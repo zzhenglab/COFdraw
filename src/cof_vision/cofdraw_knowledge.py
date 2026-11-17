@@ -76,6 +76,9 @@ def capability_inventory():
     """Describe implemented API operations, taking request schemas from models."""
     from . import drawing_api
     definitions = [
+        ("describe-cof", "/api/drawing/describe", "DescribeDrawing", "Describe a COF and review a catalog-grounded drawing plan",
+         "Offline name and word matching by default; optional explicitly configured LLM selects catalog IDs. Chemistry is validated locally. Ambiguity and unsupported requests require review; prose does not determine a unique crystal or establish a source identity.",
+         {"text": "Draw TFB and TAPB with an imine linkage in pastel colors", "mode": "rules"}, ["json"]),
         ("local-query", "/api/drawing/science/query", "KnowledgeQuery", "Query local COF records and calculation capabilities",
          "Deterministic local keyword/name/DOI retrieval; no web search, property inference or fabricated answers.",
          {"query": "Pyurea", "record_types": ["source"], "limit": 10}, ["json"]),

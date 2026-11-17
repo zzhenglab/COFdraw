@@ -8,4 +8,6 @@ The separate structure laboratory works with explicit periodic CIFs and qualifie
 
 Application code lives in `src/cof_vision`; the desktop entrypoint is `scripts/launch_cofdraw.py`. The import namespace is retained from the original COF Vision project. The portable catalog is under `data/framework-drawing`. Runtime outputs and logs should stay in an ignored output directory or another user-selected writable directory.
 
+Description interpretation produces a reviewable plan before rendering. Rules mode is local; the optional LLM may select existing catalog IDs only. Validate choices with the local chemistry engine, preserve unresolved instructions, and never invent a source identity or periodic crystal from prose. API calls require an explicit configured API-mode request. Never log, persist, export or echo provider credentials, and do not include saved projects or filesystem data in provider prompts.
+
 After functional changes, run `python -m pytest -q`. Run the relevant JavaScript and packaged-app checks when changing those surfaces. Rebuild the executable after application code changes; source tests do not validate a frozen release. Do not add source publications, private filesystem paths, local environments, model weights, or credentials to the repository.

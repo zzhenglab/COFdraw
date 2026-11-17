@@ -14,7 +14,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
 
 class PrepareDrawing(BaseModel):
@@ -130,6 +130,32 @@ class KnowledgeQuery(BaseModel):
     record_types: list[str] | None = Field(default=None, max_length=10)
     limit: int = Field(default=20, ge=1, le=50)
     offset: int = Field(default=0, ge=0, le=10000)
+
+
+class DescriptionSelection(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    source_recipe_id: str | None = Field(default=None, max_length=150)
+    monomer_a_id: str | None = Field(default=None, max_length=150)
+    monomer_b_id: str | None = Field(default=None, max_length=150)
+    linkage: str | None = Field(default=None, max_length=80)
+    template_id: str | None = Field(default=None, max_length=80)
+    style_id: str | None = Field(default=None, max_length=80)
+    palette: str | None = Field(default=None, max_length=80)
+
+
+class DescriptionLLM(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    base_url: str = Field(default='https://api.openai.com/v1', max_length=1000)
+    model: str = Field(min_length=1, max_length=150)
+    api_key: SecretStr = Field(default=SecretStr(''), exclude=True, repr=False)
+
+
+class DescribeDrawing(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    text: str = Field(min_length=1, max_length=4000)
+    mode: Literal['rules', 'llm'] = 'rules'
+    selection: DescriptionSelection | None = None
+    llm: DescriptionLLM | None = None
 
 
 def validate_recipe(recipe: dict) -> None:
@@ -276,6 +302,53 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 "source_registry_errors": errors, "max_atoms": 1000,
                 "presets": [{"instances": n, "label": f"{n // 2} A + {n // 2} B alternating pore"} for n in (6, 12)],
                 "scope": "Finite chemical pore patches with explicit attachment ports; preset connectivity is a design choice, not a topology prediction."}
+
+    @router.get('/describe/catalog')
+    def description_catalog():
+        from .cofdraw_describe import describe_catalog
+        return describe_catalog(library())
+
+    @router.post('/describe')
+    def describe_drawing(request: DescribeDrawing):
+        from .cofdraw_describe import describe_cof, describe_catalog
+        text = request.text.strip()
+        if not text:
+            raise HTTPException(422, 'Describe a COF or choose a built-in example.')
+        if request.mode == 'rules' and request.llm is not None:
+            raise HTTPException(422, 'API settings are used only in API mode.')
+        if request.mode == 'llm' and (request.llm is None or request.selection is not None):
+            raise HTTPException(422, 'API mode needs API settings and no manual selection. Review selections locally in rules mode.')
+        catalog = library()
+        selection = request.selection.model_dump(exclude_none=True) if request.selection else None
+        proposal = None
+        if request.mode == 'llm':
+            from .cofdraw_llm import select_with_llm
+            try:
+                proposal = select_with_llm(text, describe_catalog(catalog), base_url=request.llm.base_url,
+                                           model=request.llm.model,
+                                           api_key=request.llm.api_key.get_secret_value())
+                selection = proposal['selection']
+            except (ValueError, RuntimeError) as exc:
+                # Provider details and request credentials never enter stored reports.
+                raise HTTPException(422, str(exc)) from None
+        try:
+            result = describe_cof(text, catalog, selection=selection,
+                                  allow_unmatched_words=request.mode == 'llm' or bool(selection))
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from None
+        result['interpretation'] = {'mode': request.mode}
+        if proposal is not None:
+            result['interpretation'].update(model=request.llm.model, explanation=proposal.get('explanation', ''))
+            unresolved = proposal.get('unresolved', [])
+            if unresolved:
+                result['unresolved'] = list(dict.fromkeys(result.get('unresolved', []) + unresolved))
+                if result['status'] == 'ready':
+                    result['status'] = 'needs_input'
+                result['prepare_request'] = None
+                result['source_recipe_id'] = None
+        # Description plans are transient. Keys, provider responses and request
+        # bodies are not written to the scientific report store or project files.
+        return result
 
     @router.get("/sources/{recipe_id}")
     def source(recipe_id: str):
@@ -492,6 +565,9 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 'operations':{name:{'method':'POST','path':f'/api/drawing/science/{name}',
                                     'request_schema':model.model_json_schema()} for name,model in models.items()},
                 'workflows':capability_inventory(),
+                'description':{'method':'POST','path':'/api/drawing/describe',
+                               'catalog':'/api/drawing/describe/catalog',
+                               'request_schema':DescribeDrawing.model_json_schema()},
                 'reports':{'list':'/api/drawing/science/reports','read':'/api/drawing/science/reports/{report_id}'},
                 'scope':'Local catalog evidence and bounded calculations. Read each report method, units, provenance and warnings.'}
 

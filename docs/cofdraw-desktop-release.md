@@ -1,6 +1,6 @@
 # COFdraw user guide
 
-COFdraw is an offline Windows drawing application for finite COF pore patches and their monomers. It includes a basic atom/bond editor, source-associated starting drawings, presentation styles and chemical exports. It performs no PDF OCR, model inference or training.
+COFdraw is a Windows drawing application for finite COF pore patches and their monomers. Its drawing engine, catalog and rule-based description workflow work offline. An optional, explicitly configured LLM API can interpret descriptions; no language model is bundled. It includes an atom/bond editor, source-associated drawings, presentation styles and chemical exports. It performs no PDF OCR or training.
 
 The application and executable icons use the supplied faceted teal logo with a transparent background.
 
@@ -9,6 +9,14 @@ The application and executable icons use the supplied faceted teal logo with a t
 1. Extract the **entire** `COFdraw-Windows.zip` to a writable folder. Keep `COFdraw.exe`, its companion libraries and `data` together; copying the executable alone is insufficient.
 2. Open `COFdraw.exe`. No Python installation is needed for the packaged release. The desktop window uses a local service bound to `127.0.0.1` and the included assets.
 3. If the window cannot start, inspect `data/cofdraw.log`. This Windows build uses Microsoft WebView2 Runtime. For a computer without it, obtain the official standalone installer before moving the package offline. Edge browser installation alone is not the same prerequisite. [Microsoft distribution guidance](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution), [pywebview requirements](https://pywebview.flowrl.com/guide/installation.html).
+
+## Describe, review, draw
+
+Start in **Describe a COF**. Type a sentence such as `Draw TFB and TAPB with an imine linkage in pastel colors`, or choose a built-in example. Analyze the description, review the selected monomers, linkage, finite layout and style, then create the drawing. Names and words are matched to existing catalog records. The review shows assumptions and unresolved instructions; an unsupported or ambiguous request cannot become a ready drawing silently. Source-name matches open the qualified source recipe. A proposed design does not inherit the identity of a named material.
+
+Rules mode needs no key or network. Expand the optional API settings to use an OpenAI-compatible language model with your endpoint, model and API key. Only an explicit API-mode analysis sends the description and compact catalog. The key remains transient and is excluded from saved projects and calculation reports. Review or edit the returned selections locally without another provider request. See [LLM API setup](llm-api.md) for endpoint requirements and supported behavior.
+
+Use **Build manually** to choose or edit monomers directly. Advanced drawing and source controls remain available without crowding the initial description workflow.
 
 ## Draw and save
 

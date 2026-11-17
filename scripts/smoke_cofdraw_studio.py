@@ -43,6 +43,8 @@ def main():
             page=browser.new_page(viewport={'width':1600,'height':1100},bypass_csp=True);page.set_default_timeout(30000)
             page.on('pageerror',lambda e:errors.append(str(e)))
             page.goto(base);page.wait_for_function("window.COFdrawStudio?.state.online && !document.getElementById('build').disabled")
+            page.locator('#mode-manual').click()
+            page.locator('#appearance-options').evaluate('e=>e.open=true')
             page.locator('#build').click();page.wait_for_function("window.COFdrawStudio.state.result && !window.COFdrawStudio.state.busy")
             page.screenshot(path=str(output/'studio-standard.png'));checks.append('Default drawing rendered with real backend')
             page.locator('#measure-pore').click();page.locator('#pore-measurement').wait_for(state='visible')
@@ -52,6 +54,7 @@ def main():
             page.wait_for_function("document.getElementById('linkage').value==='acylhydrazone'")
             assert page.locator('#template').input_value()=='hcb_3_2'
             checks.append('Monomer edit automatically changed linkage and connectivity')
+            page.locator('.source-library summary').click()
             page.locator('#source-select').select_option('f-cof-1-source-v1');page.locator('#load-source').click()
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1' && !window.COFdrawStudio.state.busy")
             page.locator('[data-style="source"]').click();page.wait_for_function("!window.COFdrawStudio.state.busy")

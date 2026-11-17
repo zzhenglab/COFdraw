@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 - 2026-11-17
+
+- Add a description-to-drawing workflow with built-in sentence examples, local catalog matching and an editable parameter review.
+- Resolve existing monomer and source names, supported linkage/layout choices and appearance words; show assumptions, ambiguity and unsupported instructions explicitly.
+- Add optional OpenAI-compatible API parameter selection with local chemical validation and transient credentials.
+- Simplify the desktop starting flow into Describe and Build manually modes with progressive disclosure of advanced controls.
+- Expose description catalogs and request schemas to agents and extend the headless helper and skill.
+
 ## 0.5.0 - 2026-11-17
 
 - Add quick periodic-model composition, density, cell and element-site inventories.

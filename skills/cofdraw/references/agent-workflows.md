@@ -6,6 +6,28 @@ The running API is authoritative. `GET /api/drawing/science/capabilities` return
 python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/contracts science capabilities
 ```
 
+## Describe a drawing before rendering
+
+`GET /api/drawing/describe/catalog` supplies built-in description examples and exact selectable source, monomer, linkage, template, style and palette IDs. The helper exposes it as `describe-catalog`:
+
+```shell
+python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/description-options describe-catalog
+```
+
+For local interpretation, save a request such as `{"text":"Draw Pyurea with building-block highlights and a soft palette","mode":"rules"}` in `description.json`:
+
+```shell
+python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/description-plan describe --request description.json
+```
+
+The request goes to `POST /api/drawing/describe`. Its fields are `text` (1–4000 characters), `mode` (`rules` by default, or `llm`), optional `selection`, and optional `llm` settings. This call returns a plan in `result.json`; it does not draw. Read `status`, evidence, assumptions and unresolved items. A ready plan provides a source recipe ID or a bounded prepare request plus presentation choices. Continue with the existing source/prepare/render workflow only after resolving missing or conflicting constraints. Do not treat selected topology as experimental identity.
+
+`selection` accepts only `source_recipe_id`, `monomer_a_id`, `monomer_b_id`, `linkage`, `template_id`, `style_id` and `palette`, all taken from the actual catalog. Source and new design chemistry are mutually exclusive. Manual adjustments are revalidated locally with `mode: "rules"`, with no provider call. Recognized chemistry/geometry conflicts and unsupported operations remain blocking. With explicit manual or LLM choices, unmatched residual words are surfaced as review warnings; a valid parameter set does not guarantee complete semantic fidelity. Compare the returned choices and warnings with the user's intent before continuing.
+
+Optional LLM mode is for an explicitly requested provider call. It needs `llm: {"base_url":"https://provider.example/v1","model":"user-chosen-model","api_key":"..."}` and no manual `selection`. The provider sees the description and minimal catalog labels/IDs; it cannot submit SMILES, recipes, code or new chemistry. Its proposed IDs go through the deterministic planner, and any unresolved provider item prevents drawing readiness. HTTPS is required except for exact localhost HTTP hosts; redirects are blocked. Keep credentials in the desktop field or an in-memory request, never in a shared report or code sample. The helper does not copy a supplied request file or its credentials into output files and returns generic description HTTP errors to avoid credential echoes.
+
+The application stores no API configuration and discovers no environment keys. Do not turn a rules request into a paid/API request automatically, or retry provider failures silently. For compatibility and credential details, read `docs/llm-api.md` in the repository. No provider call is needed for built-in examples, explicit ID selections, rendering or scientific calculations.
+
 ## Retrieve actual local chemistry records
 
 `POST /api/drawing/science/query` accepts:

@@ -14,17 +14,27 @@ import time
 from urllib.request import urlopen
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 STATIC = Path(__file__).with_name("web")
 
 
 def create_desktop_app(data_root):
     app = FastAPI(title="COFdraw", version=VERSION, docs_url=None, redoc_url=None)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exc: RequestValidationError):
+        if request.url.path.rstrip('/') == '/api/drawing/describe':
+            # Pydantic's default errors include rejected input values. This
+            # endpoint may contain provider credentials even in malformed input.
+            return JSONResponse({'detail': 'Invalid description request. Check the text, mode, catalog selections and API settings.'}, status_code=422)
+        return await request_validation_exception_handler(request, exc)
 
     @app.middleware("http")
     async def local_only(request: Request, call_next):
@@ -48,7 +58,8 @@ def create_desktop_app(data_root):
 
     @app.get("/api/desktop")
     def about():
-        return {"version": VERSION, "offline": True, "data_directory": str(Path(data_root).resolve()), "training": False}
+        return {"version": VERSION, "offline": True, "optional_llm_api": True,
+                "default_mode": "offline_rules", "data_directory": str(Path(data_root).resolve()), "training": False}
 
     app.include_router(create_drawing_router(Path(data_root)))
     app.mount("/", StaticFiles(directory=STATIC), name="assets")

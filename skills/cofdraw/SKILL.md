@@ -17,6 +17,8 @@ Read [local-api.md](references/local-api.md) when setting up a runtime, preparin
 
 ## Drawing workflow
 
+For a prose request, use the local description workflow in [agent-workflows.md](references/agent-workflows.md) to obtain a reviewable, catalog-bound plan. Rules mode is the default. Use an optional provider API only when the user has explicitly chosen that mode and supplied its settings; never discover or reuse ambient credentials. An LLM proposal selects IDs and still passes the local chemistry checks.
+
 1. Query `library` to discover real source recipe IDs, supported linkages, monomers, templates, and styles. Check `source_registry_errors`; do not invent catalog IDs or treat a reference-only linkage as implemented.
 2. For a named catalog drawing, use `source` with its exact recipe ID and preferred style (`source` is the helper default). Preserve admitted coordinates, including a compact, tilted or irregular source arrangement. Do not automatically replace it with a regular polygon or run cleanup. For a new design, choose explicit finite monomer SMILES, supported linkage, and an appropriate template, then use `design` with the JSON prepare request. For an edited recipe or advanced style controls, use `render` with the full render request.
 3. Inspect the returned `audit`, including continuation ports, source/design status, selected template, export diagnostics, and any style limits. Visually inspect the generated PNG/SVG when an image tool is available. Preserve isotope, charge, stereo, and attachment information when editing.

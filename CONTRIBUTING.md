@@ -42,4 +42,4 @@ The current catalog, registry, and recipes are bound together by SHA-256 hashes 
 
 For detailed scientific scope and recorded validation, see the [catalog guide](docs/cofdraw-catalog-v3.md) and [release record](docs/cofdraw-release-validation.json). That record describes the original 0.3.0 application's broader validation run; the public desktop repository contains its focused drawing tests.
 
-Current structure methods and release evidence are documented in [scientific methods](docs/scientific-methods.md) and [v0.4 validation](docs/v0.4-validation.json).
+Current structure methods are documented in [scientific methods](docs/scientific-methods.md). Description interpretation and API data handling are documented in [description methods](docs/describe-methods.md) and [optional API setup](docs/llm-api.md). The [v0.6 validation record](docs/v0.6-validation.json) identifies the tested executable and browser workflows. The optional provider path is tested with a localhost fixture; paid external model calls are not required for tests.

@@ -61,6 +61,9 @@ def main():
           return rendered
         page.goto(f"{base_url}/cofdraw.html")
         page.get_by_text("Local chemistry engine · ready",exact=True).wait_for()
+        page.locator('#mode-manual').click()
+        page.locator('#appearance-options').evaluate('e=>e.open=true')
+        page.locator('details.identity-panel').evaluate('e=>e.open=true')
         library=page.request.get(f"{base_url}/api/drawing/library").json()
         page.wait_for_function("() => document.querySelector('#preview-a').complete && !document.querySelector('#preview-a').hidden")
         page.wait_for_function("() => document.querySelector('.brand-logo').complete && document.querySelector('.brand-logo').naturalWidth>0")

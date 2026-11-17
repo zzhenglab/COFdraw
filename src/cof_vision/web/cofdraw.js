@@ -108,6 +108,7 @@ function sync() {
   document.querySelectorAll("#style-controls input,#style-controls select,#style-controls button").forEach(b=>b.disabled=blocked);
   $("apply-style-options").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
   for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","source-select","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
+  window.dispatchEvent(new CustomEvent('cofdraw:state'));
 }
 function removeIdentity() {
   if(!state.recipe)return;
@@ -186,8 +187,8 @@ async function render(){
     exportNote.hidden=Boolean(result.downloads.cdxml);
     exportNote.textContent=result.downloads.cdxml?"":exportAudit.cdxml==="unavailable_in_this_rdkit_build"?"CDXML is unavailable in this local chemistry engine. Use MOL or SDF for chemical editing.":`CDXML was omitted${exportAudit.reason?`: ${exportAudit.reason}`:" because its export could not be validated"}. MOL and SDF remain available.`;
     const chosen=audit.drawing_style;if(chosen){state.style=chosen.id||state.style;state.seed=chosen.seed??state.seed;state.resolvedStyleOptions=clone(chosen.options||{});if(wasRandom)state.styleOptions=clone(chosen.options||{});$("canvas-sheet").classList.toggle("transparent-preview",Boolean(chosen.options?.transparent_background));setStyleDescription();drawStyleControls();}
-    updateIdentity();window.dispatchEvent(new CustomEvent('cofdraw:rendered',{detail:result}));notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":"Drawing ready. Inspect the connections and continuation ports before saving.");
-  }catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
+    updateIdentity();window.dispatchEvent(new CustomEvent('cofdraw:rendered',{detail:result}));notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":"Drawing ready. Inspect the connections and continuation ports before saving.");return result;
+  }catch(error){notice(error.message,true);return null;}finally{state.busy=false;sync();}
 }
 $("build").addEventListener("click",async()=>{
   if(state.busy)return;state.busy=true;sync();
@@ -410,6 +411,29 @@ $("sketch-export").addEventListener("click",async()=>{try{const r=await checkedS
 $("sketch-use").addEventListener("click",async()=>{try{const result=await checkedSketch();$(`smiles-${activeBlock}`).value=result.smiles;$(`preset-${activeBlock}`).value="";setPreview(activeBlock,result);markInputsChanged();$("sketch-dialog").close();notice(`Building block ${activeBlock.toUpperCase()} updated · ${result.formula}. Create a drawing to apply it.`);}catch(e){sketchMessage(e.message,true);}});
 $("sketch-cancel").addEventListener("click",()=>$("sketch-dialog").close());
 
+async function applyDescriptionPlan(plan){
+  if(!state.online||state.busy)throw new Error('Wait for the local drawing engine to be ready.');
+  if(plan?.status!=='ready'||Boolean(plan.source_recipe_id)===Boolean(plan.prepare_request))throw new Error('Analyze and review a complete drawing plan first.');
+  state.busy=true;sync();
+  try{
+    if(plan.source_recipe_id){
+      const source=await api(`sources/${encodeURIComponent(plan.source_recipe_id)}`);
+      acceptRecipe(source.recipe,plan.source_recipe_id,source.metadata);showSourceMonomers(source.recipe,source.metadata);
+      if(Array.from($('source-select').options).some(option=>option.value===plan.source_recipe_id))$('source-select').value=plan.source_recipe_id;
+    }else{
+      const request=clone(plan.prepare_request),prepared=await api('prepare',request);
+      for(const block of ['a','b']){$(`smiles-${block}`).value=request[`monomer_${block}`];$(`label-${block}`).value=request[`label_${block}`]||block.toUpperCase();$(`preset-${block}`).value='';}
+      $('linkage-search').value='';populateLinkages(request.linkage);$('cof-preset').value='custom';
+      acceptRecipe(prepared.recipe,null,null,true);await refreshMonomers();refreshChemistry(request.template_id);state.inputsDirty=false;
+    }
+    state.style=plan.style_id||'standard';state.seed=null;state.styleOptions=clone(plan.style_options||{});state.resolvedStyleOptions={};setStyleDescription();drawStyleControls();
+    state.busy=false;sync();
+    const result=await render();
+    if(!result)throw new Error($('notice').textContent||'The drawing could not be rendered. Review the plan and try again.');
+    return result;
+  }finally{state.busy=false;sync();}
+}
+
 async function initialize(){
   try{
     const library=await api("library");state.library=library;state.online=true;$("engine-dot").classList.add("live");$("engine-status").textContent="Local chemistry engine · ready";$("catalog-version").textContent=library.catalog_version||"Built-in drawing library";
@@ -421,5 +445,5 @@ async function initialize(){
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
-window.COFdrawStudio={state,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls};
+window.COFdrawStudio={state,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan};
 initialize();

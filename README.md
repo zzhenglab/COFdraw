@@ -5,7 +5,7 @@
 <h1 align="center">COFdraw</h1>
 
 <p align="center"><strong>A desktop drawing studio for covalent organic frameworks.</strong><br>
-Draw source-aligned COF pores, explore 3D structures, and screen geometric pore properties offline.</p>
+Describe a COF, review its building blocks, and draw. Explore 3D structures and materials properties.</p>
 
 <p align="center">
   <a href="https://github.com/zzhenglab/COFdraw/releases/latest"><img src="https://img.shields.io/github/v/release/zzhenglab/COFdraw?color=207b68" alt="Latest release"></a>
@@ -20,7 +20,7 @@ Draw source-aligned COF pores, explore 3D structures, and screen geometric pore 
   &nbsp; · &nbsp; <a href="https://github.com/zzhenglab/COFdraw/issues">Report an issue</a>
 </p>
 
-![COFdraw drawing interface with a finite imine pore and export controls](docs/assets/cofdraw-desktop.png)
+![Describe a COF, review the matched monomer structures, and create a finite chemical drawing](docs/assets/cofdraw-describe.png)
 
 ## Download and run
 
@@ -36,8 +36,10 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.5.0 |
+| Feature | Included in v0.6.0 |
 | --- | --- |
+| Describe a COF | Match sentences, monomer names, source names and style words to the local catalog; review before drawing |
+| Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |
 | Monomer library | 49 presets, structure cards, and automatic compatible linkage/template selection |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
 | Geometry editing | Direct atom drag, block-position editing, undo, rigid-block cleanup, and diagnostics |
@@ -73,6 +75,16 @@ The six implemented transforms cover imine, beta-ketoenamine, acylhydrazone, Tp 
 ![Source-aligned F-COF-1 with its recorded yellow halo and red/black bonds](docs/assets/cofdraw-source-style.png)
 
 </details>
+
+## Start with a description
+
+Choose **Describe a COF**, type a sentence or try a built-in example, then analyze it. For example:
+
+> Draw TFB and TAPB with an imine linkage in pastel colors.
+
+Review the matched building blocks, linkage, finite drawing layout and appearance before creating the drawing. Ambiguous names, unsupported chemistry and conflicting instructions require a choice instead of producing an invented structure. **Build manually** keeps the monomer editor and full construction controls available.
+
+Rules mode works offline and needs no API key. Optional **LLM API** mode sends your description and a compact catalog to your chosen compatible endpoint only when requested. Supply your own endpoint, model and key; the application does not save the key or include it in projects and reports. The LLM proposes existing catalog IDs, and the same local chemical checks still apply. See [API setup and data handling](docs/llm-api.md).
 
 ## Use with an AI agent
 

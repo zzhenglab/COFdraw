@@ -28,6 +28,9 @@ def main():
     parser.add_argument("--output", type=Path, required=True, help="New directory for this invocation")
     commands = parser.add_subparsers(dest="operation", required=True)
     commands.add_parser("library", help="Save the actual available catalog")
+    commands.add_parser("describe-catalog", help="Read description examples and selectable catalog IDs")
+    describe = commands.add_parser("describe", help="Interpret a description into a reviewable plan; does not draw")
+    describe.add_argument("--request", type=Path, required=True, help="JSON /describe body; rules mode is the default")
     source = commands.add_parser("source", help="Render a registered source recipe")
     source.add_argument("recipe_id")
     design = commands.add_parser("design", help="Prepare monomers and render the resulting design")
@@ -67,7 +70,7 @@ def main():
     request_body = None
     if args.operation == "science" and args.endpoint not in {"library", "capabilities"} and args.request is None:
         parser.error("A science calculation requires --request with its JSON request body")
-    if args.operation in {"design", "render", "layout"} or (args.operation == "science" and args.request):
+    if args.operation in {"design", "render", "layout", "describe"} or (args.operation == "science" and args.request):
         request_body = json.loads(args.request.read_text(encoding="utf-8-sig"))
         if not isinstance(request_body, dict):
             parser.error("Request JSON must be an object")
@@ -94,6 +97,12 @@ def main():
                     raise ValueError("Unexpected API redirect")
                 return response.read()
         except HTTPError as exc:
+            if path == "/api/drawing/describe":
+                # Even a framework validation response could echo a malformed
+                # credential input. Do not read or print that response body.
+                code = exc.code
+                exc.close()
+                raise RuntimeError(f"COFdraw description request failed (HTTP {code}); check the settings and supported inputs.") from None
             detail = exc.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"COFdraw HTTP {exc.code}: {detail}") from exc
 
@@ -136,6 +145,12 @@ def main():
                 result = json.loads(fetch(base, "/api/drawing/science/" + args.endpoint, request_body))
             elif args.operation == "layout":
                 result = json.loads(fetch(base, "/api/drawing/layout", request_body))
+            elif args.operation == "describe-catalog":
+                result = json.loads(fetch(base, "/api/drawing/describe/catalog"))
+            elif args.operation == "describe":
+                result = json.loads(fetch(base, "/api/drawing/describe", request_body))
+                # Never persist the request or credentials. The server returns
+                # a transient, catalog-bound plan, not a raw provider response.
             if args.operation == "source":
                 body = {"source_recipe_id": args.recipe_id}
             elif args.operation == "design":
