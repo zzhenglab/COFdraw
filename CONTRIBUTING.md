@@ -9,7 +9,7 @@ Use Windows x64 and Python 3.11 for the desktop application and packaging.
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-cofdraw-desktop.txt
-.\.venv\Scripts\python.exe -m pip install pytest httpx
+.\.venv\Scripts\python.exe -m pip install pytest httpx "scipy>=1.11"
 .\.venv\Scripts\python.exe scripts\launch_cofdraw.py
 ```
 
@@ -22,7 +22,7 @@ The launcher uses this repository's portable `data` directory by default. Use `-
 node scripts\test_cofdraw_library.cjs
 ```
 
-Node.js is needed only for the JavaScript library checks. Exercise the desktop window and affected exports when changing the UI, save bridge, or packaging. Browser/API checks alone do not establish that a native Save dialog works.
+Node.js is needed only for the JavaScript library checks. SciPy is a development dependency for the image-overlay comparison test; it is not required by the drawing application. Exercise the desktop window and affected exports when changing the UI, save bridge, or packaging. Browser/API checks alone do not establish that a native Save dialog works.
 
 For chemistry changes, preserve stereochemistry, source-qualified identity, provenance, and explicit continuation points. A successful parse is not a chemistry validation. A template is a construction choice, not evidence of a periodic topology. Keep reference-only catalog entries distinct from implemented transforms.
 
