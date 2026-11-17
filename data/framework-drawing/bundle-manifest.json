@@ -1,0 +1,772 @@
+{
+  "version": "cofdraw-portable-catalog-v3-runtime-check-1",
+  "created_at_utc": "2026-11-17T16:46:07.198599+00:00",
+  "catalog_sha256": "60448d1252666842e15d687aae853ae92c2858ea8fda02f801fd577a0c269928",
+  "runtime_module_sha256": "29815f19a1ce765d7bf0be3f3f7433ec04d83b1eba12a8836dac94471f4562c0",
+  "candidate_role_checks": [
+    {
+      "id": "tfb",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfb",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfb",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfb",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapb",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapb",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapb",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "beta_ketoenamine",
+      "role": "tp_trialdehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tp",
+      "linkage": "keto_hydrazide",
+      "role": "tp_trialdehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "pa",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pa",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pa",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmtp",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmtp",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmtp",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmtp",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pa_so3h",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pa_so3h",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pa_so3h",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "ta",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "ta",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "ta",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "ta",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "tfta",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "tfta",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "tfta",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "tfta",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dhta",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dhta",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dhta",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dhta",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpda_cho",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpda_cho",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpda_cho",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpda_cho",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "tfpb",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpb",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpb",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpb",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpt",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpt",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpt",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpt",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tfpm",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfpm",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfpm",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfpm",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfppy",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfppy",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfppy",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfppy",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "por_cho",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "por_cho",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "por_cho",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "por_cho",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "hfptp_h",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_h",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_h",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_h",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_f",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_f",
+      "linkage": "acylhydrazone",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_f",
+      "linkage": "azine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "hfptp_f",
+      "linkage": "secondary_amine",
+      "role": "aryl_aldehyde",
+      "ports": 6,
+      "valid": true
+    },
+    {
+      "id": "tapt",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapt",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapt",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapa",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapa",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapa",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "tapm",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tapm",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tapm",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "pytta",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "pytta",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "pytta",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfappm",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfappm",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "tfappm",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 4,
+      "valid": true
+    },
+    {
+      "id": "benzidine",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "benzidine",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "benzidine",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpy55",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpy55",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bpy55",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "azoda",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "azoda",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "azoda",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pame2",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pame2",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "pame2",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "melamine",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "melamine",
+      "linkage": "beta_ketoenamine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "melamine",
+      "linkage": "secondary_amine",
+      "role": "primary_arylamine",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "deth",
+      "linkage": "acylhydrazone",
+      "role": "acylhydrazide",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "deth",
+      "linkage": "keto_hydrazide",
+      "role": "acylhydrazide",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmth",
+      "linkage": "acylhydrazone",
+      "role": "acylhydrazide",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "dmth",
+      "linkage": "keto_hydrazide",
+      "role": "acylhydrazide",
+      "ports": 2,
+      "valid": true
+    },
+    {
+      "id": "bth",
+      "linkage": "acylhydrazone",
+      "role": "acylhydrazide",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "bth",
+      "linkage": "keto_hydrazide",
+      "role": "acylhydrazide",
+      "ports": 3,
+      "valid": true
+    },
+    {
+      "id": "hydrazine",
+      "linkage": "azine",
+      "role": "hydrazine",
+      "ports": 2,
+      "valid": true
+    }
+  ],
+  "passed": 104,
+  "failed": 0,
+  "source_recipe_files_byte_identical_to_previous_portable_bundle": true,
+  "files": [
+    {
+      "relative_path": "catalog-v3/catalog.json",
+      "sha256": "60448d1252666842e15d687aae853ae92c2858ea8fda02f801fd577a0c269928"
+    },
+    {
+      "relative_path": "catalog-v3/validation.json",
+      "sha256": "a2d1e7cf7b0d7feaf7d64a97caf3d2883ef766bc71d3f4c3ff5fd35ab76a60c6"
+    },
+    {
+      "relative_path": "registry.json",
+      "sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68"
+    },
+    {
+      "relative_path": "tfb-tab-pore-v1.recipe.json",
+      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de"
+    },
+    {
+      "relative_path": "tpb-dmtp-cof-pore-v1.recipe.json",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3"
+    },
+    {
+      "relative_path": "tppa-pore-v1.recipe.json",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7"
+    },
+    {
+      "relative_path": "wiley-r198-tppa-so3h-drawing-0002.json",
+      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2"
+    }
+  ],
+  "source_image_files_shipped": 0,
+  "absolute_private_paths_shipped": 0,
+  "scope": "Bounded monomer transform smoke only; source recipe identities unchanged, no arbitrary-pair experimental feasibility or net claim."
+}

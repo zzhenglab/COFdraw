@@ -1,0 +1,456 @@
+{
+  "schema": "cofdraw-native-page-fit-v1",
+  "created_at": "2026-11-17T17:44:06.173234+00:00",
+  "application": "ChemDraw23.1.2.7 / ChemDraw_x64.Application",
+  "native_automation": true,
+  "old_failure_reproduction": {
+    "input_missing_page_and_print_setup": true,
+    "negative_input_coordinates": true,
+    "native_saved_page_bounds": "0 0 1080 719.75",
+    "native_width_pages": "2",
+    "native_height_pages": "1",
+    "native_output_sha256": "30ef87a79b79c0bb970aca7cfc55d917f2f7ac9dd1b1877f8a471fe4437bb33f",
+    "scope": "Reproduced inherited page expansion; user observed B4/corner-only viewport. We did not reproduce a visible user GUI screenshot."
+  },
+  "case_count": 7,
+  "cases": [
+    {
+      "case": "default",
+      "atoms_including_ports": 108,
+      "bonds_including_port_bonds": 123,
+      "ports": 6,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.005007694444437839,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        107.19,
+        195.98,
+        435.03,
+        525.56
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        1382,
+        1390
+      ],
+      "native_PNG_white_border_pixels": [
+        9,
+        9,
+        10,
+        12
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 0.03596490004565567,
+      "hashes": {
+        ".mol": "e3dac3b9bd5a8325f61dacafe8c2c984bfb5826102816a1095977091d9274d7f",
+        ".cdxml": "c0c360300803ec1c8547bd24605ac5bf8b3374308774f059171f0f251e7dfa12",
+        ".chemical-export.json": "4fcc2862e92f0ef6b3c3fe8e495010146d83646c6521aec46da72252160968fc",
+        "-native.cdxml": "3002de11b433670866d67cfa23489ba46304d1cbeda18daa61fae1748063dac6",
+        "-native.png": "dfef74f784f376c9e0fa5724963b4d802694dc290fd16d4c713896b11d2024e2",
+        "-native-automation.json": "241bee237b7cfac74722fa73d31cea2bf58d7a75d756952f3182f310fc7ada23"
+      },
+      "existing_processes_count": 0,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "DMTP-source",
+      "atoms_including_ports": 234,
+      "bonds_including_port_bonds": 264,
+      "ports": 6,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.00496499999997244,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        20.22,
+        80.12,
+        519.78,
+        639.88
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        2099,
+        2349
+      ],
+      "native_PNG_white_border_pixels": [
+        10,
+        10,
+        10,
+        10
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 4.1244393000379205,
+      "hashes": {
+        ".mol": "506dff18f786b19ad8c11c984632271875968881a6a5ce13f80ea6cfba1e494b",
+        ".cdxml": "fe1410b4add1ff72f68bdc7771c907cd6c58ea05c8a5c23d89a8abd468633b53",
+        ".chemical-export.json": "1a3d8916e600d36e0e3cc028a91a9b62e157a5d24b68ac09ca5cc5174df45565",
+        "-native.cdxml": "33e3aaac161fb6a78385fd1142ddf3205d72444f7367f8f2a528c7e7b71a19fe",
+        "-native.png": "a67486bd01b30932ba0f21fd4ec76dcb3235b412c2e097649ebdb66383bcf10b",
+        "-native-automation.json": "1fdc7184f0bfb7e068b61a82698740fc9d932332a77216ac007297fb1c8d1a93"
+      },
+      "existing_processes_count": 0,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "automatic",
+      "atoms_including_ports": 240,
+      "bonds_including_port_bonds": 270,
+      "ports": 6,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.005255595833341505,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        17.93,
+        145.81,
+        522.07,
+        574.19
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        2117,
+        1801
+      ],
+      "native_PNG_white_border_pixels": [
+        9,
+        8,
+        9,
+        9
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 4.412194000091404,
+      "hashes": {
+        ".mol": "921f458fb6a11497e5bdba8d10eb0662c1ed5c9e47124268d63d9eeda99841f8",
+        ".cdxml": "68cf28459679fc38bf01f5e813b7ce4f0e24b31e7460544eda848e230dbf242a",
+        ".chemical-export.json": "756094c4de1d8ce9a738b8adcb4bcf188224b02bcca9e0830a1b6dc6506c4cf9",
+        "-native.cdxml": "083d298ddd131a59bc64592c35862e45399135fdfddf768c84495de483fee2d7",
+        "-native.png": "ac5fe90866eaf6d5998a9906b0e6e2c1f52242bc471e274d000eb4dbaaec81d8",
+        "-native-automation.json": "d5bcef51b4c8615137c63b2a5a079e25bd720fc6024d987cef33e8a41a55d1c5"
+      },
+      "existing_processes_count": 1,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "4c-source",
+      "atoms_including_ports": 232,
+      "bonds_including_port_bonds": 268,
+      "ports": 8,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.0049900000000218025,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        28.62,
+        118.24,
+        511.38,
+        601.76
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        2029,
+        2031
+      ],
+      "native_PNG_white_border_pixels": [
+        10,
+        10,
+        10,
+        11
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 0.32281659997534007,
+      "hashes": {
+        ".mol": "fc21ce541e4973bcb036c012a0d2aca0c02f6d4ef0dcf601514b59e49f190474",
+        ".cdxml": "87a52ed559480b0d26a5f8b830c0ab3b027ff5e74e7fa67739eb35e7e4bdb1ef",
+        ".chemical-export.json": "585c91070ddfaffa6be411845f59a9891b874d2f1c39a0587973014e5a876f46",
+        "-native.cdxml": "ec399cdecaf381a43489ea789df6cc2aeb6bd451708172dc0beb7487c1eeae12",
+        "-native.png": "b7ff9308bace4afba75bba971a3a485cd757b1b7e72554c570b643fcfa833daf",
+        "-native-automation.json": "56b449872688f407b51fc4758fdae1ea1da5fc07f94114b24a09c305f6aca829"
+      },
+      "existing_processes_count": 1,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "stereo-E",
+      "atoms_including_ports": 6,
+      "bonds_including_port_bonds": 5,
+      "ports": 0,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.0049153333333341225,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        221.97,
+        340.89,
+        300.52,
+        375.47
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        344,
+        160
+      ],
+      "native_PNG_white_border_pixels": [
+        10,
+        16,
+        12,
+        9
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 0.005483100074343383,
+      "hashes": {
+        ".mol": "8d878a2a2899992e1b8997b223ca5d1c83b3f514fc955d4e9a114353a3352c94",
+        ".cdxml": "0d6f8b77b1fbba999c96dacda290deeacbb8335816fefbbf3bd505d0d51932e4",
+        ".chemical-export.json": "18c82d9fd50560dc71f9eb21a385cd3bf69c01f5e16de3e8fa496624bab6ee7d",
+        "-native.cdxml": "503c3f80feb126e62404265c77d100d90557a6701e29eedf987cbba959a53e1b",
+        "-native.png": "a2be0ea66ef30c7f2daec0564ba56d35e779b0a04a963af4a2d47728f4d37934",
+        "-native-automation.json": "c8581e06319419ba821f2194dfca6c3de74724af9744a86eba93b6c60c62cdd3"
+      },
+      "native_MOL_EZ_tetrahedral_isotope_exact": true,
+      "existing_processes_count": 1,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "stereo-Z",
+      "atoms_including_ports": 6,
+      "bonds_including_port_bonds": 5,
+      "ports": 0,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.002920666666658652,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        225.52,
+        347.47,
+        296.97,
+        376.1
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        314,
+        136
+      ],
+      "native_PNG_white_border_pixels": [
+        10,
+        8,
+        12,
+        9
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 0.005224399967119098,
+      "hashes": {
+        ".mol": "aa6584bef5cf81744bdd26c7d2a0cb67c4f0be1923cbd98e71febc21be940eef",
+        ".cdxml": "5a1c79c5b358bf12a154637bd0e01bb928c886cf473b28ffab53e536d0bdef39",
+        ".chemical-export.json": "9090da8f9d443cb6d9c47d55ad0fbd6e6cc95416171ed1695bafd4783b92f3b8",
+        "-native.cdxml": "3786b3cd2a448bac6489c9fef1d44e946ad2542111da5c27fb5871bbe66169b8",
+        "-native.png": "f989360e78e5893967012694bdd97b8873f61184748d0110d98ab467c571c339",
+        "-native-automation.json": "4d94ca4fdf46b5f1f77d729629c6537a7e7e049a0b6ce6740be2f3950d3d5b2a"
+      },
+      "native_MOL_EZ_tetrahedral_isotope_exact": true,
+      "existing_processes_count": 1,
+      "owned_processes_count": 1
+    },
+    {
+      "case": "automatic-built-fast",
+      "atoms_including_ports": 240,
+      "bonds_including_port_bonds": 270,
+      "ports": 6,
+      "chemical_atom_bond_H_charge_isotope_and_display_tables_equal": true,
+      "coordinate_translation_only_residual_points": 0.005255595833341505,
+      "page_count": [
+        1,
+        1
+      ],
+      "native_page_bounds_points": [
+        0,
+        0,
+        540,
+        720
+      ],
+      "native_fragment_bounds_points": [
+        17.93,
+        145.81,
+        522.07,
+        574.19
+      ],
+      "native_COM_magnification_percent": 100.0,
+      "native_paper_size_points": [
+        612,
+        792
+      ],
+      "native_print_margins_points": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "native_PNG_size": [
+        2117,
+        1801
+      ],
+      "native_PNG_white_border_pixels": [
+        9,
+        8,
+        9,
+        9
+      ],
+      "all_nodes_and_native_fragment_inside_page": true,
+      "native_PNG_not_edge_clipped": true,
+      "export_seconds": 0.02910429995972663,
+      "hashes": {
+        ".mol": "921f458fb6a11497e5bdba8d10eb0662c1ed5c9e47124268d63d9eeda99841f8",
+        ".cdxml": "68cf28459679fc38bf01f5e813b7ce4f0e24b31e7460544eda848e230dbf242a",
+        ".chemical-export.json": "62fcdca8fd71939111e96538a7927133881f2df712d5d8fff59eded883247b62",
+        "-native.cdxml": "ce03229789fceeac3e2ce2742b40aa5f52797894e2129b3bfa1241d17fdc41bb",
+        "-native.png": "ac5fe90866eaf6d5998a9906b0e6e2c1f52242bc471e274d000eb4dbaaec81d8",
+        "-native-automation.json": "c7e03061efe3271714c22a7b50464a92be0a4a82091147677b9a41669dc9c904"
+      },
+      "fast_slow_CDXML_bytes_identical": true,
+      "fast_native_PNG_identical_to_viewed_automatic": true,
+      "slow_export_seconds": 3.8013585000298917,
+      "existing_processes_count": 0,
+      "owned_processes_count": 1
+    }
+  ],
+  "all_checks_pass": true,
+  "visual_audit": {
+    "actually_viewed": "native-contact.png with all six original cases; fast-path PNG is byte-identical to its viewed automatic case.",
+    "contact_sha256": "8a001b3532bf096c49aac6c4b3c59e44143036a9822999fa107ea92b13f32f36",
+    "scope": "Whole structures/ports/labels and stereo fixtures visible in native-rendered images; not a screenshot of a foreground application window."
+  },
+  "source_policy": {
+    "function_sha256": "fc163737e7f35ede202d85be79f58e60e7c278fc343b7068e355bbdb6a3b516b",
+    "explicit_XML_reader_sha256": "2689b7d9ef9833bee5afd4e5a9b6ca4a93e9f93ec1c06c119581b70f2cb85d48",
+    "audit_script_sha256": "fe0fd0dbbc79ba72da3e2b9492f2e5e639182c92980c6b62ebb37af2f5d12c0c",
+    "native_script_sha256": "746decc55fe56efd10247a9ac759ee5906957b817bf621fa114043dd5c809da6"
+  },
+  "limitations": [
+    "Hidden COM documents, actual native page properties and native PNG/CDXML outputs were inspected; no shared user document or visible window was modified.",
+    "No physical printer operation was performed. Single Letter-page geometry is verified in saved ChemDraw data and COM dimensions.",
+    "SVG presentation colors/fonts/styles are not transferred; CDXML exports editable underlying chemical graph/layout.",
+    "Unknown imine stereo remains visibly crossed in ChemDraw; page fitting does not assign E/Z.",
+    "ChemDraw SaveAs MOL still drops ExternalConnectionPoint boundary nodes; retain native CDXML and original COFdraw MOL/SDF.",
+    "Large graphs may need zoom for label readability; this fix prevents page clipping, not automatic structure cleanup."
+  ],
+  "sources": [
+    "https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk/properties/MacPrintInfo.htm",
+    "https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk/properties/PrintMargins.htm",
+    "https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk/properties/WidthPages.htm",
+    "https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk/properties/DrawingSpaceType.htm"
+  ],
+  "private_full_report_sha256": "3b022ba999a6090b2ceefee55ba014ea7e7396ba9704d2387204bdd3628fbbf6"
+}

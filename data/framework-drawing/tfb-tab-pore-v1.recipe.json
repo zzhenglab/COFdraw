@@ -1,0 +1,351 @@
+{
+  "schema_version": "cof-chemical-patch-1",
+  "recipe_id": "tfb-tab-pore-v1",
+  "name": "TFB-TAB",
+  "cofex_id": "COFEXM-YOZRE7ACVU7MOTKX2M",
+  "cofex_match_status": "exact_name_and_monomers_same_paper",
+  "reference": {
+    "master_sha256": "38d0c1cd0f646665ab119c76e2c8a8791abf3b171c6f985df7edd7805aa87a8f",
+    "mapped_sha256": "e2dcf9cc2e99d8d2e171e4f7283e7fdca71f6f6eb2bf09b9979e0d2115fd93d3",
+    "components": 2221,
+    "building_blocks": 1805,
+    "invalid_component_smiles": 1,
+    "missing_component_smiles": 818,
+    "records": 5869,
+    "complete_monomer_records": 5136,
+    "records_with_invalid_monomers": 5,
+    "unique_monomer_sets": 1841,
+    "unique_smiles_keys": 1938,
+    "distinct_dois": 2292,
+    "reference_status": "weak_labels_not_independently_verified"
+  },
+  "source": {
+    "file_sha256": "d82cb3f198dfa314e5db569f7cca8e0a7053636d9322ca3a895c3c1fb2107274",
+    "filename": "10.1021_acscatal.3c03857.pdf",
+    "kind": "pdf",
+    "page": 2,
+    "page_count": 14,
+    "bbox": [
+      0.1425438596491228,
+      0.0723793677204659,
+      0.8552631578947368,
+      0.3968386023294509
+    ],
+    "dpi": 360,
+    "width": 2166,
+    "height": 1301,
+    "doi": "10.1021/acscatal.3c03857",
+    "document_role": "main",
+    "crop_sha256": "4c9edc054a1c938108f981d773c6436555372a94552f1949f7b29cb14aade3c3"
+  },
+  "source_crop_pixels_at_1_5x": [
+    650,
+    349,
+    772,
+    474
+  ],
+  "components": {
+    "TFB": {
+      "monomer_smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+      "fragment_smiles": "C(c1cc(C=[*:2])cc([*:3])c1)=[*:1]",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "reactive_sites": [
+        {
+          "port": 1,
+          "monomer_atom_index": 1,
+          "join_bond_order": 2
+        },
+        {
+          "port": 2,
+          "monomer_atom_index": 5,
+          "join_bond_order": 2
+        },
+        {
+          "port": 3,
+          "monomer_atom_index": 9,
+          "join_bond_order": 2
+        }
+      ],
+      "connectivity": 3,
+      "library_version": "cof-chemical-patch-1",
+      "reaction_fragment_before_source_crop": "C(c1cc(C=[*:2])cc(C=[*:3])c1)=[*:1]",
+      "source_boundary_edit": {
+        "port": 3,
+        "removed": "terminal reactive atom at outward arm; cut at source aromatic continuation stub"
+      }
+    },
+    "TAB": {
+      "monomer_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "fragment_smiles": "c1cc(-c2cc(-c3ccc(N=[*:2])cc3)cc(-c3ccc([*:3])cc3)c2)ccc1N=[*:1]",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "reactive_sites": [
+        {
+          "port": 1,
+          "monomer_atom_index": 0,
+          "join_bond_order": 2
+        },
+        {
+          "port": 2,
+          "monomer_atom_index": 12,
+          "join_bond_order": 2
+        },
+        {
+          "port": 3,
+          "monomer_atom_index": 21,
+          "join_bond_order": 2
+        }
+      ],
+      "connectivity": 3,
+      "library_version": "cof-chemical-patch-1",
+      "reaction_fragment_before_source_crop": "c1cc(-c2cc(-c3ccc(N=[*:2])cc3)cc(-c3ccc(N=[*:3])cc3)c2)ccc1N=[*:1]",
+      "source_boundary_edit": {
+        "port": 3,
+        "removed": "terminal reactive atom at outward arm; cut at source aromatic continuation stub"
+      }
+    }
+  },
+  "instances": [
+    {
+      "id": "n1",
+      "component": "TAB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        6.123233995736766e-17,
+        1.0
+      ]
+    },
+    {
+      "id": "n2",
+      "component": "TFB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.8660254037844385,
+        0.5000000000000003
+      ]
+    },
+    {
+      "id": "n3",
+      "component": "TAB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.8660254037844388,
+        -0.4999999999999997
+      ]
+    },
+    {
+      "id": "n4",
+      "component": "TFB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -1.8369701987210297e-16,
+        -1.0
+      ]
+    },
+    {
+      "id": "n5",
+      "component": "TAB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.8660254037844384,
+        -0.5000000000000004
+      ]
+    },
+    {
+      "id": "n6",
+      "component": "TFB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.8660254037844386,
+        0.5
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "a": {
+        "instance": "n1",
+        "port": 2
+      },
+      "b": {
+        "instance": "n2",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n2",
+        "port": 2
+      },
+      "b": {
+        "instance": "n3",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n3",
+        "port": 2
+      },
+      "b": {
+        "instance": "n4",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n4",
+        "port": 2
+      },
+      "b": {
+        "instance": "n5",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n5",
+        "port": 2
+      },
+      "b": {
+        "instance": "n6",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n6",
+        "port": 2
+      },
+      "b": {
+        "instance": "n1",
+        "port": 1
+      },
+      "bond_order": 2
+    }
+  ],
+  "linkage": "imine",
+  "topology": null,
+  "topology_evidence": null,
+  "topology_basis": "unknown; explicit source-visible local pore connectivity only",
+  "depiction_scope": "One chemical pore and the exact outward cut boundary; no crystal stacking coordinates.",
+  "source_notes": "Figure1 lower right: three TAB and three TFB units; six C=N connections; all six outer arms stop at aromatic stubs. Source and COFex topology unknown.",
+  "review_status": "agent_draft_pending_redraw_comparison",
+  "ground_truth": false,
+  "model_prediction": false,
+  "cofex_source_records": [
+    {
+      "source_row": 1263,
+      "record_id": 1262,
+      "name": "TFB-TAB",
+      "exact_monomer_set": true,
+      "exact_name": true,
+      "cofex_id": "COFEXM-YOZRE7ACVU7MOTKX2M",
+      "cofex_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1.O=Cc1cc(C=O)cc(C=O)c1 COFex.unk.cat0;TFB-TAB",
+      "topology_reported": "",
+      "topology": null,
+      "cofex_full_key": "COFEXF-DVGWFGIY7A7KCNPHLY",
+      "cofex_synth_key": "COFEXY-SCR56C3OZCNBQEWUFW",
+      "cofex_full": "COFex|bb=node:smi[O=Cc1cc(C=O)cc(C=O)c1];node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=eclipsed|chi=achiral|metal=mf|cell0;TFB-TAB",
+      "cofex_synth": "COFex|bb=node:smi[O=Cc1cc(C=O)cc(C=O)c1];node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=eclipsed|chi=achiral|metal=mf|cell0|method=solvothermal|temp=120.0|time=72.0|solv=1-4-dioxane|mod=acetic-acid-(6-m-aq.);TFB-TAB",
+      "sample_label": "",
+      "rxn": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1.O=Cc1cc(C=O)cc(C=O)c1>C1COCCO1.CC(=O)O>Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1.O=Cc1cc(C=O)cc(C=O)c1 COFex.unk.cat0;TFB-TAB",
+      "rxn_key": "RXN-CISMB4M7JPHWPPNDOB",
+      "conditions_from_reference_only": {
+        "modulator_1_name": "acetic acid",
+        "modulator_1_smiles": "CC(=O)O",
+        "modulator_1_abbr": "",
+        "modulator_1_type": "acid",
+        "modulator_1_amount_text": "0.2 mL of 6 M",
+        "modulator_1_amount_mmol": "1.2",
+        "modulator_1_amount_mg": "",
+        "modulator_1_amount_ml": "0.2",
+        "modulator_1_mol_equiv": "",
+        "modulator_2_name": "",
+        "modulator_2_smiles": "",
+        "modulator_2_abbr": "",
+        "modulator_2_type": "",
+        "modulator_2_amount_text": "",
+        "modulator_2_amount_mmol": "",
+        "modulator_2_amount_mg": "",
+        "modulator_2_amount_ml": "",
+        "modulator_2_mol_equiv": "",
+        "solvent_1_name": "1,4-dioxane",
+        "solvent_1_smiles": "C1COCCO1",
+        "solvent_1_volume_text": "4 mL",
+        "solvent_1_volume_ml": "4.0",
+        "solvent_1_volume_mmol": "",
+        "solvent_1_fraction_v_v": "",
+        "solvent_2_name": "",
+        "solvent_2_smiles": "",
+        "solvent_2_volume_text": "",
+        "solvent_2_volume_ml": "",
+        "solvent_2_volume_mmol": "",
+        "solvent_2_fraction_v_v": "",
+        "solvent_3_name": "",
+        "solvent_3_smiles": "",
+        "solvent_3_volume_text": "",
+        "solvent_3_volume_ml": "",
+        "solvent_3_volume_mmol": "",
+        "solvent_3_fraction_v_v": "",
+        "solvent_total_volume_mL": "4.2",
+        "synthesis_method": "solvothermal",
+        "temperature_text": "120 °C (oil bath)",
+        "temp_C": "120.0",
+        "reactiomtime_text": "72 h",
+        "time_h": "72.0",
+        "solvent_stability_24h_water": "",
+        "solvent_stability_24h_acid": "",
+        "solvent_stability_24h_base": ""
+      },
+      "reference_status": "weak_table_record; source_condition_confirmation_separate"
+    }
+  ],
+  "source_confirmed_conditions": {
+    "source_role": "si",
+    "page": 2,
+    "source_sha256": "c6f7ca12e1a7b3b7854a0bba596dc8b6c13dcc3c28434f762e1172d88fb3bd4b",
+    "review": "Independent targeted reading of synthesis paragraph; root full SI review separately logged.",
+    "conditions": {
+      "temperature_C": 120,
+      "time_h": 72,
+      "solvent": "1,4-dioxane",
+      "solvent_volume_mL": 4,
+      "catalyst": "aqueous acetic acid",
+      "catalyst_molarity_M": 6,
+      "catalyst_volume_mL": 0.2,
+      "premix_room_temperature_min": 30,
+      "vessel": "sealed evacuated Pyrex tube",
+      "workup": "filter and THF wash three times; vacuum dry80C12h"
+    },
+    "target_amounts": {
+      "TpPa": {
+        "Tp_mmol": 0.6,
+        "Pa_mmol": 0.9
+      },
+      "TFB-TAB": {
+        "TFB_mmol": 0.6,
+        "TAB_mmol": 0.6,
+        "amount_evidence": "same method and equal molar TFB/TAB as corresponding TpTAB preparation"
+      }
+    }
+  },
+  "reference_snapshot_status": "tp-0001 staged correction; original master not yet overwritten",
+  "stereochemistry_scope": "Connectivity and linkage bond orders audited; depiction conformation is not exact E/Z or stacking supervision.",
+  "portable_provenance": {
+    "upstream_recipe_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3",
+    "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged."
+  }
+}

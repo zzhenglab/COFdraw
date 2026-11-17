@@ -1,0 +1,451 @@
+{
+  "schema_version": "cof-chemical-patch-1",
+  "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+  "cofex_id": "COFEXM-6YYNDORX3H7Z5YA3HT",
+  "title": "TpPa-SO3H / SCOF — source-visible chemical pore",
+  "components": {
+    "tp_triketone": {
+      "fragment_smiles": "O=C1C(=C[*:1])C(=O)C(=C[*:2])C(=O)C1=CN[*:3]",
+      "monomer_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "port_roles": {
+        "1": "exocyclic CH connected to preceding Pa nitrogen",
+        "2": "exocyclic CH connected to following Pa nitrogen",
+        "3": "visible outward NH ends in dashed continuation; missing external Pa fragment"
+      },
+      "tautomer": "cyclohexane-1,3,5-trione with three exocyclic enamine arms",
+      "source_visible_carbonyl_count": 3,
+      "mapped_dummy_ports": [
+        1,
+        2,
+        3
+      ]
+    },
+    "pa_so3h_ortho_previous": {
+      "fragment_smiles": "[*:1]Nc1ccc(N[*:2])cc1S(=O)(=O)O",
+      "monomer_smiles": "Nc1ccc(N)cc1S(=O)(=O)O",
+      "port_roles": {
+        "1": "NH preceding Tp; SO3H ortho to this aryl attachment",
+        "2": "NH following Tp"
+      },
+      "substituent": "neutral SO3H, not sulfonate",
+      "mapped_dummy_ports": [
+        1,
+        2
+      ]
+    },
+    "pa_so3h_ortho_next": {
+      "fragment_smiles": "[*:1]Nc1ccc(N[*:2])c(S(=O)(=O)O)c1",
+      "monomer_smiles": "Nc1ccc(N)cc1S(=O)(=O)O",
+      "port_roles": {
+        "1": "NH preceding Tp",
+        "2": "NH following Tp; SO3H ortho to this aryl attachment"
+      },
+      "substituent": "neutral SO3H, not sulfonate",
+      "mapped_dummy_ports": [
+        1,
+        2
+      ]
+    }
+  },
+  "instances": [
+    {
+      "id": "Tp0",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.3125,
+        -0.171429
+      ],
+      "ring_order": 0
+    },
+    {
+      "id": "Pa0",
+      "component": "pa_so3h_ortho_next",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.495833,
+        -0.15873
+      ],
+      "ring_order": 1
+    },
+    {
+      "id": "Tp1",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.666667,
+        -0.15873
+      ],
+      "ring_order": 2
+    },
+    {
+      "id": "Pa1",
+      "component": "pa_so3h_ortho_previous",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.761111,
+        -0.330159
+      ],
+      "ring_order": 3,
+      "flip_across_attachment_axis": true
+    },
+    {
+      "id": "Tp2",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.852778,
+        -0.514286
+      ],
+      "ring_order": 4
+    },
+    {
+      "id": "Pa2",
+      "component": "pa_so3h_ortho_next",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.766667,
+        -0.666667
+      ],
+      "ring_order": 5,
+      "flip_across_attachment_axis": true
+    },
+    {
+      "id": "Tp3",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.701389,
+        -0.844444
+      ],
+      "ring_order": 6
+    },
+    {
+      "id": "Pa3",
+      "component": "pa_so3h_ortho_next",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.520833,
+        -0.849206
+      ],
+      "ring_order": 7
+    },
+    {
+      "id": "Tp4",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.333333,
+        -0.866667
+      ],
+      "ring_order": 8
+    },
+    {
+      "id": "Pa4",
+      "component": "pa_so3h_ortho_next",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.25,
+        -0.690476
+      ],
+      "ring_order": 9,
+      "flip_across_attachment_axis": true
+    },
+    {
+      "id": "Tp5",
+      "component": "tp_triketone",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.154167,
+        -0.51746
+      ],
+      "ring_order": 10
+    },
+    {
+      "id": "Pa5",
+      "component": "pa_so3h_ortho_previous",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.236111,
+        -0.338095
+      ],
+      "ring_order": 11,
+      "flip_across_attachment_axis": true
+    }
+  ],
+  "connections": [
+    {
+      "a": {
+        "instance": "Tp0",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa0",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa0",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp1",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Tp1",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa1",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa1",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp2",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Tp2",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa2",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa2",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp3",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Tp3",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa3",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa3",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp4",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Tp4",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa4",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa4",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp5",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Tp5",
+        "port": 2
+      },
+      "b": {
+        "instance": "Pa5",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    },
+    {
+      "a": {
+        "instance": "Pa5",
+        "port": 2
+      },
+      "b": {
+        "instance": "Tp0",
+        "port": 1
+      },
+      "bond_order": 1,
+      "source_support": "visible enamine CH-NH single bond; exocyclic C=C retained within Tp template"
+    }
+  ],
+  "topology": null,
+  "topology_basis": "source_visible_local_cycle_only",
+  "topology_evidence": {
+    "reported_net_code": null,
+    "source_status": "unknown",
+    "source_evidence": "Main states AA/eclipsed stacking; no explicit net symbol found.",
+    "local_connectivity_observation": "3-connected Tp and 2-connected Pa linker. Six Tp + six Pa in one witnessed cycle.",
+    "global_topology_inferred": false,
+    "caution": "Degree template and a witnessed cycle do not uniquely identify a periodic net or catenation."
+  },
+  "source": {
+    "file_sha256": "19d578fa3cc71255065d7e40412c928aa01d502d2143724b51780a40a56201f5",
+    "filename": "10.1002_anie.202104106.pdf",
+    "kind": "pdf",
+    "page": 2,
+    "page_count": 6,
+    "bbox": [
+      0.12541993281075028,
+      0.6935866983372921,
+      0.4748040313549832,
+      0.8463974663499604
+    ],
+    "dpi": 360,
+    "width": 1041,
+    "height": 644,
+    "doi": "10.1002/anie.202104106",
+    "document_role": "main",
+    "crop_sha256": "8440319fd97d543210f7d577be444feea3723914a0b5e1c31be09ea20c926237"
+  },
+  "reference": {
+    "source_patch_sha256": "5fa47c2e2e64403c04f367239a40661f8c23eebedabca9ba175a607643f4e674",
+    "source_review": {
+      "manifest_sha256": "26e7cdf6b428bce598a85c066b4bf9b297619d4d94bb137b5c2440357dae229d",
+      "full_source_read_complete": true,
+      "source_role": "main",
+      "text_pages_read": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "page_overview_pages_visually_read": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "full_si_read_complete": false,
+      "scope": "Full main text + every main page overview; selected chemical figures enlarged and graph/box audited. Companion SI targeted only where recorded."
+    },
+    "cofex_identity": {
+      "status": "staged_source_and_monomer_match",
+      "cofex_id": "COFEXM-6YYNDORX3H7Z5YA3HT",
+      "reference_row": 1415,
+      "reference_scope": "Same DOI, source name SCOF, exact audited Tp/Pa-SO3H pair. ID is staged master identity, not a resolved global net."
+    },
+    "ring_roi": {
+      "coordinate_system": "normalized_page",
+      "bbox_pixels_on_1_5x_page": [
+        207,
+        878,
+        423,
+        1067
+      ],
+      "source_page": 2,
+      "detail_sha256": "05a3ae67005d602874f46475f06a9da452e7c48b9069cbe5351684d7282154bd",
+      "detail_size_pixels": [
+        720,
+        630
+      ]
+    }
+  },
+  "review_status": "agent_reviewed",
+  "ground_truth": false,
+  "designed_variant": false,
+  "uncertainties": [
+    "The visible orientation of each SO3H relative to the two linked NH sites is preserved in this finite patch; this is not evidence of a globally ordered SO3H orientation pattern.",
+    "Dashed continuations indicate missing structure; dummy ports are source cuts, not carbon/hydrogen caps.",
+    "This is a connected finite witnessed patch with six open ports, not a whole-COF SMILES or complete periodic crystal graph."
+  ],
+  "observed_cycle": {
+    "node_order": [
+      "Tp0",
+      "Pa0",
+      "Tp1",
+      "Pa1",
+      "Tp2",
+      "Pa2",
+      "Tp3",
+      "Pa3",
+      "Tp4",
+      "Pa4",
+      "Tp5",
+      "Pa5"
+    ],
+    "tp_count": 6,
+    "pa_so3h_count": 6,
+    "intercomponent_linkage_count": 12,
+    "linkage": "beta-ketoenamine",
+    "linkage_direction": "Tp ring C=CH-NH-Pa aromatic carbon",
+    "tautomer_source": "Explicit three C=O and exocyclic C=C at each Tp in Scheme1b; main3 states ketoenamine formation.",
+    "carbonyls": 18,
+    "sulfonic_acids": 6,
+    "neutral_sulfonic_acid_groups": true
+  },
+  "depiction_revision": {
+    "supersedes_sha256": "a04cf57a7d2cbb7a249f0ebfd562686d86783455b7c327f08c1f04f01a926fec",
+    "reason": "Source-visible SO3H inward/outward orientation; per-instance reflection retains constitutional graph and both attachment endpoints. Pa0 and Pa3 unchanged; Pa1, Pa2, Pa4, Pa5 reflected across the para attachment axis. No stereochemistry assigned."
+  },
+  "portable_provenance": {
+    "upstream_recipe_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827",
+    "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged."
+  }
+}

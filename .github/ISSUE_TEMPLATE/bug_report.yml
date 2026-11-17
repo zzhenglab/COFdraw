@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a drawing, export, or desktop problem
+title: "[Bug] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the expected result and the actual result.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the source preset or monomer inputs, template, linkage, style, and export format when relevant. Share only files you can make public.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: COFdraw version and Windows version
+      placeholder: COFdraw 0.3.0, Windows 11 x64
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or log excerpt
+      description: Remove personal paths or confidential data before sharing excerpts from data/cofdraw.log.

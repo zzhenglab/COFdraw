@@ -1,0 +1,4302 @@
+{
+  "catalog_version": "cofdraw-catalog-3.0.0",
+  "created_at_utc": "2026-11-17T16:45:06.666156+00:00",
+  "ground_truth": false,
+  "reviewer_type": "agent",
+  "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
+  "source_registry_sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68",
+  "research_library_sha256": "bace16062326740c8ea6822085c83eb0289613958698f4630e035436b2c81f03",
+  "monomer_presets": [
+    {
+      "id": "tfb",
+      "abbreviation": "TFB",
+      "full_name": "Benzene-1,3,5-tricarbaldehyde",
+      "label": "TFB — Benzene-1,3,5-tricarbaldehyde",
+      "smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+      "canonical_smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+      "formula": "C9H6O3",
+      "literature_names": [
+        "TFB",
+        "1,3,5-triformylbenzene",
+        "BTCA (benzene-1,3,5-tricarbaldehyde)",
+        "Benzene-1,3,5-tricarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/jacs.2c06042"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r099-006",
+          "annotation_file_sha256": "4e7fd907b31851bc53b96528d3138e581fc2027023ca8515d876b004ea657d65",
+          "annotation_line": 6,
+          "source_doi": "10.1021/jacs.2c06042",
+          "source_pdf_sha256": "d9768310205cf0ab5279c606e8ac766834f40a40f71fcf5d3e232c363154469c",
+          "source_page": 9,
+          "source_bbox": [
+            0.18477457274519687,
+            0.3598916834740743,
+            0.251965326470723,
+            0.41334094339596655
+          ],
+          "source_crop_sha256": "1a698a90d14a8fb00410398806512f22e796b02fef74db773f84d78109debe8c",
+          "source_label": "BTCA (benzene-1,3,5-tricarbaldehyde)",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r099-006",
+        "source_doi": "10.1021/jacs.2c06042",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tapb",
+      "abbreviation": "TAPB",
+      "full_name": "1,3,5-Tris(4-aminophenyl)benzene",
+      "label": "TAPB — 1,3,5-Tris(4-aminophenyl)benzene",
+      "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "formula": "C24H21N3",
+      "literature_names": [
+        "TAPB",
+        "TAB",
+        "TPB",
+        "1,3,5-tris(4-aminophenyl)benzene",
+        "1,3,5-Tris(4-aminophenyl)benzene"
+      ],
+      "source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/jacs.0c06468",
+        "10.1021/jacs.4c14535"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r174-001",
+          "annotation_file_sha256": "a6acd2cad0ed068171b516ad07e6c6e10a217f21918f4269bc329bc084b7ff51",
+          "annotation_line": 1,
+          "source_doi": "10.1021/jacs.0c06468",
+          "source_pdf_sha256": "24c9da4990d1b6673592c4c8e5d8b23b953f47cedd50ed2593557460ac5c2750",
+          "source_page": 2,
+          "source_bbox": [
+            0.09433419637063717,
+            0.4008006239240134,
+            0.18547062337277814,
+            0.45334460815795413
+          ],
+          "source_crop_sha256": "e5eafa4bc28bd45dae7f57452e570412c789a6771cc0703ed9751d439d5aa0a6",
+          "source_label": "TAPB",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r174-001",
+        "source_doi": "10.1021/jacs.0c06468",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tp",
+      "abbreviation": "Tp",
+      "full_name": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+      "label": "Tp — 2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+      "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "formula": "C9H6O6",
+      "literature_names": [
+        "Tp",
+        "triformylphloroglucinol",
+        "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (Tp)",
+        "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)"
+      ],
+      "source_dois": [
+        "10.1002/anie.202104106",
+        "10.1021/acsami.5c01437",
+        "10.1021/acscatal.3c03857"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r089-004",
+          "annotation_file_sha256": "0deb3659d33d9029e7aae8be77e87019893b2c057efbd103e0da441325cc8738",
+          "annotation_line": 4,
+          "source_doi": "10.1021/acsami.5c01437",
+          "source_pdf_sha256": "1e632860f5f11c282d144a0918d1b073df98f77e42869aed4a021d3ebb8022c8",
+          "source_page": 2,
+          "source_bbox": [
+            0.7601613963363241,
+            0.19286463908099724,
+            0.8221952188419469,
+            0.23810583331359778
+          ],
+          "source_crop_sha256": "809cc35673a68fdea20f535178d5a666036efd04142d4d1f50677abb505ade18",
+          "source_label": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (Tp)",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 3
+        },
+        {
+          "kind": "tp_trialdehyde",
+          "label": "Exact Tp keto-tautomer scaffold",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "tp_trialdehyde"
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "tp_trialdehyde"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Hydroxy-aldehyde tautomer outcomes require explicit linkage selection; ordinary imine design is not automatically the reported final product."
+      ],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r089-004",
+        "source_doi": "10.1021/acsami.5c01437",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pa",
+      "abbreviation": "Pa",
+      "full_name": "Benzene-1,4-diamine (p-phenylenediamine)",
+      "label": "Pa — Benzene-1,4-diamine (p-phenylenediamine)",
+      "smiles": "Nc1ccc(N)cc1",
+      "canonical_smiles": "Nc1ccc(N)cc1",
+      "formula": "C6H8N2",
+      "literature_names": [
+        "Pa",
+        "p-phenylenediamine",
+        "1,4-diaminobenzene",
+        "Benzene-1,4-diamine (p-phenylenediamine)"
+      ],
+      "source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r187-002",
+          "annotation_file_sha256": "fec7baedefe43e6ed8372a811d124c553ae39e5530dfd2c66e308effabb96a48",
+          "annotation_line": 2,
+          "source_doi": "10.1021/acsmacrolett.6b00805",
+          "source_pdf_sha256": "7ce742370287642244af020356150f4964acff4a3597e1ef1b0ee80b61c3ccfc",
+          "source_page": 2,
+          "source_bbox": [
+            0.5398665457288925,
+            0.21725907450230142,
+            0.594735928053312,
+            0.23162723578502292
+          ],
+          "source_crop_sha256": "b4c1c3f7f546fb2de3d943daffbaf8acdd0fbd7a4c62fce9247d111075514a5e",
+          "source_label": "1,4-diaminobenzene",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r187-002",
+        "source_doi": "10.1021/acsmacrolett.6b00805",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "dmtp",
+      "abbreviation": "DMTA",
+      "full_name": "2,5-Dimethoxybenzene-1,4-dicarbaldehyde",
+      "label": "DMTA — 2,5-Dimethoxybenzene-1,4-dicarbaldehyde",
+      "smiles": "COc1cc(C=O)c(OC)cc1C=O",
+      "canonical_smiles": "COc1cc(C=O)c(OC)cc1C=O",
+      "formula": "C10H10O4",
+      "literature_names": [
+        "DMTA",
+        "DMTP",
+        "2,5-dimethoxyterephthalaldehyde",
+        "2,5-Dimethoxybenzene-1,4-dicarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acssuschemeng.4c04003",
+        "10.1021/jacs.4c14535"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r568-si-1-M1",
+          "annotation_file_sha256": "97bb32fad6a69d99d12f155784ce6c15d7220be76838d80e09c5b8faa658d1c7",
+          "annotation_line": 1,
+          "source_doi": "10.1021/acssuschemeng.4c04003",
+          "source_pdf_sha256": "d99a1bf89752eafcc8b9b1ddd109239a954ef18e6194300438e5f0c3eb7fa00e",
+          "source_page": 3,
+          "source_bbox": [
+            0.2508169934640523,
+            0.22285353535353536,
+            0.3084150326797386,
+            0.26452020202020204
+          ],
+          "source_crop_sha256": "4c27e4c59c02c628835e4c9cb2c208a8c5fb3ab588933c285c0c0058df2dac88",
+          "source_label": "DMTP",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r568-si-1-M1",
+        "source_doi": "10.1021/acssuschemeng.4c04003",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pa_so3h",
+      "abbreviation": "Pa-SO3H",
+      "full_name": "2,5-Diaminobenzenesulfonic acid",
+      "label": "Pa-SO3H — 2,5-Diaminobenzenesulfonic acid",
+      "smiles": "Nc1ccc(N)c(S(=O)(=O)O)c1",
+      "canonical_smiles": "Nc1ccc(N)c(S(=O)(=O)O)c1",
+      "formula": "C6H8N2O3S",
+      "literature_names": [
+        "Pa-SO3H",
+        "2,5-diaminobenzenesulfonic acid",
+        "2,5-Diaminobenzenesulfonic acid"
+      ],
+      "source_dois": [
+        "10.1002/anie.202104106",
+        "10.1002/smll.202508217"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r197-01",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 168,
+          "source_doi": "10.1002/smll.202508217",
+          "source_pdf_sha256": "ab8c2860b77de0efbc2fd7fd7662291dfdefed17677c2a3b1c35cbb822d26da4",
+          "source_page": 2,
+          "source_bbox": [
+            0.20716685330347145,
+            0.282793867120954,
+            0.24748040313549832,
+            0.3126064735945486
+          ],
+          "source_crop_sha256": "580c767887910fdc5e4a72936e6dbe65365757dc962167b50b4a2fed3f5d1bf7",
+          "source_label": "Pa-SO3H",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r197-01",
+        "source_doi": "10.1002/smll.202508217",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "ta",
+      "abbreviation": "TA",
+      "full_name": "Benzene-1,4-dicarbaldehyde (terephthalaldehyde)",
+      "label": "TA — Benzene-1,4-dicarbaldehyde (terephthalaldehyde)",
+      "smiles": "O=Cc1ccc(C=O)cc1",
+      "canonical_smiles": "O=Cc1ccc(C=O)cc1",
+      "formula": "C8H6O2",
+      "literature_names": [
+        "TA",
+        "PDA terephthalaldehyde",
+        "Benzene-1,4-dicarbaldehyde (terephthalaldehyde)"
+      ],
+      "source_dois": [
+        "10.1021/jacs.3c10312"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-001-006",
+          "annotation_file_sha256": "0920ae7f2bddd522b5b845992168716da9268ff2bf36c1331cad094aa326f38d",
+          "annotation_line": 6,
+          "source_doi": "10.1021/jacs.3c10312",
+          "source_pdf_sha256": "5209376b987e617ef3acfda1b22921f350c7d8ed89e4df3738e1813ac0e7146d",
+          "source_page": 2,
+          "source_bbox": [
+            0.2911534154535274,
+            0.2209026128266033,
+            0.3202687569988802,
+            0.25494853523357086
+          ],
+          "source_crop_sha256": "1e65991c9822d0e164c6115d6178929bb819f490fd27b356c49a0af14271f9c2",
+          "source_label": "PDA terephthalaldehyde",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-001-006",
+        "source_doi": "10.1021/jacs.3c10312",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfta",
+      "abbreviation": "TFTA",
+      "full_name": "2,3,5,6-Tetrafluorobenzene-1,4-dicarbaldehyde",
+      "label": "TFTA — 2,3,5,6-Tetrafluorobenzene-1,4-dicarbaldehyde",
+      "smiles": "O=Cc1c(F)c(F)c(C=O)c(F)c1F",
+      "canonical_smiles": "O=Cc1c(F)c(F)c(C=O)c(F)c1F",
+      "formula": "C8H2F4O2",
+      "literature_names": [
+        "TFTA",
+        "TFTA tetrafluoroterephthalaldehyde",
+        "2,3,5,6-Tetrafluorobenzene-1,4-dicarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/jacs.3c10312"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-001-007",
+          "annotation_file_sha256": "0920ae7f2bddd522b5b845992168716da9268ff2bf36c1331cad094aa326f38d",
+          "annotation_line": 7,
+          "source_doi": "10.1021/jacs.3c10312",
+          "source_pdf_sha256": "5209376b987e617ef3acfda1b22921f350c7d8ed89e4df3738e1813ac0e7146d",
+          "source_page": 2,
+          "source_bbox": [
+            0.2810750279955207,
+            0.40459224069675376,
+            0.3281075027995521,
+            0.442596991290578
+          ],
+          "source_crop_sha256": "f949fe06d2a3cdd3f07158976b4de515b894e6640bf98ae1baea87136651fc94",
+          "source_label": "TFTA tetrafluoroterephthalaldehyde",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-001-007",
+        "source_doi": "10.1021/jacs.3c10312",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "dhta",
+      "abbreviation": "DHTA",
+      "full_name": "2,5-Dihydroxybenzene-1,4-dicarbaldehyde",
+      "label": "DHTA — 2,5-Dihydroxybenzene-1,4-dicarbaldehyde",
+      "smiles": "O=Cc1cc(O)c(C=O)cc1O",
+      "canonical_smiles": "O=Cc1cc(O)c(C=O)cc1O",
+      "formula": "C8H6O4",
+      "literature_names": [
+        "DHTA",
+        "DA dihydroxyterephthalaldehyde",
+        "2,5-Dihydroxybenzene-1,4-dicarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acsmaterialslett.4c01665"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-007-029",
+          "annotation_file_sha256": "60d2901320df14f92e1f16f9b41582b808629b99aca96a3bd384850d79fc3951",
+          "annotation_line": 29,
+          "source_doi": "10.1021/acsmaterialslett.4c01665",
+          "source_pdf_sha256": "fa9fdfe95049ea5bcf5560b4bda58b6da50c38b5e7247908a5d0a19d5a293c2a",
+          "source_page": 2,
+          "source_bbox": [
+            0.7664473684210527,
+            0.23627287853577372,
+            0.819078947368421,
+            0.27703826955074873
+          ],
+          "source_crop_sha256": "ba84e73dfbeca78eeea8f3ffcd325f96047a9eecbfe23709cbec66d69d7d9ab6",
+          "source_label": "DA dihydroxyterephthalaldehyde",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Hydroxy-aldehyde tautomer outcomes require explicit linkage selection; ordinary imine design is not automatically the reported final product."
+      ],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-007-029",
+        "source_doi": "10.1021/acsmaterialslett.4c01665",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "bpda_cho",
+      "abbreviation": "BPDA-CHO",
+      "full_name": "Biphenyl-4,4′-dicarbaldehyde",
+      "label": "BPDA-CHO — Biphenyl-4,4′-dicarbaldehyde",
+      "smiles": "O=Cc1ccc(-c2ccc(C=O)cc2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(C=O)cc2)cc1",
+      "formula": "C14H10O2",
+      "literature_names": [
+        "BPDA-CHO",
+        "biphenyl-4,4-dicarbaldehyde",
+        "Biphenyl-4,4′-dicarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/jacs.9b09502"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-014-018",
+          "annotation_file_sha256": "481068ca63960ab8677bf9f7dd8c2d351515c59e32ba76587635a33a53784992",
+          "annotation_line": 18,
+          "source_doi": "10.1021/jacs.9b09502",
+          "source_pdf_sha256": "8f0feca5efb918c68fa631030036439fdd046b84e5d7fd57ddfead3c2c0a5a9e",
+          "source_page": 2,
+          "source_bbox": [
+            0.24494142705005326,
+            0.11970684039087948,
+            0.2779552715654952,
+            0.18566775244299674
+          ],
+          "source_crop_sha256": "985187e73b7fdd96a4fd6137dbb49631e7375e91ca5fdb52185cb4902332e653",
+          "source_label": "biphenyl-4,4-dicarbaldehyde",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-014-018",
+        "source_doi": "10.1021/jacs.9b09502",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfpb",
+      "abbreviation": "TFPB",
+      "full_name": "1,3,5-Tris(4-formylphenyl)benzene",
+      "label": "TFPB — 1,3,5-Tris(4-formylphenyl)benzene",
+      "smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)cc(-c3ccc(C=O)cc3)c2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)cc(-c3ccc(C=O)cc3)c2)cc1",
+      "formula": "C27H18O3",
+      "literature_names": [
+        "TFPB",
+        "1,3,5-Tris(4-formylphenyl)benzene"
+      ],
+      "source_dois": [
+        "10.1021/ja204728y"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r511-main1-tfpb",
+          "annotation_file_sha256": "0bd62c330f858d4503356bb0c1994579ae463b7268662a3b04bcfadc89f2bd17",
+          "annotation_line": 4,
+          "source_doi": "10.1021/ja204728y",
+          "source_pdf_sha256": "0eca9394d3970124bd8e4e03ce5016143bb39cd08bbdb9a3cdd1a0a31f2fac52",
+          "source_page": 1,
+          "source_bbox": [
+            0.6321944843396247,
+            0.5743531340816259,
+            0.7112187948820778,
+            0.6342856350292738
+          ],
+          "source_crop_sha256": "74a1b2ac75da80e90765be5ae1589b73f169092cd3cfe9e1fe2fdf4a1888e3ec",
+          "source_label": "TFPB",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r511-main1-tfpb",
+        "source_doi": "10.1021/ja204728y",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfpt",
+      "abbreviation": "TFPT",
+      "full_name": "2,4,6-Tris(4-formylphenyl)-1,3,5-triazine",
+      "label": "TFPT — 2,4,6-Tris(4-formylphenyl)-1,3,5-triazine",
+      "smiles": "O=Cc1ccc(-c2nc(-c3ccc(C=O)cc3)nc(-c3ccc(C=O)cc3)n2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2nc(-c3ccc(C=O)cc3)nc(-c3ccc(C=O)cc3)n2)cc1",
+      "formula": "C24H15N3O3",
+      "literature_names": [
+        "TFPT",
+        "2,4,6-Tris(4-formylphenyl)-1,3,5-triazine"
+      ],
+      "source_dois": [
+        "10.1021/acssuschemeng.4c04144"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-008-021",
+          "annotation_file_sha256": "c310b29c2eaa8fa69fcf7aed44b1ed39fc8791c9af9a73ffec7c79a1af84f139",
+          "annotation_line": 21,
+          "source_doi": "10.1021/acssuschemeng.4c04144",
+          "source_pdf_sha256": "98db4493f1a64f24bceaa5081009872f6193d3ebc1d8f273e8f3c0213d0ea837",
+          "source_page": 2,
+          "source_bbox": [
+            0.6008771929824561,
+            0.2737104825291181,
+            0.7072368421052632,
+            0.35108153078202997
+          ],
+          "source_crop_sha256": "2d27784f2a993629f807e49a8900277aef16f10ccb78b941114dbced46f0bd65",
+          "source_label": "TFPT",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Triazine-centred TFPT, not a terpyridine or aryloxy-triazine molecule sharing the abbreviation."
+      ],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-008-021",
+        "source_doi": "10.1021/acssuschemeng.4c04144",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfpm",
+      "abbreviation": "TFPM",
+      "full_name": "Tetrakis(4-formylphenyl)methane",
+      "label": "TFPM — Tetrakis(4-formylphenyl)methane",
+      "smiles": "O=Cc1ccc(C(c2ccc(C=O)cc2)(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1",
+      "canonical_smiles": "O=Cc1ccc(C(c2ccc(C=O)cc2)(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1",
+      "formula": "C29H20O4",
+      "literature_names": [
+        "TFPM",
+        "tetrakis(4-formylphenyl)methane",
+        "Tetrakis(4-formylphenyl)methane"
+      ],
+      "source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r048-02",
+          "annotation_file_sha256": "088d8931328b8dd9b0f0a16399d1dba3e7898ee7c17a144b4d7ef4eea97bf024",
+          "annotation_line": 2,
+          "source_doi": "10.1039/d0gc02670k",
+          "source_pdf_sha256": "0b2e19f5a687f2a367a059641e4f98e77274d1151b1019d6e67b0cb68c115b4c",
+          "source_page": 2,
+          "source_bbox": [
+            0.35516372795969775,
+            0.0949326491340603,
+            0.47439126784214947,
+            0.17190506735086594
+          ],
+          "source_crop_sha256": "be9661586dc11b667071ef14f01d80a87a1462f1958a0fe310071ad307e3ebea",
+          "source_label": "TFPM",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Nonplanar building block; a 2D patch does not establish the three-dimensional net or stereochemistry."
+      ],
+      "geometry_hint": "tetrahedral",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r048-02",
+        "source_doi": "10.1039/d0gc02670k",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfppy",
+      "abbreviation": "TFPPy",
+      "full_name": "1,3,6,8-Tetrakis(4-formylphenyl)pyrene",
+      "label": "TFPPy — 1,3,6,8-Tetrakis(4-formylphenyl)pyrene",
+      "smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c54)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c54)cc1",
+      "formula": "C44H26O4",
+      "literature_names": [
+        "TFPPy",
+        "1,3,6,8-Tetrakis(4-formylphenyl)pyrene"
+      ],
+      "source_dois": [
+        "10.1002/anie.201902543"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r251-05",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 311,
+          "source_doi": "10.1002/anie.201902543",
+          "source_pdf_sha256": "f29fe3e5c1a610ab4cee1b07ae0622b7d140e4ac38c04c375932a06bd88af96c",
+          "source_page": 15,
+          "source_bbox": [
+            0.15565509518477044,
+            0.08867775138558986,
+            0.3169092945128779,
+            0.1749802058590657
+          ],
+          "source_crop_sha256": "8db85c5f7d57087abc160b7e4fdd17c7030e7b4803273f1c15353afb9beef1c7",
+          "source_label": "TFPPy",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_tetratopic",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r251-05",
+        "source_doi": "10.1002/anie.201902543",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "por_cho",
+      "abbreviation": "Por-CHO",
+      "full_name": "5,10,15,20-Tetrakis(4-formylphenyl)porphyrin, free base",
+      "label": "Por-CHO — 5,10,15,20-Tetrakis(4-formylphenyl)porphyrin, free base",
+      "smiles": "O=Cc1ccc(-c2c3nc(c(-c4ccc(C=O)cc4)c4ccc([nH]4)c(-c4ccc(C=O)cc4)c4nc(c(-c5ccc(C=O)cc5)c5ccc2[nH]5)C=C4)C=C3)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2c3nc(c(-c4ccc(C=O)cc4)c4ccc([nH]4)c(-c4ccc(C=O)cc4)c4nc(c(-c5ccc(C=O)cc5)c5ccc2[nH]5)C=C4)C=C3)cc1",
+      "formula": "C48H30N4O4",
+      "literature_names": [
+        "Por-CHO",
+        "Por-CHO: tetrakis(4-formylphenyl)porphyrin",
+        "5,10,15,20-Tetrakis(4-formylphenyl)porphyrin, free base"
+      ],
+      "source_dois": [
+        "10.1002/anie.202207130"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r246-01",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 283,
+          "source_doi": "10.1002/anie.202207130",
+          "source_pdf_sha256": "7e11650024b011b4aa4f36845e25fa3cb833718d0d41e655e1f23609182e9750",
+          "source_page": 2,
+          "source_bbox": [
+            0.1019036954087346,
+            0.3143309580364212,
+            0.2945128779395297,
+            0.42992874109263657
+          ],
+          "source_crop_sha256": "c374c4f58f3e28223d333c21d153310845bdce478273029ce203299af2faa43c",
+          "source_label": "Por-CHO: tetrakis(4-formylphenyl)porphyrin",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_tetratopic",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r246-01",
+        "source_doi": "10.1002/anie.202207130",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "hfptp_h",
+      "abbreviation": "HFPTP-H",
+      "full_name": "2,3,6,7,14,15-Hexakis(4-formylphenyl)triptycene",
+      "label": "HFPTP-H — 2,3,6,7,14,15-Hexakis(4-formylphenyl)triptycene",
+      "smiles": "O=Cc1ccc(-c2cc3c(cc2-c2ccc(C=O)cc2)C2c4cc(-c5ccc(C=O)cc5)c(-c5ccc(C=O)cc5)cc4C3c3cc(-c4ccc(C=O)cc4)c(-c4ccc(C=O)cc4)cc32)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2cc3c(cc2-c2ccc(C=O)cc2)C2c4cc(-c5ccc(C=O)cc5)c(-c5ccc(C=O)cc5)cc4C3c3cc(-c4ccc(C=O)cc4)c(-c4ccc(C=O)cc4)cc32)cc1",
+      "formula": "C62H38O6",
+      "literature_names": [
+        "HFPTP-H",
+        "2,3,6,7,14,15-Hexakis(4-formylphenyl)triptycene"
+      ],
+      "source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r255-04",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 339,
+          "source_doi": "10.1002/anie.202117101",
+          "source_pdf_sha256": "cadac8819891a8bb5bae88bfc1745855dc0a7fb9cd29c0acd3e9eab09d82cc94",
+          "source_page": 4,
+          "source_bbox": [
+            0.5184770436730123,
+            0.55027711797308,
+            0.8297872340425532,
+            0.7323832145684878
+          ],
+          "source_crop_sha256": "e70db02bc536d0c5359d1234e4393247b07f7f9b03f7474f9bfe59d08168073c",
+          "source_label": "HFPTP-H",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 6
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 6,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Nonplanar building block; a 2D patch does not establish the three-dimensional net or stereochemistry."
+      ],
+      "geometry_hint": "unknown",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r255-04",
+        "source_doi": "10.1002/anie.202117101",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Nonplanar six-site triptycene cage. No planar hexagonal-node hint; source hea applies to its reported material only, not any new pairing."
+      }
+    },
+    {
+      "id": "hfptp_f",
+      "abbreviation": "HFPTP-F",
+      "full_name": "2,3,6,7,14,15-Hexakis(3-fluoro-4-formylphenyl)triptycene",
+      "label": "HFPTP-F — 2,3,6,7,14,15-Hexakis(3-fluoro-4-formylphenyl)triptycene",
+      "smiles": "O=Cc1ccc(-c2cc3c(cc2-c2ccc(C=O)c(F)c2)C2c4cc(-c5ccc(C=O)c(F)c5)c(-c5ccc(C=O)c(F)c5)cc4C3c3cc(-c4ccc(C=O)c(F)c4)c(-c4ccc(C=O)c(F)c4)cc32)cc1F",
+      "canonical_smiles": "O=Cc1ccc(-c2cc3c(cc2-c2ccc(C=O)c(F)c2)C2c4cc(-c5ccc(C=O)c(F)c5)c(-c5ccc(C=O)c(F)c5)cc4C3c3cc(-c4ccc(C=O)c(F)c4)c(-c4ccc(C=O)c(F)c4)cc32)cc1F",
+      "formula": "C62H32F6O6",
+      "literature_names": [
+        "HFPTP-F",
+        "2,3,6,7,14,15-Hexakis(3-fluoro-4-formylphenyl)triptycene"
+      ],
+      "source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r255-06",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 341,
+          "source_doi": "10.1002/anie.202117101",
+          "source_pdf_sha256": "cadac8819891a8bb5bae88bfc1745855dc0a7fb9cd29c0acd3e9eab09d82cc94",
+          "source_page": 5,
+          "source_bbox": [
+            0.5173572228443449,
+            0.3285827395091053,
+            0.8297872340425532,
+            0.5114806017418844
+          ],
+          "source_crop_sha256": "3dc73694fc4f095fc2d564f6997a6c403757a7048f94f17236d42a657cc282d2",
+          "source_label": "HFPTP-F",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "aryl aldehyde",
+          "count": 6
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde"
+        }
+      ],
+      "connection_count": 6,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Nonplanar building block; a 2D patch does not establish the three-dimensional net or stereochemistry."
+      ],
+      "geometry_hint": "unknown",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r255-06",
+        "source_doi": "10.1002/anie.202117101",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Nonplanar six-site triptycene cage. No planar hexagonal-node hint; source hea applies to its reported material only, not any new pairing."
+      }
+    },
+    {
+      "id": "tapt",
+      "abbreviation": "TAPT",
+      "full_name": "2,4,6-Tris(4-aminophenyl)-1,3,5-triazine",
+      "label": "TAPT — 2,4,6-Tris(4-aminophenyl)-1,3,5-triazine",
+      "smiles": "Nc1ccc(-c2nc(-c3ccc(N)cc3)nc(-c3ccc(N)cc3)n2)cc1",
+      "canonical_smiles": "Nc1ccc(-c2nc(-c3ccc(N)cc3)nc(-c3ccc(N)cc3)n2)cc1",
+      "formula": "C21H18N6",
+      "literature_names": [
+        "TAPT",
+        "2,4,6-Tris(4-aminophenyl)-1,3,5-triazine"
+      ],
+      "source_dois": [
+        "10.1021/acsmaterialslett.2c00669"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r510-m19-si22-tapt",
+          "annotation_file_sha256": "2f209dd0430de272112e58a8deaaf8de5a4bbfbe9c90330b93214e5d8a36a5a4",
+          "annotation_line": 19,
+          "source_doi": "10.1021/acsmaterialslett.2c00669",
+          "source_pdf_sha256": "0d6c0a9f7e48c2cf9db04ba048cb1a5b888406263d0a6c0e3e6f73f4e0c63ebd",
+          "source_page": 22,
+          "source_bbox": [
+            0.13071895424836602,
+            0.12626262626262627,
+            0.29411764705882354,
+            0.2588383838383838
+          ],
+          "source_crop_sha256": "a24790264ea4f3d3c187cbe1312f5e85ce16ee105f0cabfc0d6447c4ac39720d",
+          "source_label": "TAPT",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r510-m19-si22-tapt",
+        "source_doi": "10.1021/acsmaterialslett.2c00669",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tapa",
+      "abbreviation": "TAPA",
+      "full_name": "Tris(4-aminophenyl)amine",
+      "label": "TAPA — Tris(4-aminophenyl)amine",
+      "smiles": "Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "formula": "C18H18N4",
+      "literature_names": [
+        "TAPA",
+        "Tris(4-aminophenyl)amine"
+      ],
+      "source_dois": [
+        "10.1021/acs.nanolett.1c02050"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-009-019",
+          "annotation_file_sha256": "dfef50bde5c644f90afe325c19a4b6c043c799fcd72726f38891b278f73ee1e3",
+          "annotation_line": 19,
+          "source_doi": "10.1021/acs.nanolett.1c02050",
+          "source_pdf_sha256": "a15d51021235059dbbf762751448a2089a9acf03b0eeadfee2a94fc1166b0385",
+          "source_page": 2,
+          "source_bbox": [
+            0.2268370607028754,
+            0.40879478827361565,
+            0.3365282215122471,
+            0.4723127035830619
+          ],
+          "source_crop_sha256": "f339e55c43d58a12f9539525aeb93f52359914494d37aac1e618b7f3c3e094ae",
+          "source_label": "TAPA",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-009-019",
+        "source_doi": "10.1021/acs.nanolett.1c02050",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tapm",
+      "abbreviation": "TAPM",
+      "full_name": "Tetrakis(4-aminophenyl)methane",
+      "label": "TAPM — Tetrakis(4-aminophenyl)methane",
+      "smiles": "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "formula": "C25H24N4",
+      "literature_names": [
+        "TAPM",
+        "TAPM tetra(4-aminophenyl)methane",
+        "Tetrakis(4-aminophenyl)methane"
+      ],
+      "source_dois": [
+        "10.1021/jacs.0c12505"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-001-004",
+          "annotation_file_sha256": "0920ae7f2bddd522b5b845992168716da9268ff2bf36c1331cad094aa326f38d",
+          "annotation_line": 4,
+          "source_doi": "10.1021/jacs.0c12505",
+          "source_pdf_sha256": "a998cdc09360266aff44843e27293587b74501f11fcebe0c1cab11d44c166587",
+          "source_page": 3,
+          "source_bbox": [
+            0.15789473684210525,
+            0.25494853523357086,
+            0.2967525195968645,
+            0.33729216152019004
+          ],
+          "source_crop_sha256": "e7d858121e33eb67b6eacc644c15aa524079721bef4e68afc4c70492963e0431",
+          "source_label": "TAPM tetra(4-aminophenyl)methane",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Nonplanar building block; a 2D patch does not establish the three-dimensional net or stereochemistry."
+      ],
+      "geometry_hint": "tetrahedral",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-001-004",
+        "source_doi": "10.1021/jacs.0c12505",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pytta",
+      "abbreviation": "PyTTA",
+      "full_name": "1,3,6,8-Tetrakis(4-aminophenyl)pyrene",
+      "label": "PyTTA — 1,3,6,8-Tetrakis(4-aminophenyl)pyrene",
+      "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(N)cc5)c5ccc2c3c54)cc1",
+      "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(N)cc5)c5ccc2c3c54)cc1",
+      "formula": "C40H30N4",
+      "literature_names": [
+        "PyTTA",
+        "1,3,6,8-Tetrakis(4-aminophenyl)pyrene"
+      ],
+      "source_dois": [
+        "10.1002/chem.202303556"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r122-01",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 97,
+          "source_doi": "10.1002/chem.202303556",
+          "source_pdf_sha256": "b49749be73c5508b1dfaab88a010bc3de3509786d3728e25392c3820202de94e",
+          "source_page": 4,
+          "source_bbox": [
+            0.1534154535274356,
+            0.19714964370546317,
+            0.2721164613661814,
+            0.2684085510688836
+          ],
+          "source_crop_sha256": "ec62d74dd28e59b1782e8de649ea2ed18dc70e84b7814b493c6df0277ac6654d",
+          "source_label": "PyTTA",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_tetratopic",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r122-01",
+        "source_doi": "10.1002/chem.202303556",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tfappm",
+      "abbreviation": "TFAPPM",
+      "full_name": "Tetrakis[4-(4-amino-2-fluorophenyl)phenyl]methane",
+      "label": "TFAPPM — Tetrakis[4-(4-amino-2-fluorophenyl)phenyl]methane",
+      "smiles": "Nc1ccc(-c2ccc(C(c3ccc(-c4ccc(N)cc4F)cc3)(c3ccc(-c4ccc(N)cc4F)cc3)c3ccc(-c4ccc(N)cc4F)cc3)cc2)c(F)c1",
+      "canonical_smiles": "Nc1ccc(-c2ccc(C(c3ccc(-c4ccc(N)cc4F)cc3)(c3ccc(-c4ccc(N)cc4F)cc3)c3ccc(-c4ccc(N)cc4F)cc3)cc2)c(F)c1",
+      "formula": "C49H36F4N4",
+      "literature_names": [
+        "TFAPPM",
+        "Tetrakis[4-(4-amino-2-fluorophenyl)phenyl]methane"
+      ],
+      "source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r255-09",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 344,
+          "source_doi": "10.1002/anie.202117101",
+          "source_pdf_sha256": "cadac8819891a8bb5bae88bfc1745855dc0a7fb9cd29c0acd3e9eab09d82cc94",
+          "source_page": 6,
+          "source_bbox": [
+            0.5263157894736842,
+            0.11955661124307206,
+            0.8297872340425532,
+            0.32304038004750596
+          ],
+          "source_crop_sha256": "8f0e36411f96dc9e9ea905addda839d7f3f5dd3a707ce4895321b6edcd284afa",
+          "source_label": "TFAPPM",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 4,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Nonplanar building block; a 2D patch does not establish the three-dimensional net or stereochemistry."
+      ],
+      "geometry_hint": "tetrahedral",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r255-09",
+        "source_doi": "10.1002/anie.202117101",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "benzidine",
+      "abbreviation": "BD",
+      "full_name": "Biphenyl-4,4′-diamine (benzidine)",
+      "label": "BD — Biphenyl-4,4′-diamine (benzidine)",
+      "smiles": "Nc1ccc(-c2ccc(N)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(-c2ccc(N)cc2)cc1",
+      "formula": "C12H12N2",
+      "literature_names": [
+        "BD",
+        "DAB benzidine",
+        "Biphenyl-4,4′-diamine (benzidine)"
+      ],
+      "source_dois": [
+        "10.1021/acsaem.1c00807"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-004-015",
+          "annotation_file_sha256": "6c0f6a5be6762f1718a1935824d168871e52f2b4141f173aece32132dffd4cdb",
+          "annotation_line": 15,
+          "source_doi": "10.1021/acsaem.1c00807",
+          "source_pdf_sha256": "e8db03a542ac08b35d4a57eb9976ef88c2e50ec50c186fa559b0be4c19bd8b5c",
+          "source_page": 2,
+          "source_bbox": [
+            0.23068309070548712,
+            0.12193190815518606,
+            0.2765957446808511,
+            0.22644497228820268
+          ],
+          "source_crop_sha256": "c48d7cbd801a3f7b2890d91a68ff75256979f34784906f6cd8b7e46870d92298",
+          "source_label": "DAB benzidine",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-004-015",
+        "source_doi": "10.1021/acsaem.1c00807",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "bpy55",
+      "abbreviation": "Bpy-55",
+      "full_name": "2,2′-Bipyridine-5,5′-diamine",
+      "label": "Bpy-55 — 2,2′-Bipyridine-5,5′-diamine",
+      "smiles": "Nc1ccc(-c2ccc(N)cn2)nc1",
+      "canonical_smiles": "Nc1ccc(-c2ccc(N)cn2)nc1",
+      "formula": "C10H10N4",
+      "literature_names": [
+        "Bpy-55",
+        "Bpy: 2,2-bipyridine-5,5-diamine",
+        "2,2′-Bipyridine-5,5′-diamine"
+      ],
+      "source_dois": [
+        "10.1002/anie.202319876"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r241-04",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 281,
+          "source_doi": "10.1002/anie.202319876",
+          "source_pdf_sha256": "8d6233d27d0975324c5ea2917f252ab4ab45bc2a43b70908e66594a63ff4f4cd",
+          "source_page": 8,
+          "source_bbox": [
+            0.12206047032474804,
+            0.13539192399049882,
+            0.26539753639417696,
+            0.16389548693586697
+          ],
+          "source_crop_sha256": "dba3f169125a68448f49e86f4b38cca114255b408e3f5fe60b161c3829815369",
+          "source_label": "Bpy: 2,2-bipyridine-5,5-diamine",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "This is the5,5′ isomer; do not merge with4,4′-diamino-2,2′-bipyridine."
+      ],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r241-04",
+        "source_doi": "10.1002/anie.202319876",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "azoda",
+      "abbreviation": "Azo",
+      "full_name": "4,4′-Diaminoazobenzene, depicted E azo bond",
+      "label": "Azo — 4,4′-Diaminoazobenzene, depicted E azo bond",
+      "smiles": "Nc1ccc(/N=N/c2ccc(N)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(/N=N/c2ccc(N)cc2)cc1",
+      "formula": "C12H12N4",
+      "literature_names": [
+        "Azo",
+        "4,4-prime-azodianiline",
+        "4,4′-Diaminoazobenzene, depicted E azo bond"
+      ],
+      "source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r048-03",
+          "annotation_file_sha256": "088d8931328b8dd9b0f0a16399d1dba3e7898ee7c17a144b4d7ef4eea97bf024",
+          "annotation_line": 3,
+          "source_doi": "10.1039/d0gc02670k",
+          "source_pdf_sha256": "0b2e19f5a687f2a367a059641e4f98e77274d1151b1019d6e67b0cb68c115b4c",
+          "source_page": 3,
+          "source_bbox": [
+            0.6607892527287993,
+            0.07312379730596537,
+            0.7027707808564232,
+            0.1404746632456703
+          ],
+          "source_crop_sha256": "ccb0a4a20887f2c28e62d1cf768bedbc8f4a57055fd343405bdf14e5dd90365a",
+          "source_label": "Azo",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r048-03",
+        "source_doi": "10.1039/d0gc02670k",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pame2",
+      "abbreviation": "Pa-Me2",
+      "full_name": "2,5-Dimethylbenzene-1,4-diamine",
+      "label": "Pa-Me2 — 2,5-Dimethylbenzene-1,4-diamine",
+      "smiles": "Cc1cc(N)c(C)cc1N",
+      "canonical_smiles": "Cc1cc(N)c(C)cc1N",
+      "formula": "C8H12N2",
+      "literature_names": [
+        "Pa-Me2",
+        "2,5-dimethyl-1,4-phenylenediamine",
+        "Pa-CH3",
+        "PaMe2",
+        "2,5-Dimethylbenzene-1,4-diamine"
+      ],
+      "source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r048-05",
+          "annotation_file_sha256": "088d8931328b8dd9b0f0a16399d1dba3e7898ee7c17a144b4d7ef4eea97bf024",
+          "annotation_line": 5,
+          "source_doi": "10.1039/d0gc02670k",
+          "source_pdf_sha256": "0b2e19f5a687f2a367a059641e4f98e77274d1151b1019d6e67b0cb68c115b4c",
+          "source_page": 3,
+          "source_bbox": [
+            0.6658270361041142,
+            0.19627966645285438,
+            0.7036104114189756,
+            0.2386144964720975
+          ],
+          "source_crop_sha256": "2d7006722563a58ab32643445f79ebe0de3266754bb1525a36cb6fe1ff42931c",
+          "source_label": "PaMe2",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r048-05",
+        "source_doi": "10.1039/d0gc02670k",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "melamine",
+      "abbreviation": "Melamine",
+      "full_name": "1,3,5-Triazine-2,4,6-triamine",
+      "label": "Melamine — 1,3,5-Triazine-2,4,6-triamine",
+      "smiles": "Nc1nc(N)nc(N)n1",
+      "canonical_smiles": "Nc1nc(N)nc(N)n1",
+      "formula": "C3H6N6",
+      "literature_names": [
+        "Melamine",
+        "TTA (melamine, not TAPT)",
+        "1,3,5-Triazine-2,4,6-triamine"
+      ],
+      "source_dois": [
+        "10.1039/d2re00241h"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r042-02",
+          "annotation_file_sha256": "cfdec034c9304bbd4316acb6dde646aecc327da10b34d533a0b753ec9f03ee00",
+          "annotation_line": 2,
+          "source_doi": "10.1039/d2re00241h",
+          "source_pdf_sha256": "d9329f29c95c54743c5bd6fb9a357a5f253cdc976bb8467aa3383180910bd595",
+          "source_page": 3,
+          "source_bbox": [
+            0.09233508350892954,
+            0.12082222639514859,
+            0.170537644066895,
+            0.15928382282700987
+          ],
+          "source_crop_sha256": "5127b25a60fd069dd443606413121bc9298f945bbda9f6383a1be06f0e70e2b9",
+          "source_label": "TTA (melamine, not TAPT)",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "primary arylamine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine"
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r042-02",
+        "source_doi": "10.1039/d2re00241h",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "deth",
+      "abbreviation": "DETH",
+      "full_name": "2,5-Diethoxyterephthalohydrazide",
+      "label": "DETH — 2,5-Diethoxyterephthalohydrazide",
+      "smiles": "CCOc1cc(C(=O)NN)c(OCC)cc1C(=O)NN",
+      "canonical_smiles": "CCOc1cc(C(=O)NN)c(OCC)cc1C(=O)NN",
+      "formula": "C12H18N4O4",
+      "literature_names": [
+        "DETH",
+        "Deth: 2,5-diethoxyterephthalohydrazide",
+        "2,5-Diethoxyterephthalohydrazide"
+      ],
+      "source_dois": [
+        "10.1002/anie.202319876"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r241-01",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 278,
+          "source_doi": "10.1002/anie.202319876",
+          "source_pdf_sha256": "8d6233d27d0975324c5ea2917f252ab4ab45bc2a43b70908e66594a63ff4f4cd",
+          "source_page": 3,
+          "source_bbox": [
+            0.1791713325867861,
+            0.0768012668250198,
+            0.2687569988801792,
+            0.12668250197941408
+          ],
+          "source_crop_sha256": "70a1c63c38a034a2cbc69ef4c6cee6020c8f4690289a3e3fa8e693694ff6d6bf",
+          "source_label": "Deth: 2,5-diethoxyterephthalohydrazide",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide"
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r241-01",
+        "source_doi": "10.1002/anie.202319876",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "dmth",
+      "abbreviation": "DMTH",
+      "full_name": "2,5-Dimethoxyterephthalohydrazide",
+      "label": "DMTH — 2,5-Dimethoxyterephthalohydrazide",
+      "smiles": "COc1cc(C(=O)NN)c(OC)cc1C(=O)NN",
+      "canonical_smiles": "COc1cc(C(=O)NN)c(OC)cc1C(=O)NN",
+      "formula": "C10H14N4O4",
+      "literature_names": [
+        "DMTH",
+        "2,5-dimethoxyterephthalohydrazide",
+        "2,5-Dimethoxyterephthalohydrazide"
+      ],
+      "source_dois": [
+        "10.1002/cssc.201601702"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r106-04",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 65,
+          "source_doi": "10.1002/cssc.201601702",
+          "source_pdf_sha256": "9ea2fbb5d089c1901314a5a3be2bccba13548c811a46eefc119ddcb9cee1cb79",
+          "source_page": 6,
+          "source_bbox": [
+            0.7189249720044792,
+            0.10688836104513064,
+            0.8544232922732363,
+            0.2454473475851148
+          ],
+          "source_crop_sha256": "4a8e7b6a050e2c559c0ee4ac09a1b5bb45fc68d934a6eed2142e22dd36d0f8df",
+          "source_label": "2,5-dimethoxyterephthalohydrazide",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide"
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r106-04",
+        "source_doi": "10.1002/cssc.201601702",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "bth",
+      "abbreviation": "BTH",
+      "full_name": "Benzene-1,3,5-tricarbohydrazide",
+      "label": "BTH — Benzene-1,3,5-tricarbohydrazide",
+      "smiles": "NNC(=O)c1cc(C(=O)NN)cc(C(=O)NN)c1",
+      "canonical_smiles": "NNC(=O)c1cc(C(=O)NN)cc(C(=O)NN)c1",
+      "formula": "C9H12N6O3",
+      "literature_names": [
+        "BTH",
+        "benzene-1,3,5-tricarbohydrazide",
+        "Benzene-1,3,5-tricarbohydrazide"
+      ],
+      "source_dois": [
+        "10.1002/cssc.202401046"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r230-03",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 241,
+          "source_doi": "10.1002/cssc.202401046",
+          "source_pdf_sha256": "e9ef4658c1def80e3b1991804bc1d5a805e2549608a4c8c453e5b483bf4858bc",
+          "source_page": 2,
+          "source_bbox": [
+            0.11086226203807391,
+            0.7513855898653998,
+            0.1948488241881299,
+            0.8068091844813935
+          ],
+          "source_crop_sha256": "61a89c99d5698038c8a360bc9feefafb69c48bf4447230cba0c44b4e1961c600",
+          "source_label": "benzene-1,3,5-tricarbohydrazide",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "acylhydrazide",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide"
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide"
+        }
+      ],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r230-03",
+        "source_doi": "10.1002/cssc.202401046",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "hydrazine",
+      "abbreviation": "Ha",
+      "full_name": "Hydrazine, neutral molecular form",
+      "label": "Ha — Hydrazine, neutral molecular form",
+      "smiles": "NN",
+      "canonical_smiles": "NN",
+      "formula": "H4N2",
+      "literature_names": [
+        "Ha",
+        "hydrazine",
+        "Hydrazine, neutral molecular form"
+      ],
+      "source_dois": [
+        "10.1021/jacs.4c08231"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r364-003",
+          "annotation_file_sha256": "e96586b9a9e2dfde8417bc5cebe65c0161f88fc611af9bd904fd08bffd67f4d9",
+          "annotation_line": 3,
+          "source_doi": "10.1021/jacs.4c08231",
+          "source_pdf_sha256": "a4ff96c0fb99ce417ed902ee379c70be0e7b21268f4f2210c5be084c8f14e6c5",
+          "source_page": 2,
+          "source_bbox": [
+            0.1771537632083484,
+            0.23227086271882955,
+            0.22100685673419637,
+            0.24305758104239264
+          ],
+          "source_crop_sha256": "56ad9e0c9ef6d70039cb1744b6506c3d59671d6382dc0db6c4cf986c1bf19d18",
+          "source_label": "hydrazine",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "hydrazine",
+          "label": "hydrazine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "azine",
+          "role": "hydrazine"
+        }
+      ],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "limitations": [
+        "Neutral molecular hydrazine is distinct from the hydrate/salt supplied in some experimental procedures."
+      ],
+      "geometry_hint": "unknown",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r364-003",
+        "source_doi": "10.1021/jacs.4c08231",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "bdba",
+      "abbreviation": "BDBA",
+      "full_name": "Benzene-1,4-diboronic acid",
+      "label": "BDBA — Benzene-1,4-diboronic acid",
+      "smiles": "OB(O)c1ccc(B(O)O)cc1",
+      "canonical_smiles": "OB(O)c1ccc(B(O)O)cc1",
+      "formula": "C6H8B2O4",
+      "literature_names": [
+        "BDBA",
+        "Benzene-1,4-diboronic acid"
+      ],
+      "source_dois": [
+        "10.1039/c2ra21531d"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r022-01",
+          "annotation_file_sha256": "dad3c1fce750326fe45e0fdf9247b3aea5022a785fe58cf43daea755cc0db4e7",
+          "annotation_line": 1,
+          "source_doi": "10.1039/c2ra21531d",
+          "source_pdf_sha256": "2b1b12b7dd08c1f797f60c2176272bc51d6e0f9da1248a3802540747ac7993b9",
+          "source_page": 1,
+          "source_bbox": [
+            0.5285047615936203,
+            0.7362797167135433,
+            0.5966211403719994,
+            0.7565711942155897
+          ],
+          "source_crop_sha256": "e709a150e30733f9dd71dca83543e8ce0b66467f97713eb741aee99b7513f1bb",
+          "source_label": "BDBA",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "boronic_acid",
+          "label": "boronic acid",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r022-01",
+        "source_doi": "10.1039/c2ra21531d",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "bpbda",
+      "abbreviation": "BPBDA",
+      "full_name": "Biphenyl-4,4′-diboronic acid",
+      "label": "BPBDA — Biphenyl-4,4′-diboronic acid",
+      "smiles": "OB(O)c1ccc(-c2ccc(B(O)O)cc2)cc1",
+      "canonical_smiles": "OB(O)c1ccc(-c2ccc(B(O)O)cc2)cc1",
+      "formula": "C12H12B2O4",
+      "literature_names": [
+        "BPBDA",
+        "BPDA",
+        "Biphenyl-4,4′-diboronic acid"
+      ],
+      "source_dois": [
+        "10.1039/c6cc07399a"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r001-02",
+          "annotation_file_sha256": "bf20df3a4f7c827222fc58b28a47f5456559e8d00187f1bc8e830144d59b241f",
+          "annotation_line": 2,
+          "source_doi": "10.1039/c6cc07399a",
+          "source_pdf_sha256": "f36aca09c4c6b3707cd954b32d3ed4765421c146be2681c8e5e77209f0fa5aad",
+          "source_page": 2,
+          "source_bbox": [
+            0.2745637583892617,
+            0.08116279069767442,
+            0.39536912751677855,
+            0.10860807113543092
+          ],
+          "source_crop_sha256": "4bb4a487860e86f30292a2b809e0c5c30bf2439764b7b84a0b72e055f2176569",
+          "source_label": "BPDA",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "boronic_acid",
+          "label": "boronic acid",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r001-02",
+        "source_doi": "10.1039/c6cc07399a",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "hhtp",
+      "abbreviation": "HHTP",
+      "full_name": "Triphenylene-2,3,6,7,10,11-hexol",
+      "label": "HHTP — Triphenylene-2,3,6,7,10,11-hexol",
+      "smiles": "Oc1cc2c3cc(O)c(O)cc3c3cc(O)c(O)cc3c2cc1O",
+      "canonical_smiles": "Oc1cc2c3cc(O)c(O)cc3c3cc(O)c(O)cc3c2cc1O",
+      "formula": "C18H12O6",
+      "literature_names": [
+        "HHTP",
+        "Triphenylene-2,3,6,7,10,11-hexol"
+      ],
+      "source_dois": [
+        "10.1039/c6cc07399a"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r001-01",
+          "annotation_file_sha256": "bf20df3a4f7c827222fc58b28a47f5456559e8d00187f1bc8e830144d59b241f",
+          "annotation_line": 1,
+          "source_doi": "10.1039/c6cc07399a",
+          "source_pdf_sha256": "f36aca09c4c6b3707cd954b32d3ed4765421c146be2681c8e5e77209f0fa5aad",
+          "source_page": 2,
+          "source_bbox": [
+            0.15711409395973153,
+            0.05884746922024624,
+            0.26281879194630875,
+            0.12425444596443228
+          ],
+          "source_crop_sha256": "a80f973907a4cdf3ff734bb135b4a334f9f2831184b6a238e1fc2f2ea25c7b73",
+          "source_label": "HHTP",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "vicinal_diol_pair",
+          "label": "vicinal diol pair",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r001-01",
+        "source_doi": "10.1039/c6cc07399a",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "thb",
+      "abbreviation": "THB",
+      "full_name": "Benzene-1,2,4,5-tetrol",
+      "label": "THB — Benzene-1,2,4,5-tetrol",
+      "smiles": "Oc1cc(O)c(O)cc1O",
+      "canonical_smiles": "Oc1cc(O)c(O)cc1O",
+      "formula": "C6H6O4",
+      "literature_names": [
+        "THB",
+        "Benzene-1,2,4,5-tetrol"
+      ],
+      "source_dois": [
+        "10.1039/c0cc04386a"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r041-02",
+          "annotation_file_sha256": "9aede7d11f3f46a026211995af1ae570cebc12e77171dc6bbe3fb1a6a79ab481",
+          "annotation_line": 2,
+          "source_doi": "10.1039/c0cc04386a",
+          "source_pdf_sha256": "ddeb57986be1e7374239a6bf5f393affbe82d08e6a743bc6756c88b3c918ecbb",
+          "source_page": 1,
+          "source_bbox": [
+            0.7956621242560293,
+            0.33166526258216206,
+            0.8481631992893505,
+            0.35417441848842945
+          ],
+          "source_crop_sha256": "5a198401f42a3bdb7ba93c4e546964ada237fc9a7daf8bfdc03ea9cc4a27f90c",
+          "source_label": "THB",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "vicinal_diol_pair",
+          "label": "vicinal diol pair",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "rsc-molecule-r041-02",
+        "source_doi": "10.1039/c0cc04386a",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "thdma",
+      "abbreviation": "THDMA",
+      "full_name": "9,10-Dimethylanthracene-2,3,6,7-tetrol",
+      "label": "THDMA — 9,10-Dimethylanthracene-2,3,6,7-tetrol",
+      "smiles": "Cc1c2cc(O)c(O)cc2c(C)c2cc(O)c(O)cc12",
+      "canonical_smiles": "Cc1c2cc(O)c(O)cc2c(C)c2cc(O)c(O)cc12",
+      "formula": "C16H14O4",
+      "literature_names": [
+        "THDMA",
+        "2,3,6,7-tetrahydroxy-9,10-dimethylanthracene",
+        "9,10-Dimethylanthracene-2,3,6,7-tetrol"
+      ],
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r169-005",
+          "annotation_file_sha256": "4748b2c13daa84b1ca808ee98e5824a93b3ad496a3906da2b9e7ad51da076719",
+          "annotation_line": 5,
+          "source_doi": "10.1021/acsami.7b09061",
+          "source_pdf_sha256": "e4f9cfb167686438ea291bef4f33946bf4eaee41101ef0aaf1e469f7283a9a25",
+          "source_page": 2,
+          "source_bbox": [
+            0.4101880615919944,
+            0.46505139735576273,
+            0.566548166521514,
+            0.5273511649821713
+          ],
+          "source_crop_sha256": "6c4da7b6782d421d6f40e688524d4b51e9e05daf7549ca66c6299c54ad2c53b9",
+          "source_label": "2,3,6,7-tetrahydroxy-9,10-dimethylanthracene",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "vicinal_diol_pair",
+          "label": "vicinal diol pair",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r169-005",
+        "source_doi": "10.1021/acsami.7b09061",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "thdea",
+      "abbreviation": "THDEA",
+      "full_name": "9,10-Diethylanthracene-2,3,6,7-tetrol",
+      "label": "THDEA — 9,10-Diethylanthracene-2,3,6,7-tetrol",
+      "smiles": "CCc1c2cc(O)c(O)cc2c(CC)c2cc(O)c(O)cc12",
+      "canonical_smiles": "CCc1c2cc(O)c(O)cc2c(CC)c2cc(O)c(O)cc12",
+      "formula": "C18H18O4",
+      "literature_names": [
+        "THDEA",
+        "2,3,6,7-tetrahydroxy-9,10-diethylanthracene",
+        "9,10-Diethylanthracene-2,3,6,7-tetrol"
+      ],
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r169-006",
+          "annotation_file_sha256": "4748b2c13daa84b1ca808ee98e5824a93b3ad496a3906da2b9e7ad51da076719",
+          "annotation_line": 6,
+          "source_doi": "10.1021/acsami.7b09061",
+          "source_pdf_sha256": "e4f9cfb167686438ea291bef4f33946bf4eaee41101ef0aaf1e469f7283a9a25",
+          "source_page": 2,
+          "source_bbox": [
+            0.6116335955502712,
+            0.45772201292912645,
+            0.7679937004797908,
+            0.5346805494088076
+          ],
+          "source_crop_sha256": "1341c18d05f9cbed5b8b2df91cd2948e96e5816123e483fa605854c6b7fabc87",
+          "source_label": "2,3,6,7-tetrahydroxy-9,10-diethylanthracene",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "vicinal_diol_pair",
+          "label": "vicinal diol pair",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r169-006",
+        "source_doi": "10.1021/acsami.7b09061",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pmda",
+      "abbreviation": "PMDA",
+      "full_name": "Pyromellitic dianhydride",
+      "label": "PMDA — Pyromellitic dianhydride",
+      "smiles": "O=c1oc(=O)c2cc3c(=O)oc(=O)c3cc12",
+      "canonical_smiles": "O=c1oc(=O)c2cc3c(=O)oc(=O)c3cc12",
+      "formula": "C10H2O6",
+      "literature_names": [
+        "PMDA",
+        "Pyromellitic dianhydride"
+      ],
+      "source_dois": [
+        "10.1002/marc.202200782"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r137-01",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 114,
+          "source_doi": "10.1002/marc.202200782",
+          "source_pdf_sha256": "ea9e8005916148f7f76154693e4cd0e544b8ab3e186f9287a396e7a954669a02",
+          "source_page": 2,
+          "source_bbox": [
+            0.27547592385218367,
+            0.12436115843270869,
+            0.335946248600224,
+            0.1643952299829642
+          ],
+          "source_crop_sha256": "0d14f9e6463c4349ec028555877b1d7c884c4c7a8abd35b78d5e5aec45eec7aa",
+          "source_label": "PMDA",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "cyclic_anhydride",
+          "label": "cyclic anhydride",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r137-01",
+        "source_doi": "10.1002/marc.202200782",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "piperazine",
+      "abbreviation": "Pz",
+      "full_name": "Piperazine",
+      "label": "Pz — Piperazine",
+      "smiles": "C1CNCCN1",
+      "canonical_smiles": "C1CNCCN1",
+      "formula": "C4H10N2",
+      "literature_names": [
+        "Pz",
+        "Pz: piperazine",
+        "Piperazine"
+      ],
+      "source_dois": [
+        "10.1002/anie.202207130"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-wave3-r246-02",
+          "annotation_file_sha256": "42f299bc39591976009294e4f1d64de9c73e6757afe2437dda3a5868b601dceb",
+          "annotation_line": 284,
+          "source_doi": "10.1002/anie.202207130",
+          "source_pdf_sha256": "7e11650024b011b4aa4f36845e25fa3cb833718d0d41e655e1f23609182e9750",
+          "source_page": 2,
+          "source_bbox": [
+            0.1881298992161254,
+            0.47980997624703087,
+            0.21500559910414332,
+            0.517814726840855
+          ],
+          "source_crop_sha256": "210ae8fa9f5efacb4da05dc5cb54657c9196df6124387e7d1fda6242a39fdcbc",
+          "source_label": "Pz: piperazine",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "secondary_amine",
+          "label": "secondary amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "unknown",
+      "geometry_evidence": {
+        "annotation_id": "wiley-wave3-r246-02",
+        "source_doi": "10.1002/anie.202207130",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "pdan",
+      "abbreviation": "PDAN",
+      "full_name": "1,4-Phenylenediacetonitrile",
+      "label": "PDAN — 1,4-Phenylenediacetonitrile",
+      "smiles": "N#CCc1ccc(CC#N)cc1",
+      "canonical_smiles": "N#CCc1ccc(CC#N)cc1",
+      "formula": "C10H8N2",
+      "literature_names": [
+        "PDAN",
+        "p-phenylenediacetonitrile",
+        "1,4-Phenylenediacetonitrile"
+      ],
+      "source_dois": [
+        "10.1021/acsapm.3c01765"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-wave3-010-031",
+          "annotation_file_sha256": "8f35cff5dc4d68cfc90d05ff7989eafd86b7c279cfbe7c14e4f88e55ffab2089",
+          "annotation_line": 31,
+          "source_doi": "10.1021/acsapm.3c01765",
+          "source_pdf_sha256": "15bf566dbb49db3c59086a46e51652020ba0d41fc5ff0c4e79d4320baece8641",
+          "source_page": 4,
+          "source_bbox": [
+            0.20156774916013437,
+            0.26999208234362626,
+            0.2541993281075028,
+            0.33016627078384797
+          ],
+          "source_crop_sha256": "3e03a5d2b5b931b30efb4c8fc39a9bcfb8a537f1765a7638141922249c36b762",
+          "source_label": "p-phenylenediacetonitrile",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "activated_cyanomethyl",
+          "label": "activated cyanomethyl",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 2,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "linear",
+      "geometry_evidence": {
+        "annotation_id": "acs-wave3-010-031",
+        "source_doi": "10.1021/acsapm.3c01765",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    },
+    {
+      "id": "tkb",
+      "abbreviation": "TKB",
+      "full_name": "1,3,5-Triacetylbenzene",
+      "label": "TKB — 1,3,5-Triacetylbenzene",
+      "smiles": "CC(=O)c1cc(C(C)=O)cc(C(C)=O)c1",
+      "canonical_smiles": "CC(=O)c1cc(C(C)=O)cc(C(C)=O)c1",
+      "formula": "C12H12O3",
+      "literature_names": [
+        "TKB",
+        "1,3,5-Triacetylbenzene"
+      ],
+      "source_dois": [
+        "10.1021/jacs.4c08231"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r364-001",
+          "annotation_file_sha256": "e96586b9a9e2dfde8417bc5cebe65c0161f88fc611af9bd904fd08bffd67f4d9",
+          "annotation_line": 1,
+          "source_doi": "10.1021/jacs.4c08231",
+          "source_pdf_sha256": "a4ff96c0fb99ce417ed902ee379c70be0e7b21268f4f2210c5be084c8f14e6c5",
+          "source_page": 2,
+          "source_bbox": [
+            0.1811044923548212,
+            0.1936184553927284,
+            0.21824134633166542,
+            0.2235815618470704
+          ],
+          "source_crop_sha256": "85659b774a8b68e1ea9d23587a086421f8204472b9f234aa3513e847587e9fb8",
+          "source_label": "TKB",
+          "review_status": "agent_reviewed",
+          "ground_truth": false
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_methyl_ketone",
+          "label": "aryl methyl ketone",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": 3,
+      "name_scope": "Descriptive expanded name normalized to this exact source graph. Abbreviations are paper-scoped, not globally unique.",
+      "compatibility_scope": "Functional-group design compatibility only. Runtime support and an explicit attachment/layout template are additionally required; no synthetic feasibility or net prediction.",
+      "catalog_use": "reference_only_family",
+      "limitations": [],
+      "geometry_hint": "planar_trigonal",
+      "geometry_evidence": {
+        "annotation_id": "acs-context-r364-001",
+        "source_doi": "10.1021/jacs.4c08231",
+        "basis": "Source-checked constitution and visible connection-site arrangement; idealized design hint only, not a measured three-dimensional conformation.",
+        "qualification": "Site count does not determine net. Biaryl torsions and conformers are not fixed. Tetrahedral carbon-centred4c monomers must not be silently treated as planar sql nodes."
+      }
+    }
+  ],
+  "cof_presets": [
+    {
+      "id": "tfb-tab-pore-v1",
+      "label": "TFB-TAB",
+      "linkage": "imine",
+      "monomer_a": "O=Cc1cc(C=O)cc(C=O)c1",
+      "monomer_b": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "label_a": "TFB",
+      "label_b": "TAB",
+      "instances": 6,
+      "source_recipe_id": "tfb-tab-pore-v1",
+      "prepare_scope": "Starting monomers only; /prepare creates a new design. Load source_recipe_id to retain the audited attachment incidence.",
+      "full_name_a": "Benzene-1,3,5-tricarbaldehyde",
+      "monomer_a_id": "tfb",
+      "full_name_b": "1,3,5-Tris(4-aminophenyl)benzene",
+      "monomer_b_id": "tapb",
+      "template_id": "hcb_3_3",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "tppa-pore-v1",
+      "label": "TpPa",
+      "linkage": "beta_ketoenamine",
+      "monomer_a": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "monomer_b": "Nc1ccc(N)cc1",
+      "label_a": "Tp",
+      "label_b": "Pa",
+      "instances": 12,
+      "source_recipe_id": "tppa-pore-v1",
+      "prepare_scope": "Starting monomers only; /prepare creates a new design. Load source_recipe_id to retain the audited attachment incidence.",
+      "full_name_a": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+      "monomer_a_id": "tp",
+      "full_name_b": "Benzene-1,4-diamine (p-phenylenediamine)",
+      "monomer_b_id": "pa",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "tpb-dmtp-cof-pore-v1",
+      "label": "TPB-DMTP-COF",
+      "linkage": "imine",
+      "monomer_a": "COc1cc(C=O)c(OC)cc1C=O",
+      "monomer_b": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "label_a": "DMTA",
+      "label_b": "TAPB",
+      "instances": 12,
+      "source_recipe_id": "tpb-dmtp-cof-pore-v1",
+      "prepare_scope": "Starting monomers only; /prepare creates a new design. Load source_recipe_id to retain the audited attachment incidence.",
+      "full_name_a": "2,5-Dimethoxybenzene-1,4-dicarbaldehyde",
+      "monomer_a_id": "dmtp",
+      "full_name_b": "1,3,5-Tris(4-aminophenyl)benzene",
+      "monomer_b_id": "tapb",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "wiley-r198-tppa-so3h-pore-0002",
+      "label": "TpPa-SO3H / SCOF",
+      "linkage": "beta_ketoenamine",
+      "monomer_a": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "monomer_b": "Nc1ccc(N)cc1S(=O)(=O)O",
+      "label_a": "Tp",
+      "label_b": "Pa-SO3H",
+      "instances": 12,
+      "source_recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "prepare_scope": "Starting monomers only; /prepare creates a new design. Load source_recipe_id to retain the audited attachment incidence.",
+      "full_name_a": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+      "monomer_a_id": "tp",
+      "full_name_b": "2,5-Diaminobenzenesulfonic acid",
+      "monomer_b_id": "pa_so3h",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-tfb_deth",
+      "label": "TFB + DETH",
+      "linkage": "acylhydrazone",
+      "monomer_a": "O=Cc1cc(C=O)cc(C=O)c1",
+      "monomer_b": "CCOc1cc(C(=O)NN)c(OCC)cc1C(=O)NN",
+      "monomer_a_id": "tfb",
+      "monomer_b_id": "deth",
+      "label_a": "TFB",
+      "label_b": "DETH",
+      "full_name_a": "Benzene-1,3,5-tricarbaldehyde",
+      "full_name_b": "2,5-Diethoxyterephthalohydrazide",
+      "instances": 12,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-tp_deth",
+      "label": "Tp + DETH",
+      "linkage": "keto_hydrazide",
+      "monomer_a": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+      "monomer_b": "CCOc1cc(C(=O)NN)c(OCC)cc1C(=O)NN",
+      "monomer_a_id": "tp",
+      "monomer_b_id": "deth",
+      "label_a": "Tp",
+      "label_b": "DETH",
+      "full_name_a": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+      "full_name_b": "2,5-Diethoxyterephthalohydrazide",
+      "instances": 12,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-tfb_ha",
+      "label": "TFB + hydrazine",
+      "linkage": "azine",
+      "monomer_a": "O=Cc1cc(C=O)cc(C=O)c1",
+      "monomer_b": "NN",
+      "monomer_a_id": "tfb",
+      "monomer_b_id": "hydrazine",
+      "label_a": "TFB",
+      "label_b": "Ha",
+      "full_name_a": "Benzene-1,3,5-tricarbaldehyde",
+      "full_name_b": "Hydrazine, neutral molecular form",
+      "instances": 12,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-tfb_tapb_reduced",
+      "label": "TFB + TAPB, reduced-imine design",
+      "linkage": "secondary_amine",
+      "monomer_a": "O=Cc1cc(C=O)cc(C=O)c1",
+      "monomer_b": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "monomer_a_id": "tfb",
+      "monomer_b_id": "tapb",
+      "label_a": "TFB",
+      "label_b": "TAPB",
+      "full_name_a": "Benzene-1,3,5-tricarbaldehyde",
+      "full_name_b": "1,3,5-Tris(4-aminophenyl)benzene",
+      "instances": 6,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_3",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-ta_tapt",
+      "label": "TA + TAPT",
+      "linkage": "imine",
+      "monomer_a": "O=Cc1ccc(C=O)cc1",
+      "monomer_b": "Nc1ccc(-c2nc(-c3ccc(N)cc3)nc(-c3ccc(N)cc3)n2)cc1",
+      "monomer_a_id": "ta",
+      "monomer_b_id": "tapt",
+      "label_a": "TA",
+      "label_b": "TAPT",
+      "full_name_a": "Benzene-1,4-dicarbaldehyde (terephthalaldehyde)",
+      "full_name_b": "2,4,6-Tris(4-aminophenyl)-1,3,5-triazine",
+      "instances": 12,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-tfpt_tapa",
+      "label": "TFPT + TAPA",
+      "linkage": "imine",
+      "monomer_a": "O=Cc1ccc(-c2nc(-c3ccc(C=O)cc3)nc(-c3ccc(C=O)cc3)n2)cc1",
+      "monomer_b": "Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "monomer_a_id": "tfpt",
+      "monomer_b_id": "tapa",
+      "label_a": "TFPT",
+      "label_b": "TAPA",
+      "full_name_a": "2,4,6-Tris(4-formylphenyl)-1,3,5-triazine",
+      "full_name_b": "Tris(4-aminophenyl)amine",
+      "instances": 6,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "hcb_3_3",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-pycho_pa",
+      "label": "TFPPy + Pa",
+      "linkage": "imine",
+      "monomer_a": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c54)cc1",
+      "monomer_b": "Nc1ccc(N)cc1",
+      "monomer_a_id": "tfppy",
+      "monomer_b_id": "pa",
+      "label_a": "TFPPy",
+      "label_b": "Pa",
+      "full_name_a": "1,3,6,8-Tetrakis(4-formylphenyl)pyrene",
+      "full_name_b": "Benzene-1,4-diamine (p-phenylenediamine)",
+      "instances": 8,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "sql_4_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    },
+    {
+      "id": "design-ta_pytta",
+      "label": "TA + PyTTA",
+      "linkage": "imine",
+      "monomer_a": "O=Cc1ccc(C=O)cc1",
+      "monomer_b": "Nc1ccc(-c2cc(-c3ccc(N)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(N)cc5)c5ccc2c3c54)cc1",
+      "monomer_a_id": "ta",
+      "monomer_b_id": "pytta",
+      "label_a": "TA",
+      "label_b": "PyTTA",
+      "full_name_a": "Benzene-1,4-dicarbaldehyde (terephthalaldehyde)",
+      "full_name_b": "1,3,6,8-Tetrakis(4-aminophenyl)pyrene",
+      "instances": 8,
+      "identity_scope": "user_design_starting_pair_not_a_source_identified_material",
+      "cofex_id": null,
+      "cofex_notation": null,
+      "design_cofex_notation": null,
+      "notation_qualifications": [
+        "Backend constructs design notation from current monomers and selected net or unk, with explicitly assumed cat0; no static design string is frozen in this catalog.",
+        "Monomer-based notation does not encode full atom-to-atom network or distinguish all linkage states.",
+        "No source COFex identity is attached to this design."
+      ],
+      "prepare_scope": "Requires backend-supported linkage and attachment-template validation. Source recipe IDs are intentionally absent; existing source recipes stay separate.",
+      "template_id": "sql_4_2",
+      "template_scope": "Explicit design template choice, not inferred reported topology. Loading an audited source recipe preserves its own incidence and qualifications instead."
+    }
+  ],
+  "source_metadata": {
+    "tfb-tab-pore-v1": {
+      "cofex_notation": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1.O=Cc1cc(C=O)cc(C=O)c1 COFex.unk.cat0;TFB-TAB",
+      "cofex_id": "COFEXM-YOZRE7ACVU7MOTKX2M",
+      "literature_name": "TFB-TAB",
+      "monomers": [
+        {
+          "label": "TFB",
+          "literature_names": [
+            "TFB",
+            "1,3,5-triformylbenzene"
+          ],
+          "smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+          "canonical_smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+          "monomer_preset_id": "tfb",
+          "master_component_matches": [
+            {
+              "component_no": "4",
+              "name": "1,3,5-triformylbenzene",
+              "abbrev": "TFB",
+              "smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+              "canonical_smiles": "O=Cc1cc(C=O)cc(C=O)c1"
+            }
+          ],
+          "abbreviation": "TFB",
+          "full_name": "Benzene-1,3,5-tricarbaldehyde"
+        },
+        {
+          "label": "TAB",
+          "literature_names": [
+            "TAPB",
+            "TAB",
+            "TPB",
+            "1,3,5-tris(4-aminophenyl)benzene"
+          ],
+          "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+          "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+          "monomer_preset_id": "tapb",
+          "master_component_matches": [
+            {
+              "component_no": "2",
+              "name": "1,3,5-tris(4-aminophenyl)benzene",
+              "abbrev": "TAPB",
+              "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+              "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+            }
+          ],
+          "abbreviation": "TAPB",
+          "full_name": "1,3,5-Tris(4-aminophenyl)benzene"
+        }
+      ],
+      "qualifications": [
+        "Provisional agent-reviewed source-visible finite patch; not human ground truth or a complete periodic crystal graph.",
+        "Full COFex notation identifies the matched precursor set and recorded metadata; it is not a whole-framework SMILES.",
+        "unk means no supported net code in this matched record. A displayed pore does not establish a unique topology.",
+        "cat0 is retained from the installed reference convention; this catalog does not independently establish noninterpenetration.",
+        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures."
+      ],
+      "source_dois": [
+        "10.1021/acscatal.3c03857"
+      ],
+      "reference_record_ids": [
+        1262
+      ],
+      "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
+      "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
+      "source_recipe_sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "source_pdf_sha256": "d82cb3f198dfa314e5db569f7cca8e0a7053636d9322ca3a895c3c1fb2107274",
+      "source_page": 2,
+      "source_bbox": [
+        0.1425438596491228,
+        0.0723793677204659,
+        0.8552631578947368,
+        0.3968386023294509
+      ],
+      "topology": null,
+      "catenation": "cat0",
+      "catenation_evidence": "reference_convention_unverified_by_this_catalog",
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "upstream_source_recipe_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3"
+    },
+    "tppa-pore-v1": {
+      "cofex_notation": "Nc1ccc(N)cc1.O=Cc1c(O)c(C=O)c(O)c(C=O)c1O COFex.unk.cat0;TpPa",
+      "cofex_id": "COFEXM-HTM4SO6D3NX6MNYL2K",
+      "literature_name": "TpPa",
+      "monomers": [
+        {
+          "label": "Tp",
+          "literature_names": [
+            "Tp",
+            "triformylphloroglucinol"
+          ],
+          "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+          "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+          "monomer_preset_id": "tp",
+          "master_component_matches": [
+            {
+              "component_no": "1",
+              "name": "1,3,5-triformylphloroglucinol",
+              "abbrev": "Tp",
+              "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+              "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
+            },
+            {
+              "component_no": "14",
+              "name": "2,4,6-triformylphloroglucinol",
+              "abbrev": "TFP",
+              "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+              "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
+            }
+          ],
+          "abbreviation": "Tp",
+          "full_name": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)"
+        },
+        {
+          "label": "Pa",
+          "literature_names": [
+            "Pa",
+            "p-phenylenediamine"
+          ],
+          "smiles": "Nc1ccc(N)cc1",
+          "canonical_smiles": "Nc1ccc(N)cc1",
+          "monomer_preset_id": "pa",
+          "master_component_matches": [
+            {
+              "component_no": "5",
+              "name": "p-phenylenediamine",
+              "abbrev": "PDA",
+              "smiles": "Nc1ccc(N)cc1",
+              "canonical_smiles": "Nc1ccc(N)cc1"
+            }
+          ],
+          "abbreviation": "Pa",
+          "full_name": "Benzene-1,4-diamine (p-phenylenediamine)"
+        }
+      ],
+      "qualifications": [
+        "Provisional agent-reviewed source-visible finite patch; not human ground truth or a complete periodic crystal graph.",
+        "Full COFex notation identifies the matched precursor set and recorded metadata; it is not a whole-framework SMILES.",
+        "unk means no supported net code in this matched record. A displayed pore does not establish a unique topology.",
+        "cat0 is retained from the installed reference convention; this catalog does not independently establish noninterpenetration.",
+        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures."
+      ],
+      "source_dois": [
+        "10.1021/acscatal.3c03857"
+      ],
+      "reference_record_ids": [
+        1256
+      ],
+      "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
+      "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
+      "source_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "source_pdf_sha256": "d82cb3f198dfa314e5db569f7cca8e0a7053636d9322ca3a895c3c1fb2107274",
+      "source_page": 2,
+      "source_bbox": [
+        0.1425438596491228,
+        0.0723793677204659,
+        0.8552631578947368,
+        0.3968386023294509
+      ],
+      "topology": null,
+      "catenation": "cat0",
+      "catenation_evidence": "reference_convention_unverified_by_this_catalog",
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "upstream_source_recipe_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+    },
+    "tpb-dmtp-cof-pore-v1": {
+      "cofex_notation": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "literature_name": "TPB-DMTP-COF",
+      "monomers": [
+        {
+          "label": "DMTA",
+          "literature_names": [
+            "DMTA",
+            "DMTP",
+            "2,5-dimethoxyterephthalaldehyde"
+          ],
+          "smiles": "COc1cc(C=O)c(OC)cc1C=O",
+          "canonical_smiles": "COc1cc(C=O)c(OC)cc1C=O",
+          "monomer_preset_id": "dmtp",
+          "master_component_matches": [
+            {
+              "component_no": "7",
+              "name": "2,5-dimethoxyterephthalaldehyde",
+              "abbrev": "DMTA",
+              "smiles": "COc1cc(C=O)c(OC)cc1C=O",
+              "canonical_smiles": "COc1cc(C=O)c(OC)cc1C=O"
+            }
+          ],
+          "abbreviation": "DMTA",
+          "full_name": "2,5-Dimethoxybenzene-1,4-dicarbaldehyde"
+        },
+        {
+          "label": "TAPB",
+          "literature_names": [
+            "TAPB",
+            "TAB",
+            "TPB",
+            "1,3,5-tris(4-aminophenyl)benzene"
+          ],
+          "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+          "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+          "monomer_preset_id": "tapb",
+          "master_component_matches": [
+            {
+              "component_no": "2",
+              "name": "1,3,5-tris(4-aminophenyl)benzene",
+              "abbrev": "TAPB",
+              "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+              "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+            }
+          ],
+          "abbreviation": "TAPB",
+          "full_name": "1,3,5-Tris(4-aminophenyl)benzene"
+        }
+      ],
+      "qualifications": [
+        "Provisional agent-reviewed source-visible finite patch; not human ground truth or a complete periodic crystal graph.",
+        "Full COFex notation identifies the matched precursor set and recorded metadata; it is not a whole-framework SMILES.",
+        "unk means no supported net code in this matched record. A displayed pore does not establish a unique topology.",
+        "cat0 is retained from the installed reference convention; this catalog does not independently establish noninterpenetration.",
+        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures.",
+        "Source precursor labels are TAPB and DMTA; the material is called TPB-DMTP-COF.",
+        "Three same-DOI records share this precursor notation; record IDs are retained, not silently selected.",
+        "The source compares conventional pore depiction with a revised dual-pore/AA-prime model; this recipe is the depicted local pore, not a crystal reconstruction.",
+        "This compact key has inconsistent records elsewhere in the table; only these DOI/name/graph-verified records are associated here."
+      ],
+      "source_dois": [
+        "10.1021/jacs.4c14535"
+      ],
+      "reference_record_ids": [
+        4194,
+        4195,
+        4196
+      ],
+      "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
+      "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
+      "source_recipe_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "source_pdf_sha256": "7cde5d8ab7bf96cce05ef2b2bce2b6890c4c34dd29070dc28f89de34f329f06a",
+      "source_page": 2,
+      "source_bbox": [
+        0.13486842105263158,
+        0.1064891846921797,
+        0.5032894736842105,
+        0.35524126455906824
+      ],
+      "topology": null,
+      "catenation": "cat0",
+      "catenation_evidence": "reference_convention_unverified_by_this_catalog",
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "upstream_source_recipe_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+    },
+    "wiley-r198-tppa-so3h-pore-0002": {
+      "cofex_notation": "Nc1ccc(N)c(S(=O)(=O)O)c1.O=Cc1c(O)c(C=O)c(O)c(C=O)c1O COFex.unk.cat0;SCOF",
+      "cofex_id": "COFEXM-6YYNDORX3H7Z5YA3HT",
+      "literature_name": "TpPa-SO3H / SCOF",
+      "monomers": [
+        {
+          "label": "Tp",
+          "literature_names": [
+            "Tp",
+            "triformylphloroglucinol"
+          ],
+          "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+          "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+          "monomer_preset_id": "tp",
+          "master_component_matches": [
+            {
+              "component_no": "1",
+              "name": "1,3,5-triformylphloroglucinol",
+              "abbrev": "Tp",
+              "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+              "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
+            },
+            {
+              "component_no": "14",
+              "name": "2,4,6-triformylphloroglucinol",
+              "abbrev": "TFP",
+              "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+              "canonical_smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
+            }
+          ],
+          "abbreviation": "Tp",
+          "full_name": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)"
+        },
+        {
+          "label": "Pa-SO3H",
+          "literature_names": [
+            "Pa-SO3H",
+            "2,5-diaminobenzenesulfonic acid"
+          ],
+          "smiles": "Nc1ccc(N)cc1S(=O)(=O)O",
+          "canonical_smiles": "Nc1ccc(N)c(S(=O)(=O)O)c1",
+          "monomer_preset_id": "pa_so3h",
+          "master_component_matches": [
+            {
+              "component_no": "33",
+              "name": "2,5-diaminobenzenesulfonic acid",
+              "abbrev": "Pa-SO3H",
+              "smiles": "Nc1ccc(N)c(S(=O)(=O)O)c1",
+              "canonical_smiles": "Nc1ccc(N)c(S(=O)(=O)O)c1"
+            }
+          ],
+          "abbreviation": "Pa-SO3H",
+          "full_name": "2,5-Diaminobenzenesulfonic acid"
+        }
+      ],
+      "qualifications": [
+        "Provisional agent-reviewed source-visible finite patch; not human ground truth or a complete periodic crystal graph.",
+        "Full COFex notation identifies the matched precursor set and recorded metadata; it is not a whole-framework SMILES.",
+        "unk means no supported net code in this matched record. A displayed pore does not establish a unique topology.",
+        "cat0 is retained from the installed reference convention; this catalog does not independently establish noninterpenetration.",
+        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures.",
+        "SCOF and TpPa-SO3H are source aliases. Neutral sulfonic-acid depiction is retained; substrate grafting is outside this patch."
+      ],
+      "source_dois": [
+        "10.1002/anie.202104106"
+      ],
+      "reference_record_ids": [
+        1414
+      ],
+      "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
+      "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
+      "source_recipe_sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "source_pdf_sha256": "19d578fa3cc71255065d7e40412c928aa01d502d2143724b51780a40a56201f5",
+      "source_page": 2,
+      "source_bbox": [
+        0.12541993281075028,
+        0.6935866983372921,
+        0.4748040313549832,
+        0.8463974663499604
+      ],
+      "topology": null,
+      "catenation": "cat0",
+      "catenation_evidence": "reference_convention_unverified_by_this_catalog",
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "upstream_source_recipe_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827"
+    }
+  },
+  "recipe_bindings": [
+    {
+      "recipe_id": "tfb-tab-pore-v1",
+      "filename": "tfb-tab-pore-v1.recipe.json",
+      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "upstream_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3"
+    },
+    {
+      "recipe_id": "tppa-pore-v1",
+      "filename": "tppa-pore-v1.recipe.json",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+    },
+    {
+      "recipe_id": "tpb-dmtp-cof-pore-v1",
+      "filename": "tpb-dmtp-cof-pore-v1.recipe.json",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+    },
+    {
+      "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "filename": "wiley-r198-tppa-so3h-drawing-0002.json",
+      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "upstream_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827"
+    }
+  ],
+  "linkage_catalog": [
+    {
+      "id": "imine",
+      "label": "Imine",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "conceptual_motif": "Aldehyde plus primary amine; carbonyl carbon becomes the imine carbon and amine nitrogen becomes the linked nitrogen, with water loss.",
+      "primary_sources": [
+        {
+          "label": "Lyle et al., 2019",
+          "url": "https://pubs.acs.org/doi/10.1021/jacs.9b04731"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Condensation design; E/Z and topology are unspecified. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "search_terms": [
+        "imine",
+        "Imine",
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ],
+      "candidate_transform": true,
+      "roles": [
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ]
+    },
+    {
+      "id": "beta_ketoenamine",
+      "label": "Beta-ketoenamine",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "conceptual_motif": "Appropriate hydroxy-aldehyde plus primary amine; imine formation followed by coupled proton/bond-order redistribution to the ketoenamine.",
+      "primary_sources": [
+        {
+          "label": "Kandambeth et al., 2012",
+          "url": "https://pubs.acs.org/doi/10.1021/ja308278w"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Exact unsubstituted Tp only; hydroxy-imine and keto forms are distinct. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "search_terms": [
+        "beta_ketoenamine",
+        "Beta-ketoenamine",
+        "tp_trialdehyde",
+        "primary_arylamine"
+      ],
+      "candidate_transform": true,
+      "roles": [
+        "tp_trialdehyde",
+        "primary_arylamine"
+      ]
+    },
+    {
+      "id": "hydrazone",
+      "label": "Hydrazone",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Aldehyde plus terminal acylhydrazide NH2; form C=N–NH–C(O) while retaining the existing acyl group.",
+      "primary_sources": [
+        {
+          "label": "Uribe-Romo et al., 2011",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/11-crystallinecof.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "hydrazone",
+        "Hydrazone",
+        "Aldehyde plus terminal acylhydrazide NH2; form C=N–NH–C(O) while retaining the existing acyl group."
+      ]
+    },
+    {
+      "id": "azine_paper_labelled_hydrazine_link",
+      "label": "Azine / paper-labelled hydrazine link",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Aldehydes plus hydrazine form C=N–N=C connections.",
+      "primary_sources": [
+        {
+          "label": "Hydrazine/hydrazide COFs, 2022",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/22COFWater.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "azine_paper_labelled_hydrazine_link",
+        "Azine / paper-labelled hydrazine link",
+        "Aldehydes plus hydrazine form C=N–N=C connections."
+      ]
+    },
+    {
+      "id": "boroxine",
+      "label": "Boroxine",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Three boronic acid groups condense into a B3O3 ring.",
+      "primary_sources": [
+        {
+          "label": "COF-1/COF-5, 2005",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/cote_yaghi.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "boroxine",
+        "Boroxine",
+        "Three boronic acid groups condense into a B3O3 ring."
+      ]
+    },
+    {
+      "id": "boronate_ester",
+      "label": "Boronate ester",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "A boronic acid and vicinal diol produce the cyclic boronate linkage.",
+      "primary_sources": [
+        {
+          "label": "COF-1/COF-5, 2005",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/cote_yaghi.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "boronate_ester",
+        "Boronate ester",
+        "A boronic acid and vicinal diol produce the cyclic boronate linkage."
+      ]
+    },
+    {
+      "id": "imide",
+      "label": "Imide",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Anhydride plus primary amine; ring closure replaces the anhydride bridging oxygen with the amine nitrogen while retaining both carbonyls.",
+      "primary_sources": [
+        {
+          "label": "Fang et al., 2014",
+          "url": "https://www.nature.com/articles/ncomms5503"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "imide",
+        "Imide",
+        "Anhydride plus primary amine; ring closure replaces the anhydride bridging oxygen with the amine nitrogen while retaining both carbonyls."
+      ]
+    },
+    {
+      "id": "nitrone",
+      "label": "Nitrone",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Aldehyde plus N-substituted hydroxylamine; create C=[N+]([O-])–R.",
+      "primary_sources": [
+        {
+          "label": "Nitrone COFs, 2023",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/23NitroneCOF.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "nitrone",
+        "Nitrone",
+        "Aldehyde plus N-substituted hydroxylamine; create C=[N+]([O-])–R."
+      ]
+    },
+    {
+      "id": "cyano_vinylene_sp2_carbon",
+      "label": "Cyano-vinylene / sp2 carbon",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Aldehyde plus activated cyanomethyl carbon; Knoevenagel condensation creates C=C and retains the nitrile substituent.",
+      "primary_sources": [
+        {
+          "label": "Jin et al., 2017",
+          "url": "https://escholarship.org/uc/item/9kh6x4gk"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "cyano_vinylene_sp2_carbon",
+        "Cyano-vinylene / sp2 carbon",
+        "Aldehyde plus activated cyanomethyl carbon; Knoevenagel condensation creates C=C and retains the nitrile substituent."
+      ]
+    },
+    {
+      "id": "dioxin",
+      "label": "Dioxin",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Activated adjacent aryl fluorides plus a catechol pair; nucleophilic substitution forms two aryl–O bonds and closes the dioxin ring.",
+      "primary_sources": [
+        {
+          "label": "Dioxin COFs, 2018",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/DoixinCOFs.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "dioxin",
+        "Dioxin",
+        "Activated adjacent aryl fluorides plus a catechol pair; nucleophilic substitution forms two aryl–O bonds and closes the dioxin ring."
+      ]
+    },
+    {
+      "id": "polyphenylene",
+      "label": "Polyphenylene",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Three aryl methyl-ketone handles undergo aldol cyclotrimerization to a new phenylene ring.",
+      "primary_sources": [
+        {
+          "label": "Polyphenylene COFs, 2024",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/24CarbonCOF.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "polyphenylene",
+        "Polyphenylene",
+        "Three aryl methyl-ketone handles undergo aldol cyclotrimerization to a new phenylene ring."
+      ]
+    },
+    {
+      "id": "triazine",
+      "label": "Triazine",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "Three nitrile groups cyclotrimerize to a triazine ring.",
+      "primary_sources": [
+        {
+          "label": "Kuhn et al., 2008",
+          "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/anie.200705710"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "triazine",
+        "Triazine",
+        "Three nitrile groups cyclotrimerize to a triazine ring."
+      ]
+    },
+    {
+      "id": "urea_containing_cof",
+      "label": "Urea-containing COF",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "conceptual_motif": "The cited monomers already contain urea; aldehyde condensation and tautomerization construct the network around that retained group.",
+      "primary_sources": [
+        {
+          "label": "Urea-containing COFs, 2018",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/UreaCOF.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "urea_containing_cof",
+        "Urea-containing COF",
+        "The cited monomers already contain urea; aldehyde condensation and tautomerization construct the network around that retained group."
+      ]
+    },
+    {
+      "id": "imine_to_amide",
+      "label": "Imine to amide",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Waller et al., 2016",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/AmideCOF.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "imine_to_amide",
+        "Imine to amide",
+        ""
+      ]
+    },
+    {
+      "id": "imine_to_amine",
+      "label": "Imine to amine",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Grunenberg et al., 2021",
+          "url": "https://pubs.acs.org/doi/10.1021/jacs.0c12249"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "imine_to_amine",
+        "Imine to amine",
+        ""
+      ]
+    },
+    {
+      "id": "azine_to_hydrazide",
+      "label": "Azine to hydrazide",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Hydrazine/hydrazide COFs, 2022",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/22COFWater.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "azine_to_hydrazide",
+        "Azine to hydrazide",
+        ""
+      ]
+    },
+    {
+      "id": "benzoxazole_benzothiazole",
+      "label": "Benzoxazole / benzothiazole",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Waller et al., 2018",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/JACSOxThi.pdf"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "benzoxazole_benzothiazole",
+        "Benzoxazole / benzothiazole",
+        ""
+      ]
+    },
+    {
+      "id": "cyclic_carbamate_thiocarbamate",
+      "label": "Cyclic carbamate / thiocarbamate",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Lyle et al., 2019",
+          "url": "https://pubs.acs.org/doi/10.1021/jacs.9b04731"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "cyclic_carbamate_thiocarbamate",
+        "Cyclic carbamate / thiocarbamate",
+        ""
+      ]
+    },
+    {
+      "id": "coumarin",
+      "label": "Coumarin",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Coumarin COFs, 2025",
+          "url": "https://www.nature.com/articles/s44160-025-00859-8"
+        },
+        {
+          "label": "author-institute record",
+          "url": "https://kavli.berkeley.edu/publications/crystalline-coumarin-linked-covalent-organic-frameworks"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "coumarin",
+        "Coumarin",
+        ""
+      ]
+    },
+    {
+      "id": "quinoline_alpha_aminonitrile_multicomponent_routes",
+      "label": "Quinoline / alpha-aminonitrile multicomponent routes",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "primary_sources": [
+        {
+          "label": "Multicomponent COFs, 2020",
+          "url": "https://pubs.acs.org/doi/10.1021/jacs.0c00969"
+        }
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Explicit separately audited recipes can depict additional linkage families; this does not make them automatic monomer transforms.",
+      "search_terms": [
+        "quinoline_alpha_aminonitrile_multicomponent_routes",
+        "Quinoline / alpha-aminonitrile multicomponent routes",
+        ""
+      ]
+    },
+    {
+      "id": "acylhydrazone",
+      "label": "Acylhydrazone",
+      "primary_sources": [
+        {
+          "label": "Uribe-Romo et al., 2011",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/11-crystallinecof.pdf"
+        }
+      ],
+      "conceptual_motif": "Aldehyde plus terminal acylhydrazide NH2; form C=N–NH–C(O) while retaining the existing acyl group.",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "candidate_transform": true,
+      "roles": [
+        "aryl_aldehyde",
+        "acylhydrazide"
+      ],
+      "qualification": "Terminal hydrazide NH2 reacts; pre-existing acyl C=O remains. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "topology_inference_allowed": false,
+      "search_terms": [
+        "acylhydrazone",
+        "Acylhydrazone",
+        "aryl_aldehyde",
+        "acylhydrazide"
+      ]
+    },
+    {
+      "id": "keto_hydrazide",
+      "label": "Keto-enamine from Tp and hydrazide",
+      "primary_sources": [
+        {
+          "label": "Source-checked Tp-Deth chemistry",
+          "url": "https://doi.org/10.1002/anie.202319876"
+        }
+      ],
+      "conceptual_motif": "Exact Tp scaffold; retain NH-NH-C(O) hydrazide chain and source-supported tautomer.",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "candidate_transform": true,
+      "roles": [
+        "tp_trialdehyde",
+        "acylhydrazide"
+      ],
+      "qualification": "Exact Tp scaffold; retain NH-NH-C(O) hydrazide chain and source-supported tautomer. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "topology_inference_allowed": false,
+      "search_terms": [
+        "keto_hydrazide",
+        "Keto-enamine from Tp and hydrazide",
+        "tp_trialdehyde",
+        "acylhydrazide"
+      ]
+    },
+    {
+      "id": "azine",
+      "label": "Azine",
+      "primary_sources": [
+        {
+          "label": "Hydrazine/hydrazide COFs, 2022",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/22COFWater.pdf"
+        }
+      ],
+      "conceptual_motif": "Aldehydes plus hydrazine form C=N–N=C connections.",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "candidate_transform": true,
+      "roles": [
+        "aryl_aldehyde",
+        "hydrazine"
+      ],
+      "qualification": "Neutral N2H4 graph; two aldehydes connect through C=N-N=C; not a generic hydrazide. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "topology_inference_allowed": false,
+      "search_terms": [
+        "azine",
+        "Azine",
+        "aryl_aldehyde",
+        "hydrazine"
+      ]
+    },
+    {
+      "id": "secondary_amine",
+      "label": "Reduced-imine secondary amine",
+      "primary_sources": [
+        {
+          "label": "Grunenberg et al., 2021",
+          "url": "https://pubs.acs.org/doi/10.1021/jacs.0c12249"
+        }
+      ],
+      "conceptual_motif": "Explicit reduced-imine design state, not a claimed generic direct one-step reaction.",
+      "runtime_status": "runtime_registry_authoritative",
+      "automatic_prepare_supported": null,
+      "candidate_transform": true,
+      "roles": [
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ],
+      "qualification": "Explicit reduced-imine design state, not a claimed generic direct one-step reaction. Actual execution requires the installed runtime registry and a compatible explicit template.",
+      "topology_inference_allowed": false,
+      "search_terms": [
+        "secondary_amine",
+        "Reduced-imine secondary amine",
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ]
+    }
+  ],
+  "source_styles": [
+    {
+      "id": "source-acscatal-2023",
+      "source_dois": [
+        "10.1021/acscatal.3c03857"
+      ],
+      "source_recipe_ids": [
+        "tfb-tab-pore-v1",
+        "tppa-pore-v1"
+      ],
+      "observed": {
+        "tfb_tab": "Black chemical linework with small dotted continuation stubs; compact imine N glyphs.",
+        "tppa": "Orange Tp-derived bonds/carbonyl O and blue Pa-derived aryl/NH bonds; dotted continuation stubs.",
+        "labels": [
+          "NH",
+          "HN",
+          "CHO",
+          "OHC",
+          "NH2",
+          "H2N"
+        ],
+        "font": "Chemical glyphs appear sans-serif; bold serif material captions. Exact font and point size not recovered."
+      },
+      "suggested_runtime_styles": [
+        "mono_dashed",
+        "red_blue",
+        "compact_labels"
+      ],
+      "exact_style_equivalence": false,
+      "review_scope": "Source crop visually inspected; palette substitutions are user display choices."
+    },
+    {
+      "id": "source-tpb-dmtp-2024",
+      "source_dois": [
+        "10.1021/jacs.4c14535"
+      ],
+      "source_recipe_ids": [
+        "tpb-dmtp-cof-pore-v1"
+      ],
+      "observed": {
+        "colors": "Black TAPB-derived and green DMTA-derived chemical linework; continuation stubs dotted.",
+        "labels": [
+          "OCH3",
+          "H3CO",
+          "N",
+          "CHO",
+          "NH2"
+        ],
+        "font": "Sans-serif chemical glyphs, smaller pore labels than precursor glyphs; exact font unknown.",
+        "layout": "Six alternating 3-connected aryl and 2-connected dialdehyde-derived units; omit neighboring ball-and-stick illustration from chemical graph."
+      },
+      "suggested_runtime_styles": [
+        "mono_dashed",
+        "compact_labels"
+      ],
+      "exact_style_equivalence": false
+    },
+    {
+      "id": "source-scof-2021",
+      "source_dois": [
+        "10.1002/anie.202104106"
+      ],
+      "source_recipe_ids": [
+        "wiley-r198-tppa-so3h-pore-0002"
+      ],
+      "observed": {
+        "font_family": {
+          "observed": "sans-serif; NH/H glyphs and carbonylO visually bold",
+          "exact_font_family": null,
+          "font_point_size": null,
+          "renderer_substitute": "Arial",
+          "basis": "Visual raster inspection; PDF figure contains no selectable text or vector font records."
+        },
+        "glyph_sizes_pixels": {
+          "N_approx_height": 20,
+          "H_approx_height": 20,
+          "O_approx_height": 22,
+          "SO3H_main_approx_height": 21,
+          "subscript3_approx_height": 13,
+          "uncertainty": 3
+        },
+        "colors": {
+          "Tp_bonds_and_carbonylO": "#f58315",
+          "Pa_aryl_bonds_and_all_NH": "#198181",
+          "sulfonic_acid_text": "#f48a91",
+          "basis": "Median chromatic pixels in source raster, not original author color definitions; antialiasing/JPEG may shift values."
+        },
+        "abbreviations": {
+          "observed": [
+            "SO3H",
+            "HO3S"
+          ],
+          "expanded_O_atoms_visible": false,
+          "sulfonic_acid_charge": "neutral,explicitH",
+          "placement": "Pa0/2/5 label readsSO3H; Pa1/3/4 readsHO3S to placeS adjacent to aryl attachment",
+          "other_OCH3_or_alkoxy_labels": false
+        },
+        "continuations": {
+          "count": 6,
+          "kind": "dashed",
+          "color": "orange",
+          "cut_after": "NH",
+          "asterisk_visible_in_source": false,
+          "wavy_visible_in_this_source": false,
+          "meaning": "Periodic/crop continuation,not stereochemistry"
+        },
+        "layout": {
+          "visible_cycle": "SixTp +sixPaSO3H,12 alternating instances",
+          "sulfonate_inward_outward": [
+            "outward",
+            "inward",
+            "outward",
+            "inward",
+            "outward",
+            "inward"
+          ],
+          "port_endpoints_explicit": true,
+          "aromatic_double_line_placement_recorded": true,
+          "topology": "unknown",
+          "stereochemistry": "not assigned from depiction"
+        },
+        "source_scope": {
+          "full_main_read": "Bound prior source review;6pages read",
+          "full_si_read": false,
+          "current_review": "All12 source fragment coordinate grids +combined atom-index overlays,not a new full-PDF reading"
+        }
+      },
+      "source_style_evidence_sha256": "70c73ab5a4f187d7de913d2a12d27f41c07e04892d86d82d08549e3ff6f2a6d6",
+      "suggested_runtime_styles": [
+        "compact_labels"
+      ],
+      "exact_style_equivalence": false,
+      "qualification": "Arial is a renderer substitute; sampled raster colors and glyph sizes are approximate. Hidden SO3H atom coordinates are not observed."
+    }
+  ],
+  "style_contract": {
+    "runtime_style_ids": [
+      "standard",
+      "mono_dashed",
+      "mono_wave",
+      "red_blue",
+      "serif",
+      "compact_labels"
+    ],
+    "runtime_style_owner": "application; catalog records source evidence, not API style defaults",
+    "rules": [
+      "Style changes must preserve atom/bond tables and typed continuation boundaries.",
+      "Collapsed groups such as SO3H/OCH3 require graph-bound atom membership; labels cannot substitute for an unknown graph.",
+      "Wave/dashed/crossbar marks are continuation conventions, not stereochemistry.",
+      "Source label direction (SO3H/HO3S; OCH3/H3CO), font scale and atom-specific size can vary within a figure.",
+      "A visually regular pore is not evidence for a net, stacking or interpenetration."
+    ]
+  },
+  "upstream_catalog_sha256": "677d2e29a36ae82f50cbf8035fd2d7344721c39449158de351d029da8ae7cad7",
+  "upstream_source_registry_sha256": "e931fd95f6975e89b962b571b1503c876bb631ebf3fae30598dde9166bb2e6cd",
+  "previous_catalog_sha256": "b1edd1052b60b154976a5b6404237c70002b0a7b8a885a914e33bfeabe32151f",
+  "inventory_manifest_sha256": "2706301a65b7cdb8601c64fe920aa560ae6983c3fe1787b31b2319eb1f7b7904",
+  "compatibility_rules": [
+    {
+      "linkage": "imine",
+      "label": "Imine",
+      "roles": [
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Condensation design; E/Z and topology are unspecified.",
+      "topology_inference_allowed": false
+    },
+    {
+      "linkage": "beta_ketoenamine",
+      "label": "Beta-ketoenamine",
+      "roles": [
+        "tp_trialdehyde",
+        "primary_arylamine"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Exact unsubstituted Tp only; hydroxy-imine and keto forms are distinct.",
+      "topology_inference_allowed": false
+    },
+    {
+      "linkage": "acylhydrazone",
+      "label": "Acylhydrazone",
+      "roles": [
+        "aryl_aldehyde",
+        "acylhydrazide"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Terminal hydrazide NH2 reacts; pre-existing acyl C=O remains.",
+      "topology_inference_allowed": false
+    },
+    {
+      "linkage": "keto_hydrazide",
+      "label": "Keto-enamine from Tp and hydrazide",
+      "roles": [
+        "tp_trialdehyde",
+        "acylhydrazide"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Exact Tp scaffold; retain NH-NH-C(O) hydrazide chain and source-supported tautomer.",
+      "topology_inference_allowed": false
+    },
+    {
+      "linkage": "azine",
+      "label": "Azine",
+      "roles": [
+        "aryl_aldehyde",
+        "hydrazine"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Neutral N2H4 graph; two aldehydes connect through C=N-N=C; not a generic hydrazide.",
+      "topology_inference_allowed": false
+    },
+    {
+      "linkage": "secondary_amine",
+      "label": "Reduced-imine secondary amine",
+      "roles": [
+        "aryl_aldehyde",
+        "primary_arylamine"
+      ],
+      "candidate_transform": true,
+      "implementation_status": "runtime_registry_authoritative",
+      "scope": "Explicit reduced-imine design state, not a claimed generic direct one-step reaction.",
+      "topology_inference_allowed": false
+    }
+  ],
+  "monomer_library_scope": {
+    "source_partition": "train_only",
+    "new_source_images": 0,
+    "new_training_labels": 0,
+    "total_monomers": 41,
+    "connection_count_distribution": {
+      "3": 11,
+      "2": 22,
+      "4": 6,
+      "6": 2
+    },
+    "finite_graph_validation": "RDKit strict valence and isomeric SMILES/MOL roundtrip for each selected finite source graph. This is not experimental material validation.",
+    "topology": "Never derived from reactive-group count. Source metadata or an explicit user design choice is required.",
+    "full_name_scope": "Readable structural descriptions, normalized using source-checked graph incidence; original source labels and DOI aliases retained."
+  },
+  "library_only_pairs": [
+    {
+      "id": "hfptph_tfappm",
+      "label": "HFPTP-H + TFAPPM",
+      "monomer_a_id": "hfptp_h",
+      "monomer_b_id": "tfappm",
+      "linkage": "imine",
+      "executable_preset": false,
+      "reason": "Nonplanar6+4 source pair requires its explicit three-dimensional incidence; not a supported generic planar ring template. No new source recipe or identity asserted."
+    }
+  ],
+  "reference_only_compatibility": [
+    {
+      "linkage": "boronate_ester",
+      "reactive_group_pair": [
+        "boronic_acid",
+        "vicinal_diol_pair"
+      ],
+      "executable": false,
+      "scope": "Requires cyclic B-O-C connectivity; not an ordinary one-bond join."
+    },
+    {
+      "linkage": "boroxine",
+      "reactive_group_pair": [
+        "boronic_acid",
+        "boronic_acid"
+      ],
+      "executable": false,
+      "scope": "Three boronic-acid sites form each B3O3 ring."
+    },
+    {
+      "linkage": "imide",
+      "reactive_group_pair": [
+        "cyclic_anhydride",
+        "primary_arylamine"
+      ],
+      "executable": false,
+      "scope": "Ring closure retains both carbonyls; amic acid and imide states differ."
+    },
+    {
+      "linkage": "aminal",
+      "reactive_group_pair": [
+        "aryl_aldehyde",
+        "secondary_amine"
+      ],
+      "executable": false,
+      "scope": "Piperazine examples require two N additions per aldehyde and source-specific incidence."
+    },
+    {
+      "linkage": "cyanovinylene",
+      "reactive_group_pair": [
+        "aryl_aldehyde",
+        "activated_cyanomethyl"
+      ],
+      "executable": false,
+      "scope": "Knoevenagel-type connectivity retains nitrile and unresolved alkene stereochemistry."
+    },
+    {
+      "linkage": "ketazine",
+      "reactive_group_pair": [
+        "aryl_methyl_ketone",
+        "hydrazine"
+      ],
+      "executable": false,
+      "scope": "Ketone/hydrazine scope differs from current aldehyde-only azine transform."
+    }
+  ]
+}

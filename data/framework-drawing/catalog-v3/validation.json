@@ -1,0 +1,426 @@
+{
+  "catalog_sha256": "60448d1252666842e15d687aae853ae92c2858ea8fda02f801fd577a0c269928",
+  "builder_sha256": "3293d70d0f4c97acc83a42ba80bc301cdcaae4f835fd0cc267029a670badd501",
+  "base_catalog_sha256": "b1edd1052b60b154976a5b6404237c70002b0a7b8a885a914e33bfeabe32151f",
+  "inventory_manifest_sha256": "2706301a65b7cdb8601c64fe920aa560ae6983c3fe1787b31b2319eb1f7b7904",
+  "source_catalog_sha256": "03e4b613e14cca56940d050ffea6aa190a84a1f4829d4e3c5c3a6154b5528b58",
+  "verified_annotation_crop_and_pdf_files": 94,
+  "monomer_count": 41,
+  "checks": [
+    {
+      "id": "tfb",
+      "atom_count": 12,
+      "formula": "C9H6O3",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r099-006"
+    },
+    {
+      "id": "tapb",
+      "atom_count": 27,
+      "formula": "C24H21N3",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r174-001"
+    },
+    {
+      "id": "tp",
+      "atom_count": 15,
+      "formula": "C9H6O6",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r089-004"
+    },
+    {
+      "id": "pa",
+      "atom_count": 8,
+      "formula": "C6H8N2",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r187-002"
+    },
+    {
+      "id": "dmtp",
+      "atom_count": 14,
+      "formula": "C10H10O4",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r568-si-1-M1"
+    },
+    {
+      "id": "pa_so3h",
+      "atom_count": 12,
+      "formula": "C6H8N2O3S",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r197-01"
+    },
+    {
+      "id": "ta",
+      "atom_count": 10,
+      "formula": "C8H6O2",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-001-006"
+    },
+    {
+      "id": "tfta",
+      "atom_count": 14,
+      "formula": "C8H2F4O2",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-001-007"
+    },
+    {
+      "id": "dhta",
+      "atom_count": 12,
+      "formula": "C8H6O4",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-007-029"
+    },
+    {
+      "id": "bpda_cho",
+      "atom_count": 16,
+      "formula": "C14H10O2",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-014-018"
+    },
+    {
+      "id": "tfpb",
+      "atom_count": 30,
+      "formula": "C27H18O3",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r511-main1-tfpb"
+    },
+    {
+      "id": "tfpt",
+      "atom_count": 30,
+      "formula": "C24H15N3O3",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-008-021"
+    },
+    {
+      "id": "tfpm",
+      "atom_count": 33,
+      "formula": "C29H20O4",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r048-02"
+    },
+    {
+      "id": "tfppy",
+      "atom_count": 48,
+      "formula": "C44H26O4",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r251-05"
+    },
+    {
+      "id": "por_cho",
+      "atom_count": 56,
+      "formula": "C48H30N4O4",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r246-01"
+    },
+    {
+      "id": "hfptp_h",
+      "atom_count": 68,
+      "formula": "C62H38O6",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 6,
+      "observed_count": 6,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r255-04"
+    },
+    {
+      "id": "hfptp_f",
+      "atom_count": 74,
+      "formula": "C62H32F6O6",
+      "reactive_group": "aryl_aldehyde",
+      "expected_count": 6,
+      "observed_count": 6,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r255-06"
+    },
+    {
+      "id": "tapt",
+      "atom_count": 27,
+      "formula": "C21H18N6",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r510-m19-si22-tapt"
+    },
+    {
+      "id": "tapa",
+      "atom_count": 22,
+      "formula": "C18H18N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-009-019"
+    },
+    {
+      "id": "tapm",
+      "atom_count": 29,
+      "formula": "C25H24N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-001-004"
+    },
+    {
+      "id": "pytta",
+      "atom_count": 44,
+      "formula": "C40H30N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r122-01"
+    },
+    {
+      "id": "tfappm",
+      "atom_count": 57,
+      "formula": "C49H36F4N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 4,
+      "observed_count": 4,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r255-09"
+    },
+    {
+      "id": "benzidine",
+      "atom_count": 14,
+      "formula": "C12H12N2",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-004-015"
+    },
+    {
+      "id": "bpy55",
+      "atom_count": 14,
+      "formula": "C10H10N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r241-04"
+    },
+    {
+      "id": "azoda",
+      "atom_count": 16,
+      "formula": "C12H12N4",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r048-03"
+    },
+    {
+      "id": "pame2",
+      "atom_count": 10,
+      "formula": "C8H12N2",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r048-05"
+    },
+    {
+      "id": "melamine",
+      "atom_count": 9,
+      "formula": "C3H6N6",
+      "reactive_group": "primary_arylamine",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r042-02"
+    },
+    {
+      "id": "deth",
+      "atom_count": 20,
+      "formula": "C12H18N4O4",
+      "reactive_group": "acylhydrazide",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r241-01"
+    },
+    {
+      "id": "dmth",
+      "atom_count": 18,
+      "formula": "C10H14N4O4",
+      "reactive_group": "acylhydrazide",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r106-04"
+    },
+    {
+      "id": "bth",
+      "atom_count": 18,
+      "formula": "C9H12N6O3",
+      "reactive_group": "acylhydrazide",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r230-03"
+    },
+    {
+      "id": "hydrazine",
+      "atom_count": 2,
+      "formula": "H4N2",
+      "reactive_group": "hydrazine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r364-003"
+    },
+    {
+      "id": "bdba",
+      "atom_count": 12,
+      "formula": "C6H8B2O4",
+      "reactive_group": "boronic_acid",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r022-01"
+    },
+    {
+      "id": "bpbda",
+      "atom_count": 18,
+      "formula": "C12H12B2O4",
+      "reactive_group": "boronic_acid",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r001-02"
+    },
+    {
+      "id": "hhtp",
+      "atom_count": 24,
+      "formula": "C18H12O6",
+      "reactive_group": "vicinal_diol_pair",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r001-01"
+    },
+    {
+      "id": "thb",
+      "atom_count": 10,
+      "formula": "C6H6O4",
+      "reactive_group": "vicinal_diol_pair",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "rsc-molecule-r041-02"
+    },
+    {
+      "id": "thdma",
+      "atom_count": 20,
+      "formula": "C16H14O4",
+      "reactive_group": "vicinal_diol_pair",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r169-005"
+    },
+    {
+      "id": "thdea",
+      "atom_count": 22,
+      "formula": "C18H18O4",
+      "reactive_group": "vicinal_diol_pair",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r169-006"
+    },
+    {
+      "id": "pmda",
+      "atom_count": 16,
+      "formula": "C10H2O6",
+      "reactive_group": "cyclic_anhydride",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r137-01"
+    },
+    {
+      "id": "piperazine",
+      "atom_count": 6,
+      "formula": "C4H10N2",
+      "reactive_group": "secondary_amine",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "wiley-wave3-r246-02"
+    },
+    {
+      "id": "pdan",
+      "atom_count": 12,
+      "formula": "C10H8N2",
+      "reactive_group": "activated_cyanomethyl",
+      "expected_count": 2,
+      "observed_count": 2,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-wave3-010-031"
+    },
+    {
+      "id": "tkb",
+      "atom_count": 15,
+      "formula": "C12H12O3",
+      "reactive_group": "aryl_methyl_ketone",
+      "expected_count": 3,
+      "observed_count": 3,
+      "finite_smiles_mol_roundtrip": true,
+      "source_annotation_id": "acs-context-r364-001"
+    }
+  ],
+  "source_rows_are_train_only": true,
+  "source_identity_recipe_count": 4,
+  "new_design_presets": 8,
+  "no_source_files_or_paths_shipped": true,
+  "no_training": true
+}

@@ -1,0 +1,16 @@
+{
+  "asset": "cofdraw-logo.png",
+  "tool": "built-in image_gen",
+  "edit_type": "transparent background extraction",
+  "original_supplied_filename": "Faceted Teal C-Minus Logo.png",
+  "original_sha256": "b80bb8b8caaa85b386f55008c51d28cd75dbb864888fee48b75bc74a1b8c55d9",
+  "edited_sha256": "474854a46b00f3c7bbb4cfdf5e0a004f2e27dde8249c15f11b6d34f3dcb1e803",
+  "alpha_validated": true,
+  "alpha_zero_fraction": 0.7729739457344821,
+  "actual_visual_checks": [
+    "Transparent negative space",
+    "White background composite",
+    "Dark background composite"
+  ],
+  "prompt": "Remove only the white/off-white background and make it genuinely transparent, including all negative space inside and around the C and around the minus bar. Preserve the existing faceted teal C-minus silhouette, proportions, facet geometry and teal/mint gradients. Clean stray edge pixels; do not add text, shadows, borders or a checkerboard."
+}

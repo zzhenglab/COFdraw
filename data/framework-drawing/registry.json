@@ -1,0 +1,38 @@
+{
+  "schema_version": "cof-chemical-patch-1",
+  "recipes": [
+    {
+      "recipe_id": "tfb-tab-pore-v1",
+      "cofex_id": "COFEXM-YOZRE7ACVU7MOTKX2M",
+      "label": "TFB-TAB",
+      "path": "tfb-tab-pore-v1.recipe.json",
+      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "upstream_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3"
+    },
+    {
+      "recipe_id": "tppa-pore-v1",
+      "cofex_id": "COFEXM-HTM4SO6D3NX6MNYL2K",
+      "label": "TpPa",
+      "path": "tppa-pore-v1.recipe.json",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+    },
+    {
+      "recipe_id": "tpb-dmtp-cof-pore-v1",
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "label": "TPB-DMTP-COF",
+      "path": "tpb-dmtp-cof-pore-v1.recipe.json",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+    },
+    {
+      "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "cofex_id": "COFEXM-6YYNDORX3H7Z5YA3HT",
+      "label": "TpPa-SO3H",
+      "path": "wiley-r198-tppa-so3h-drawing-0002.json",
+      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "upstream_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827"
+    }
+  ],
+  "upstream_registry_sha256": "e931fd95f6975e89b962b571b1503c876bb631ebf3fae30598dde9166bb2e6cd"
+}

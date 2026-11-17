@@ -1,0 +1,160 @@
+{
+  "schema_version": "cofdraw-current-catalog-audit-1",
+  "created_at_utc": "2026-11-17T16:58:51.652514+00:00",
+  "catalog_sha256": "c6a6751240dad4bc1f1f15e9e9a2a2527bccbd0cd2e798e10f84c3c730b5bb89",
+  "base_catalog_sha256": "60448d1252666842e15d687aae853ae92c2858ea8fda02f801fd577a0c269928",
+  "previous_current_sha256": null,
+  "builder_sha256": "15408c6030e42cb3dcfc829af80f142a0e5975a978a14fe9894fe6570b5b0267",
+  "runtime_chemistry_sha256": "e5e12680019669a1fa760f86aaae22fcb0ad2fd8dce9bbc17ebeb5958c789233",
+  "monomer_count": 41,
+  "preset_count": 12,
+  "topology_or_strategy_entries": 25,
+  "enabled_template_ids": [
+    "alternating_hexagon",
+    "chain_2_2",
+    "hcb_3_2",
+    "hcb_3_3",
+    "hxl_6_2",
+    "sql_4_2",
+    "sql_4_4"
+  ],
+  "enabled_topology_catalog_rows": 5,
+  "three_dimensional_construction_enabled": false,
+  "source_preset_identity_unchanged": true,
+  "private_path_scan_passed": true,
+  "source_pdf_or_image_included": false,
+  "new_training_images": 0,
+  "source_registry_sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68",
+  "source_recipe_checks": [
+    {
+      "recipe_id": "tfb-tab-pore-v1",
+      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "precursor_names_smiles_notation_equal": true
+    },
+    {
+      "recipe_id": "tppa-pore-v1",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "precursor_names_smiles_notation_equal": true
+    },
+    {
+      "recipe_id": "tpb-dmtp-cof-pore-v1",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "precursor_names_smiles_notation_equal": true
+    },
+    {
+      "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "precursor_names_smiles_notation_equal": true
+    }
+  ],
+  "preset_template_checks": [
+    {
+      "id": "tfb-tab-pore-v1",
+      "template_id": "hcb_3_3",
+      "instances": 6,
+      "reactive_site_counts": [
+        3,
+        3
+      ]
+    },
+    {
+      "id": "tppa-pore-v1",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        3,
+        2
+      ]
+    },
+    {
+      "id": "tpb-dmtp-cof-pore-v1",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "wiley-r198-tppa-so3h-pore-0002",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        3,
+        2
+      ]
+    },
+    {
+      "id": "design-tfb_deth",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        3,
+        2
+      ]
+    },
+    {
+      "id": "design-tp_deth",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        3,
+        2
+      ]
+    },
+    {
+      "id": "design-tfb_ha",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        3,
+        2
+      ]
+    },
+    {
+      "id": "design-tfb_tapb_reduced",
+      "template_id": "hcb_3_3",
+      "instances": 6,
+      "reactive_site_counts": [
+        3,
+        3
+      ]
+    },
+    {
+      "id": "design-ta_tapt",
+      "template_id": "hcb_3_2",
+      "instances": 12,
+      "reactive_site_counts": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "design-tfpt_tapa",
+      "template_id": "hcb_3_3",
+      "instances": 6,
+      "reactive_site_counts": [
+        3,
+        3
+      ]
+    },
+    {
+      "id": "design-pycho_pa",
+      "template_id": "sql_4_2",
+      "instances": 8,
+      "reactive_site_counts": [
+        4,
+        2
+      ]
+    },
+    {
+      "id": "design-ta_pytta",
+      "template_id": "sql_4_2",
+      "instances": 8,
+      "reactive_site_counts": [
+        2,
+        4
+      ]
+    }
+  ]
+}

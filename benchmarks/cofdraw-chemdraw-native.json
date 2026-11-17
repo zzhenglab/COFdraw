@@ -1,0 +1,257 @@
+{
+  "schema": "cofdraw-native-chemdraw-port-check-v1",
+  "application": {
+    "name": "ChemDraw",
+    "executable_file_version": "23.1.2.7",
+    "version_source": "installed executable Windows FileVersion/ProductVersion",
+    "com_prog_id": "ChemDraw_x64.Application"
+  },
+  "actual_desktop_application_automation": true,
+  "cases": [
+    {
+      "case": "boundary-fixture",
+      "label": "single-bond boundary smoke",
+      "atoms_including_ports": 10,
+      "bonds_including_port_bonds": 10,
+      "connection_points": 2,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 0.0,
+      "native_MOL_atoms": 8,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 2,
+      "hashes": {
+        ".mol": "419f776d59d4c956bc231861ecb7c12181bb633ab55ef37f70f78346c0fc9506",
+        ".cdxml": "da00e417e4d9b6d699fa225aacac32d4ea7925fcf8e943e5645f2a22a3dc3721",
+        ".sdf": "499c04673a90ae9b71f6e6c9c38377b4666db2c3640ed117266dfe4860a86f15",
+        ".chemical-export.json": "bf2cb7596c3217103d98aa03f5e61a41112ab8608162e008b75a9825677cf72c",
+        "-native.cdxml": "8b892c49abad65b05557cc6fa1012669d0202906ecef149f5b9762502f190609",
+        "-native.mol": "3fbef5a40ef361efcea6fd53ec99fba576daa18f9f8fa31b86c69e131d5f2530",
+        "-native.png": "eeb2f745b26f93de008362d7415e4d9317232123e5e96318fbb2fb044448c933",
+        "-native-automation.json": "4952133593e5626cc12f2d183394d09ffe30090115f4556c310966aab7605711"
+      }
+    },
+    {
+      "case": "case01",
+      "label": "tfb-tab-pore-v1",
+      "atoms_including_ports": 108,
+      "bonds_including_port_bonds": 123,
+      "connection_points": 6,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 5.684341886080802e-14,
+      "native_MOL_atoms": 102,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 6,
+      "hashes": {
+        ".mol": "e3dac3b9bd5a8325f61dacafe8c2c984bfb5826102816a1095977091d9274d7f",
+        ".cdxml": "c50068de9dda398774d8481eb7bcd03bbf225276e9e12764bf67ce0a23e3ca64",
+        ".sdf": "637a8ed3aa8cefae0a4cec6f009ea72d3c35309caed3282ae29da89151e1697d",
+        ".chemical-export.json": "7529a5edb4d0c226a55224ecce9d182b0824aa15979508a002765d71a11bf395",
+        "-native.cdxml": "73fafa9954be59e74252eb637f7dd0a75aa29e3c50d575b10ee1eaad8777fc2e",
+        "-native.mol": "1b843fc55ca3a82a85a94e240f50d2b382e1ee00cebbf741cbad72dc3714d583",
+        "-native.png": "d50f53e8007c6205a7776f3da8e01f47ccaa5a00483f0b5a8ef59f3a205c35cb",
+        "-native-automation.json": "f0f98c5d6fd591685fa7b6fb238a38646fc99e48a11830a0221d99da3a8f3e9d"
+      }
+    },
+    {
+      "case": "case02",
+      "label": "tpb-dmtp-cof-pore-v1",
+      "atoms_including_ports": 234,
+      "bonds_including_port_bonds": 264,
+      "connection_points": 6,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 1.1368683772161603e-13,
+      "native_MOL_atoms": 228,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 6,
+      "hashes": {
+        ".mol": "506dff18f786b19ad8c11c984632271875968881a6a5ce13f80ea6cfba1e494b",
+        ".cdxml": "75927627915b840a926b6eafae0be46da9141eb7673479e033df4966d0c4454f",
+        ".sdf": "3682b06e832dc2237bd4b8033e7cbf170a3cf9c89bee7593211d64c1b2f91f37",
+        ".chemical-export.json": "a5caaecf89ff838f42bb591b861421252bbfde4f73f2016378696d554cce76b9",
+        "-native.cdxml": "753e17fcba06a2c798ee5ae69413d3fd2945855de6122f6cb5227d8d4ee95a02",
+        "-native.mol": "4d94db654a819ed2356573c22f5395bfaf55588142de3a111b14313d898160bf",
+        "-native.png": "175a943dc20a712753a37f55fed96f7fea97601e7387ccdff660a91d3c7912e6",
+        "-native-automation.json": "c839fdf14cd79a88f82a069b29fb27268307a9cff5ff0e4f7a41030ae569e4bf"
+      }
+    },
+    {
+      "case": "case03",
+      "label": "tppa-pore-v1",
+      "atoms_including_ports": 126,
+      "bonds_including_port_bonds": 138,
+      "connection_points": 6,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 5.684341886080802e-14,
+      "native_MOL_atoms": 120,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 6,
+      "hashes": {
+        ".mol": "0550910016fdeb3ed87457efc0e905b22d390d9230d04ac46d177d0d3137062e",
+        ".cdxml": "4904671d184865fd8fde0fb82de41b9a52ccf224c974aa4b71ac2af7773ea41e",
+        ".sdf": "e5de5c969408a2b10b27a24ff1e305b044ac52e7230c059e6d89cb24fd067d3a",
+        ".chemical-export.json": "757ca622f40618f377b2b88380fabee6ed2cc3fe4f5dcf48cc0892880b2ce797",
+        "-native.cdxml": "deb617ca674bbd455ffdfb7ddbc1f8e42bd67ed80af89ef896025ca481ced310",
+        "-native.mol": "2f0fbf80d98d13219f5149f37b8ab66e8c6586ee0e1eef0cfea5cf3618504bcb",
+        "-native.png": "37fe61906e069014dc90a35dfc411c6d02c31deafbc492b8e1fe2b01d95efad8",
+        "-native-automation.json": "d6b8d26f8672d3a0019878034da4e90651c261ab0df5af7788ae56cc4d937b8b"
+      }
+    },
+    {
+      "case": "case04",
+      "label": "wiley-r198-tppa-so3h-pore-0002",
+      "atoms_including_ports": 156,
+      "bonds_including_port_bonds": 168,
+      "connection_points": 6,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 0.0,
+      "native_MOL_atoms": 150,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 6,
+      "hashes": {
+        ".mol": "127d9d162351c844c3b9153f16e6b5b5b515cc2633ca3236e2f3e38e71c8e70b",
+        ".cdxml": "fbdd8506eedc52fb73a78d5eb43e97deff5b0cdb20bdd934e9ef8ccb55fb50c1",
+        ".sdf": "4c74284d8af2c41ec16b52f8c18a2d13a9af3340d0d9f79cbbf52d6472da347d",
+        ".chemical-export.json": "bec7eb1a9e74513946b9ce87c7cf886b6842708c9b2466f33b7dda18dca01afa",
+        "-native.cdxml": "a935a0aec6367c06ba7b6365e0f33c2f173497470687550fae46cfe82d211d65",
+        "-native.mol": "7153da91d510c4e84ee31565b7b65ae9a556f73476fc81ce7d44d910f49d5511",
+        "-native.png": "4645918650ce6e7ecb1d396a4c39c5acf1a2f9074b63638354f2320767eb745b",
+        "-native-automation.json": "a45a4882b04e105f1734cf4283c3b0058d24c6b1bac0cc8ddeaf3f02c65425bc"
+      }
+    },
+    {
+      "case": "case05",
+      "label": "automatic-preset",
+      "atoms_including_ports": 240,
+      "bonds_including_port_bonds": 270,
+      "connection_points": 6,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 1.1368683772161603e-13,
+      "native_MOL_atoms": 234,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 6,
+      "hashes": {
+        ".mol": "921f458fb6a11497e5bdba8d10eb0662c1ed5c9e47124268d63d9eeda99841f8",
+        ".cdxml": "8412b3b24004f82265805ff45c22a282a6c31d30b1be5a717649e91280e3bbec",
+        ".sdf": "92541f95c92fab00e52110e19acc4bd077587506df10f141739d3394d02df0ca",
+        ".chemical-export.json": "5ecf0a05d4864de968ac7ef5db695d15b36b2a0a1c424aea5552be0ae6991e79",
+        "-native.cdxml": "2803f7bcb43806ce427dc542e8015131ab0012f1e4e970b5c8e716c185df099e",
+        "-native.mol": "4675688b6c6389af8dfae576bbce13ecbf90310c7f1c10a85e2073cdf8d76ab7",
+        "-native.png": "af79f623e5366caddab2905e41f01548fee11efdaf9813dcd9fbd3f285f5483d",
+        "-native-automation.json": "ffd78fcdfc15fe65c8d250c0ecedcd67968541d8c2baa448626092480c292f35"
+      }
+    },
+    {
+      "case": "stereo-E",
+      "label": "stereo-E",
+      "atoms_including_ports": 6,
+      "bonds_including_port_bonds": 5,
+      "connection_points": 0,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 0.0,
+      "native_MOL_atoms": 6,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 0,
+      "hashes": {
+        ".mol": "8d878a2a2899992e1b8997b223ca5d1c83b3f514fc955d4e9a114353a3352c94",
+        ".cdxml": "b5541684b2f170475373df8a519c5dd7d8d75d9d92c0e48accce2952aa6ec3eb",
+        ".sdf": "f5bad3eef7f8f81a2a18babbc3c0ba450dfd614e055295971d952e2cc54e9971",
+        ".chemical-export.json": "4b267a4c26d05f2cf32e9d940b84170cdd3c4c5060c8a5a4f7d1de5fe029cace",
+        "-native.cdxml": "97b942aacfeffa027afd5c73544a30549b3257dd6f885fff4c99b0e9fc5af3bd",
+        "-native.mol": "a31ed1e948d32d55f923941574ed66a8fd6b5b15e0f2968e443240d1bda01e8f",
+        "-native.png": "d77285f4425858d6aa7434fa3013eda466191219131380eb94fc509af88dd179",
+        "-native-automation.json": "ef8300f995c1b70a31b9481d2ccabcacb9aea0d7acd83206901bc22287a3bb9e"
+      },
+      "native_MOL_isotope_tetrahedral_and_alkene_stereo_exact": true,
+      "native_MOL_isomeric_smiles": "[13CH3][C@H](F)/C=C/Cl"
+    },
+    {
+      "case": "stereo-Z",
+      "label": "stereo-Z",
+      "atoms_including_ports": 6,
+      "bonds_including_port_bonds": 5,
+      "connection_points": 0,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 0.0,
+      "native_MOL_atoms": 6,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 0,
+      "hashes": {
+        ".mol": "aa6584bef5cf81744bdd26c7d2a0cb67c4f0be1923cbd98e71febc21be940eef",
+        ".cdxml": "be76b7877eec9a6cfd1d75aef0a0803341a6b392284358db81d6e688862e870a",
+        ".sdf": "a39ecce77e02fab6e614b9227582ec52c5d351ab4dabb3111f48f084c5902493",
+        ".chemical-export.json": "2b13069617ea41eeced5092515a5103ba0d70f7900f3022c423d1adf9cd97ffa",
+        "-native.cdxml": "da5a415f6c6b33b3ce466c3c1041dac6fa5f35648f5b91d2de7aa1c7a4b5e1fc",
+        "-native.mol": "da0af5ef26e81db60a3d471822a4ebb0c03249c98787904623d187bb250fc5dc",
+        "-native.png": "7d66ca39823d5173292da64277413df203c732fa957376d8362a8fe823c41eca",
+        "-native-automation.json": "a12a21014965980f15fb27e67a9d3156e4fb8ca2043bcfe1b46ee6e29aa52cab"
+      },
+      "native_MOL_isotope_tetrahedral_and_alkene_stereo_exact": true,
+      "native_MOL_isomeric_smiles": "[13CH3][C@H](F)/C=C\\Cl"
+    },
+    {
+      "case": "double-cut",
+      "label": "double-cut",
+      "atoms_including_ports": 5,
+      "bonds_including_port_bonds": 4,
+      "connection_points": 2,
+      "native_import_and_save": true,
+      "explicit_cdxml_atoms_bonds_hydrogens_preserved": true,
+      "bond_display_and_boundary_types_preserved": true,
+      "coordinate_translation_only_max_residual": 0.0,
+      "native_MOL_atoms": 3,
+      "native_MOL_ports": 0,
+      "native_MOL_boundary_loss": 2,
+      "hashes": {
+        ".mol": "77a131667a65d1f6cf1b1203ad180755f23bb0749c9c554fc0976b5c4e520fb4",
+        ".cdxml": "a1dadd6b7b170e3e41ab8a4d2034bbcfb133e99ff9d3cbc73addc2a64ca22493",
+        ".sdf": "a50d372808f3be1b797a0058190d1a986a3609a607a5ed67bc0d8a85b72db29d",
+        ".chemical-export.json": "23bb533d0099110170b1f768bb8399e284c3a06f5c0eef9d9c11a45fb1f414fe",
+        "-native.cdxml": "9981b9303962e989af0879c5c08792754a9872e69d4cd155fa56c71c2566117b",
+        "-native.mol": "2a09fc6fa7ed2c7879b31052bdefbc7649f1f54323bf6faab6b440bcd55373e2",
+        "-native.png": "822495a778e9e75123754e354cd647fdfb765647e60350705fcc2ee5125d583a",
+        "-native-automation.json": "e28f5342eb534a736e465c4556b9202c16bd3052518feed05b456139b4b60f15"
+      }
+    }
+  ],
+  "case_count": 9,
+  "all_native_cdxml_import_save_and_table_checks_pass": true,
+  "actual_visual_inspection": {
+    "reviewer_type": "agent",
+    "files": [
+      "boundary-fixture-native.png",
+      "native-results-contact.png"
+    ],
+    "scope": "All nine native PNGs inspected, the eight-case contact includes the five pores, isotope/E-Z pair and double-cut fixture; continuation marks and expected stereochemical depictions present. No literature-style equivalence claimed."
+  },
+  "limitations": [
+    "Native ChemDraw SaveAs MOL drops ExternalConnectionPoint nodes. Preserve native CDXML for edited boundary structures and retain original MOL/SDF plus JSON for graph provenance.",
+    "No whole-periodic material graph, global macrocycle aromaticity, source-style fidelity, automatic cleanup or arbitrary CDXML feature coverage was tested.",
+    "RDKit native CDXML reading does not preserve ExternalConnectionPoint semantics; it is not used to validate those nodes.",
+    "Tests use Python-generated exports and actual installed ChemDraw; the rebuilt frozen executable requires separate packaging smoke."
+  ],
+  "process_isolation": "Each run opened a new initially empty hidden automation instance, closed only its temporary document and quit only that owned instance; existing ChemDraw process was preserved.",
+  "supporting_files": {
+    "audit_saved_files.py": "2689b7d9ef9833bee5afd4e5a9b6ca4a93e9f93ec1c06c119581b70f2cb85d48",
+    "native-smoke.ps1": "af682e9c147848677cd8d14b4b931c213d5b84c139ff1055a4ff592c04a2b60f",
+    "native-batch.ps1": "2e3d9d5bd294033484515d06bd6442a8ca59af4f678e7c2a27a860efd1503ce7",
+    "native-results-contact.png": "a84a11c33577fcfa907001aec59884b392d3c057f6a9d3b5a7467d223d9c728b",
+    "cases.json": "a59cc17dfd5338d65550232b0ef0b9e760cd66e8fcce38b3ecc41048f9428065"
+  },
+  "private_report_sha256": "f013bed99ce750c537ab98626b29eb74ad3b4e6effbbefcac4bca6ab398d9027"
+}

@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a drawing or workflow improvement
+title: "[Feature] "
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What would you like to do?
+      description: Describe your use case and the result you need.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Examples or references
+      description: For new chemistry, include a DOI or public reference and the relevant monomers/linkage if available.

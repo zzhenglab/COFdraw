@@ -1,0 +1,138 @@
+{
+  "version": "0.3.0",
+  "validated_at_utc": "2026-11-17T17:49:17.945988+00:00",
+  "executable_sha256": "80446e5e8940d14924d01265845eb7c65cb78f12e15f602b25caf129ec17037c",
+  "private_qa_report_sha256": "c1d01f756cb4e6a84c8888394f58044b78c2b75b98140f79c0c4bc7a70abb116",
+  "pytest": {
+    "command": "python -m pytest -q",
+    "passed": 355,
+    "skipped": 0,
+    "failed": 0,
+    "junit_sha256": "81a424218eede135a82a20bf6a98029d9a39692e56e64d2ab67767d296ad7cb6",
+    "seconds": 15.78
+  },
+  "packaged_library": {
+    "styles": 17,
+    "monomer_presets": 41,
+    "templates": 7,
+    "topology_catalog": 25,
+    "linkages": 30
+  },
+  "packaged_source_drawings": [
+    {
+      "source": "tfb-tab-pore-v1",
+      "atoms": 108,
+      "elapsed_seconds": 0.27,
+      "downloads_sha256": {
+        "svg": "20d21680e2c5d6f5f52bd1d05fcf3fa4bfc408b10e22adb9910e4486b7c49613",
+        "png": "828740029ed78eac839a6406f0459448351da578f2ffb7f2788fb37705e14e37",
+        "mol": "e3dac3b9bd5a8325f61dacafe8c2c984bfb5826102816a1095977091d9274d7f",
+        "json": "b757414df95543e2601e31838ea19f471848222adcfcdccb49e0d0804d9ff275",
+        "sdf": "637a8ed3aa8cefae0a4cec6f009ea72d3c35309caed3282ae29da89151e1697d",
+        "cdxml": "c0c360300803ec1c8547bd24605ac5bf8b3374308774f059171f0f251e7dfa12"
+      }
+    },
+    {
+      "source": "tppa-pore-v1",
+      "atoms": 126,
+      "elapsed_seconds": 0.19,
+      "downloads_sha256": {
+        "svg": "51afcf7f2660d1a0a36664499f034263e80d23477b1ab406e38992a264be7d3e",
+        "png": "988f9e9fea015097f23188e278aa11c6ce4af37be7822afd445908af404c3e82",
+        "mol": "0550910016fdeb3ed87457efc0e905b22d390d9230d04ac46d177d0d3137062e",
+        "json": "ff88fe418c790899b472346415122553f421064bebe6187805bd7f58ee2eedfd",
+        "sdf": "e5de5c969408a2b10b27a24ff1e305b044ac52e7230c059e6d89cb24fd067d3a",
+        "cdxml": "731348e1557096dd4c65c47032b6a7bb347d2dbf756409767ea27c20d3e480ce"
+      }
+    },
+    {
+      "source": "tpb-dmtp-cof-pore-v1",
+      "atoms": 234,
+      "elapsed_seconds": 0.23,
+      "downloads_sha256": {
+        "svg": "1d834a25a008774c69311e2c606de07607b7108f404a31c1408409046c190dac",
+        "png": "ecf0fd366e7bf0c30096946410a19a161ec2ef138127a45820b7d9d0b75abfa5",
+        "mol": "506dff18f786b19ad8c11c984632271875968881a6a5ce13f80ea6cfba1e494b",
+        "json": "f0f3a2fc316c4fcd41f6cc6358bdf238278521ea19c3fcded3eb00fb9a28080f",
+        "sdf": "3682b06e832dc2237bd4b8033e7cbf170a3cf9c89bee7593211d64c1b2f91f37",
+        "cdxml": "fe1410b4add1ff72f68bdc7771c907cd6c58ea05c8a5c23d89a8abd468633b53"
+      }
+    },
+    {
+      "source": "wiley-r198-tppa-so3h-pore-0002",
+      "atoms": 156,
+      "elapsed_seconds": 0.17,
+      "downloads_sha256": {
+        "svg": "b2d8c3edad84029bee01de7100484d2ff1baf6930d4fc1b1181358d414197270",
+        "png": "6a7ea0f2f4ce471fa0537082cd4f96c90e0a4d64d11e052a763516842dbc4e95",
+        "mol": "127d9d162351c844c3b9153f16e6b5b5b515cc2633ca3236e2f3e38e71c8e70b",
+        "json": "df44167730a106ac0c50b5959a1067f7d7cb9380a027a69a8ab0d34851a4b453",
+        "sdf": "4c74284d8af2c41ec16b52f8c18a2d13a9af3340d0d9f79cbbf52d6472da347d",
+        "cdxml": "4fa14c00bbb77acc5768cca34faee424b707117e549b868ec80c050a6d49e827"
+      }
+    }
+  ],
+  "browser_checks": [
+    "Real SVG card grid: lazy off-screen loading, cached filter reuse, scrolling, and 1/2/3/5/6 responsive columns",
+    "Broad library4c filter, visible disabled partner reasons, and single-monomer MOL export without changing A",
+    "Choose A then B: incompatible partner actions remain visible and disabled",
+    "3D topology references remain browsable and explicitly nonconstructing",
+    "Local catalog loaded and real RDKit monomer SVG displayed",
+    "Monomers prepared and six-block imine patch rendered",
+    "PNG/SVG/MOL/SDF/CDXML/JSON downloads saved",
+    "Actual colored drawing style rendered",
+    "Actual palette/font/continuation/transparency overrides applied",
+    "Random style returns reproducible seed",
+    "Project saves and reopens as an editable design without inheriting source identity",
+    "Interactive benzene ring drawing validates and replaces one monomer",
+    "Stereo graph retained; unsupported stereo connectivity edit is blocked explicitly",
+    "Actual twelve-block Tp ketoenamine patch",
+    "Expanded catalog shows full monomer names, reactive groups and chosen template",
+    "Unsupported linkage is searchable and explicitly prevents generation",
+    "Actual four-connected catalog monomers render their explicitly chosen template",
+    "Actual acylhydrazone monomer pair rendered",
+    "Actual layered presentation rendered with explicit scope notice",
+    "Actual schematic presentation rendered with explicit scope notice",
+    "Source recipe displays qualified COFex ID and full notation",
+    "Source coordinate edits strip active reference identity before re-render",
+    "390 px layout has no horizontal overflow",
+    "Explicit fixture: omitted CDXML reason visible; unsupported download absent"
+  ],
+  "browser_javascript_errors": [],
+  "native_window": {
+    "opened_and_closed": true,
+    "native_save_bridge_loaded": true
+  },
+  "chemdraw": {
+    "application": {
+      "name": "ChemDraw",
+      "executable_file_version": "23.1.2.7",
+      "version_source": "installed executable Windows FileVersion/ProductVersion",
+      "com_prog_id": "ChemDraw_x64.Application"
+    },
+    "import_save_cases_passed": 9,
+    "report": "benchmarks/cofdraw-chemdraw-native.json",
+    "report_sha256": "0d6037642ee857248b1309b5e06313733ea213dd99af652239f56199b46414fa",
+    "page_fit_cases_passed": 7,
+    "page_fit_report_sha256": "62c49ab7a94345af859be5b46b76e21f2d94bc9a11c0626492f34da8c50f78bb",
+    "exact_packaged_export_native_pass": true,
+    "packaged_page_report_sha256": "87ad926cfac4cdf65959f48556c375aa2b9c507d2daae3351a704d7eba7336be"
+  },
+  "local_performance": {
+    "report": "benchmarks/cofdraw-render-performance.json",
+    "sha256": "bae1069a86a3d10d569aad28edce2ed2c47950e8361ebacfdbe305fa56e60a02",
+    "baseline_median_seconds": 18.292941899970174,
+    "updated_median_seconds": 0.1639769000466913,
+    "scope": "Local 240-atom DMTP-TAPB hcb_3_2 finite patch, 1000px Standard, prepare + draw + SDF/CDXML export; excludes app startup and browser download."
+  },
+  "limits": [
+    "A user-driven Windows Save dialog was not manually exercised; bridge availability and browser file contents were checked.",
+    "ChemDraw CDXML import/save preserves chemical and continuation tables in the nine checked cases. ChemDraw's MOL save omits external connection points; keep edited frameworks in CDXML.",
+    "Local timing uses one nonstereo 240-atom example and excludes startup/browser downloads; it is not a general performance promise.",
+    "The omitted-CDXML browser notice uses an explicit response fixture; the four packaged source drawings all produce actual CDXML.",
+    "Layered and cartoon renderings are illustrations, not calculated crystals. Template connectivity is a design choice, not a topology prediction.",
+    "These are software checks, not image recognition accuracy or independent human chemistry ground truth."
+  ],
+  "training": false,
+  "model_inference": false
+}
