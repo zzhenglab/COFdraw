@@ -1,0 +1,503 @@
+{
+  "schema_version": 1,
+  "version": "0.6.1",
+  "validated_utc": "2026-11-17T23:56:15.000732+00:00",
+  "passed": true,
+  "archive_sha256": "7a725870a0fc1f4afbef0909748df905a0174984f07be4270e64c62dc24e7433",
+  "archive_bytes": 67138765,
+  "executable_sha256": "c6fc04bff9c2763b2cede777bd0dc8a2773aaff7480e6b25669bff48d44406b9",
+  "runtime_config_sha256": "94cfe11aed6870ddb76a8ef105e41359fc1fc074638ec6c965c46bd31f49563a",
+  "launch": {
+    "method": "ordinary_explorer_reviewed_shell_link",
+    "passed": true,
+    "native": {
+      "version": "0.6.1",
+      "status": "desktop_smoke_passed",
+      "title": "COFdraw \u2014 Chemical drawing studio",
+      "native_save_bridge": true
+    },
+    "process": {
+      "integrity_rid": 8192,
+      "medium_integrity": true
+    },
+    "server_closed": true
+  },
+  "first_run_confirmation": {
+    "observed": true,
+    "product": "Microsoft Defender SmartScreen",
+    "application": "COFdraw.exe",
+    "publisher": "Unknown publisher",
+    "action": "More info then Run anyway",
+    "security_settings_changed": false,
+    "agent_removed_download_marks": false,
+    "executable_mark_observation": "present_before_absent_after"
+  },
+  "marked_file_count": 115,
+  "marked_files": [
+    {
+      "path": "_internal/clr_loader/ffi/dlls/amd64/ClrLoader.dll",
+      "sha256": "07f62bcb1b70320f221ffb2cfc5ce6133815195f3e7cdb8d833222506188c2ac"
+    },
+    {
+      "path": "_internal/clr_loader/ffi/dlls/x86/ClrLoader.dll",
+      "sha256": "3128381d133f4ff746add70100cfef713ce2d78f2b12c02ec24ec453c5dfab0d"
+    },
+    {
+      "path": "_internal/libcrypto-3.dll",
+      "sha256": "05fe080eab7fc535c51e10c1bd76a2f3e6217f9c91a25034774588881c3f99de"
+    },
+    {
+      "path": "_internal/libffi-8.dll",
+      "sha256": "eff52743773eb550fcc6ce3efc37c85724502233b6b002a35496d828bd7b280a"
+    },
+    {
+      "path": "_internal/libssl-3.dll",
+      "sha256": "2e9fbcd8f7fdc13a5179533239811456554f2b3aa2fb10e1b17be0df81c79006"
+    },
+    {
+      "path": "_internal/numpy.libs/libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+      "sha256": "63c857e738469261263c764a36be9436ebdeaa272e340a828f42047a97131080"
+    },
+    {
+      "path": "_internal/numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll",
+      "sha256": "a4c2229bdc2a2a630acdc095b4d86008e5c3e3bc7773174354f3da4f5beb9cde"
+    },
+    {
+      "path": "_internal/python3.dll",
+      "sha256": "db84bc052cfb121fe4db36242ba5f1d2c031b600ef5d8d752cf25b7c02b6bac6"
+    },
+    {
+      "path": "_internal/python311.dll",
+      "sha256": "0817a2a657a24c0d5fbb60df56960f42fc66b3039d522ec952dab83e2d869364"
+    },
+    {
+      "path": "_internal/pythonnet/runtime/Python.Runtime.dll",
+      "sha256": "2ebd4492e28442ef1f1af587afe5b3a090c2ebfa220758ded4f1450f2a27f13a"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_iostreams-cda58e5c4f7330c51680bab67d6885bf.dll",
+      "sha256": "bdbbd7f587f4c6352b0f9adfdec6906cd1e026779da76956a9deeaf9c4f23a30"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_numpy311-afc560a316bee0f94cb644e4daa45334.dll",
+      "sha256": "2a4e7bf4e56d0ed9aa2465fd54c27a6ee7653ec9822a9282e8e8575c4961b2be"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_python311-8480122feeff453efd769ac4c04b0edc.dll",
+      "sha256": "b0118a58815cd859efd6ad4df42be71214ae779274c2a022e1e62af45b7be614"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_serialization-bb5e81e423a7816a842536dc8ef0564a.dll",
+      "sha256": "70c46b3289eb9094db8d3379b8021468b8b7259d15cfc1359345f98bd1b74525"
+    },
+    {
+      "path": "_internal/rdkit.libs/brotlicommon-84c5df3ccb9ac25887ad77032b644681.dll",
+      "sha256": "84c5df3ccb9ac25887ad77032b6446812591192f26b86a12dd9ec081693ffc1b"
+    },
+    {
+      "path": "_internal/rdkit.libs/brotlidec-6ec09a6a7ad50d56afaa19ce27cc7ae9.dll",
+      "sha256": "62e4d7dc044581e59f8e9e0edbe16d2d6311a7aa4cf5b296a7dcdec4912e25f1"
+    },
+    {
+      "path": "_internal/rdkit.libs/bz2-9e9b61ce4d00ceb3ac8bcf8ee9e0d4c7.dll",
+      "sha256": "9e9b61ce4d00ceb3ac8bcf8ee9e0d4c792e54f3b7575fc154cdeebc6052467a1"
+    },
+    {
+      "path": "_internal/rdkit.libs/cairo-2-055de767cfb20439bee7e4a9811ac1d8.dll",
+      "sha256": "3c507ac04afb0d00685a299942c2f3d983f3b02e7b696e9d566e5f7c75e9652a"
+    },
+    {
+      "path": "_internal/rdkit.libs/fontconfig-1-8eeb50ff0699649a1c2d6f788345061a.dll",
+      "sha256": "9df303353251aa70bd4a6f17439950991dbe7960904519b58764d8629febc185"
+    },
+    {
+      "path": "_internal/rdkit.libs/freetype-4bbaea004e6272646e9e4321eff67735.dll",
+      "sha256": "a21ddc31180144e192b742beb754cea68fc40897c471ab45dafd3ba3f54759bc"
+    },
+    {
+      "path": "_internal/rdkit.libs/libexpat-7afc320316896ea83be6a624583d6d7b.dll",
+      "sha256": "7afc320316896ea83be6a624583d6d7be9d4da500274d852dddb695ab8ff1a6d"
+    },
+    {
+      "path": "_internal/rdkit.libs/libpng16-58fe6381b28412e52ec666e4d6ed3d2b.dll",
+      "sha256": "1b4b966ba6c4c281963b0240d8cf8c7667b3ecb199bd31838d3df6f17e7e3108"
+    },
+    {
+      "path": "_internal/rdkit.libs/msvcp140-0fa7eb792d3fbcf2233e4ea47e9144b9.dll",
+      "sha256": "0fa7eb792d3fbcf2233e4ea47e9144b9b1309ba8ed5d4731a72fffa8f4f556d6"
+    },
+    {
+      "path": "_internal/rdkit.libs/pixman-1-0-36171e49cbe1a56fa8e4e996e3952964.dll",
+      "sha256": "36171e49cbe1a56fa8e4e996e395296456a6349d99a2396f7244ede0a1e0540c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAbbreviations-efcc5526f1d1736eebfee5a9f87e50db.dll",
+      "sha256": "162e875f4fd9e0e1f6699c43206d9e7b28a0e7d0fc0dc2e05ab9fcd101d52369"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAlignment-adb1964a87f3f1c97dcf32ac623ca9dc.dll",
+      "sha256": "956c70d7e51220e6eff33e19c7dbd6900a50679c3acfa271111ea153606b6685"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitavalon_clib-7db6867463d473a4ba9258017689306b.dll",
+      "sha256": "7db6867463d473a4ba9258017689306b40913b5391c0b400fe8f712ee84fb8dc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAvalonLib-a6e380fe21a9e88ed4417e4607ed161d.dll",
+      "sha256": "6a5d26b3925e653161c9f5125a88bbb1ffa67dab87972601efe5ad7aae262222"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitCatalogs-d43062a09d20a18b19ffe1e12f7779e7.dll",
+      "sha256": "9121cac773833209856b19ebe7a9cf3881e2e3faac52fece2ba7fcf8000ff717"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemDraw-333a78fc837defa3b1ca1eecdf4b359d.dll",
+      "sha256": "a5c4fabfb2e7bd5cf18e5c8d97e8b88eb0f1778ed717bc37a97408f1d63cd515"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemicalFeatures-4bb3380847bd71755bc4250ee4121758.dll",
+      "sha256": "dcea5c76f7dbbb8640db99c1b0e5c0f4932ef2dcbce1ebb646b279ae32c1c7fd"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemReactions-3de201bb59a51c64a4e75b0b1caa6f5d.dll",
+      "sha256": "8a03803a2bad30932fef883aa0114ccc749847c4c134a9790f2f7f2fa3cd6a6d"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemTransforms-7b2034ed205b810a198f9060876aee76.dll",
+      "sha256": "8c82ece3ae71fefcd0357013d2e9a81dd492dba91f630b7c6641274598d3fa6a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitCIPLabeler-38cd896c19416d5230c5d606f11e8953.dll",
+      "sha256": "c04a94de15fcc824a82f69e1647cb3070a03b782b2f35e7ce04d2c83adf75df4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitcoordgen-1bf45e94a9e08fe859ca215f1f6aeb8c.dll",
+      "sha256": "e9b34d88d02824415beb6c91311d4a91c96c9a064b495d568c2fd30373450cd6"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDataStructs-68f889bfe1077fb16cf028732d5df624.dll",
+      "sha256": "112701d840f9a31b63ad270f835fdd243398c007dba10816c34e2d7a02e08eb0"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDepictor-3fa9c879ad55fcafcaea8ed736a5bafa.dll",
+      "sha256": "5dbebf962a321b113d1ef89bb0f3ef58b313152678a87307902a48f20b19e5d1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDeprotect-0af9c315508f8f608131ca3d7574e245.dll",
+      "sha256": "c77e3f04ebd9d4c287a750dd0d5817f7b6ae876f42f09f432f1ccd5de2ca563c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDescriptors-32607e4b2b4f9e8054046bd213f88e0c.dll",
+      "sha256": "779d5d2af25d1ffaf64f59bd0919ef6e469adf0e647396395d3bf174ba353923"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDetermineBonds-a014d52f6e4ebe56c492b3bfcd9ca918.dll",
+      "sha256": "1994078c4a893d63e7169a7306330bb3b8e7a682e5e2e6043b59586298e39ef4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDistGeometry-bb1a790af9f4941ca113c92df6e13965.dll",
+      "sha256": "87d21ed532f90233f037a82a0e28e4f46fc74fa3226973101555fac5aeef49ef"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDistGeomHelpers-b22ceaa212481fb3d64a4db8974af21c.dll",
+      "sha256": "384918d205b8961c16cd96b66ba866f57e91a099c5a06df128615af0392520a3"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEHTLib-4a2123f2c69c3a82c92e134a3222491c.dll",
+      "sha256": "d9c7c7c239dc412be7a0cd31c84308dd09ce8c2512b99fdcafb17c73470d2229"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEigenSolvers-b23a0a717c0c4b0ba8628439382a6479.dll",
+      "sha256": "95434c065b2b27e4c663357d8ce525eaa1bc61a5847f48f80da28e0ae1e28530"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEnumerateStereoisomers-1929e992e4618f58576fa13fcecb1ef5.dll",
+      "sha256": "c7af95f1317867922c5b1c76033bc8fcc3575ab4b309ff264e7a6718a7764dfc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFileParsers-d365ca4bafb411d6bfcfc5c037970f24.dll",
+      "sha256": "91c35551221be4e707b711fb70ae5fcf4eb467103635d2d19613619f14fb34eb"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFilterCatalog-b1c7657b35bacf4c3d89a01c2758e6ea.dll",
+      "sha256": "0f50358f391208975595e28df430fc79d89b25baa91c79f50b21d0701f4fb131"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFingerprints-b9614f5f49ec3f3c8a280ea925094913.dll",
+      "sha256": "5a5c78ed91f6f5ce4813c3c05b0336d31fae9e22465421ac4381163c4113f5f1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFMCS-97ef8e20bfbc4fe7433f7999a9919f12.dll",
+      "sha256": "8d6d905596922096d1a79ddb187fbb52043c969b295c76508db9c4de55371600"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitForceField-b37e12e69da858c544c96d7f200c4b6d.dll",
+      "sha256": "43f596bdc5fe15d3ceb4f4112b8098a0f1e5e6d57aef5a198ded9726effb5f8a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitForceFieldHelpers-5952668a62d1c749544461a7420dc9f8.dll",
+      "sha256": "f8ec7a02a2672ef84b9f9e0bdbbaa4841c9add3d6577def0a1de410a76769d09"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFragCatalog-0c1c7e001a162b65ad4dcafa20726c14.dll",
+      "sha256": "51b9f24c59ada2a427f10b9247df71f3b38b7eb9b491722c909236b502f490eb"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitfreesasa_clib-9e501b02a80bd8f17a16d569490bccb1.dll",
+      "sha256": "9e501b02a80bd8f17a16d569490bccb1a74f312b97022e5ebb83f47e1727a629"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFreeSASALib-ff4a8f95f6b5239f68dfcce87536313e.dll",
+      "sha256": "3ac3b1e75a676ca198ea264ebd0c2dc13984d2bfd084e78456659fd6df818a27"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitga-b56b0bd4ef2d337a8c32d52ad500633d.dll",
+      "sha256": "2bc714457264cb32cd7e8a5dd45cc8c6cdeee47b03ad6d55397f84d74bb00fe6"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGaussianShape-925fcfc648cef7d83126d01b925e7fe1.dll",
+      "sha256": "71e873c459a9f058805f645d8ef784a6e0df5087a1630eadf511622361d21461"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGeneralizedSubstruct-f78ee8105581c286310d711a64c8ea5a.dll",
+      "sha256": "9c2a4e88b7e612acdfd14dfea51bb142f3ed95a0c644c70df73051a73871112c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGenericGroups-0c7bf0a9cfe163bdbec20426ce5ba464.dll",
+      "sha256": "ca2ffa01326d58cfdd85e65725d2b22360fa668b8b853cccd36fffcfe8910846"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGraphMol-f9d7e5fc2313be6df9889b9464503ab8.dll",
+      "sha256": "3fc804d26c4a200610dcc4be3b8a28d0003f9a7e07b8297062f31c653bf49bd1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKithc-c6394160fae592704a0247aec1fb4630.dll",
+      "sha256": "c6394160fae592704a0247aec1fb46300e21a319a63e393366a28278b9dd9be1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitInchi-3ee22e5decf003230526d9368c0e4442.dll",
+      "sha256": "3ee22e5decf003230526d9368c0e444265d4f6b09f92d6ffd53b2d5b73696356"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitInfoTheory-0341fae3ca67eaa2e623ad9445f2f122.dll",
+      "sha256": "bef5bc64b3ac598e241b8f5545e86a5b1b9683570b93900f6932258e2d16c5e8"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitmaeparser-b93682e4589beeaa61c31a640977c847.dll",
+      "sha256": "ab8ac26cca6639211446b0a4dc4df14c3259b1a83c25d2cba043b3fdcef64ac7"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMarvinParser-3fbd9df84dab088588efbc8a8bd95c78.dll",
+      "sha256": "a071f3e1bf0e9058279bd37fe92026e46c3bd2be6df16238415cd87d027494ab"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMMPA-e53d2178351cdbbd342c53cdcce2d4c5.dll",
+      "sha256": "e9e3a43314717019d704922f2677cccbdb89d62c4875feb6b42781959c7cc061"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolAlign-62ffc77bb9bd22f8dcd5dfd9885e5628.dll",
+      "sha256": "2c9f7fc072c0e138bd37fa07c4256264479d0902d9eb2e1726cd6ac3274c199a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolCatalog-ae549f850b4b5925a7243a4f03f33b8b.dll",
+      "sha256": "a0243ddd272e784254b3957d8d9410239d774bf1433698fbe570cbc3035072a8"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolChemicalFeatures-d6f4225304a638b7bf533956b0e580b3.dll",
+      "sha256": "ee0f0c261884eab7b17b0109e5b61aa8dccc789930dba9413cf8b455bca41030"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolDraw2D-991aceca6f18bf3ed2a40d6879ff53a8.dll",
+      "sha256": "5cb298c0dd5d03eea1b8ae4aa63128acfe580678363944a1ffc5c8148b47c5da"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolEnumerator-4ea54b60f262a215c901bf548792785d.dll",
+      "sha256": "912faae947563030abb247fa27c4d122b231bda7eda1fcc7c788a7381bb6a703"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolHash-d20fe37333df86d23af9cf862848bf02.dll",
+      "sha256": "7d47d18b537acc7314dd4116e3699f0986b3fb2eaac2ae28829a442e23f8d53c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolInteractionFields-e6a1fcfeb7061065847de049aed9d95a.dll",
+      "sha256": "051eaa06f0f5ded359fa6e991539cc8e3628ab1315dc2cc54dc40b2a32cc1663"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolInterchange-7e793647c1dbc091c0d5e6cdbc8baff4.dll",
+      "sha256": "b2c6d78830bb75ba908d7d8f256d6e1b9423773995ae188cdf4eb4df636eab4c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolProcessing-a550e9378fbe2b1c9278ca70cc0cab97.dll",
+      "sha256": "e98561a91a4254e6416cccbabe2deefb1074909ed401edbe941a76bc6f3940ea"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolStandardize-6b9e57d9b0f1bcbb86bb7e145eadb9f0.dll",
+      "sha256": "b599720149f58f17e39be60942c582de73e82fe47be9e8e2c1997694c1aecb97"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolTransforms-eb1483329269b63715337a599544554b.dll",
+      "sha256": "1ced3bb7b26d24d601c52fa065e94d2a94f26fa2563f231543fa236015845b99"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitO3AAlign-f8cd0f88cff544ce4cc98ad9314c9a9f.dll",
+      "sha256": "6c1ffa2e3034341f14d1926a271119366a0653ffc96cd1f94657b9dcab75bd05"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitPartialCharges-aa3590abc42156237c1d4b2f478cc46a.dll",
+      "sha256": "106be9b2b5e4fd2758b9be0f2001f0374c4513fed712af4a0eecf6fcf05ac584"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitpubchem_align3d-ce2667dc858c34c90d3064f90222586a.dll",
+      "sha256": "9d52f4860e0d82550d045498522513eab30f35e36e6a382615385d7adde2e24d"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitPubChemShape-62097e141fa54d3ca184e5ba4a4230c5.dll",
+      "sha256": "e78f493bd9eb38e4b2567ed05566b68a868a0c90b6aa79cb06ae21c5ec11b552"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRascalMCES-728bb49f38047d485a65676cfc43eef4.dll",
+      "sha256": "7d7c5555313ff46e155a6fd710647dbef1e517ddb6bb762fcb5558d0a7d4f9af"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDBoost-5e78419ff046f3b4ff3b3d851ea29956.dll",
+      "sha256": "3a125b9a91b491d38596be9ab01d1f9ea79e9274d8a3823872b3cd731fb869cc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDChemDrawLib-bcb1a9f98721ec9a5ec2f394779d841d.dll",
+      "sha256": "21654cdc106184c2ec7180677b7ec8a71f00d11c39b4f553338e4b87cb39757f"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDChemDrawReactionLib-1fe6b766ca5bcd8433c5f33f2723fe17.dll",
+      "sha256": "b078114e937341e4e4419b6ac5591d8ce24df951a3459d408a79dd3346e4dba1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDGeneral-1daf6cf8fe6bb3c9c00957113be3a3d5.dll",
+      "sha256": "63d07599bc9d8aee27cb6dbd192f09da1596256678139e756736c58103514317"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDGeometryLib-c6b96bd1d29aa1ec4330aed1f2365b4a.dll",
+      "sha256": "96e5cb1dec8cb380e2d283548bcfbc7c63c2f94ddf8e3131bfa45c27314678d3"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDInchiLib-be076cbea56e434bc5e7a5e5c00d5bad.dll",
+      "sha256": "4408518ccd4bfe40cf31193e65fc45199ab0869286499c0b6a513de190dd8783"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDStreams-48a4e8ba21404b6c66e4f2c9473e683a.dll",
+      "sha256": "61c5e648449fc46fe7874fbbccfba604eb74dd7b1e4719ad40f89275041d69d4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitReducedGraphs-60a61e5e235c43b91059451448d678c5.dll",
+      "sha256": "a7fe600fba9e77ea254727c1dfcbec6cdc06ad8ac0b3f04214faa4fa4ad4c527"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRGroupDecomposition-cbce5e5c613b08b35da13de1acb967ad.dll",
+      "sha256": "fe8187213aaa415ba8ec4b4023e6503202b375f5a25f9018b67e88ec85cb30ce"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRingDecomposerLib-185d4d8bf5d8b76417e45ee669c13c1d.dll",
+      "sha256": "185d4d8bf5d8b76417e45ee669c13c1d3a01a5d0219964771ce05dea67a2ac09"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitScaffoldNetwork-01251827642a5c852d715af195734172.dll",
+      "sha256": "86b79ddf041e2c72df39af5666f31c4e982fb55934378f8f615a10e33de91789"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitShapeHelpers-4f2bd2604fbce72a5ca48c17e30513ca.dll",
+      "sha256": "7afd9d93ff6c664c627c7fca556420b4dc66a717c7aa114843aee1476f06a452"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSimDivPickers-a02aa585ad26e271c73355d0cd8337de.dll",
+      "sha256": "a9a01385df325a5567220a952e09dde61a499b18e20b4e3f900abf65070eb61b"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSLNParse-fea0bb0de6ce348d100f8901107bfabd.dll",
+      "sha256": "89495d56d28d6ec4e3746d8f2835de76ad2579ff109f39784fd6a1449e5f6042"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSmilesParse-5d9438c989a0c67efea5f9cde275dee9.dll",
+      "sha256": "1584a43c6702a2cd34391ebde647c00b223035d0b4a38fab8d8ba1fdcf8e8f2a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubgraphs-8688fb5928f3b71891e2286b85ef1ee1.dll",
+      "sha256": "ccfd87903f1e7050f738f4db3393b56951a0d66d02bdc15fe5cf469c7790cc9c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubstructLibrary-6d40049cac5f6dd795db1841d3956025.dll",
+      "sha256": "36c66eee145cb33ef7b40a07233198e968ea0d3562362128a471cb4fd04192ba"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubstructMatch-780705980ba339edcadde935ea32ce0e.dll",
+      "sha256": "b4a202f6ef0ed7cb1c9218b94110c85f3ba59c2b7f3539d797823bdfe74f0952"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSynthonSpaceSearch-c97bcf7ffb1de23a282c0410ad82a9d7.dll",
+      "sha256": "a976983a2394c9022b7427498ee93249319c7e7d4995d37c00d33efc0c32ed9c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitTautomerQuery-57a3e9ae3d7d6766cfa653e18f31e206.dll",
+      "sha256": "ec3d06694bd8abb370e3589298caa253d136c9468e72f415d6f68e7a9e8fee85"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitTrajectory-1858b4c85f0c23ac11cd6ec74d3f6e2f.dll",
+      "sha256": "bc3a9d1abed98df3e240def72a9cabc78d8981ff867097a702f23fc484018e19"
+    },
+    {
+      "path": "_internal/rdkit.libs/z-6ac907abefeb2dcf651a1a8b85adb875.dll",
+      "sha256": "6ac907abefeb2dcf651a1a8b85adb875db0d92985d8d8daced1f62c56646cbd4"
+    },
+    {
+      "path": "_internal/sqlite3.dll",
+      "sha256": "314bba62f4a1628b986afc94c09dc29cdaf08210eae469440fbf46bcdb86d3fd"
+    },
+    {
+      "path": "_internal/VCRUNTIME140.dll",
+      "sha256": "4d292623516f65c80482081e62d5dadb759dc16e851de5db24c3cbb57b87db83"
+    },
+    {
+      "path": "_internal/VCRUNTIME140_1.dll",
+      "sha256": "a113f192195f245f17389e6ecbed8005990bcb2476ddad33f7c4c6c86327afe5"
+    },
+    {
+      "path": "_internal/webview/lib/Microsoft.Web.WebView2.Core.dll",
+      "sha256": "8219a3135436c147f8eb02fb831e99596103eebc18b6d7b794ca93f4c67018a2"
+    },
+    {
+      "path": "_internal/webview/lib/Microsoft.Web.WebView2.WinForms.dll",
+      "sha256": "c48f8d729dc531288d2c53a6241effe7922ed1b947850b2442008a945c098c48"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-arm64/native/WebView2Loader.dll",
+      "sha256": "0937030efc718f3da77c5e0978fb5046e381d0bb7b01acaad31a535a1b588a33"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-x64/native/WebView2Loader.dll",
+      "sha256": "eb5335edeaa6f2122c044e82aab2351dc8c9b4e0fe5e578c71922fb61be285e7"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-x86/native/WebView2Loader.dll",
+      "sha256": "04814b2c59314c6452d61b821a4a3a5c5f8e8577b55b985f6a7a4b59f8907ec5"
+    },
+    {
+      "path": "_internal/webview/lib/WebBrowserInterop.x64.dll",
+      "sha256": "f6a646470f0e1058224a52e8e2e217501dca46939b30bfc9a5dd4dcdd43f088d"
+    },
+    {
+      "path": "_internal/webview/lib/WebBrowserInterop.x86.dll",
+      "sha256": "4e527297fbea7c5a0419f3a6af307c2681787beb0bf0ef3fea849a7fd85a08dc"
+    },
+    {
+      "path": "COFdraw.exe",
+      "sha256": "c6fc04bff9c2763b2cede777bd0dc8a2773aaff7480e6b25669bff48d44406b9"
+    },
+    {
+      "path": "COFdraw.exe.config",
+      "sha256": "94cfe11aed6870ddb76a8ef105e41359fc1fc074638ec6c965c46bd31f49563a"
+    }
+  ],
+  "marked_file_hashes_unchanged": true,
+  "download_marks_retained": false,
+  "dll_config_download_marks_retained": true,
+  "executable_download_mark_before": true,
+  "executable_download_mark_after": false
+}

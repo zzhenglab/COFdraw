@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -179,13 +179,17 @@ def main(argv=None):
             finally:
                 window.destroy()
         webview.start(smoke if args.smoke_window else None, gui="edgechromium", debug=False, private_mode=True)
+        if args.smoke_window and status.get('status') != 'desktop_smoke_passed':
+            return 1
     except Exception as exc:
         logging.exception("Desktop startup failed")
         status.update(status="failed", error=str(exc)); write_status()
         if not args.smoke_window:
             import ctypes
-            ctypes.windll.user32.MessageBoxW(0, "COFdraw could not open.\n\n" + str(exc) + "\n\nDetails: " + str(log), "COFdraw", 0x10)
-        raise
+            ctypes.windll.user32.MessageBoxW(0, "COFdraw could not open its desktop window.\n\n"
+                "Extract the complete current release and keep COFdraw.exe.config, _internal, and data beside COFdraw.exe.\n\n"
+                "The desktop also requires Microsoft WebView2 Runtime.\n\nDetails: " + str(log), "COFdraw", 0x10)
+        return 1
     finally:
         server.should_exit = True
         worker.join(timeout=5)

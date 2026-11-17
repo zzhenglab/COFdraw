@@ -16,4 +16,4 @@ if __name__ == "__main__":
         arg == "--data-dir" or arg.startswith("--data-dir=") for arg in arguments
     ):
         arguments = ["--data-dir", str(repository / "data"), *arguments]
-    main(arguments)
+    raise SystemExit(main(arguments))

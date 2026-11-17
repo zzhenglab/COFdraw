@@ -6,11 +6,13 @@ The application and executable icons use the supplied faceted teal logo with a t
 
 ## Run the release
 
-1. Extract the **entire** `COFdraw-Windows.zip` to a writable folder. Keep `COFdraw.exe`, its companion libraries and `data` together; copying the executable alone is insufficient.
+1. Extract the **entire** `COFdraw-Windows.zip` to a writable folder. Keep `COFdraw.exe`, `COFdraw.exe.config`, its companion libraries and `data` together; copying the executable alone is insufficient.
 2. Open `COFdraw.exe`. No Python installation is needed for the packaged release. The desktop window uses a local service bound to `127.0.0.1` and the included assets.
 3. If the window cannot start, inspect `data/cofdraw.log`. This Windows build uses Microsoft WebView2 Runtime. For a computer without it, obtain the official standalone installer before moving the package offline. Edge browser installation alone is not the same prerequisite. [Microsoft distribution guidance](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution), [pywebview requirements](https://pywebview.flowrl.com/guide/installation.html).
 
 ## Describe, review, draw
+
+If an older downloaded release reports `Failed to resolve Python.Runtime.Loader.Initialize`, replace it with v0.6.1 or later. Windows can retain an Internet-zone marking on extracted DLLs; the included application configuration supports loading the bundled assemblies without removing those markings or changing machine settings. See [Windows startup troubleshooting](windows-startup.md).
 
 Start in **Describe a COF**. Type a sentence such as `Draw TFB and TAPB with an imine linkage in pastel colors`, or choose a built-in example. Analyze the description, review the selected monomers, linkage, finite layout and style, then create the drawing. Names and words are matched to existing catalog records. The review shows assumptions and unresolved instructions; an unsupported or ambiguous request cannot become a ready drawing silently. Source-name matches open the qualified source recipe. A proposed design does not inherit the identity of a named material.
 

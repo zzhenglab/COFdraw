@@ -28,7 +28,7 @@ Describe a COF, review its building blocks, and draw. Explore 3D structures and 
 2. Extract the **entire ZIP** into a writable folder.
 3. Open **`COFdraw.exe`** inside the extracted `COFdraw` folder.
 
-**No Python installation is needed.** Keep the executable, `_internal`, and `data` folders together. The ZIP is the ready-to-run desktop application; GitHub's automatically generated “Source code” archives are for developers.
+**No Python installation is needed.** Keep `COFdraw.exe.config` beside the executable, along with the `_internal` and `data` folders. The ZIP is the ready-to-run desktop application; GitHub's automatically generated “Source code” archives are for developers.
 
 The Windows application requires [Microsoft WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/). Install it if the desktop window cannot open. Once the runtime is present, the bundled drawing tools and catalog work offline. The application runs its chemistry service locally on `127.0.0.1`.
 
@@ -36,7 +36,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.6.0 |
+| Feature | Included in v0.6.1 |
 | --- | --- |
 | Describe a COF | Match sentences, monomer names, source names and style words to the local catalog; review before drawing |
 | Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |

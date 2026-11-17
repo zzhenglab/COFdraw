@@ -32,9 +32,11 @@ For chemistry changes, preserve stereochemistry, source-qualified identity, prov
 .\.venv\Scripts\python.exe scripts\build_cofdraw_desktop.py
 ```
 
-The builder produces `dist/COFdraw/`, `dist/COFdraw-Windows.zip`, and a SHA-256 checksum file. It refuses an existing output directory; use `--output-dir dist/another-build` for a new build. Keep the EXE, `_internal`, and `data` together. The build environment and executable output are excluded from Git.
+The builder produces `dist/COFdraw/`, `dist/COFdraw-Windows.zip`, and a SHA-256 checksum file. It refuses an existing output directory; use `--output-dir dist/another-build` for a new build. Keep the EXE, `COFdraw.exe.config`, `_internal`, and `data` together. The build environment and executable output are excluded from Git.
 
 The builder validates and includes the reviewed drawing catalog and periodic model templates. It retains its build cache and copies into a fresh destination. A rebuilt binary has a new hash; run `scripts/smoke_cofdraw_release.py` against that executable and its bundled data before distributing it. Browser smoke checks require development Playwright and installed Chrome or Edge.
+
+Also run `scripts/smoke_cofdraw_download.py --zip <release.zip> --output-dir <fresh-directory>` on Windows. It marks the archive's extracted EXE, configuration, and DLLs as downloaded, then verifies a normal-user native process and retained DLL/configuration markings. Windows may clear only the EXE's mark when its first-run confirmation is accepted; the report distinguishes that from file-content changes. An elevated or unmarked-DLL local startup is insufficient evidence for downloaded-release readiness. See [Windows startup validation](docs/windows-startup.md).
 
 ## Catalog and documentation
 

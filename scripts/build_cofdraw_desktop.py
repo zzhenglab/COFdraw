@@ -17,7 +17,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 
 
 def sha(path):
@@ -112,6 +112,10 @@ def main():
     staged = inside_repository(run / "dist/COFdraw")
     if not (staged / "COFdraw.exe").is_file():
         raise SystemExit("PyInstaller did not produce COFdraw.exe")
+    # Windows preserves the Internet-zone marking when Explorer extracts a
+    # downloaded ZIP. The process-scoped CLR setting lets Python.NET/WebView2
+    # load the supplied managed DLLs without unblocking files or changing the OS.
+    shutil.copy2(REPO / "packaging/COFdraw.exe.config", staged / "COFdraw.exe.config")
     portable = staged / "data/framework-drawing"
     portable.mkdir(parents=True)
     # Copy only the hash-bound catalog. Local exports and logs stay private.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 - 2026-11-17
+
+- Fix downloaded Windows releases failing at `Python.Runtime.Loader.Initialize`: include the process-scoped .NET loading configuration beside the executable.
+- Preserve Windows download markings and machine security settings; no blanket file unblocking or administrator launch is required.
+- Add native startup validation from a freshly extracted, download-marked package under a normal Windows user token.
+- Return a controlled startup error and exit status instead of a second unhandled PyInstaller traceback dialog.
+
 ## 0.6.0 - 2026-11-17
 
 - Add a description-to-drawing workflow with built-in sentence examples, local catalog matching and an editable parameter review.

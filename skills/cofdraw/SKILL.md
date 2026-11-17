@@ -9,7 +9,7 @@ Create actual PNG/SVG and editable MOL/SDF/CDXML drawings with the local COFdraw
 
 ## Start from a GitHub link
 
-The project is [zzhenglab/COFdraw](https://github.com/zzhenglab/COFdraw). A pasted link makes these instructions readable; automatic skill installation depends on the agent host. If the repository is available, use that checkout. Otherwise obtain the source or, on Windows, the complete `COFdraw-Windows.zip` from its Releases page. The EXE requires its `_internal` and `data` folders. Do not download a lone EXE or assume a browser-only agent can run it.
+The project is [zzhenglab/COFdraw](https://github.com/zzhenglab/COFdraw). A pasted link makes these instructions readable; automatic skill installation depends on the agent host. If the repository is available, use that checkout. Otherwise obtain the source or, on Windows, the complete `COFdraw-Windows.zip` from its Releases page. The EXE requires adjacent `COFdraw.exe.config`, `_internal`, and `data`. Do not download a lone EXE or assume a browser-only agent can run it. For downloaded Windows startup failures, read [startup troubleshooting](../../docs/windows-startup.md); do not change machine-wide policy or unblock unrelated folders.
 
 For an installable skill, select the **`skills/cofdraw` directory**, including its scripts and references. Installing this directory does not install the application. The helper accepts an explicit checkout or executable location and works when the skill is installed separately.
 
