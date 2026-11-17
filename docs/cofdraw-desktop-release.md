@@ -36,6 +36,10 @@ In **BET from isotherm**, paste two columns: relative pressure `p/p0` and uptake
 
 In **Monomer descriptors**, choose A or B and a conformer count. RDKit supplies molecular descriptors and empirical Gasteiger charges, generates ETKDG conformers, and minimizes with MMFF94s or UFF when supported. Export XYZ/SDF and the method report. Energies compare conformers of the same monomer; they are not xTB, DFT or orbital energies. See [scientific methods](scientific-methods.md) for detailed assumptions and limitations.
 
+## Materials inspection and evidence
+
+Version 0.5 adds **Quick check**, **PXRD**, **Compare CIF files**, and **Find information**. Inspect composition, density, cell geometry and inferred periodic networks; compare candidate CIFs; calculate model diffraction; retrieve exact catalog records and saved calculation reports. Lattice-axis views, hydrogen visibility and atom tables support inspection. Follow the [materials workflow guide](materials-workflows.md) for instructions and interpretation.
+
 ## Exports and identity
 
 Save the project JSON to reopen monomer inputs, recipe, layout and style. Use PNG/SVG for presentation, and MOL/SDF/CDXML for chemical editing. CDXML depends on the packaged native writer; optional failure leaves the other outputs available and is recorded in the chemical-export diagnostic. Current CDXML carries the chemical graph, coordinates and explicit wavy external connection points, **not all SVG fonts, colors or aliases**.

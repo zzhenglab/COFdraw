@@ -1,11 +1,11 @@
 ---
 name: cofdraw
-description: Use COFdraw to draw source-informed or designed finite COF patches, preserve manually placed coordinates, export editable chemistry, generate molecular conformers, inspect periodic CIF models, and run qualified geometry or supplied-isotherm analyses. Use when asked to use COFdraw or its GitHub link for these drawings, structures, or calculations.
+description: Use COFdraw to query its local chemistry catalog, draw source-informed or designed COF patches, preserve manual layouts, export editable chemistry, inspect periodic CIFs and contact networks, calculate ideal PXRD and geometric screening, and retrieve saved machine-readable reports. Use when asked to use COFdraw or its GitHub link for information, structures, or qualified calculations.
 ---
 
 # COFdraw
 
-Create actual PNG/SVG and editable MOL/SDF/CDXML drawings with the local COFdraw application. Preserve the accompanying JSON and its provenance. Its separate scientific tools handle molecular conformers, explicit periodic models, geometric pore estimates and supplied adsorption data. A finite drawing does not establish a crystal structure.
+Create actual PNG/SVG and editable MOL/SDF/CDXML drawings with the local COFdraw application. Preserve the accompanying JSON and its provenance. Its separate scientific tools query local evidence and handle molecular conformers, periodic models, contact networks, ideal diffraction, geometric screening and supplied adsorption data. A finite drawing does not establish a crystal structure.
 
 ## Start from a GitHub link
 
@@ -13,7 +13,7 @@ The project is [zzhenglab/COFdraw](https://github.com/zzhenglab/COFdraw). A past
 
 For an installable skill, select the **`skills/cofdraw` directory**, including its scripts and references. Installing this directory does not install the application. The helper accepts an explicit checkout or executable location and works when the skill is installed separately.
 
-Read [local-api.md](references/local-api.md) when setting up a runtime, preparing custom monomers, editing a recipe, or changing presentation options. For 3D or calculations, also read [science-api.md](references/science-api.md). The helper [cofdraw_client.py](scripts/cofdraw_client.py) starts a temporary headless service, copies catalog/model data into a fresh output directory, saves actual returned exports, and stops its own service.
+Read [local-api.md](references/local-api.md) when setting up a runtime, preparing custom monomers, editing a recipe, or changing presentation options. For 3D or calculations, also read [science-api.md](references/science-api.md). For information retrieval, screening and saved reports, read [agent-workflows.md](references/agent-workflows.md). The helper [cofdraw_client.py](scripts/cofdraw_client.py) starts a temporary headless service, copies catalog/model data into a fresh output directory, saves actual returned exports, and stops its own service.
 
 ## Drawing workflow
 
@@ -50,8 +50,14 @@ Use a new output directory for each call. The helper refuses overwrites. It does
 
 ## Structures and calculations
 
+Start with `science capabilities` for the running API's request schemas. Use `science query` to find exact local names, IDs, DOIs, monomers, reference-only linkages, topologies, models and workflows. Keep retrieved records and qualifiers; no match means absent from this bundle, not absent from chemistry. Distinguish catalog information from a calculation result.
+
 Query `science library` for the actual periodic model IDs. Use `science monomer` for a complete finite molecule, `science model` for an explicit CIF or a separate built-in reticular design, and `science patch` for an illustrative stack of the active finite drawing. Their scope is different; retain the returned qualification and JSON with XYZ/SDF/CIF/PDB exports. Never attach the active drawing's source identity to an unrelated periodic template.
 
+Use `science inspect` for cell composition/density and distance-inferred periodic contacts, `science pxrd` for an ideal powder pattern, and `science screen` for a bounded comparison of supplied structures. Contact cutoff changes can change inferred dimensionality; it is not automatic RCSR identification. PXRD is a calculation from the supplied structure, not phase identification or refinement of an experimental pattern. Element counts per gram are not accessible catalytic-site densities.
+
 `science porosity` requires an explicit periodic structure. It estimates hard-sphere geometry, not adsorption or BET area. `science bet` requires the user's adsorption data and a chosen fit interval. Do not invent an isotherm to supply a requested material property. No bundled calculation runs DFT or xTB, establishes a band gap, or proves a stable crystal. Report units, parameters, convergence/sampling limits and failed checks from the actual result.
+
+Return the saved JSON report and any actual CSV/structure/image files, plus concise findings grounded in their values. Preserve `report_id`, `operation`, engine version, input/structure hashes, units, method and limitations where returned. A persistent local service can list and reread its previous reports; the helper's isolated runs also keep their complete result files on disk.
 
 If this agent cannot execute local programs or access files, explain that limitation and provide the desktop download or exact runnable command. Do not claim that reading the repository generated a drawing.

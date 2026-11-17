@@ -7,6 +7,7 @@ import math
 import re
 import threading
 import uuid
+from datetime import datetime, timezone
 from copy import deepcopy
 from pathlib import Path
 from typing import Annotated, Literal
@@ -89,6 +90,46 @@ class BETAnalysis(BaseModel):
     fit_min: float = Field(default=.05, gt=0, lt=1)
     fit_max: float = Field(default=.30, gt=0, lt=1)
     cross_section_nm2: float = Field(default=.162, gt=0, le=1)
+
+
+class StructureInspection(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    structure: dict
+    bond_scale: float = Field(default=1.15, ge=.9, le=1.35)
+    tolerance_angstrom: float = Field(default=.15, ge=0, le=.3)
+
+
+class PowderDrawing(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    structure: dict
+    wavelength: float = Field(default=1.5406, ge=.3, le=3)
+    two_theta_min: float = Field(default=2, ge=.5, le=100)
+    two_theta_max: float = Field(default=50, ge=1, le=150)
+    step: float = Field(default=.02, ge=.01, le=.2)
+    fwhm: float = Field(default=.15, ge=.02, le=2)
+    b_iso: float = Field(default=0, ge=0, le=20)
+
+
+class ScreenEntry(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    name: str = Field(default='Structure', max_length=100)
+    structure: dict
+
+
+class ScreenBatch(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    entries: list[ScreenEntry] = Field(min_length=1, max_length=8)
+    include_porosity: bool = False
+    probe_radius: float = Field(default=1.82, ge=0, le=3)
+    samples: int = Field(default=4000, ge=1000, le=12000)
+
+
+class KnowledgeQuery(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    query: str = Field(default='', max_length=500)
+    record_types: list[str] | None = Field(default=None, max_length=10)
+    limit: int = Field(default=20, ge=1, le=50)
+    offset: int = Field(default=0, ge=0, le=10000)
 
 
 def validate_recipe(recipe: dict) -> None:
@@ -318,14 +359,15 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             raise HTTPException(422, str(exc)) from exc
 
     @router.get("/exports/{drawing_id}/{extension}")
-    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml", "cif", "xyz", "pdb"]):
+    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml", "cif", "xyz", "pdb", "csv"]):
         if not re.fullmatch(r"[0-9a-f]{32}", drawing_id):
             raise HTTPException(404, "Drawing not found")
         path = (outputs / drawing_id / f"{drawing_id}.{extension}").resolve()
         if not path.is_relative_to(outputs.resolve()) or not path.is_file():
             raise HTTPException(404, "Drawing not found")
         types = {"svg": "image/svg+xml", "png": "image/png", "mol": "chemical/x-mdl-molfile", "json": "application/json", "sdf": "chemical/x-mdl-sdfile", "cdxml": "chemical/x-cdxml", "cif":"chemical/x-cif", "xyz":"chemical/x-xyz", "pdb":"chemical/x-pdb"}
-        return FileResponse(path, media_type=types[extension], filename=f"cof-pore-{drawing_id[:8]}.{extension}")
+        types['csv'] = 'text/csv; charset=utf-8'
+        return FileResponse(path, media_type=types[extension], filename=f"cofdraw-{drawing_id[:8]}.{extension}")
 
     def selected_recipe(request):
         value = source_recipe(request.source_recipe_id)[0] if request.source_recipe_id else deepcopy(request.recipe)
@@ -339,20 +381,31 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         validate_recipe(value)
         return value
 
-    def scientific_result(result):
+    def scientific_result(result, operation='calculation', inputs=None):
+        from . import __version__
         result=deepcopy(result)
         contents=result.pop('exports',{})
         identifier=uuid.uuid4().hex
         directory=outputs/identifier;directory.mkdir(parents=True)
         urls={}
         for extension,content in contents.items():
-            if extension not in {'cif','xyz','pdb','sdf','mol'}:continue
+            if extension not in {'cif','xyz','pdb','sdf','mol','csv'}:continue
             if not isinstance(content,str) or len(content)>20_000_000:raise ValueError('Structure export exceeds the size limit')
-            (directory/f'{identifier}.{extension}').write_text(content,encoding='utf-8')
+            (directory/f'{identifier}.{extension}').write_text(content,encoding='utf-8',newline='')
             urls[extension]=f'/api/drawing/exports/{identifier}/{extension}'
         urls['json']=f'/api/drawing/exports/{identifier}/json'
         result['downloads']=urls
-        (directory/f'{identifier}.json').write_text(json.dumps(result,indent=2,allow_nan=False),encoding='utf-8')
+        result.update(report_id=identifier, operation=operation, engine_version=__version__,
+                      report_schema_version='cofdraw-science-1',
+                      created_at_utc=datetime.now(timezone.utc).isoformat())
+        if inputs is not None:
+            result['inputs']=deepcopy(inputs)
+            result['input_sha256']=hashlib.sha256(json.dumps(inputs,sort_keys=True,allow_nan=False).encode()).hexdigest()
+        report_text=json.dumps(result,indent=2,allow_nan=False)
+        if len(report_text.encode('utf-8'))>40_000_000:raise ValueError('Scientific report exceeds the 40 MB limit')
+        temporary=directory/f'{identifier}.json.tmp'
+        temporary.write_text(report_text,encoding='utf-8')
+        temporary.replace(directory/f'{identifier}.json')
         return result
 
     @router.post('/layout')
@@ -384,7 +437,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             else:structure=import_cif(request.cif_text)
             with lock:result=structure_exports(structure,repeats=tuple(request.repeats))
             result['scope']='Periodic atomic model with an explicit cell. Built-in templates are unrelaxed reticular designs, not experimentally assigned crystals; imported CIFs retain supplied geometry.'
-            return scientific_result(result)
+            return scientific_result(result, 'model', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/patch')
@@ -393,7 +446,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             from .cofdraw_science import patch_3d
             with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip)
             result['scope']='Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.'
-            return scientific_result(result)
+            return scientific_result(result, 'patch', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/monomer')
@@ -401,7 +454,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         try:
             from .cofdraw_science import monomer_analysis
             with lock:result=monomer_analysis(request.smiles,conformers=request.conformers)
-            return scientific_result(result)
+            return scientific_result(result, 'monomer', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/porosity')
@@ -410,7 +463,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             if len(json.dumps(request.structure))>2_000_000:raise ValueError('Structure input limit is 2 MB')
             from .cofdraw_science import pore_analysis
             with lock:result=pore_analysis(request.structure,probe_radius=request.probe_radius,samples=request.samples)
-            return scientific_result(result)
+            return scientific_result(result, 'porosity', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/measure')
@@ -424,7 +477,84 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def analyze_bet(request: BETAnalysis):
         try:
             from .cofdraw_science import fit_bet
-            return scientific_result(fit_bet(**request.model_dump()))
+            return scientific_result(fit_bet(**request.model_dump()), 'bet', request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.get('/science/capabilities')
+    def scientific_capabilities():
+        from . import __version__
+        from .cofdraw_knowledge import capability_inventory
+        models={'model':ModelDrawing,'patch':Patch3D,'monomer':MonomerAnalysis,
+                'porosity':PoreAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
+                'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
+                'measure':RenderDrawing}
+        return {'engine_version':__version__, 'schema_version':'cofdraw-capabilities-1',
+                'operations':{name:{'method':'POST','path':f'/api/drawing/science/{name}',
+                                    'request_schema':model.model_json_schema()} for name,model in models.items()},
+                'workflows':capability_inventory(),
+                'reports':{'list':'/api/drawing/science/reports','read':'/api/drawing/science/reports/{report_id}'},
+                'scope':'Local catalog evidence and bounded calculations. Read each report method, units, provenance and warnings.'}
+
+    @router.post('/science/query')
+    def query_information(request: KnowledgeQuery):
+        try:
+            from .cofdraw_knowledge import query_catalog
+            return query_catalog(root, **request.model_dump())
+        except (ValueError,KeyError,TypeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.get('/science/reports')
+    def recent_reports(limit: int=20):
+        if not 1<=limit<=100:raise HTTPException(422,'Choose a report limit between 1 and 100')
+        reports=[]
+        for directory in sorted(outputs.iterdir(),key=lambda p:p.stat().st_mtime,reverse=True)[:500] if outputs.exists() else []:
+            data=stored_report(directory.name)
+            if data:
+                reports.append({key:data.get(key) for key in ['report_id','operation','kind','created_at_utc','engine_version','input_sha256','structure_sha256','downloads']})
+                if len(reports)>=limit:break
+        return {'reports':reports,'limit':limit,'scope':'Recent scientific reports in this local data directory; at most 500 output folders inspected.'}
+
+    def stored_report(report_id):
+        if not re.fullmatch(r'[0-9a-f]{32}',report_id):return None
+        path=(outputs/report_id/f'{report_id}.json').resolve()
+        try:
+            if not path.is_relative_to(outputs.resolve()) or not path.is_file() or path.stat().st_size>40_000_000:return None
+            data=json.loads(path.read_text(encoding='utf-8'))
+            return data if isinstance(data,dict) and data.get('report_id')==report_id else None
+        except (OSError,ValueError,UnicodeError):return None
+
+    @router.get('/science/reports/{report_id}')
+    def read_report(report_id: str):
+        data=stored_report(report_id)
+        if data is None:raise HTTPException(404,'Scientific report not found or unreadable')
+        return data
+
+    @router.post('/science/inspect')
+    def inspect_structure(request: StructureInspection):
+        try:
+            if len(json.dumps(request.structure))>2_000_000:raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_characterization import structure_summary
+            from .cofdraw_network import inspect_periodic_network
+            with lock:
+                result={'kind':'periodic_structure_inspection','summary':structure_summary(request.structure),
+                        'network':inspect_periodic_network(request.structure,bond_scale=request.bond_scale,tolerance_angstrom=request.tolerance_angstrom)}
+            return scientific_result(result,'inspect',request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/pxrd')
+    def diffraction(request: PowderDrawing):
+        try:
+            if len(json.dumps(request.structure))>2_000_000:raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_characterization import powder_xrd
+            with lock:result=powder_xrd(**request.model_dump())
+            return scientific_result(result,'pxrd',request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/screen')
+    def screen(request: ScreenBatch):
+        try:
+            from .cofdraw_screening import screen_structures
+            with lock:result=screen_structures(**request.model_dump())
+            return scientific_result(result,'screen',request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     return router

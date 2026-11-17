@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 - 2026-11-17
+
+- Add quick periodic-model composition, density, cell and element-site inventories.
+- Infer periodic network dimensionality with explicit translated-cell bonds, coordination, contact warnings and cutoff sensitivity.
+- Calculate model powder XRD with IT92 form factors, physical reciprocal-cell geometry, peak tables and CSV exports.
+- Compare up to eight CIFs using common screening settings.
+- Add lattice-axis views, hydrogen visibility and fractional atom tables.
+- Search local COF evidence by names, monomers, linkage, DOI and workflow; preserve support status and source qualifiers.
+- Expose live API request schemas and saved reports with input hashes, parameters and engine versions; expand the agent skill and headless client.
+- Preserve CSV payloads and protect spreadsheet names; skip unreadable historical report files.
+- Include Gemmi coefficient provenance, MPL-2.0 license and editable coefficient source in the portable package.
+
 ## 0.4.0 — 2026-11-17
 
 - Preserve source geometry and use a shared native chemical renderer across styles. Restore compact, skewed Pyurea and asymmetric UCOF layouts without distorting aromatic rings.

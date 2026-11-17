@@ -17,7 +17,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 
 def sha(path):
@@ -137,6 +137,12 @@ def main():
             shutil.copytree(REPO / name, staged / name,
                             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.log"))
     copy_licenses(staged / "third-party-licenses")
+    # The generated Gemmi coefficient table retains MPL-2.0. Supply its exact
+    # editable source beside the executable, as well as the upstream license.
+    coefficient_source = staged / "third-party-sources/Gemmi"
+    coefficient_source.mkdir(parents=True)
+    shutil.copy2(REPO / "src/cof_vision/cofdraw_xray_factors.py", coefficient_source)
+    shutil.copy2(REPO / "docs/third-party-licenses/Gemmi-MPL-2.0.txt", coefficient_source)
     manifest = {"application_id": "cofdraw", "version": VERSION,
                 "executable_sha256": sha(staged / "COFdraw.exe"),
                 "catalog_sha256": catalog["catalog_sha256"],

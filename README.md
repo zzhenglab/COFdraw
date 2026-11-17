@@ -36,7 +36,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.4.0 |
+| Feature | Included in v0.5.0 |
 | --- | --- |
 | Monomer library | 49 presets, structure cards, and automatic compatible linkage/template selection |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
@@ -47,11 +47,16 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 | Pore screening | Drawing-plane opening; periodic sampled pore size, void volume, and probe-exposed surface |
 | BET | Fit supplied adsorption isotherms with consistency diagnostics |
 | Monomer properties | RDKit descriptors, Gasteiger charges, ETKDG conformers, MMFF/UFF optimization, XYZ/SDF |
-| Automation | Local HTTP API and reusable GitHub-discoverable agent skill |
+| COF quick checks | Formula, density, cell parameters, elemental site inventories, periodic connectivity and contact diagnostics |
+| Powder diffraction | Model PXRD, d spacings, Miller indices and CSV export |
+| Candidate comparison | Up to eight CIFs under common screening settings; CSV/JSON reports |
+| Evidence and automation | Searchable catalog, request schemas, saved-report retrieval and reusable agent skill |
 
 Source drawings retain their recorded coordinates and presentation. The restored Pyurea and UCOF layouts use source-informed block positions rather than forcing a rectangular or regular-hexagonal arrangement. These are qualified reconstructions, not exact image registrations. See the [recovered drawing catalog](docs/recovered-source-drawings.md).
 
-![Periodic COF model in the 3D structure laboratory](docs/assets/cofdraw-3d.png)
+![COF structure check with cell, composition and inferred network dimensionality](docs/assets/cofdraw-materials.png)
+
+For a materials-chemistry workflow, start with the [quick-check and screening guide](docs/materials-workflows.md). The [PXRD methods](docs/characterization-methods.md) and [periodic-network methods](docs/periodic-network-inspection.md) explain the calculations and their limits.
 
 The six implemented transforms cover imine, beta-ketoenamine, acylhydrazone, Tp keto-enamine–hydrazide, azine, and a selected reduced-imine secondary-amine product state. Broader linkage and topology catalogs also contain **reference-only entries**; those entries do not imply an available constructor.
 
@@ -104,8 +109,8 @@ COFdraw creates **finite molecular drawings with explicit continuation points**.
 
 CDXML preserves the checked chemical graph and continuation points, but does not reproduce every presentation style. Compatibility was checked with **ChemDraw 23.1.2.7**. Keep ChemDraw-edited framework boundaries in CDXML: ChemDraw's MOL save omitted external connection points in the recorded tests. Keep original MOL/SDF and project JSON files as well.
 
-See [v0.4 validation](docs/v0.4-validation.json), the [catalog scope](docs/cofdraw-catalog-v3.md), [chemical export validation](docs/chemdraw-export-validation.md), [page-fit validation](docs/cofdraw-page-fit-validation.md), [original release validation](docs/cofdraw-release-validation.json), and [public-package verification](docs/publication-validation.json) for evidence and limitations.
+See [v0.5 validation](docs/v0.5-validation.json), [v0.4 validation](docs/v0.4-validation.json), the [catalog scope](docs/cofdraw-catalog-v3.md), [chemical export validation](docs/chemdraw-export-validation.md), [page-fit validation](docs/cofdraw-page-fit-validation.md), [original release validation](docs/cofdraw-release-validation.json), and [public-package verification](docs/publication-validation.json) for evidence and limitations.
 
 ## License and acknowledgments
 
-Original project code is available under the [MIT License](LICENSE). COFdraw uses RDKit, pywebview, FastAPI, and other open-source components; the Windows download includes their license notices. Generated periodic templates cite [pyCOFBuilder](https://github.com/lipelopesoliveira/pyCOFBuilder) and retain its attribution in `data/crystal-models`. Source publications and external materials retain their own rights. Catalog records preserve their source identifiers and provenance.
+Original application code is available under the [MIT License](LICENSE). The generated Gemmi IT92 coefficient module retains its [MPL-2.0 license](docs/third-party-licenses/Gemmi-MPL-2.0.txt); the Windows package includes its source and license. COFdraw uses RDKit, pywebview, FastAPI, and other open-source components; the Windows download includes their license notices. Generated periodic templates cite [pyCOFBuilder](https://github.com/lipelopesoliveira/pyCOFBuilder) and retain its attribution in `data/crystal-models`. Source publications and external materials retain their own rights. Catalog records preserve their source identifiers and provenance.

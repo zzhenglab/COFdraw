@@ -84,6 +84,9 @@ def main():
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_studio.py")), "--base-url", base,
                         "--output-dir", str(output / "studio")], check=True, timeout=600, creationflags=hidden)
         report["studio_report"] = json.loads((output / "studio/studio-smoke-report.json").read_text(encoding="utf-8"))
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_materials.py")), "--base-url", base,
+                        "--output-dir", str(output / "materials")], check=True, timeout=600, creationflags=hidden)
+        report["materials_report"] = json.loads((output / "materials/materials-smoke-report.json").read_text(encoding="utf-8"))
         native_status = output / "native-window.json"
         with subprocess.Popen([str(executable), "--smoke-window", "--data-dir", str(runtime), "--status-file", str(native_status)], creationflags=hidden) as native:
             try:

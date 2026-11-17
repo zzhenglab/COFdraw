@@ -1,0 +1,307 @@
+{
+  "version": "0.5.0",
+  "date": "2026-11-17",
+  "python_tests": {
+    "passed": 239
+  },
+  "javascript_library_tests": "passed",
+  "powder_xrd_crosscheck": {
+    "reference": "Gemmi 0.7.5 direct structure factors",
+    "visible_peaks": 518,
+    "maximum_relative_integrated_intensity_discrepancy": 1.54e-06,
+    "scope": "Same IT92 coefficients; independent direct summation on four supplied model templates."
+  },
+  "frozen_executable": {
+    "sha256": "afbbfe5de22d42f52ea16935672598bd0bb06e29438f647628196064aee17f0c",
+    "native_window": {
+      "version": "0.5.0",
+      "status": "desktop_smoke_passed",
+      "title": "COFdraw \u2014 Chemical drawing studio",
+      "native_save_bridge": true
+    },
+    "source_export_checks": [
+      {
+        "source": "tfb-tab-pore-v1",
+        "atoms": 108,
+        "elapsed_seconds": 0.22,
+        "downloads_sha256": {
+          "svg": "81501d4bfcfe87fad45d42636d48c26b913564c1eea9f18e7557a070f904a858",
+          "png": "62227dd6d3078f26f5015b49945f28c0a16da2d328cb84df8fb96a9f5af7f122",
+          "mol": "fb8eb79ffa2b8d98f70a903f2f0e0c4778ee2308f65a68ea27d46ac17ea316c7",
+          "json": "f4deb6ea20743b70c6ae49481785b1e99ea13c898f14d31b9c5e319f11412e0e",
+          "sdf": "7e0abcd299037ed965c50177be92625b6ccb86c7367d58374f8edda556b4de64",
+          "cdxml": "3934fd19dc63ad7df7deea482e551b65b501130c0fab2b3f445516c9b1b3d23f"
+        }
+      },
+      {
+        "source": "tppa-pore-v1",
+        "atoms": 126,
+        "elapsed_seconds": 0.27,
+        "downloads_sha256": {
+          "svg": "77b21960bcc97c0c60b01094084a8355e921f64f882fac57f0ed0ac6fb53380e",
+          "png": "c4a0b52ade3ffaafea58fae57641f5cc2fe0220c2031394eb507841e9aefaaa3",
+          "mol": "0550910016fdeb3ed87457efc0e905b22d390d9230d04ac46d177d0d3137062e",
+          "json": "d71ba6c278aae9bcfb991a5152e3edb8b0f10ce14be12c33df2c6fac4c6bd8cc",
+          "sdf": "e5de5c969408a2b10b27a24ff1e305b044ac52e7230c059e6d89cb24fd067d3a",
+          "cdxml": "731348e1557096dd4c65c47032b6a7bb347d2dbf756409767ea27c20d3e480ce"
+        }
+      },
+      {
+        "source": "tpb-dmtp-cof-pore-v1",
+        "atoms": 234,
+        "elapsed_seconds": 0.44,
+        "downloads_sha256": {
+          "svg": "fe99ab7f21f493936e0829206122226bdfc5ea5d14a1684a105940925e7bcba1",
+          "png": "a117220ee7c024840721cd7e024785524253ecf1d8e07f93ead406acf8c7161f",
+          "mol": "506dff18f786b19ad8c11c984632271875968881a6a5ce13f80ea6cfba1e494b",
+          "json": "ea7e69759264e81532bbd2093a54762054b4db0baf59969daed38cd45bca140d",
+          "sdf": "3682b06e832dc2237bd4b8033e7cbf170a3cf9c89bee7593211d64c1b2f91f37",
+          "cdxml": "fe1410b4add1ff72f68bdc7771c907cd6c58ea05c8a5c23d89a8abd468633b53"
+        }
+      },
+      {
+        "source": "wiley-r198-tppa-so3h-pore-0002",
+        "atoms": 156,
+        "elapsed_seconds": 0.34,
+        "downloads_sha256": {
+          "svg": "1ef633dd238f4b70b6a850b0545a9b4a9a5c375f22a8573a5646b95c55fb66f1",
+          "png": "2b17c03cae13c8ad6c829ca287a10bde0ca34cff87246eb4184330ab39ae7419",
+          "mol": "364adfdf539324471557c4ebfd7bf5be2945747db368c32efebe3cb3ce705afc",
+          "json": "204b984c8db3efe20b25cf25a81c34f7faecd238ed645d9758a67a1b6997180d",
+          "sdf": "94e9079d2441212d132238092310d90b3ea88a032f5a0b72207fcac9c1794d9b",
+          "cdxml": "413244b71ea73680b5a5254c43c6f7a15f6df9cd32599cd83ef5aa1b8a093762"
+        }
+      },
+      {
+        "source": "f-cof-1-source-v1",
+        "atoms": 90,
+        "elapsed_seconds": 0.27,
+        "downloads_sha256": {
+          "svg": "0dd758d52faa546b7586cc787a6b56f94aee185bc34d428e8a06db28781b8e47",
+          "png": "958acfe5fb9201fc4b307b8482d19a73010343f95d5ed80c1e8b3901d4c61bdb",
+          "mol": "3953c60b4246aa7dd748ba34713f40cbe016707bce0b69f0aa2fbad7173d0c9a",
+          "json": "b308fe8623d169181efa41668d0ed0e40d243edfddbb9700b7040511b264d09e",
+          "sdf": "7e4b9b002d63cbbd1b1e06f8ab218e573ad36a74a4c42185621bd6fb479839e5",
+          "cdxml": "64749c6d327446c77a775919e58e9df192fa744c3f9eec8cfd4316c3275e0002"
+        }
+      },
+      {
+        "source": "cof-300-projection-v1",
+        "atoms": 402,
+        "elapsed_seconds": 0.77,
+        "downloads_sha256": {
+          "svg": "26505b0c260eda07ff20de69ef08866381dfe7aa40895f991062b725aba47359",
+          "png": "63e4af983289515404f5837b0e6d2e559c5db9511c8f85652e6e932333dee5b6",
+          "mol": "8567cbec7ebb5c4f62dfa42d857855dc43af3117b5f0b65a36ada26fdd8ad90f",
+          "json": "0f1ef13cf03ffaacc1ef5cceaf199b7aa32c516c87c2bd9f1fa7a83274d2e4fa",
+          "sdf": "79469485e79f85f8ac185e0e65117286ffd92fd4f5be420c02cec87c8911e27f",
+          "cdxml": "c85a1033ae6840b5c9a3e750caa694882fefc3c1497b215521c6e39a5c064a39"
+        }
+      },
+      {
+        "source": "bta-cof-1-local-v1",
+        "atoms": 59,
+        "elapsed_seconds": 0.2,
+        "downloads_sha256": {
+          "svg": "33224e5ab32ae435026484204303ae5adeb808385168746274d7e251a1e52d5d",
+          "png": "496fffb73ab940ed17cb570661383a190cbfca79d18b6f0dbe87c9b6126f180e",
+          "mol": "2b33ae9b41b8d4abe125468adbd48f99f964f50d2cdc553478b7e76fa2ef61fb",
+          "json": "ec95fb15ba5ab456c0d5613664f10a2c3e0c0475f7902845b4a2f8a883d334b5",
+          "sdf": "1c1b45ae91534a41fa2cc192fe1e8e69c8bded080ad427626460f8377fc6af85",
+          "cdxml": "6c73b7933f21f1865d6a4258f913df2fb903568e4b8b341ac3c7241859fadeb7"
+        }
+      },
+      {
+        "source": "bta-cof-2-local-v1",
+        "atoms": 53,
+        "elapsed_seconds": 0.22,
+        "downloads_sha256": {
+          "svg": "50ac79d4a9bbacde8bca8fb9b055133243202c1efa122acedf0b06f6bfadaf6c",
+          "png": "0faad630db1b922f7a6b72bad7b518116f14318a238120df2b23ff04e8151f3e",
+          "mol": "e76c9518e4fb80cd899dc452a4c837dce42ff3581a61b4b759f29cbb069c8b75",
+          "json": "d7d1f1433a383c22edf10ea7d829be3cb980604845816f9b90bc4300aed99ae3",
+          "sdf": "076d3a61693e1fcdb1772fa4f7d0a33d377ace419d5af76cfaebda0414b61309",
+          "cdxml": "7a194c2bb22000471f230599bfb6f6dd44015aae933189719438c7a9c6d63069"
+        }
+      },
+      {
+        "source": "bta-cof-3-local-v1",
+        "atoms": 55,
+        "elapsed_seconds": 0.27,
+        "downloads_sha256": {
+          "svg": "6bb6b94b11dbc8ef8da21a66c17b9495b9bec89c0863a0e17818c1dcd806c6a9",
+          "png": "554af93675fb34e6b1f5af13b6ea4d3cda828a4536e87372100848f66ece2a00",
+          "mol": "c0069395fd8bd921590a39a3cc880704ac4e606e5beb1cce828aa985b34aa435",
+          "json": "62a0dc4ad0714258038ce041cc50e7c77a1f04765989012d415ba13632d2af68",
+          "sdf": "de058c369e7fc7b35d7421a5094c827d1f97a6af85d8f5a09685d7b9a92a5a8f",
+          "cdxml": "c69ebac2e7c1aa5400eec150f235707b9e9e1077a04a95cf30a325a1861b60b8"
+        }
+      },
+      {
+        "source": "bta-cof-4-pore-v1",
+        "atoms": 120,
+        "elapsed_seconds": 0.28,
+        "downloads_sha256": {
+          "svg": "a0063b3e1d0d55279f08332e99469da76531771acf03650f45ddab9672a6d665",
+          "png": "f33f6e37809abf005149c798e879a6c70b5d709174d71d988e3bee7aa09fb54f",
+          "mol": "81eba305f8994c34f3992baabf9782cf5b67cbf33cc5dc19ad4e1859f4c0893f",
+          "json": "182fbf6712597b6d5179bb6604aaa650a467429cf020c5b727f654fc829de50f",
+          "sdf": "8ebceb99c4cfa42feecd3596411e7f82bd3fe8d70c4596cc10ef444a1c627986",
+          "cdxml": "1290e828e95f22f97b01c2d37a47c507f6f906ae10758771ac3e4480255186ce"
+        }
+      },
+      {
+        "source": "brick-wall-pore-v1",
+        "atoms": 240,
+        "elapsed_seconds": 32.14,
+        "downloads_sha256": {
+          "svg": "8d27a54a04cb1dd308fdef8fc02a81ade758ea8432e8f392195197f7e4d997e1",
+          "png": "24e40a1bdb208b48a6671e6543424749ab2cbdaeb142a405b87d162badecc7dd",
+          "mol": "785e2bba09e3251f0bf36fa27d1953b46ae0f08d858e9c5c455567e4d711c11e",
+          "json": "8055993b7df067f5ae34c1d6e6e4edadc32abfbb8fe6f551dd9745d3766a5d73",
+          "sdf": "76baef5c835d8d67374ec7de3784548c4b1282f3480c6896c5cee6e4a0030776",
+          "cdxml": "a3090af6aff39ca6eebd46a0f11dc1d2cfe16c64ee3f0b5e4e384d9dcdea2398"
+        }
+      },
+      {
+        "source": "herringbone-proposal-v1",
+        "atoms": 240,
+        "elapsed_seconds": 31.69,
+        "downloads_sha256": {
+          "svg": "d21f33336c6ca4d9c3e21bed924aac0d31b849507946f146af31277e5a0b6afe",
+          "png": "d873e7ee008bce353ebbbdeb5f72d2adb60f08f69b1f788a79c3a02f350e269a",
+          "mol": "3dcdfe930ccd491cd32066c0876fcf6fb71c423537b36681ce2d5055bc7c9788",
+          "json": "b74fd61f5b756ac6a37e68b42dd4c01ae26222531f7f01cbd70b5909e93f2783",
+          "sdf": "7a3e7ad7e1c187dbddc346b90f6b86f8b89ba90f7fc8cb8c1e300c3a44ea155b",
+          "cdxml": "10f3acccab18feabf4a5ba415603be5d42ce7d3ebe73d24c6910485bada1c94f"
+        }
+      },
+      {
+        "source": "cof-bp-network-v1",
+        "atoms": 630,
+        "elapsed_seconds": 1.62,
+        "downloads_sha256": {
+          "svg": "85c8d6d517d9b1e59b79ab2402d6fecf2daeebaf5853c9d8405c126a05103fb9",
+          "png": "5d3d38fe34612f879f383742890620c630e5473a443feacc6339568eaac82803",
+          "mol": "45f451c5ece09d4b08bc3fb44fb98193396c76e27614f0b62801e355ed2782ed",
+          "json": "24d4f5d3f867196b987482fe16faf44ba1bee3a729e25986229ee3bb38ff0164",
+          "sdf": "0e4e58ae9e7e2fa566214f40a264b8095571d75ff2980eb23a0a8c4e8dd640af",
+          "cdxml": "92d8784c86a7387cf936ece593dd50830a8298bb3a025ce6ae26d95c1fe8fc52"
+        }
+      },
+      {
+        "source": "cof-bp-ni1-network-v1",
+        "atoms": 666,
+        "elapsed_seconds": 7.95,
+        "downloads_sha256": {
+          "svg": "cc6da38fdefa32997e6b032c9bde2865871119b2256ec857ac9a120a3956d856",
+          "png": "912adc7d123d8d879c64f8869c89fe15b7bada4456b58dfb37c01be271e11925",
+          "mol": "12f898daa43dc7d172bdb363c0478ceaeaa3c172aaab5c6372e7c602a375986a",
+          "json": "b5f34c21cf74a739d4fb01ed94e589602326d58d77ff250a78cc5b307fea180d",
+          "sdf": "10650a5b4107df49f43c732e1836926a6299289f1a84c4b18b0dca5a9ada7e0a",
+          "cdxml": "883971d25c73c599336eccdf772a75c1b12ccb88257d26ac4dcd675ab954ccaf"
+        }
+      },
+      {
+        "source": "cof-bp-ni2-network-v1",
+        "atoms": 694,
+        "elapsed_seconds": 9.78,
+        "downloads_sha256": {
+          "svg": "57e05b8fd3c039aa8ff076e5d0b09b88c6556fa539f0d00472d0b22fbed16ee8",
+          "png": "a5b1a5713302958533fd4bcc9d6c3f04b69cf3a81636e8ae82f03500041ed716",
+          "mol": "8e25e688a223158d20522fdac99b5d7621154ab522856e4618a1e24afc9d2018",
+          "json": "26ae135ba809a969fbbefa28aea3d38b7c7574c12be6748dfa0e6fa46076da54",
+          "sdf": "a9878478fd121dba579eb473926a7c49fa89ae4325358a8c4412e1124c4c39b8",
+          "cdxml": "3f42d7569277a1fdcd3446f770ef7b241ec56ac425caa0c4af1fc094f97f6fa0"
+        }
+      },
+      {
+        "source": "pyurea-source-layout-v1",
+        "atoms": 232,
+        "elapsed_seconds": 0.45,
+        "downloads_sha256": {
+          "svg": "3fc8f78d0508db40b1a0762e3545edf93cf1eb29121a68af6ef542b7fcf8e537",
+          "png": "ab8e3d1d212a4f8ab68af367e484774f68ddbf0f6fd14f2cfcbebd8cdda8e15f",
+          "mol": "287fd2003a8f037db6661238e79bf2c1e02b5c7b27f34469c295817ea1ce179c",
+          "json": "406421de731e40dfc39773deec0022b14dd32167110d377f008a16beb400583f",
+          "sdf": "f2cc3be4eff70aba8bb4862d9f19ffa08bf1a529b6a8a17b147423f6e99e77f7",
+          "cdxml": "d2a679205fd9a8385a2170a841810ef31c50fb6435406608b3a7d37776780039"
+        }
+      },
+      {
+        "source": "ucof-source-layout-v1",
+        "atoms": 144,
+        "elapsed_seconds": 0.31,
+        "downloads_sha256": {
+          "svg": "20f95d9d091a7ee6d71c3f99ff7bd9edd2053ceebc1f49b7f71e20e141abd24b",
+          "png": "fab0cca01d364ec83589cacfe5795dcc628eaf2e3713d2aaf4dfe9507e1cd83c",
+          "mol": "a79deff85255894a7efc580655ec7c233f2f9be0054c828b8d85b23af482d104",
+          "json": "72e524c28a402a9b7096e2bbef0aea457fb1bbff8dda647d028088bb3830af40",
+          "sdf": "817d24b0865ff27d3497830d5317f198ce7a539e58cde1aab08e82cf0f0d77a5",
+          "cdxml": "9e1a2a432442cbd0683bc4671efbc10895dadf943e806def8882aa9459fabac6"
+        }
+      }
+    ],
+    "browser_checks": [
+      "Real SVG card grid: lazy off-screen loading, cached filter reuse, scrolling, and 1/2/3/5/6 responsive columns",
+      "Broad library4c filter, visible disabled partner reasons, and single-monomer MOL export without changing A",
+      "Choose A then B: incompatible partner actions remain visible and disabled",
+      "3D topology references remain browsable and explicitly nonconstructing",
+      "Local catalog loaded and real RDKit monomer SVG displayed",
+      "Monomers prepared and six-block imine patch rendered",
+      "PNG/SVG/MOL/SDF/CDXML/JSON downloads saved",
+      "Actual colored drawing style rendered",
+      "Actual palette/font/continuation/transparency overrides applied",
+      "Random style returns reproducible seed",
+      "Project saves and reopens as an editable design without inheriting source identity",
+      "Interactive benzene ring drawing validates and replaces one monomer",
+      "Stereo graph retained; unsupported stereo connectivity edit is blocked explicitly",
+      "Actual twelve-block Tp ketoenamine patch",
+      "Expanded catalog shows full monomer names, reactive groups and chosen template",
+      "Unsupported linkage is searchable and explicitly prevents generation",
+      "Actual four-connected catalog monomers render their explicitly chosen template",
+      "Actual acylhydrazone monomer pair rendered",
+      "Actual layered presentation rendered with explicit scope notice",
+      "Actual schematic presentation rendered with explicit scope notice",
+      "Source recipe displays qualified COFex ID and full notation",
+      "Source coordinate edits strip active reference identity before re-render",
+      "390 px layout has no horizontal overflow",
+      "Explicit fixture: omitted CDXML reason visible; unsupported download absent"
+    ],
+    "studio_checks": [
+      "Default drawing rendered with real backend",
+      "Bounded 2D pore opening measurement displayed",
+      "Monomer edit automatically changed linkage and connectivity",
+      "Recovered source alignment and halo style rendered",
+      "Direct atom drag preserves graph and clears source identity",
+      "Undo restores source identity; projected styles disable atom handles",
+      "Real periodic DIA model generated and shown with CIF/XYZ/PDB exports",
+      "Periodic geometric pore/volume/surface analysis completed",
+      "Changing a periodic model clears previous pore results",
+      "BET fit on synthetic known-capacity fixture recovers expected area",
+      "RDKit descriptors and actual optimized monomer conformer displayed",
+      "390px viewport has no horizontal page overflow"
+    ],
+    "materials_checks": [
+      "Lattice-axis view, hydrogen visibility and fractional atom table",
+      "Periodic composition,2D network and geometric pore screening displayed",
+      "Comparison CSV downloads through actual UI",
+      "Multiple CIF upload compares two actual structures under common settings",
+      "Physical model PXRD preview, peak table and numeric CSV export",
+      "Narrow PXRD width automatically uses adequate profile sampling",
+      "Source-information query returns exact record, qualification and evidence",
+      "Agents discover schemas and retrieve identical saved reports with input hashes",
+      "Information result opens its actual saved source drawing",
+      "Materials tools fit390px viewport without horizontal overflow"
+    ],
+    "javascript_errors": []
+  },
+  "catalog": {
+    "source_drawings": 17,
+    "monomers": 49,
+    "styles": 20,
+    "palettes": 13,
+    "periodic_templates": 4
+  },
+  "scope": "Software and numerical validation, not experimental validation of crystals or adsorption properties. Original ChemDraw native compatibility evidence remains in the earlier validation records; new source exports were checked as XML/chemical tables, not all reopened natively."
+}

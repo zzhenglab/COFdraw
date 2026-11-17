@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -68,7 +68,7 @@ class DesktopBridge:
         import webview
         self._check()
         name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", str(suggested))[:160]
-        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb"}:
+        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb", ".csv"}:
             raise ValueError("Unsupported export extension")
         selected = self._window.create_file_dialog(webview.FileDialog.SAVE, save_filename=name)
         if not selected:
@@ -79,7 +79,7 @@ class DesktopBridge:
 
     def save_export(self, relative_path, suggested_filename):
         self._check()
-        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json|cif|xyz|pdb)", str(relative_path)):
+        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json|cif|xyz|pdb|csv)", str(relative_path)):
             raise ValueError("Not a generated COFdraw export")
         with urlopen(self._origin + relative_path, timeout=30) as response:
             data = response.read(20_000_001)

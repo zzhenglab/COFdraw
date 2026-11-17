@@ -37,7 +37,7 @@ def main():
     layout = commands.add_parser("layout", help="Request an explicit layout revision; saves the returned recipe")
     layout.add_argument("--request", type=Path, required=True)
     science = commands.add_parser("science", help="Run a documented local structure/analysis endpoint")
-    science.add_argument("endpoint", choices=["library", "model", "patch", "monomer", "porosity", "bet", "measure"])
+    science.add_argument("endpoint", choices=["library", "capabilities", "query", "model", "patch", "monomer", "porosity", "bet", "measure", "inspect", "pxrd", "screen"])
     science.add_argument("--request", type=Path)
     for sub in (source, design):
         sub.add_argument("--style", default="standard")
@@ -65,7 +65,7 @@ def main():
     if output == template or template in output.parents:
         parser.error("Output must be outside the catalog template")
     request_body = None
-    if args.operation == "science" and args.endpoint != "library" and args.request is None:
+    if args.operation == "science" and args.endpoint not in {"library", "capabilities"} and args.request is None:
         parser.error("A science calculation requires --request with its JSON request body")
     if args.operation in {"design", "render", "layout"} or (args.operation == "science" and args.request):
         request_body = json.loads(args.request.read_text(encoding="utf-8-sig"))
@@ -153,7 +153,7 @@ def main():
             write_json(output / "result.json", result)
             artifacts = []
             for extension, path in result.get("downloads", {}).items():
-                if extension not in {"svg", "png", "mol", "sdf", "cdxml", "json", "cif", "xyz", "pdb"}:
+                if extension not in {"svg", "png", "mol", "sdf", "cdxml", "json", "cif", "xyz", "pdb", "csv"}:
                     raise ValueError(f"Unexpected export format: {extension}")
                 content = fetch(base, path)
                 prefix = "structure" if args.operation == "science" else "drawing"
