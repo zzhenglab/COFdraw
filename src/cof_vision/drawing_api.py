@@ -9,7 +9,7 @@ import threading
 import uuid
 from copy import deepcopy
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
@@ -51,10 +51,55 @@ class MonomerDrawing(BaseModel):
     clean_layout: bool = False
 
 
+class LayoutDrawing(RenderDrawing):
+    operation: Literal['clean'] = 'clean'
+
+
+class ModelDrawing(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    template_id: str | None = Field(default=None, max_length=80)
+    cif_text: str | None = Field(default=None, max_length=2_000_000)
+    repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
+
+
+class Patch3D(RenderDrawing):
+    layers: int = Field(default=3, ge=1, le=6)
+    layer_spacing: float = Field(default=3.4, ge=2.5, le=12, allow_inf_nan=False)
+    stacking: Literal['AA','AB'] = 'AA'
+    slip: list[Annotated[float, Field(ge=-20,le=20,allow_inf_nan=False)]] | None = Field(default=None,min_length=2,max_length=2)
+
+
+class MonomerAnalysis(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    smiles: str = Field(min_length=1, max_length=4000)
+    conformers: int = Field(default=4, ge=1, le=8)
+
+
+class PoreAnalysis(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    structure: dict
+    probe_radius: float = Field(default=1.82, ge=0, le=3)
+    samples: int = Field(default=12000, ge=1000, le=30000)
+
+
+class BETAnalysis(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    relative_pressures: list[float] = Field(min_length=3, max_length=2000)
+    uptake_mmol_g: list[float] = Field(min_length=3, max_length=2000)
+    fit_min: float = Field(default=.05, gt=0, lt=1)
+    fit_max: float = Field(default=.30, gt=0, lt=1)
+    cross_section_nm2: float = Field(default=.162, gt=0, le=1)
+
+
 def validate_recipe(recipe: dict) -> None:
     """Reject costly or degenerate graphs before the renderer allocates them."""
     from rdkit import Chem
     from .framework_drawing import VERSION
+
+    if 'explicit_graph' in recipe:
+        from .cofdraw_explicit import validate_explicit_recipe
+        validate_explicit_recipe(recipe)
+        return
 
     if len(json.dumps(recipe, allow_nan=False)) > 200_000:
         raise ValueError("Recipe exceeds 200 kB")
@@ -153,6 +198,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         if value.get("cofex_id") != recipe.get("cofex_id") or value.get("source_recipe_sha256") != digest:
             raise ValueError("Catalog metadata does not match this source recipe revision")
         notation = value.get("cofex_notation", "")
+        if not notation and recipe.get('explicit_graph'):
+            return value
         if " COFex." not in notation:
             raise ValueError("Catalog source is missing its full SMILES-based COFex notation")
         expected = {canonical(c["monomer_smiles"]) for c in recipe["components"].values()}
@@ -179,7 +226,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 errors.append(str(exc))
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
-                "style_controls": {"palettes":list(PALETTES),"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
+                "style_controls": {"palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": decorated_monomers(catalog.get("monomer_presets", MONOMERS)),
@@ -235,8 +282,11 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 recipe["derived_from_recipe_id"] = recipe.get("recipe_id")
                 recipe.update(cofex_id=None, cofex_notation=None, cofex_string=None, parent_cofex_id=None, source=None, reference=None, topology=None, topology_evidence=None,
                               designed_variant=True, ground_truth=False, review_status="user_design")
+                from .cofdraw_explicit import clear_source_registration
+                clear_source_registration(recipe)
                 validate_recipe(recipe)
-                refresh_design_identity(recipe)
+                if not recipe.get('explicit_graph'):
+                    refresh_design_identity(recipe)
                 status = "designed_variant"
                 metadata = {}
             validate_recipe(recipe)
@@ -258,7 +308,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             audit.update(design_cofex_notation=recipe.get("design_cofex_notation"), design_topology=recipe.get("design_topology"),
                          design_identity_qualification=recipe.get("design_identity_qualification"), selected_template=recipe.get("selected_template"))
             audit.update(cofex_string=metadata.get("cofex_notation"), cofex_notation=metadata.get("cofex_notation"),
-                         literature_metadata=metadata, monomers=[{"component": name, "label": c.get("label", name), "smiles": c.get("monomer_smiles")} for name, c in recipe["components"].items()],
+                         literature_metadata=metadata, monomers=[{"component": name, "label": c.get("label", name), "smiles": c.get("monomer_smiles")} for name, c in recipe.get("components",{}).items()],
                          chemical_export_scope="Editable finite patch with continuation atoms. SVG styles are separate presentation; no complete periodic unit cell is implied.")
             urls = {ext: f"/api/drawing/exports/{drawing_id}/{ext}" for ext in ("svg", "png", "mol", "json", *extra_formats)}
             bundle = {"recipe": recipe, "audit": audit, "downloads": urls}
@@ -268,13 +318,113 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             raise HTTPException(422, str(exc)) from exc
 
     @router.get("/exports/{drawing_id}/{extension}")
-    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml"]):
+    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml", "cif", "xyz", "pdb"]):
         if not re.fullmatch(r"[0-9a-f]{32}", drawing_id):
             raise HTTPException(404, "Drawing not found")
         path = (outputs / drawing_id / f"{drawing_id}.{extension}").resolve()
         if not path.is_relative_to(outputs.resolve()) or not path.is_file():
             raise HTTPException(404, "Drawing not found")
-        types = {"svg": "image/svg+xml", "png": "image/png", "mol": "chemical/x-mdl-molfile", "json": "application/json", "sdf": "chemical/x-mdl-sdfile", "cdxml": "chemical/x-cdxml"}
+        types = {"svg": "image/svg+xml", "png": "image/png", "mol": "chemical/x-mdl-molfile", "json": "application/json", "sdf": "chemical/x-mdl-sdfile", "cdxml": "chemical/x-cdxml", "cif":"chemical/x-cif", "xyz":"chemical/x-xyz", "pdb":"chemical/x-pdb"}
         return FileResponse(path, media_type=types[extension], filename=f"cof-pore-{drawing_id[:8]}.{extension}")
+
+    def selected_recipe(request):
+        value = source_recipe(request.source_recipe_id)[0] if request.source_recipe_id else deepcopy(request.recipe)
+        if not request.source_recipe_id:
+            value.update(cofex_id=None, cofex_notation=None, cofex_string=None,
+                         parent_cofex_id=None, source=None, reference=None,
+                         topology=None, topology_evidence=None, designed_variant=True,
+                         ground_truth=False, review_status='user_design')
+            from .cofdraw_explicit import clear_source_registration
+            clear_source_registration(value)
+        validate_recipe(value)
+        return value
+
+    def scientific_result(result):
+        result=deepcopy(result)
+        contents=result.pop('exports',{})
+        identifier=uuid.uuid4().hex
+        directory=outputs/identifier;directory.mkdir(parents=True)
+        urls={}
+        for extension,content in contents.items():
+            if extension not in {'cif','xyz','pdb','sdf','mol'}:continue
+            if not isinstance(content,str) or len(content)>20_000_000:raise ValueError('Structure export exceeds the size limit')
+            (directory/f'{identifier}.{extension}').write_text(content,encoding='utf-8')
+            urls[extension]=f'/api/drawing/exports/{identifier}/{extension}'
+        urls['json']=f'/api/drawing/exports/{identifier}/json'
+        result['downloads']=urls
+        (directory/f'{identifier}.json').write_text(json.dumps(result,indent=2,allow_nan=False),encoding='utf-8')
+        return result
+
+    @router.post('/layout')
+    def layout(request: LayoutDrawing):
+        try:
+            from .cofdraw_layout import clean_layout
+            return clean_layout(selected_recipe(request))
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.get('/science/library')
+    def scientific_library():
+        path=root/'crystal-models/manifest.json'
+        data=json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
+        return {'templates':data['templates'],'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
+
+    @router.post('/science/model')
+    def model(request: ModelDrawing):
+        try:
+            from .cofdraw_science import import_cif, structure_exports
+            if bool(request.template_id)==bool(request.cif_text):raise ValueError('Choose one model template or import one CIF')
+            if request.template_id:
+                manifest=json.loads((root/'crystal-models/manifest.json').read_text(encoding='utf-8'))
+                matches=[x for x in manifest['templates'] if x['id']==request.template_id]
+                if len(matches)!=1:raise ValueError('Unknown crystal template')
+                item=matches[0];path=(root/'crystal-models'/item['path']).resolve()
+                if not path.is_relative_to((root/'crystal-models').resolve()) or hashlib.sha256(path.read_bytes()).hexdigest()!=item['sha256']:raise ValueError('Crystal template integrity check failed')
+                structure=import_cif(path.read_text(encoding='utf-8'))
+                structure['provenance']={**structure.get('provenance',{}),'template':item['id'],'generator':manifest['generator'],'model_name':item['model_name'],'doi':manifest['citation_doi'],'qualification':item['description']}
+            else:structure=import_cif(request.cif_text)
+            with lock:result=structure_exports(structure,repeats=tuple(request.repeats))
+            result['scope']='Periodic atomic model with an explicit cell. Built-in templates are unrelaxed reticular designs, not experimentally assigned crystals; imported CIFs retain supplied geometry.'
+            return scientific_result(result)
+        except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/patch')
+    def patch_model(request: Patch3D):
+        try:
+            from .cofdraw_science import patch_3d
+            with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip)
+            result['scope']='Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.'
+            return scientific_result(result)
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/monomer')
+    def analyze_monomer(request: MonomerAnalysis):
+        try:
+            from .cofdraw_science import monomer_analysis
+            with lock:result=monomer_analysis(request.smiles,conformers=request.conformers)
+            return scientific_result(result)
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/porosity')
+    def analyze_porosity(request: PoreAnalysis):
+        try:
+            if len(json.dumps(request.structure))>2_000_000:raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_science import pore_analysis
+            with lock:result=pore_analysis(request.structure,probe_radius=request.probe_radius,samples=request.samples)
+            return scientific_result(result)
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/measure')
+    def measure(request: RenderDrawing):
+        try:
+            from .cofdraw_measure import measure_drawing
+            return measure_drawing(selected_recipe(request))
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/bet')
+    def analyze_bet(request: BETAnalysis):
+        try:
+            from .cofdraw_science import fit_bet
+            return scientific_result(fit_bet(**request.model_dump()))
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     return router

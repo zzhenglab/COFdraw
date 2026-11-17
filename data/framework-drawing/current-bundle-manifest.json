@@ -1,10 +1,10 @@
 {
   "schema_version": "cofdraw-current-portable-bundle-1",
-  "created_at_utc": "2026-11-17T17:04:33.490323+00:00",
+  "created_at_utc": "2026-11-17T21:11:16.856301+00:00",
   "catalog": "catalog/current.json",
-  "catalog_sha256": "342c3613b02216080a9b44d031febe6df8d01b21f36b4ad5316b65c28cd8da61",
+  "catalog_sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
   "registry": "registry.json",
-  "registry_sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68",
+  "registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
   "files": [
     {
       "path": "bundle-manifest.json",
@@ -13,13 +13,13 @@
     },
     {
       "path": "catalog/current.audit.json",
-      "sha256": "ea3da18c63b3695b9b652d1b6a2361895bdbea2af08b97e189a52f3a9c872e96",
-      "bytes": 3946
+      "sha256": "70ec7c4d7c012281eedca60ae0b033f0af2ebe9c0037b9e0f6bf96b454796cdb",
+      "bytes": 486
     },
     {
       "path": "catalog/current.json",
-      "sha256": "342c3613b02216080a9b44d031febe6df8d01b21f36b4ad5316b65c28cd8da61",
-      "bytes": 260427
+      "sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+      "bytes": 331786
     },
     {
       "path": "catalog/history/342c3613b02216080a9b44d031febe6df8d01b21f36b4ad5316b65c28cd8da61.audit.json",
@@ -42,6 +42,11 @@
       "bytes": 249186
     },
     {
+      "path": "catalog/recovered-drawings.audit.json",
+      "sha256": "faf9b09e8aeb4276c4dc1a77ad2c781a4825937a05b9f5ba34bc8536bef0b74b",
+      "bytes": 9998
+    },
+    {
       "path": "catalog-v3/catalog.json",
       "sha256": "60448d1252666842e15d687aae853ae92c2858ea8fda02f801fd577a0c269928",
       "bytes": 181411
@@ -52,14 +57,79 @@
       "bytes": 12594
     },
     {
+      "path": "recovered/brick-wall-pore-v1.recipe.json",
+      "sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55",
+      "bytes": 169653
+    },
+    {
+      "path": "recovered/bta-cof-1-local-v1.recipe.json",
+      "sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0",
+      "bytes": 45616
+    },
+    {
+      "path": "recovered/bta-cof-2-local-v1.recipe.json",
+      "sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc",
+      "bytes": 41252
+    },
+    {
+      "path": "recovered/bta-cof-3-local-v1.recipe.json",
+      "sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f",
+      "bytes": 42791
+    },
+    {
+      "path": "recovered/bta-cof-4-pore-v1.recipe.json",
+      "sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b",
+      "bytes": 87942
+    },
+    {
+      "path": "recovered/cof-300-projection-v1.recipe.json",
+      "sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59",
+      "bytes": 277635
+    },
+    {
+      "path": "recovered/cof-bp-network-v1.recipe.json",
+      "sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c",
+      "bytes": 437733
+    },
+    {
+      "path": "recovered/cof-bp-ni1-network-v1.recipe.json",
+      "sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d",
+      "bytes": 462927
+    },
+    {
+      "path": "recovered/cof-bp-ni2-network-v1.recipe.json",
+      "sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437",
+      "bytes": 483903
+    },
+    {
+      "path": "recovered/f-cof-1-source-v1.recipe.json",
+      "sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe",
+      "bytes": 61373
+    },
+    {
+      "path": "recovered/herringbone-proposal-v1.recipe.json",
+      "sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d",
+      "bytes": 169674
+    },
+    {
+      "path": "recovered/pyurea-source-layout-v1.recipe.json",
+      "sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71",
+      "bytes": 167302
+    },
+    {
+      "path": "recovered/ucof-source-layout-v1.recipe.json",
+      "sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd",
+      "bytes": 108227
+    },
+    {
       "path": "registry.json",
-      "sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68",
-      "bytes": 1578
+      "sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+      "bytes": 7911
     },
     {
       "path": "tfb-tab-pore-v1.recipe.json",
-      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
-      "bytes": 10567
+      "sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656",
+      "bytes": 28862
     },
     {
       "path": "tpb-dmtp-cof-pore-v1.recipe.json",
@@ -73,8 +143,8 @@
     },
     {
       "path": "wiley-r198-tppa-so3h-drawing-0002.json",
-      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
-      "bytes": 11908
+      "sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701",
+      "bytes": 38861
     }
   ],
   "source_pdf_or_image_included": false,

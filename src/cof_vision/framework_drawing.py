@@ -198,7 +198,7 @@ def _refine_block_spacing(mol, coordinates, origins):
     initial_lengths = np.array([np.linalg.norm(original[j]-original[i]) for i, j in joins])
     audit['initial_maximum_bond_error'] = float(max(abs(initial_lengths-target)))
     current = original.copy()
-    for iteration in range(80):
+    for iteration in range(200):
         rhs = np.zeros((len(joins)+1, 2))
         for n, (i, j) in enumerate(joins):
             delta = current[j]-current[i]; length = np.linalg.norm(delta)
@@ -239,6 +239,9 @@ def build_patch(recipe: dict):
     The current layout helper accepts a single closed pore sequence. Every
     chemical connection is explicit; degrees do not select a topology.
     """
+    if recipe.get('explicit_graph'):
+        from .cofdraw_explicit import build_explicit_patch
+        return build_explicit_patch(recipe)
     if recipe.get("schema_version") != VERSION:
         raise ValueError("Unsupported drawing recipe version")
     instances = recipe["instances"]
@@ -265,6 +268,12 @@ def build_patch(recipe: dict):
                 nxt = (2*position-np.asarray(prev)).tolist()
         coords[name] = _fragment_layout(mol, item["incoming_port"], item["outgoing_port"], position, prev, nxt,
                                        item.get("flip_across_attachment_axis", False))
+        angle = item.get('layout_rotation_degrees', 0)
+        if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle):
+            raise ValueError('Block rotation must be a finite angle')
+        if angle:
+            theta = math.radians(angle)
+            coords[name] = coords[name] @ np.array([[math.cos(theta), math.sin(theta)], [-math.sin(theta), math.cos(theta)]])
         offsets[name] = joined.GetNumAtoms(); positions[name] = position; parts[name] = mol
         joined = Chem.CombineMols(joined, mol)
         atom_origin += [{"instance": name, "component": item["component"], "fragment_atom_index": a.GetIdx()} for a in mol.GetAtoms()]
@@ -292,18 +301,20 @@ def build_patch(recipe: dict):
                              Chem.BondStereo.STEREOCIS, Chem.BondStereo.STEREOTRANS)
     ]
     rw = Chem.RWMol(joined); to_remove = []; consumed_selector_replacements = {}
-    all_coords = []
+    all_coords = []; port_joins = []
     for item in instances:
         name = item["id"]
         all_coords.extend(coords[name] + scale*positions[name])
     for edge in recipe["connections"]:
-        endpoints = []; edge_dummies = []
+        endpoints = []; edge_dummies = []; directions = []
         for end in (edge["a"], edge["b"]):
             name, port = end["instance"], end["port"]
             if (name, port) in used:
                 raise ValueError("Attachment port consumed more than once")
             used.add((name, port))
             dummy, neighbor = _ports(parts[name])[port]
+            direction = coords[name][dummy]-coords[name][neighbor]
+            directions.append(direction/np.linalg.norm(direction))
             dummy += offsets[name]; neighbor += offsets[name]
             source_order = rw.GetBondBetweenAtoms(dummy, neighbor).GetBondTypeAsDouble()
             if source_order != edge["bond_order"]:
@@ -314,6 +325,7 @@ def build_patch(recipe: dict):
         rw.AddBond(*endpoints, {1: Chem.BondType.SINGLE, 2: Chem.BondType.DOUBLE, 3: Chem.BondType.TRIPLE}[edge["bond_order"]])
         consumed_selector_replacements[edge_dummies[0]] = endpoints[1]
         consumed_selector_replacements[edge_dummies[1]] = endpoints[0]
+        port_joins.append({'a': endpoints[0], 'b': endpoints[1], 'direction_a': directions[0], 'direction_b': directions[1]})
     removed = set(to_remove)
     for idx in sorted(removed, reverse=True):
         rw.RemoveAtom(idx)
@@ -365,10 +377,32 @@ def build_patch(recipe: dict):
     kept_coords = [p for i, p in enumerate(all_coords) if i not in removed]
     kept_origin = [p for i, p in enumerate(atom_origin) if i not in removed]
     refinement = {'method': None, 'applied': False}
-    if recipe.get('layout_refinement'):
-        if recipe['layout_refinement'] != 'rigid_block_translation_v1':
+    if recipe.get('layout_refinement') not in (None, 'manual') and not recipe.get('atom_coordinates'):
+        if recipe['layout_refinement'] == 'rigid_block_pose_v1':
+            from .cofdraw_layout import refine_rigid_poses
+            if specified_double_stereo or any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()):
+                refinement = {'method': 'rigid_block_pose_v1', 'applied': False, 'reason': 'explicit_stereochemistry_preserved_without_automatic_reorientation'}
+            else:
+                joins = [{**j, 'a': retained_atom_indices[j['a']], 'b': retained_atom_indices[j['b']]} for j in port_joins]
+                kept_coords, refinement = refine_rigid_poses(mol, kept_coords, kept_origin, joins)
+        elif recipe['layout_refinement'] == 'rigid_block_translation_v1':
+            kept_coords, refinement = _refine_block_spacing(mol, kept_coords, kept_origin)
+        else:
             raise ValueError('Unsupported layout refinement')
-        kept_coords, refinement = _refine_block_spacing(mol, kept_coords, kept_origin)
+    if recipe.get('atom_coordinates'):
+        rows = recipe['atom_coordinates']
+        if not isinstance(rows, list) or len(rows) != len(kept_origin):
+            raise ValueError('Provide one coordinate for every retained graph atom')
+        positions_by_atom = {(p['instance'], p['fragment_atom_index']): p['xy'] for p in rows}
+        if len(positions_by_atom) != len(kept_origin):
+            raise ValueError('Repeated atom coordinate key')
+        try:
+            kept_coords = np.asarray([positions_by_atom[(o['instance'], o['fragment_atom_index'])] for o in kept_origin], dtype=float)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError('Atom coordinate keys must match the assembled graph') from exc
+        if kept_coords.shape != (len(kept_origin), 2) or not np.isfinite(kept_coords).all() or np.max(abs(kept_coords)) > 100000:
+            raise ValueError('Atom coordinates must be finite xy pairs')
+        refinement = {'method': 'explicit_atom_coordinates', 'applied': False, 'source_coordinates_preserved': True}
     conf = Chem.Conformer(mol.GetNumAtoms())
     conf.Set3D(False)
     continuation_ports = []
@@ -412,6 +446,8 @@ def build_patch(recipe: dict):
                                                    "consumed_selectors_rebound": remapped_selector_count},
         "defined_double_bond_geometry": _double_bond_geometry_audit(mol),
         "boundary": "Stars denote outgoing continuation/crop ports, not terminal atoms or isolated molecules."}
+    from .cofdraw_layout import layout_diagnostics
+    audit['layout_diagnostics'] = layout_diagnostics(mol, kept_coords, kept_origin)
     return mol, audit
 
 

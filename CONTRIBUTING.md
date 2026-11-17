@@ -34,10 +34,12 @@ For chemistry changes, preserve stereochemistry, source-qualified identity, prov
 
 The builder produces `dist/COFdraw/`, `dist/COFdraw-Windows.zip`, and a SHA-256 checksum file. It refuses an existing output directory; use `--output-dir dist/another-build` for a new build. Keep the EXE, `_internal`, and `data` together. The build environment and executable output are excluded from Git.
 
-The first public v0.3.0 release repackages the existing validated executable with a clean portable catalog and documentation. The standalone builder lets contributors produce a fresh executable from this desktop source. A rebuilt binary can have a different hash; validate that binary before distributing it.
+The builder validates and includes the reviewed drawing catalog and periodic model templates. It retains its build cache and copies into a fresh destination. A rebuilt binary has a new hash; run `scripts/smoke_cofdraw_release.py` against that executable and its bundled data before distributing it. Browser smoke checks require development Playwright and installed Chrome or Edge.
 
 ## Catalog and documentation
 
 The current catalog, registry, and recipes are bound together by SHA-256 hashes in `data/framework-drawing/current-bundle-manifest.json`. Keep those records consistent. Preserve source identifiers, and do not include private publications, local source paths, datasets, model weights, or generated exports in commits.
 
 For detailed scientific scope and recorded validation, see the [catalog guide](docs/cofdraw-catalog-v3.md) and [release record](docs/cofdraw-release-validation.json). That record describes the original 0.3.0 application's broader validation run; the public desktop repository contains its focused drawing tests.
+
+Current structure methods and release evidence are documented in [scientific methods](docs/scientific-methods.md) and [v0.4 validation](docs/v0.4-validation.json).

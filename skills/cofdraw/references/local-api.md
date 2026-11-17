@@ -6,7 +6,7 @@ From a source checkout with Python 3.11 or newer, install the project's dependen
 
 For an existing Windows release, extract the entire archive and pass the full `COFdraw.exe` path to `--exe`. The helper needs only standard-library Python in this mode. Native desktop viewing needs WebView2; headless API use does not open a webview.
 
-By default, the helper reads template data from `<repo>/data` or the executable's sibling `data`. Override this with `--data-dir` when using another reviewed portable catalog. It copies `framework-drawing` into `<output>/runtime-data` and excludes generated `exports` and log files. It never changes the template catalog.
+By default, the helper reads template data from `<repo>/data` or the executable's sibling `data`. Override this with `--data-dir` when using another reviewed portable catalog. It copies `framework-drawing` and, when present, `crystal-models` into `<output>/runtime-data` and excludes generated `exports` and log files. It never changes the template catalog.
 
 Direct launch, if a persistent service is useful:
 
@@ -14,7 +14,7 @@ Direct launch, if a persistent service is useful:
 python scripts/launch_cofdraw.py --headless --data-dir outputs/runtime-data --status-file outputs/server.json
 ```
 
-First copy the reviewed `data/framework-drawing` into `outputs/runtime-data/framework-drawing` and create `outputs`. The status file reports the chosen loopback URL and process ID. Wait for `GET /api/desktop` to succeed; the initial status file alone does not establish readiness. Stop only the process you started when finished. The API binds to `127.0.0.1` and rejects cross-origin writes; it is a local application, not a hosted multiuser service.
+First copy the reviewed `data/framework-drawing` into `outputs/runtime-data/framework-drawing`, copy `data/crystal-models` if using periodic templates, and create `outputs`. The status file reports the chosen loopback URL and process ID. Wait for `GET /api/desktop` to succeed; the initial status file alone does not establish readiness. Stop only the process you started when finished. The API binds to `127.0.0.1` and rejects cross-origin writes; it is a local application, not a hosted multiuser service.
 
 ## Endpoint contract
 
@@ -26,7 +26,8 @@ First copy the reviewed `data/framework-drawing` into `outputs/runtime-data/fram
 | `POST /api/drawing/monomer` | Validated monomer graph, SMILES, MOL block and depiction |
 | `POST /api/drawing/prepare` | Editable finite recipe for explicit monomer inputs |
 | `POST /api/drawing/render` | Audit and download URLs for actual generated files |
-| `GET /api/drawing/exports/{drawing_id}/{extension}` | A generated SVG, PNG, MOL, SDF, CDXML or JSON file, when available |
+| `POST /api/drawing/layout` | Explicitly requested cleanup revision and diagnostics; inspect the returned recipe |
+| `GET /api/drawing/exports/{drawing_id}/{extension}` | A generated SVG, PNG, MOL, SDF, CDXML, JSON, XYZ, CIF or PDB file, when available |
 
 Read valid IDs and supported status from `library` rather than maintaining a separate invented catalog. Requests reject unknown top-level fields. HTTP 422 carries the invalid-input reason.
 
@@ -39,6 +40,14 @@ Render request:
 ```
 
 `render` requires **exactly one** of `source_recipe_id` and `recipe`. Size is 500–2400 pixels. Optional fields are `style_seed` (0–2147483647) and `style_options` (object). Use the controls exposed by the library and the UI as the style-options reference. Retain the seed and resolved options for random styles.
+
+Use `style_id: "source"` for source-informed colors, continuation marks, fills and supported abbreviations. Source coordinates remain fixed in all normal rendering. For example, `pyurea-source-layout-v1` retains its compact pyrene-block arrangement and `ucof-source-layout-v1` retains the source-informed angular arrangement with red urethane links. Read the recipe's coordinate qualifications; neither is claimed to be exact pixel registration. Source style is a vector reconstruction, not a copy of the publication image.
+
+### Coordinate editing
+
+Recipes may use component fragments and instances, or an `explicit_graph`. For the latter, atom `index` and `xy: [x,y]` use Cartesian y-up drawing coordinates. Edit `explicit_graph.atoms[i].xy` while retaining all atom/bond, hydrogen, charge, isotope, stereo and origin fields. For component recipes with `atom_coordinates`, positions are keyed by `instance` and `fragment_atom_index`. Preserve these coordinates rather than changing only the coarse instance positions.
+
+The audit's `atom_origin` maps output atoms back to these keys; direct graphs also include `explicit_atom_index`. Return edited recipes through `/render` as designed variants. `POST /layout` accepts the usual recipe/source selection plus `operation: "clean"`; it is an explicit geometry change, not a prerequisite for source rendering. Automatic cleanup is supported for assembled component recipes; direct `explicit_graph` recipes retain their supplied coordinates and reject this operation. Review the returned diagnostics before accepting a revision, then render it as an edited recipe. The helper exposes this as `layout --request layout.json` and saves the response in `result.json`.
 
 ### Custom design
 

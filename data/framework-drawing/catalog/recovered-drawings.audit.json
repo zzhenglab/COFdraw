@@ -1,0 +1,258 @@
+{
+  "schema_version": "cofdraw-reviewed-catalog-import-1",
+  "imported_at_utc": "2026-11-17T21:11:16.819654+00:00",
+  "entries": [
+    {
+      "recipe_id": "f-cof-1-source-v1",
+      "label": "F-COF-1",
+      "doi": "10.1021/acsami.2c11052",
+      "atoms": 90,
+      "bonds": 102,
+      "ports": 6,
+      "representation_kind": "source_registered_pore",
+      "upstream_sha256": "79fd5ef76d08e402990d8e04fb7fd5f63768e189f11449eaf5ac4ddc0dd4c5ee",
+      "recipe_sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe",
+      "stereo": {
+        "checked": 6,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "cof-300-projection-v1",
+      "label": "COF-300 · projected network",
+      "doi": "10.1021/acsami.3c12826",
+      "atoms": 402,
+      "bonds": 456,
+      "ports": 16,
+      "representation_kind": "source_informed_projected_network",
+      "upstream_sha256": "e0a7d4a6dc67476149ab01cadfffde9b2cbaf4e2c411de9acde4816a71164d64",
+      "recipe_sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "bta-cof-1-local-v1",
+      "label": "BTA-COF1 · local boronate fragment",
+      "doi": "10.1021/acsami.7b09061",
+      "atoms": 59,
+      "bonds": 67,
+      "ports": 8,
+      "representation_kind": "source_informed_local_fragment",
+      "upstream_sha256": "f1a81d85c3de180b842db5052be88842f48cc39e8c90979893cfe78988a54563",
+      "recipe_sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "bta-cof-2-local-v1",
+      "label": "BTA-COF2 · local boronate fragment",
+      "doi": "10.1021/acsami.7b09061",
+      "atoms": 53,
+      "bonds": 60,
+      "ports": 6,
+      "representation_kind": "source_informed_local_fragment",
+      "upstream_sha256": "77a1c88c70ee2c88d104b63e99b41dd810cddc5df45edcf297450c1d1e47be0f",
+      "recipe_sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "bta-cof-3-local-v1",
+      "label": "BTA-COF3 · local boronate fragment",
+      "doi": "10.1021/acsami.7b09061",
+      "atoms": 55,
+      "bonds": 62,
+      "ports": 6,
+      "representation_kind": "source_informed_local_fragment",
+      "upstream_sha256": "cd41ba58043311be40ccae4754962c312f482d040aa06aece5ba95ac7a6c144b",
+      "recipe_sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "bta-cof-4-pore-v1",
+      "label": "BTA-COF4 · boroxine pore",
+      "doi": "10.1021/acsami.7b09061",
+      "atoms": 120,
+      "bonds": 138,
+      "ports": 9,
+      "representation_kind": "source_informed_pore",
+      "upstream_sha256": "eec33b25fbca5bdee7ad6385ec16367969eaec399b91fe7852b73a092fe1ef06",
+      "recipe_sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "brick-wall-pore-v1",
+      "label": "Brick-wall COF",
+      "doi": "10.1021/acsmacrolett.6b00805",
+      "atoms": 240,
+      "bonds": 276,
+      "ports": 6,
+      "representation_kind": "source_informed_pore",
+      "upstream_sha256": "406175781401e112ca10216dc5c7ece3ed13699dddd51eb282a94a69c68c29aa",
+      "recipe_sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55",
+      "stereo": {
+        "checked": 18,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "herringbone-proposal-v1",
+      "label": "Herringbone · rejected source proposal",
+      "doi": "10.1021/acsmacrolett.6b00805",
+      "atoms": 240,
+      "bonds": 276,
+      "ports": 6,
+      "representation_kind": "rejected_source_hypothesis",
+      "upstream_sha256": "dc1b224ad264756b9979c1bc7b07311dc7a46d34310e54032fe2b350e67bfc99",
+      "recipe_sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d",
+      "stereo": {
+        "checked": 18,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "cof-bp-network-v1",
+      "label": "COF-BP · parent network",
+      "doi": "10.1021/acs.inorgchem.4c05494",
+      "atoms": 630,
+      "bonds": 732,
+      "ports": 12,
+      "representation_kind": "source_informed_network",
+      "upstream_sha256": "54eb64fda7365ec449353318eb4b77a80d3fb2ff07b1af7f575be881c1195d48",
+      "recipe_sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "cof-bp-ni1-network-v1",
+      "label": "COF-BP-Ni1 · drawn coordination sites",
+      "doi": "10.1021/acs.inorgchem.4c05494",
+      "atoms": 666,
+      "bonds": 772,
+      "ports": 12,
+      "representation_kind": "source_informed_coordination_patch",
+      "upstream_sha256": "21a448c1277aace3d1827507ef9d461b5479136d61f5e586dce8afa3ebfe0252",
+      "recipe_sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "cof-bp-ni2-network-v1",
+      "label": "COF-BP-Ni2 · drawn coordination sites",
+      "doi": "10.1021/acs.inorgchem.4c05494",
+      "atoms": 694,
+      "bonds": 812,
+      "ports": 12,
+      "representation_kind": "source_informed_coordination_patch",
+      "upstream_sha256": "5d8ffe5fea6a939616677a3a09eba17af077d170dc0ffb20862fa2aa69312b98",
+      "recipe_sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437",
+      "stereo": {
+        "checked": 4,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "pyurea-source-layout-v1",
+      "label": "Pyurea-COF",
+      "doi": "10.1039/d1qm00231g",
+      "atoms": 232,
+      "bonds": 268,
+      "ports": 8,
+      "representation_kind": "source_informed_manual_pore",
+      "upstream_sha256": "9763e611eefa49171793752e681a8fcf4e972c684f0d63ccd131957c2e106a75",
+      "recipe_sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    },
+    {
+      "recipe_id": "ucof-source-layout-v1",
+      "label": "UCOF",
+      "doi": "10.1039/d2dt04057c",
+      "atoms": 144,
+      "bonds": 156,
+      "ports": 6,
+      "representation_kind": "source_informed_manual_pore",
+      "upstream_sha256": "19f861f259dd599bca149c210a46e09bb1143ac5ecf868a8b2bd5f11af774977",
+      "recipe_sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd",
+      "stereo": {
+        "checked": 0,
+        "valid": true,
+        "violations": [],
+        "scope": "Defined double bonds only; no new stereochemistry inferred from coordinates."
+      }
+    }
+  ],
+  "new_monomer_ids": [
+    "recovered_urea",
+    "recovered_monoformylphloroglucinol",
+    "recovered_1_4_phenylene_diisocyanate"
+  ],
+  "original_source_count": 4,
+  "source_count": 17,
+  "monomer_count": 49,
+  "restored_existing_source_registrations": [
+    {
+      "recipe_id": "tfb-tab-pore-v1",
+      "visible_atoms": 108,
+      "unobserved_atoms": 0,
+      "source_anchor_sha256": "cbf67383a2760f30c8bacd13b54a977c194e2e3496d6067d8a6f746e243f7ed2",
+      "recipe_sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656"
+    },
+    {
+      "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "visible_atoms": 138,
+      "unobserved_atoms": 18,
+      "source_anchor_sha256": "3de59c14986a4cf8b704efcf07881e20c6cdbadd1513d3815fe3bed14a18e69f",
+      "recipe_sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701"
+    }
+  ],
+  "human_verification_claimed": false,
+  "source_images_distributed": false,
+  "limits": [
+    "Most recovered coordinates are organized source-informed reconstructions, not pixel registrations.",
+    "F-COF-1 and the restored existing TFB-TAB/SCOF entries retain source atomwise anchors; Pyurea/UCOF are manually source-informed revisions.",
+    "Herringbone is a rejected proposal. COF-300 is a projection. Ni site drawings do not establish bulk occupancy."
+  ]
+}

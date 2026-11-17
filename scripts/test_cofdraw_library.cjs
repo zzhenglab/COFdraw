@@ -13,6 +13,12 @@ assert.equal(L.roleEvidence({compatible_roles:[]},"imine","aldehyde").compatible
 assert.equal(L.roleEvidence({smiles:"not chemistry"},"imine","aldehyde"),null);
 assert.equal(L.roleEvidence({compatible_roles:[{linkage:"imine",role:"aldehyde",reactive_sites:1}]},"imine","aldehyde").compatible,false);
 const monomers = {a:library.monomer_presets[0],b:library.monomer_presets[1]};
+const automaticLibrary={...library,linkages:{imine:{supported:true,roles:['aldehyde','amine']},reference:{supported:false,roles:[]}},templates:[{id:'sql',allow_pairs:[[4,2]]}]};
+assert.deepEqual(L.compatibleLinkages(automaticLibrary,monomers.a,monomers.b).map(x=>[x.id,x.swapped,x.templates]),[['imine',false,['sql']]]);
+assert.equal(L.compatibleLinkages(automaticLibrary,monomers.b,monomers.a)[0].swapped,true);
+assert.deepEqual(L.compatibleLinkages(automaticLibrary,monomers.a,{compatible_roles:[]}),[]);
+assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'a',monomers.b).compatible,true);
+assert.equal(L.automaticChoice(automaticLibrary,{compatible_roles:[]},'a',monomers.b).compatible,false);
 const square = {id:"square",linkages:["imine"],required_functionalities:{a:[4],b:[2]}};
 assert.equal(L.templateCompatibility(square,"imine",monomers,library).compatible,true);
 assert.equal(L.templateCompatibility({...square,required_functionalities:{a:[3],b:[2]}},"imine",monomers,library).compatible,false);

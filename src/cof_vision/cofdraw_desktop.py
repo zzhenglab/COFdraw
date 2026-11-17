@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -68,7 +68,7 @@ class DesktopBridge:
         import webview
         self._check()
         name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", str(suggested))[:160]
-        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json"}:
+        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb"}:
             raise ValueError("Unsupported export extension")
         selected = self._window.create_file_dialog(webview.FileDialog.SAVE, save_filename=name)
         if not selected:
@@ -79,7 +79,7 @@ class DesktopBridge:
 
     def save_export(self, relative_path, suggested_filename):
         self._check()
-        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json)", str(relative_path)):
+        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json|cif|xyz|pdb)", str(relative_path)):
             raise ValueError("Not a generated COFdraw export")
         with urlopen(self._origin + relative_path, timeout=30) as response:
             data = response.read(20_000_001)
@@ -92,6 +92,16 @@ class DesktopBridge:
         if not isinstance(content, str) or len(content) > 2_000_000:
             raise ValueError("Project is too large")
         return self._save(suggested_filename, content.encode("utf-8"))
+
+    def save_image(self, suggested_filename, data_url):
+        import base64
+        self._check()
+        if not isinstance(data_url,str) or len(data_url)>28_000_000 or not data_url.startswith('data:image/png;base64,'):
+            raise ValueError('Expected a bounded PNG image')
+        data=base64.b64decode(data_url.split(',',1)[1],validate=True)
+        if not data.startswith(b'\x89PNG\r\n\x1a\n') or Path(suggested_filename).suffix.lower()!='.png':
+            raise ValueError('Expected a PNG filename and image')
+        return self._save(suggested_filename,data)
 
 
 def main(argv=None):

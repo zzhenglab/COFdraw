@@ -1,10 +1,10 @@
 {
-  "catalog_version": "cofdraw-current-2026-11-topology-linkage-2",
+  "catalog_version": "cofdraw-reviewed-drawings-5",
   "created_at_utc": "2026-11-17T16:45:06.666156+00:00",
   "ground_truth": false,
   "reviewer_type": "agent",
   "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-  "source_registry_sha256": "7a5f7731c1cb841fd41e3eb4d611fb1133fe71f861b75224e8985d6cf1f20c68",
+  "source_registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
   "research_library_sha256": "bace16062326740c8ea6822085c83eb0289613958698f4630e035436b2c81f03",
   "monomer_presets": [
     {
@@ -2899,6 +2899,118 @@
       },
       "node_symmetry": null,
       "node_symmetry_qualification": "Not independently assigned in this catalog; do not infer Cn from connection_count or reactive_groups."
+    },
+    {
+      "id": "recovered_tt",
+      "label": "TT · 2,4,6-Trimethyl-1,3,5-triazine",
+      "abbreviation": "TT",
+      "full_name": "2,4,6-Trimethyl-1,3,5-triazine",
+      "smiles": "Cc1nc(C)nc(C)n1",
+      "source_doi": "10.1021/acsami.2c11052",
+      "source_dois": [
+        "10.1021/acsami.2c11052"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer. Presence in the library does not imply an implemented automatic linkage transform."
+    },
+    {
+      "id": "recovered_compound2",
+      "label": "compound2 · 2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+      "abbreviation": "compound2",
+      "full_name": "2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+      "smiles": "OB(O)c1ccc(-c2nc(-c3ccc(B(O)O)cc3)nc(-c3ccc(B(O)O)cc3)n2)cc1",
+      "source_doi": "10.1021/acsami.7b09061",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer. Presence in the library does not imply an implemented automatic linkage transform."
+    },
+    {
+      "id": "recovered_t_node",
+      "label": "T-node · T-shaped trisaldehyde building block",
+      "abbreviation": "T-node",
+      "full_name": "T-shaped trisaldehyde building block",
+      "smiles": "O=Cc1ccc(-c2nc3c(-c4ccc(C=O)cc4)ccc(-c4ccc(C=O)cc4)c3[nH]2)cc1",
+      "source_doi": "10.1021/acsmacrolett.6b00805",
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer. Presence in the library does not imply an implemented automatic linkage transform."
+    },
+    {
+      "id": "recovered_tfbp",
+      "label": "TFBP · 3,3′,5,5′-tetraformyl-4,4′-biphenyldiol",
+      "abbreviation": "TFBP",
+      "full_name": "3,3′,5,5′-tetraformyl-4,4′-biphenyldiol",
+      "smiles": "O=Cc1cc(-c2cc(C=O)c(O)c(C=O)c2)cc(C=O)c1O",
+      "source_doi": "10.1021/acs.inorgchem.4c05494",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer. Presence in the library does not imply an implemented automatic linkage transform."
+    },
+    {
+      "id": "recovered_bd",
+      "label": "BD · 4,4′-(benzo-2,1,3-thiadiazole-4,7-diyl)dianiline",
+      "abbreviation": "BD",
+      "full_name": "4,4′-(benzo-2,1,3-thiadiazole-4,7-diyl)dianiline",
+      "smiles": "Nc1ccc(-c2ccc(-c3ccc(N)cc3)c3nsnc23)cc1",
+      "source_doi": "10.1021/acs.inorgchem.4c05494",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer. Presence in the library does not imply an implemented automatic linkage transform."
+    },
+    {
+      "id": "recovered_urea",
+      "label": "Urea · 1,4-phenylenediurea",
+      "abbreviation": "Urea",
+      "full_name": "1,4-phenylenediurea",
+      "smiles": "NC(=O)Nc1ccc(NC(N)=O)cc1",
+      "source_doi": "10.1039/d1qm00231g",
+      "source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer; not an automatic linkage support claim."
+    },
+    {
+      "id": "recovered_monoformylphloroglucinol",
+      "label": "monoformylphloroglucinol · 2,4,6-trihydroxybenzaldehyde",
+      "abbreviation": "monoformylphloroglucinol",
+      "full_name": "2,4,6-trihydroxybenzaldehyde",
+      "smiles": "O=Cc1c(O)cc(O)cc1O",
+      "source_doi": "10.1039/d2dt04057c",
+      "source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer; not an automatic linkage support claim."
+    },
+    {
+      "id": "recovered_1_4_phenylene_diisocyanate",
+      "label": "1,4-phenylene diisocyanate · 1,4-phenylene diisocyanate",
+      "abbreviation": "1,4-phenylene diisocyanate",
+      "full_name": "1,4-phenylene diisocyanate",
+      "smiles": "O=C=Nc1ccc(N=C=O)cc1",
+      "source_doi": "10.1039/d2dt04057c",
+      "source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "ground_truth": false,
+      "qualification": "Source-derived finite monomer; not an automatic linkage support claim."
     }
   ],
   "cof_presets": [
@@ -3249,7 +3361,7 @@
       ],
       "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
       "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-      "source_recipe_sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "source_recipe_sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656",
       "source_pdf_sha256": "d82cb3f198dfa314e5db569f7cca8e0a7053636d9322ca3a895c3c1fb2107274",
       "source_page": 2,
       "source_bbox": [
@@ -3263,7 +3375,25 @@
       "catenation_evidence": "reference_convention_unverified_by_this_catalog",
       "ground_truth": false,
       "reviewer_type": "agent",
-      "upstream_source_recipe_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3"
+      "upstream_source_recipe_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3",
+      "preferred_style_id": "source",
+      "source_registered": true,
+      "coordinate_provenance": {
+        "source_registered": true,
+        "visible_atom_count": 108,
+        "unobserved_abbreviated_atom_count": 0,
+        "unobserved_atom_indices": [],
+        "source_anchor_sha256": "cbf67383a2760f30c8bacd13b54a977c194e2e3496d6067d8a6f746e243f7ed2",
+        "review_sha256": "5a7a02e705624894944b9ae734a876fead295304f71f98e9deac645090d0b154",
+        "uniform_viewport_scale": 0.06976744186046514,
+        "pixel_center": [
+          240.07407407407408,
+          281.1388888888889
+        ],
+        "y_axis_reversed": true,
+        "source_anchor_positions_changed": false,
+        "unobserved_coordinate_method": null
+      }
     },
     "tppa-pore-v1": {
       "cofex_notation": "Nc1ccc(N)cc1.O=Cc1c(O)c(C=O)c(O)c(C=O)c1O COFex.unk.cat0;TpPa",
@@ -3510,7 +3640,7 @@
       ],
       "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
       "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-      "source_recipe_sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "source_recipe_sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701",
       "source_pdf_sha256": "19d578fa3cc71255065d7e40412c928aa01d502d2143724b51780a40a56201f5",
       "source_page": 2,
       "source_bbox": [
@@ -3524,16 +3654,680 @@
       "catenation_evidence": "reference_convention_unverified_by_this_catalog",
       "ground_truth": false,
       "reviewer_type": "agent",
-      "upstream_source_recipe_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827"
+      "upstream_source_recipe_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827",
+      "preferred_style_id": "source",
+      "source_registered": true,
+      "coordinate_provenance": {
+        "source_registered": true,
+        "visible_atom_count": 138,
+        "unobserved_abbreviated_atom_count": 18,
+        "unobserved_atom_indices": [
+          22,
+          23,
+          24,
+          49,
+          50,
+          51,
+          74,
+          75,
+          76,
+          100,
+          101,
+          102,
+          126,
+          127,
+          128,
+          153,
+          154,
+          155
+        ],
+        "source_anchor_sha256": "3de59c14986a4cf8b704efcf07881e20c6cdbadd1513d3815fe3bed14a18e69f",
+        "review_sha256": "6fa06929239f279ab968c743fbe6f1d7aac9bdc580591aad261d11489f5c2996",
+        "uniform_viewport_scale": 0.05437495751958103,
+        "pixel_center": [
+          359.0475813670453,
+          313.13873873776083
+        ],
+        "y_axis_reversed": true,
+        "source_anchor_positions_changed": false,
+        "unobserved_coordinate_method": "Rigid similarity fit of the parent component; illustrative chemical export positions only."
+      }
+    },
+    "f-cof-1-source-v1": {
+      "literature_name": "F-COF-1",
+      "display_name": "F-COF-1",
+      "source_doi": "10.1021/acsami.2c11052",
+      "source_dois": [
+        "10.1021/acsami.2c11052"
+      ],
+      "monomers": [
+        {
+          "label": "FTDA",
+          "full_name": "1,3,5-Tris(4-formylphenyl)benzene",
+          "smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)cc(-c3ccc(C=O)cc3)c2)cc1"
+        },
+        {
+          "label": "TT",
+          "full_name": "2,4,6-Trimethyl-1,3,5-triazine",
+          "smiles": "Cc1nc(C)nc(C)n1"
+        }
+      ],
+      "cofex_id": "COFEXM-7QLVSH5C2JXMRSXVUV",
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_registered_pore",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": true,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Finite source-informed diagram with explicit boundary ports.",
+      "review_evidence": [
+        {
+          "artifact": "f-cof1-source-registered-v1.audit.json",
+          "sha256": "79fd5ef76d08e402990d8e04fb7fd5f63768e189f11449eaf5ac4ddc0dd4c5ee",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "review.json",
+          "sha256": "45ac0769a3d89294f106940a94b2831218b03d8258d972ace9a70c6c9868c0cd",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe"
+    },
+    "cof-300-projection-v1": {
+      "literature_name": "COF-300 · projected network",
+      "display_name": "COF-300 · projected network",
+      "source_doi": "10.1021/acsami.3c12826",
+      "source_dois": [
+        "10.1021/acsami.3c12826"
+      ],
+      "monomers": [
+        {
+          "label": "ta",
+          "full_name": "Benzene-1,4-dicarbaldehyde (terephthalaldehyde)",
+          "smiles": "O=Cc1ccc(C=O)cc1"
+        },
+        {
+          "label": "tapm",
+          "full_name": "Tetrakis(4-aminophenyl)methane",
+          "smiles": "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_projected_network",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Finite source-informed diagram with explicit boundary ports.",
+      "review_evidence": [
+        {
+          "artifact": "COF300_TOC.json",
+          "sha256": "e0a7d4a6dc67476149ab01cadfffde9b2cbaf4e2c411de9acde4816a71164d64",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "independent-web-toc-network-review-0001.json",
+          "sha256": "dfc10616236d5ee95b421757efac30c22b148a12d2dead4168aba5d6d34a0337",
+          "role": "independent_bounded_review"
+        }
+      ],
+      "source_recipe_sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59"
+    },
+    "bta-cof-1-local-v1": {
+      "literature_name": "BTA-COF1 · local boronate fragment",
+      "display_name": "BTA-COF1 · local boronate fragment",
+      "source_doi": "10.1021/acsami.7b09061",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "monomers": [
+        {
+          "label": "compound2",
+          "full_name": "2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+          "smiles": "OB(O)c1ccc(-c2nc(-c3ccc(B(O)O)cc3)nc(-c3ccc(B(O)O)cc3)n2)cc1",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        },
+        {
+          "label": "HHTP",
+          "full_name": "2,3,6,7,10,11-hexahydroxytriphenylene",
+          "smiles": "Oc1cc2c3cc(O)c(O)cc3c3cc(O)c(O)cc3c2cc1O",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_local_fragment",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Source local chemical fragment, not complete pore.",
+      "review_evidence": [
+        {
+          "artifact": "BTA-COF1-local-v1.json",
+          "sha256": "f1a81d85c3de180b842db5052be88842f48cc39e8c90979893cfe78988a54563",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "BTA-COF1-local-draft.json",
+          "sha256": "e06eb0fc657054fc797f31e56f6dd67157b534447ec209a7866d237ee0164db7",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-boronate-incidence-review-0001.json",
+          "sha256": "4b4311ceebf39915fbe0dca6b02aac1fe08061fb19e957681fc07872bf38ef92",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0"
+    },
+    "bta-cof-2-local-v1": {
+      "literature_name": "BTA-COF2 · local boronate fragment",
+      "display_name": "BTA-COF2 · local boronate fragment",
+      "source_doi": "10.1021/acsami.7b09061",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "monomers": [
+        {
+          "label": "compound2",
+          "full_name": "2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+          "smiles": "OB(O)c1ccc(-c2nc(-c3ccc(B(O)O)cc3)nc(-c3ccc(B(O)O)cc3)n2)cc1",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        },
+        {
+          "label": "THDMA",
+          "full_name": "2,3,6,7-tetrahydroxy-9,10-dimethylanthracene",
+          "smiles": "Cc1c2cc(O)c(O)cc2c(C)c2cc(O)c(O)cc12",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_local_fragment",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Source local chemical fragment; one shared R=Me/Et image yields two conditional alternatives, not two source images.",
+      "review_evidence": [
+        {
+          "artifact": "BTA-COF2-local-v1.json",
+          "sha256": "77a1c88c70ee2c88d104b63e99b41dd810cddc5df45edcf297450c1d1e47be0f",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "BTA-COF2-local-draft.json",
+          "sha256": "050cbdd5885d2abd2a34bb969dc5ada4f26e99c32e3fe77295f47fce19189484",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-boronate-incidence-review-0001.json",
+          "sha256": "4b4311ceebf39915fbe0dca6b02aac1fe08061fb19e957681fc07872bf38ef92",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc"
+    },
+    "bta-cof-3-local-v1": {
+      "literature_name": "BTA-COF3 · local boronate fragment",
+      "display_name": "BTA-COF3 · local boronate fragment",
+      "source_doi": "10.1021/acsami.7b09061",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "monomers": [
+        {
+          "label": "compound2",
+          "full_name": "2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+          "smiles": "OB(O)c1ccc(-c2nc(-c3ccc(B(O)O)cc3)nc(-c3ccc(B(O)O)cc3)n2)cc1",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        },
+        {
+          "label": "THDEA",
+          "full_name": "2,3,6,7-tetrahydroxy-9,10-diethylanthracene",
+          "smiles": "CCc1c2cc(O)c(O)cc2c(CC)c2cc(O)c(O)cc12",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_local_fragment",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Source local chemical fragment; one shared R=Me/Et image yields two conditional alternatives, not two source images.",
+      "review_evidence": [
+        {
+          "artifact": "BTA-COF3-local-v1.json",
+          "sha256": "cd41ba58043311be40ccae4754962c312f482d040aa06aece5ba95ac7a6c144b",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "BTA-COF3-local-draft.json",
+          "sha256": "6a93f86e8bd1451dc6a1f99131c87023c9b695f55fe6d784222fe17966fcd0a0",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-boronate-incidence-review-0001.json",
+          "sha256": "4b4311ceebf39915fbe0dca6b02aac1fe08061fb19e957681fc07872bf38ef92",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f"
+    },
+    "bta-cof-4-pore-v1": {
+      "literature_name": "BTA-COF4 · boroxine pore",
+      "display_name": "BTA-COF4 · boroxine pore",
+      "source_doi": "10.1021/acsami.7b09061",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "monomers": [
+        {
+          "label": "compound2",
+          "full_name": "2,4,6-tris(4-dihydroxyborylphenyl)-1,3,5-triazine",
+          "smiles": "OB(O)c1ccc(-c2nc(-c3ccc(B(O)O)cc3)nc(-c3ccc(B(O)O)cc3)n2)cc1",
+          "upstream_monomer_review_sha256": "6b268cfefc8ecf2d30cea1a15c8e7ac12f25be167f3d88a223879599f1fe9035"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_pore",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "One literal displayed six-node pore, alternating three triazines and three boroxines; six B-cut and three aryl-cut interfaces. AA-I/AA-II unresolved by source PXRD.",
+      "review_evidence": [
+        {
+          "artifact": "BTA-COF4-pore-v1.json",
+          "sha256": "eec33b25fbca5bdee7ad6385ec16367969eaec399b91fe7852b73a092fe1ef06",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "BTA-COF4-pore-draft.json",
+          "sha256": "99873b58820fc180d1bfa65ed6e61116b58ba9c8e2c689a0ae3ff97b242381f8",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-boronate-incidence-review-0001.json",
+          "sha256": "4b4311ceebf39915fbe0dca6b02aac1fe08061fb19e957681fc07872bf38ef92",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b"
+    },
+    "brick-wall-pore-v1": {
+      "literature_name": "Brick-wall COF",
+      "display_name": "Brick-wall COF",
+      "source_doi": "10.1021/acsmacrolett.6b00805",
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "monomers": [
+        {
+          "label": "T-node",
+          "full_name": "T-shaped trisaldehyde building block",
+          "smiles": "O=Cc1ccc(-c2nc3c(-c4ccc(C=O)cc4)ccc(-c4ccc(C=O)cc4)c3[nH]2)cc1",
+          "upstream_monomer_review_sha256": "0fa6aecc3bc886e693edef85da52889791f35ba76eae024ca353454e4d5201d4"
+        },
+        {
+          "label": "PDA",
+          "full_name": "1,4-diaminobenzene",
+          "smiles": "Nc1ccc(N)cc1",
+          "upstream_monomer_review_sha256": "0fa6aecc3bc886e693edef85da52889791f35ba76eae024ca353454e4d5201d4"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_pore",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Experimentally selected brick-wall model, AB stacking source main2-3; chemical patch not unique crystal identity",
+      "review_evidence": [
+        {
+          "artifact": "brick-wall-pore-v1.json",
+          "sha256": "406175781401e112ca10216dc5c7ece3ed13699dddd51eb282a94a69c68c29aa",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "brick-wall-pore-draft.json",
+          "sha256": "48f96ec8a1ae2315678e871af58f93df7322a8e0e18574ba563e057e7551e340",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-pore-incidence-review-0001.json",
+          "sha256": "0a45b772190764726a7d2617cec80733f56de2944e867f18f7bea25d1a4ee4d7",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55"
+    },
+    "herringbone-proposal-v1": {
+      "literature_name": "Herringbone · rejected source proposal",
+      "display_name": "Herringbone · rejected source proposal",
+      "source_doi": "10.1021/acsmacrolett.6b00805",
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "monomers": [
+        {
+          "label": "T-node",
+          "full_name": "T-shaped trisaldehyde building block",
+          "smiles": "O=Cc1ccc(-c2nc3c(-c4ccc(C=O)cc4)ccc(-c4ccc(C=O)cc4)c3[nH]2)cc1",
+          "upstream_monomer_review_sha256": "0fa6aecc3bc886e693edef85da52889791f35ba76eae024ca353454e4d5201d4"
+        },
+        {
+          "label": "PDA",
+          "full_name": "1,4-diaminobenzene",
+          "smiles": "Nc1ccc(N)cc1",
+          "upstream_monomer_review_sha256": "0fa6aecc3bc886e693edef85da52889791f35ba76eae024ca353454e4d5201d4"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "rejected_source_hypothesis",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Rejected herringbone proposal in the source paper; not a synthesized material claim.",
+      "review_evidence": [
+        {
+          "artifact": "herringbone-hypothetical-pore-v1.json",
+          "sha256": "dc1b224ad264756b9979c1bc7b07311dc7a46d34310e54032fe2b350e67bfc99",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "herringbone-hypothetical-pore-draft.json",
+          "sha256": "e7a4cd08801eb067fa7181431f8788b13714e453831cca1c072b5534e5d3b23d",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-rsc-pore-incidence-review-0001.json",
+          "sha256": "0a45b772190764726a7d2617cec80733f56de2944e867f18f7bea25d1a4ee4d7",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d"
+    },
+    "cof-bp-network-v1": {
+      "literature_name": "COF-BP · parent network",
+      "display_name": "COF-BP · parent network",
+      "source_doi": "10.1021/acs.inorgchem.4c05494",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "monomers": [
+        {
+          "label": "TFBP",
+          "full_name": "3,3′,5,5′-tetraformyl-4,4′-biphenyldiol",
+          "smiles": "O=Cc1cc(-c2cc(C=O)c(O)c(C=O)c2)cc(C=O)c1O",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        },
+        {
+          "label": "BD",
+          "full_name": "4,4′-(benzo-2,1,3-thiadiazole-4,7-diyl)dianiline",
+          "smiles": "Nc1ccc(-c2ccc(-c3ccc(N)cc3)c3nsnc23)cc1",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_network",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Finite source-informed diagram with explicit boundary ports.",
+      "review_evidence": [
+        {
+          "artifact": "COF-BP-parent-network-v1.json",
+          "sha256": "54eb64fda7365ec449353318eb4b77a80d3fb2ff07b1af7f575be881c1195d48",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "COF-BP-parent-network-draft.json",
+          "sha256": "f4eefcb5a4c37887441c92f005e8f19f1845535b056d5008a0af0729ed883bcf",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-root-network-review-0001.json",
+          "sha256": "ee55baba62c93a67111019da65d07afee6b3cec9916ae75dce6009eb15f34e04",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c"
+    },
+    "cof-bp-ni1-network-v1": {
+      "literature_name": "COF-BP-Ni1 · drawn coordination sites",
+      "display_name": "COF-BP-Ni1 · drawn coordination sites",
+      "source_doi": "10.1021/acs.inorgchem.4c05494",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "monomers": [
+        {
+          "label": "TFBP",
+          "full_name": "3,3′,5,5′-tetraformyl-4,4′-biphenyldiol",
+          "smiles": "O=Cc1cc(-c2cc(C=O)c(O)c(C=O)c2)cc(C=O)c1O",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        },
+        {
+          "label": "BD",
+          "full_name": "4,4′-(benzo-2,1,3-thiadiazole-4,7-diyl)dianiline",
+          "smiles": "Nc1ccc(-c2ccc(-c3ccc(N)cc3)c3nsnc23)cc1",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_coordination_patch",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Only four Ni sites drawn at both ends of the two central left/right vertical BD bridges; does not assert full or uniform material occupancy.",
+      "review_evidence": [
+        {
+          "artifact": "COF-BP-Ni1-network-v1.json",
+          "sha256": "21a448c1277aace3d1827507ef9d461b5479136d61f5e586dce8afa3ebfe0252",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "COF-BP-Ni1-network-draft.json",
+          "sha256": "f211398c5fc9bc9b3e89fa347f84d9a1f9f9cb83809d5060ec2c468d2642f14a",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-root-network-review-0001.json",
+          "sha256": "ee55baba62c93a67111019da65d07afee6b3cec9916ae75dce6009eb15f34e04",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d"
+    },
+    "cof-bp-ni2-network-v1": {
+      "literature_name": "COF-BP-Ni2 · drawn coordination sites",
+      "display_name": "COF-BP-Ni2 · drawn coordination sites",
+      "source_doi": "10.1021/acs.inorgchem.4c05494",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "monomers": [
+        {
+          "label": "TFBP",
+          "full_name": "3,3′,5,5′-tetraformyl-4,4′-biphenyldiol",
+          "smiles": "O=Cc1cc(-c2cc(C=O)c(O)c(C=O)c2)cc(C=O)c1O",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        },
+        {
+          "label": "BD",
+          "full_name": "4,4′-(benzo-2,1,3-thiadiazole-4,7-diyl)dianiline",
+          "smiles": "Nc1ccc(-c2ccc(-c3ccc(N)cc3)c3nsnc23)cc1",
+          "upstream_monomer_review_sha256": "b3980c78409a848a57ddbe3889da3b7e69af03c75d0850074934570414b7d158"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified drawing record. No complete periodic identity is asserted.",
+      "representation_kind": "source_informed_coordination_patch",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_drawing",
+      "scope": "Only four Ni sites drawn at both ends of the two central left/right vertical BD bridges; does not assert full or uniform material occupancy.",
+      "review_evidence": [
+        {
+          "artifact": "COF-BP-Ni2-network-v1.json",
+          "sha256": "5d8ffe5fea6a939616677a3a09eba17af077d170dc0ffb20862fa2aa69312b98",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "COF-BP-Ni2-network-draft.json",
+          "sha256": "f9bbe96a2613b97620d01d94e5a99cdc0cccca5dfcf79a2f466d752ef51a584c",
+          "role": "upstream_review_or_bound_draft"
+        },
+        {
+          "artifact": "independent-root-network-review-0001.json",
+          "sha256": "ee55baba62c93a67111019da65d07afee6b3cec9916ae75dce6009eb15f34e04",
+          "role": "upstream_review_or_bound_draft"
+        }
+      ],
+      "source_recipe_sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437"
+    },
+    "pyurea-source-layout-v1": {
+      "literature_name": "Pyurea-COF",
+      "display_name": "Pyurea-COF",
+      "source_doi": "10.1039/d1qm00231g",
+      "source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "monomers": [
+        {
+          "label": "Py",
+          "full_name": "1,3,6,8-tetrakis(4-formylphenyl)pyrene",
+          "smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c54)cc1",
+          "upstream_monomer_review_sha256": "795f8ebd62160501420c205dd737fe55c7652dd0636a7c0e58b8f315481fdc43"
+        },
+        {
+          "label": "Urea",
+          "full_name": "1,4-phenylenediurea",
+          "smiles": "NC(=O)Nc1ccc(NC(N)=O)cc1",
+          "upstream_monomer_review_sha256": "795f8ebd62160501420c205dd737fe55c7652dd0636a7c0e58b8f315481fdc43"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified finite drawing; no complete periodic identity asserted.",
+      "representation_kind": "source_informed_manual_pore",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_informed_layout",
+      "scope": "Finite source-visible chemical pore with manually source-informed block placement; not exact atom registration or a periodic crystal model. Eight directly para-aryl-bound boundary cuts.",
+      "review_evidence": [
+        {
+          "artifact": "Pyurea-pore.json",
+          "sha256": "9763e611eefa49171793752e681a8fcf4e972c684f0d63ccd131957c2e106a75",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "independent-rsc-source-incidence-review-0001.json",
+          "sha256": "accf12cfdd2b420a18e1003a34e72e07108edf62f5aeec08a3f6de4131692183",
+          "role": "independent_bounded_chemical_review"
+        },
+        {
+          "artifact": "finite-graphs-draft.json",
+          "sha256": "795f8ebd62160501420c205dd737fe55c7652dd0636a7c0e58b8f315481fdc43",
+          "role": "reviewed_monomer_table"
+        },
+        {
+          "artifact": "pyurea-source-layout-adjusted.recipe.json",
+          "sha256": "647f479e9ad118f1d0834e2c1ebc30f7f924c09efbe018e3024d2d18a53bbdd8",
+          "role": "source_informed_layout_revision"
+        }
+      ],
+      "source_recipe_sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71"
+    },
+    "ucof-source-layout-v1": {
+      "literature_name": "UCOF",
+      "display_name": "UCOF",
+      "source_doi": "10.1039/d2dt04057c",
+      "source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "monomers": [
+        {
+          "label": "monoformylphloroglucinol",
+          "full_name": "2,4,6-trihydroxybenzaldehyde",
+          "smiles": "O=Cc1c(O)cc(O)cc1O",
+          "upstream_monomer_review_sha256": "563bdd698b386ce4c53184336b6b798279ac02f4501d98def0e3bd3dde91b4c1"
+        },
+        {
+          "label": "1,4-phenylene diisocyanate",
+          "full_name": "1,4-phenylene diisocyanate",
+          "smiles": "O=C=Nc1ccc(N=C=O)cc1",
+          "upstream_monomer_review_sha256": "563bdd698b386ce4c53184336b6b798279ac02f4501d98def0e3bd3dde91b4c1"
+        }
+      ],
+      "cofex_id": null,
+      "cofex_notation": null,
+      "identity_qualification": "Source-qualified finite drawing; no complete periodic identity asserted.",
+      "representation_kind": "source_informed_manual_pore",
+      "preferred_style_id": "source",
+      "ground_truth": false,
+      "source_registered": false,
+      "review_status": "agent_reviewed_source_informed_layout",
+      "scope": "Finite source-visible chemical pore with manually source-informed block placement; not exact atom registration or a periodic crystal model. Organic urethane-linked graph only; source photograph and measurement overlays excluded.",
+      "review_evidence": [
+        {
+          "artifact": "UCOF-pore-graph.json",
+          "sha256": "19f861f259dd599bca149c210a46e09bb1143ac5ecf868a8b2bd5f11af774977",
+          "role": "reviewed_graph_table"
+        },
+        {
+          "artifact": "independent-acs-urethane-and-finite-review-0001.json",
+          "sha256": "1e02ada6d07503e5a574415c62d4fca5b183e6f2944adff8cf1ce0d38cb5b146",
+          "role": "independent_bounded_chemical_review"
+        },
+        {
+          "artifact": "finite-graphs-draft.json",
+          "sha256": "563bdd698b386ce4c53184336b6b798279ac02f4501d98def0e3bd3dde91b4c1",
+          "role": "reviewed_monomer_table"
+        },
+        {
+          "artifact": "ucof-source-layout-adjusted.recipe.json",
+          "sha256": "d538a842e116b3f921d118524da87c2d9ff759285fcda5a15a7dcb6110ae137d",
+          "role": "source_informed_layout_revision"
+        }
+      ],
+      "source_recipe_sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd"
     }
   },
   "recipe_bindings": [
     {
       "recipe_id": "tfb-tab-pore-v1",
       "filename": "tfb-tab-pore-v1.recipe.json",
-      "sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de",
+      "sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656",
       "upstream_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3",
-      "portable_sha256": "d362e64cfe3a9b952167ce64c4ebaf0d0a7248a5326172ea8e494ac14a5908de"
+      "portable_sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656"
     },
     {
       "recipe_id": "tppa-pore-v1",
@@ -3552,9 +4346,100 @@
     {
       "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
       "filename": "wiley-r198-tppa-so3h-drawing-0002.json",
-      "sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2",
+      "sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701",
       "upstream_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827",
-      "portable_sha256": "74cf37bb2b4056bfe4e48e2fa4e62b6bc34a0610f870a7a34dab1bfad99c2ab2"
+      "portable_sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701"
+    },
+    {
+      "recipe_id": "f-cof-1-source-v1",
+      "filename": "recovered/f-cof-1-source-v1.recipe.json",
+      "sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe",
+      "portable_sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe",
+      "upstream_sha256": "79fd5ef76d08e402990d8e04fb7fd5f63768e189f11449eaf5ac4ddc0dd4c5ee"
+    },
+    {
+      "recipe_id": "cof-300-projection-v1",
+      "filename": "recovered/cof-300-projection-v1.recipe.json",
+      "sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59",
+      "portable_sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59",
+      "upstream_sha256": "e0a7d4a6dc67476149ab01cadfffde9b2cbaf4e2c411de9acde4816a71164d64"
+    },
+    {
+      "recipe_id": "bta-cof-1-local-v1",
+      "filename": "recovered/bta-cof-1-local-v1.recipe.json",
+      "sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0",
+      "portable_sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0",
+      "upstream_sha256": "f1a81d85c3de180b842db5052be88842f48cc39e8c90979893cfe78988a54563"
+    },
+    {
+      "recipe_id": "bta-cof-2-local-v1",
+      "filename": "recovered/bta-cof-2-local-v1.recipe.json",
+      "sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc",
+      "portable_sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc",
+      "upstream_sha256": "77a1c88c70ee2c88d104b63e99b41dd810cddc5df45edcf297450c1d1e47be0f"
+    },
+    {
+      "recipe_id": "bta-cof-3-local-v1",
+      "filename": "recovered/bta-cof-3-local-v1.recipe.json",
+      "sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f",
+      "portable_sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f",
+      "upstream_sha256": "cd41ba58043311be40ccae4754962c312f482d040aa06aece5ba95ac7a6c144b"
+    },
+    {
+      "recipe_id": "bta-cof-4-pore-v1",
+      "filename": "recovered/bta-cof-4-pore-v1.recipe.json",
+      "sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b",
+      "portable_sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b",
+      "upstream_sha256": "eec33b25fbca5bdee7ad6385ec16367969eaec399b91fe7852b73a092fe1ef06"
+    },
+    {
+      "recipe_id": "brick-wall-pore-v1",
+      "filename": "recovered/brick-wall-pore-v1.recipe.json",
+      "sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55",
+      "portable_sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55",
+      "upstream_sha256": "406175781401e112ca10216dc5c7ece3ed13699dddd51eb282a94a69c68c29aa"
+    },
+    {
+      "recipe_id": "herringbone-proposal-v1",
+      "filename": "recovered/herringbone-proposal-v1.recipe.json",
+      "sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d",
+      "portable_sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d",
+      "upstream_sha256": "dc1b224ad264756b9979c1bc7b07311dc7a46d34310e54032fe2b350e67bfc99"
+    },
+    {
+      "recipe_id": "cof-bp-network-v1",
+      "filename": "recovered/cof-bp-network-v1.recipe.json",
+      "sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c",
+      "portable_sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c",
+      "upstream_sha256": "54eb64fda7365ec449353318eb4b77a80d3fb2ff07b1af7f575be881c1195d48"
+    },
+    {
+      "recipe_id": "cof-bp-ni1-network-v1",
+      "filename": "recovered/cof-bp-ni1-network-v1.recipe.json",
+      "sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d",
+      "portable_sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d",
+      "upstream_sha256": "21a448c1277aace3d1827507ef9d461b5479136d61f5e586dce8afa3ebfe0252"
+    },
+    {
+      "recipe_id": "cof-bp-ni2-network-v1",
+      "filename": "recovered/cof-bp-ni2-network-v1.recipe.json",
+      "sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437",
+      "portable_sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437",
+      "upstream_sha256": "5d8ffe5fea6a939616677a3a09eba17af077d170dc0ffb20862fa2aa69312b98"
+    },
+    {
+      "recipe_id": "pyurea-source-layout-v1",
+      "filename": "recovered/pyurea-source-layout-v1.recipe.json",
+      "sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71",
+      "portable_sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71",
+      "upstream_sha256": "9763e611eefa49171793752e681a8fcf4e972c684f0d63ccd131957c2e106a75"
+    },
+    {
+      "recipe_id": "ucof-source-layout-v1",
+      "filename": "recovered/ucof-source-layout-v1.recipe.json",
+      "sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd",
+      "portable_sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd",
+      "upstream_sha256": "19f861f259dd599bca149c210a46e09bb1143ac5ecf868a8b2bd5f11af774977"
     }
   ],
   "linkage_catalog": [
@@ -4448,6 +5333,292 @@
       ],
       "exact_style_equivalence": false,
       "qualification": "Arial is a renderer substitute; sampled raster colors and glyph sizes are approximate. Hidden SO3H atom coordinates are not observed."
+    },
+    {
+      "id": "recovered-f-cof-1-source-v1",
+      "source_dois": [
+        "10.1021/acsami.2c11052"
+      ],
+      "source_recipe_ids": [
+        "f-cof-1-source-v1"
+      ],
+      "observed": {
+        "red_reactive_segments": "#ff0000",
+        "central_FTDA_phenyls": "black",
+        "bond_width_pixels": 2.6,
+        "atom_font_size_pixels": 42,
+        "wavy_caps": "perpendicular120px span,14px period,4px amplitude",
+        "glow": "decorative fluorescence halo reconstructed from vector strokes; no chemical meaning",
+        "raster_frame": "source-like green border; excluded from chemical-ink metric",
+        "SVG": "chemical primitives only; decorative glow/frame omitted",
+        "vinylene_double_bonds": "Connected atom-to-atom primary line plus source-side shorter parallel; offsets explicitly fixed in reproducer.",
+        "abbreviations": "No collapsed groups within this pore. N labels enlarged/red; all phenyl/benzene skeletal atoms implicit."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": true,
+      "qualification": "Finite source-informed diagram with explicit boundary ports."
+    },
+    {
+      "id": "recovered-cof-300-projection-v1",
+      "source_dois": [
+        "10.1021/acsami.3c12826"
+      ],
+      "source_recipe_ids": [
+        "cof-300-projection-v1"
+      ],
+      "observed": {},
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Finite source-informed diagram with explicit boundary ports."
+    },
+    {
+      "id": "recovered-bta-cof-1-local-v1",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_recipe_ids": [
+        "bta-cof-1-local-v1"
+      ],
+      "observed": {
+        "source_depiction": "Black skeletal line drawings. Main Schemes1/2 use heavy bold atom labels, Scheme3 rounded heavy labels, SI NMR insets use fine black lines. B(OH)2 and CN are expanded in finite graph labels. No Cl atoms imported from computational BTA2/3 approximations.",
+        "A": "Two rightward preparation arrows in Scheme1; sequential nBuLi/borate/hydrolysis under one second arrow. Scheme3 has one formation arrow per panel; textual precursor identifiers are not invented molecule drawings.",
+        "C": "BTA1 retains four outer B-to-wave and four O-to-wave interfaces; BTA2/3 retain four B cuts and two O cuts. Shared R=Me/Et source panel has two conditional graph labels. BTA4 displays three triazine nodes and three boroxines; six B-to-O cuts plus three aryl-C-to-triazine-C cuts. All source B-O bonds explicitly single.",
+        "M": "Six unique finite source-drawn identities,12 source occurrences; five additional text-reported route species have no independent image count. NMR source bonds and substituent positions were compared directly, not inferred only from names.",
+        "crop_qualifications": "Scheme1 intermediate/product rectangles retain arrow tips or text. NMR13 compound2 has nearby spectrum trace and axis labels; its chemical graph remains visible. NMR13 THDEA retains a tiny spectrum tick. Scheme3 waves lie close to the native image border; all retained atoms are visible. Raw extracted native Scheme3 raster uses reversed grayscale; authoritative crop is rendered from PDF.",
+        "redraw_scope": "Generic analytic local ring geometry, normalized bond spacing and readable black labels; no source registration or measured overlay accuracy. Boroxine component-local explicit single bonds are preserved rather than globally re-aromatized.",
+        "excluded_source_context": "Main TOC generic fused-ring cut/boroxine alternative needs separate symbolic boundary interpretation and remains unresolved; no silent complete graph. MainFigure1/6/7/8 crystallography, stacking, ESP and void calculations are context, not strict chemical-line examples."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Source local chemical fragment, not complete pore."
+    },
+    {
+      "id": "recovered-bta-cof-2-local-v1",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_recipe_ids": [
+        "bta-cof-2-local-v1"
+      ],
+      "observed": {
+        "source_depiction": "Black skeletal line drawings. Main Schemes1/2 use heavy bold atom labels, Scheme3 rounded heavy labels, SI NMR insets use fine black lines. B(OH)2 and CN are expanded in finite graph labels. No Cl atoms imported from computational BTA2/3 approximations.",
+        "A": "Two rightward preparation arrows in Scheme1; sequential nBuLi/borate/hydrolysis under one second arrow. Scheme3 has one formation arrow per panel; textual precursor identifiers are not invented molecule drawings.",
+        "C": "BTA1 retains four outer B-to-wave and four O-to-wave interfaces; BTA2/3 retain four B cuts and two O cuts. Shared R=Me/Et source panel has two conditional graph labels. BTA4 displays three triazine nodes and three boroxines; six B-to-O cuts plus three aryl-C-to-triazine-C cuts. All source B-O bonds explicitly single.",
+        "M": "Six unique finite source-drawn identities,12 source occurrences; five additional text-reported route species have no independent image count. NMR source bonds and substituent positions were compared directly, not inferred only from names.",
+        "crop_qualifications": "Scheme1 intermediate/product rectangles retain arrow tips or text. NMR13 compound2 has nearby spectrum trace and axis labels; its chemical graph remains visible. NMR13 THDEA retains a tiny spectrum tick. Scheme3 waves lie close to the native image border; all retained atoms are visible. Raw extracted native Scheme3 raster uses reversed grayscale; authoritative crop is rendered from PDF.",
+        "redraw_scope": "Generic analytic local ring geometry, normalized bond spacing and readable black labels; no source registration or measured overlay accuracy. Boroxine component-local explicit single bonds are preserved rather than globally re-aromatized.",
+        "excluded_source_context": "Main TOC generic fused-ring cut/boroxine alternative needs separate symbolic boundary interpretation and remains unresolved; no silent complete graph. MainFigure1/6/7/8 crystallography, stacking, ESP and void calculations are context, not strict chemical-line examples."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Source local chemical fragment; one shared R=Me/Et image yields two conditional alternatives, not two source images."
+    },
+    {
+      "id": "recovered-bta-cof-3-local-v1",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_recipe_ids": [
+        "bta-cof-3-local-v1"
+      ],
+      "observed": {
+        "source_depiction": "Black skeletal line drawings. Main Schemes1/2 use heavy bold atom labels, Scheme3 rounded heavy labels, SI NMR insets use fine black lines. B(OH)2 and CN are expanded in finite graph labels. No Cl atoms imported from computational BTA2/3 approximations.",
+        "A": "Two rightward preparation arrows in Scheme1; sequential nBuLi/borate/hydrolysis under one second arrow. Scheme3 has one formation arrow per panel; textual precursor identifiers are not invented molecule drawings.",
+        "C": "BTA1 retains four outer B-to-wave and four O-to-wave interfaces; BTA2/3 retain four B cuts and two O cuts. Shared R=Me/Et source panel has two conditional graph labels. BTA4 displays three triazine nodes and three boroxines; six B-to-O cuts plus three aryl-C-to-triazine-C cuts. All source B-O bonds explicitly single.",
+        "M": "Six unique finite source-drawn identities,12 source occurrences; five additional text-reported route species have no independent image count. NMR source bonds and substituent positions were compared directly, not inferred only from names.",
+        "crop_qualifications": "Scheme1 intermediate/product rectangles retain arrow tips or text. NMR13 compound2 has nearby spectrum trace and axis labels; its chemical graph remains visible. NMR13 THDEA retains a tiny spectrum tick. Scheme3 waves lie close to the native image border; all retained atoms are visible. Raw extracted native Scheme3 raster uses reversed grayscale; authoritative crop is rendered from PDF.",
+        "redraw_scope": "Generic analytic local ring geometry, normalized bond spacing and readable black labels; no source registration or measured overlay accuracy. Boroxine component-local explicit single bonds are preserved rather than globally re-aromatized.",
+        "excluded_source_context": "Main TOC generic fused-ring cut/boroxine alternative needs separate symbolic boundary interpretation and remains unresolved; no silent complete graph. MainFigure1/6/7/8 crystallography, stacking, ESP and void calculations are context, not strict chemical-line examples."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Source local chemical fragment; one shared R=Me/Et image yields two conditional alternatives, not two source images."
+    },
+    {
+      "id": "recovered-bta-cof-4-pore-v1",
+      "source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_recipe_ids": [
+        "bta-cof-4-pore-v1"
+      ],
+      "observed": {
+        "source_depiction": "Black skeletal line drawings. Main Schemes1/2 use heavy bold atom labels, Scheme3 rounded heavy labels, SI NMR insets use fine black lines. B(OH)2 and CN are expanded in finite graph labels. No Cl atoms imported from computational BTA2/3 approximations.",
+        "A": "Two rightward preparation arrows in Scheme1; sequential nBuLi/borate/hydrolysis under one second arrow. Scheme3 has one formation arrow per panel; textual precursor identifiers are not invented molecule drawings.",
+        "C": "BTA1 retains four outer B-to-wave and four O-to-wave interfaces; BTA2/3 retain four B cuts and two O cuts. Shared R=Me/Et source panel has two conditional graph labels. BTA4 displays three triazine nodes and three boroxines; six B-to-O cuts plus three aryl-C-to-triazine-C cuts. All source B-O bonds explicitly single.",
+        "M": "Six unique finite source-drawn identities,12 source occurrences; five additional text-reported route species have no independent image count. NMR source bonds and substituent positions were compared directly, not inferred only from names.",
+        "crop_qualifications": "Scheme1 intermediate/product rectangles retain arrow tips or text. NMR13 compound2 has nearby spectrum trace and axis labels; its chemical graph remains visible. NMR13 THDEA retains a tiny spectrum tick. Scheme3 waves lie close to the native image border; all retained atoms are visible. Raw extracted native Scheme3 raster uses reversed grayscale; authoritative crop is rendered from PDF.",
+        "redraw_scope": "Generic analytic local ring geometry, normalized bond spacing and readable black labels; no source registration or measured overlay accuracy. Boroxine component-local explicit single bonds are preserved rather than globally re-aromatized.",
+        "excluded_source_context": "Main TOC generic fused-ring cut/boroxine alternative needs separate symbolic boundary interpretation and remains unresolved; no silent complete graph. MainFigure1/6/7/8 crystallography, stacking, ESP and void calculations are context, not strict chemical-line examples."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "One literal displayed six-node pore, alternating three triazines and three boroxines; six B-cut and three aryl-cut interfaces. AA-I/AA-II unresolved by source PXRD."
+    },
+    {
+      "id": "recovered-brick-wall-pore-v1",
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "source_recipe_ids": [
+        "brick-wall-pore-v1"
+      ],
+      "observed": {
+        "source_chemical_depiction": "Black T-node skeletons, blue PDA/aniline-derived rings and imineN; serif main labels versus sans-serif SI. Source condensed CHO/OHC and B(OH)2 are expanded in chemical graphs. Variable atomfont sizes retained as image evidence.",
+        "arrows": "Thin rightward arrows S1-S3/mainformation; cyan curved branching SI4 arrows distinguish observed brick-wall from rejected herringbone proposal. Plus signs, labels, yield/time text and magenta precursor frame are nonchemical.",
+        "ports": "Six outer source imineN-to-wave continuations per pore; no guessed exterior atoms. Native main depiction has little margin at top/bottom wave tips; not missing retained N atoms. Nested SI pore crop contains small cyan arrow fragment.",
+        "redraw_scope": "Component-local regular rings and equal bond lengths with source-facing T orientations, no atomwise registration. Brick-wall and herringbone redraw outlines differ from the source overall tilt/aspect. All18 visible imines encodedE by explicit selector geometry; no bulk stereochemical measurement or global stereo reload guarantee.",
+        "crop_qualifications": "S2T/S3T/S3model include small neighboring arrow or plus context; NMRmodel rectangles may retain spectral strokes. These are flagged nonchemical, not additional carbon bonds. MS vector drawings overlay native spectrum raster and were cropped from the PDF, not the native raster alone.",
+        "material_scope": "Brick-wall source label and AB stacking are reported interpretations; no inferred formal net code. Herringbone is rejected. Source residual terminalCHO signal means ideal pore drawing is not a complete-conversion bulk assertion."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Experimentally selected brick-wall model, AB stacking source main2-3; chemical patch not unique crystal identity"
+    },
+    {
+      "id": "recovered-herringbone-proposal-v1",
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "source_recipe_ids": [
+        "herringbone-proposal-v1"
+      ],
+      "observed": {
+        "source_chemical_depiction": "Black T-node skeletons, blue PDA/aniline-derived rings and imineN; serif main labels versus sans-serif SI. Source condensed CHO/OHC and B(OH)2 are expanded in chemical graphs. Variable atomfont sizes retained as image evidence.",
+        "arrows": "Thin rightward arrows S1-S3/mainformation; cyan curved branching SI4 arrows distinguish observed brick-wall from rejected herringbone proposal. Plus signs, labels, yield/time text and magenta precursor frame are nonchemical.",
+        "ports": "Six outer source imineN-to-wave continuations per pore; no guessed exterior atoms. Native main depiction has little margin at top/bottom wave tips; not missing retained N atoms. Nested SI pore crop contains small cyan arrow fragment.",
+        "redraw_scope": "Component-local regular rings and equal bond lengths with source-facing T orientations, no atomwise registration. Brick-wall and herringbone redraw outlines differ from the source overall tilt/aspect. All18 visible imines encodedE by explicit selector geometry; no bulk stereochemical measurement or global stereo reload guarantee.",
+        "crop_qualifications": "S2T/S3T/S3model include small neighboring arrow or plus context; NMRmodel rectangles may retain spectral strokes. These are flagged nonchemical, not additional carbon bonds. MS vector drawings overlay native spectrum raster and were cropped from the PDF, not the native raster alone.",
+        "material_scope": "Brick-wall source label and AB stacking are reported interpretations; no inferred formal net code. Herringbone is rejected. Source residual terminalCHO signal means ideal pore drawing is not a complete-conversion bulk assertion."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Rejected herringbone proposal in the source paper; not a synthesized material claim."
+    },
+    {
+      "id": "recovered-cof-bp-network-v1",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "source_recipe_ids": [
+        "cof-bp-network-v1"
+      ],
+      "observed": {
+        "chemical_depiction": "Black skeletal bonds with magenta TFBP and cyan BD ring fills; orange salicylideneaniline. Nblue,Ored,Sorange,Ni/acetategreen. Atom font sizes differ sharply between finite monomers and network repeats. Aldehydes use OHC/CHO labels; expanded graph preserves carbonyls.",
+        "boundary": "Main network exterior has short gray/dotted strokes. These are qualified contextual direct aryl-C interfaces, not guaranteed literal finite carbon stubs. NMR inset has four explicit dotted cuts; they occur directly on aryl carbons, not an invented terminal amine or extra imine.",
+        "coordination": "Source uses solid Ni–N/O contacts and omits formal charges. Export uses explicitly documented Ni2+/phenoxide/acetate normalization and dative bonds; generic SVG hides normalized charge labels to follow source notation. Four sites drawn do not establish full site occupancy. Tiny Ni1 acetate glyphs corroborated by surrounding text.",
+        "arrows": "Rightward formation, downward nickel loading and leftward ligand exchange are preparative steps. Figure5d sun/lightning, upward excitation, curved charge/proton/AA arrows and level bands are mechanism context, not monomer synthesis arrows.",
+        "generic_redraw": "Regular component rings with rigid translations; parent bond range36.620–36.625px at2400canvas. No source registration claim. Ring fills replaced by colored bonds, S-face orientations and ligand placement not matched atomwise. Two tentative Ni2 ligand orientations overlapped framework in first private draft; reflected achiral ligand depictions across donor lines before freeze, retaining all4E assignments and graph unchanged.",
+        "crop_flags": "Native figure outer continuation stubs have little original margin; PDF padding cannot recover strokes absent from embedded source. Foreground Ni model overlaps faded framework; full-image finite-graph loss disabled. Final layout widened AA-arrow head and light-arrow head boxes before freeze."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Finite source-informed diagram with explicit boundary ports."
+    },
+    {
+      "id": "recovered-cof-bp-ni1-network-v1",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "source_recipe_ids": [
+        "cof-bp-ni1-network-v1"
+      ],
+      "observed": {
+        "chemical_depiction": "Black skeletal bonds with magenta TFBP and cyan BD ring fills; orange salicylideneaniline. Nblue,Ored,Sorange,Ni/acetategreen. Atom font sizes differ sharply between finite monomers and network repeats. Aldehydes use OHC/CHO labels; expanded graph preserves carbonyls.",
+        "boundary": "Main network exterior has short gray/dotted strokes. These are qualified contextual direct aryl-C interfaces, not guaranteed literal finite carbon stubs. NMR inset has four explicit dotted cuts; they occur directly on aryl carbons, not an invented terminal amine or extra imine.",
+        "coordination": "Source uses solid Ni–N/O contacts and omits formal charges. Export uses explicitly documented Ni2+/phenoxide/acetate normalization and dative bonds; generic SVG hides normalized charge labels to follow source notation. Four sites drawn do not establish full site occupancy. Tiny Ni1 acetate glyphs corroborated by surrounding text.",
+        "arrows": "Rightward formation, downward nickel loading and leftward ligand exchange are preparative steps. Figure5d sun/lightning, upward excitation, curved charge/proton/AA arrows and level bands are mechanism context, not monomer synthesis arrows.",
+        "generic_redraw": "Regular component rings with rigid translations; parent bond range36.620–36.625px at2400canvas. No source registration claim. Ring fills replaced by colored bonds, S-face orientations and ligand placement not matched atomwise. Two tentative Ni2 ligand orientations overlapped framework in first private draft; reflected achiral ligand depictions across donor lines before freeze, retaining all4E assignments and graph unchanged.",
+        "crop_flags": "Native figure outer continuation stubs have little original margin; PDF padding cannot recover strokes absent from embedded source. Foreground Ni model overlaps faded framework; full-image finite-graph loss disabled. Final layout widened AA-arrow head and light-arrow head boxes before freeze."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Only four Ni sites drawn at both ends of the two central left/right vertical BD bridges; does not assert full or uniform material occupancy."
+    },
+    {
+      "id": "recovered-cof-bp-ni2-network-v1",
+      "source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "source_recipe_ids": [
+        "cof-bp-ni2-network-v1"
+      ],
+      "observed": {
+        "chemical_depiction": "Black skeletal bonds with magenta TFBP and cyan BD ring fills; orange salicylideneaniline. Nblue,Ored,Sorange,Ni/acetategreen. Atom font sizes differ sharply between finite monomers and network repeats. Aldehydes use OHC/CHO labels; expanded graph preserves carbonyls.",
+        "boundary": "Main network exterior has short gray/dotted strokes. These are qualified contextual direct aryl-C interfaces, not guaranteed literal finite carbon stubs. NMR inset has four explicit dotted cuts; they occur directly on aryl carbons, not an invented terminal amine or extra imine.",
+        "coordination": "Source uses solid Ni–N/O contacts and omits formal charges. Export uses explicitly documented Ni2+/phenoxide/acetate normalization and dative bonds; generic SVG hides normalized charge labels to follow source notation. Four sites drawn do not establish full site occupancy. Tiny Ni1 acetate glyphs corroborated by surrounding text.",
+        "arrows": "Rightward formation, downward nickel loading and leftward ligand exchange are preparative steps. Figure5d sun/lightning, upward excitation, curved charge/proton/AA arrows and level bands are mechanism context, not monomer synthesis arrows.",
+        "generic_redraw": "Regular component rings with rigid translations; parent bond range36.620–36.625px at2400canvas. No source registration claim. Ring fills replaced by colored bonds, S-face orientations and ligand placement not matched atomwise. Two tentative Ni2 ligand orientations overlapped framework in first private draft; reflected achiral ligand depictions across donor lines before freeze, retaining all4E assignments and graph unchanged.",
+        "crop_flags": "Native figure outer continuation stubs have little original margin; PDF padding cannot recover strokes absent from embedded source. Foreground Ni model overlaps faded framework; full-image finite-graph loss disabled. Final layout widened AA-arrow head and light-arrow head boxes before freeze."
+      },
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Only four Ni sites drawn at both ends of the two central left/right vertical BD bridges; does not assert full or uniform material occupancy."
+    },
+    {
+      "id": "recovered-pyurea-source-layout-v1",
+      "source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "source_recipe_ids": [
+        "pyurea-source-layout-v1"
+      ],
+      "observed": {},
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Finite source-visible chemical pore with manually source-informed block placement; not exact atom registration or a periodic crystal model. Eight directly para-aryl-bound boundary cuts."
+    },
+    {
+      "id": "recovered-ucof-source-layout-v1",
+      "source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "source_recipe_ids": [
+        "ucof-source-layout-v1"
+      ],
+      "observed": {},
+      "suggested_runtime_styles": [
+        "source"
+      ],
+      "exact_style_equivalence": false,
+      "source_registered": false,
+      "qualification": "Finite source-visible chemical pore with manually source-informed block placement; not exact atom registration or a periodic crystal model. Organic urethane-linked graph only; source photograph and measurement overlays excluded."
     }
   ],
   "style_contract": {
@@ -5945,5 +7116,6 @@
     "source_identity": "Only source-qualified matches carry source COFex strings. A selected design emits a separate notation with chosen net or unk and explicitly assumed cat0.",
     "runtime": "Only the seven listed finite drawing templates are implemented. No crystal, 3D geometry or pore-property prediction is implied."
   },
-  "current_release_policy": "Stable current.json path; prior catalog/evidence bytes retained under hash-addressed history. No sealed source annotation is mutated."
+  "current_release_policy": "Stable current.json path; prior catalog/evidence bytes retained under hash-addressed history. No sealed source annotation is mutated.",
+  "recovered_drawing_scope": "Reviewed explicit graph drawings with retained coordinate-revision and source-style qualifications; no source pixels distributed."
 }

@@ -89,6 +89,31 @@
     }
     return {compatible:true,reason:`Supplies ${label}. Attachment incidence and the selected template are checked during construction.`};
   }
+  function compatibleLinkages(library, a, b) {
+    if (!a || !b) return [];
+    const raw=library.templates, templates=Array.isArray(raw)?raw:Object.values(raw||{}), results=[];
+    for (const [id, rule] of Object.entries(library.linkages||{})) {
+      if (rule.supported!==true || !Array.isArray(rule.roles) || rule.roles.length!==2) continue;
+      for (const swapped of [false,true]) {
+        const pair=swapped?{a:b,b:a}:{a,b};
+        if (!['a','b'].every((block,index)=>roleEvidence(pair[block],id,rule.roles[index])?.compatible===true)) continue;
+        const eligible=templates.filter(t=>templateCompatibility(t,id,pair,library).compatible);
+        if (templates.length && !eligible.length) continue;
+        results.push({id,swapped,templates:eligible.map(t=>t.id),label:rule.label||id});
+        break;
+      }
+    }
+    // Product-state reduction is never an automatic replacement for condensation.
+    const order=['beta_ketoenamine','keto_hydrazide','imine','acylhydrazone','azine','secondary_amine'];
+    return results.sort((a,b)=>(order.indexOf(a.id)<0?99:order.indexOf(a.id))-(order.indexOf(b.id)<0?99:order.indexOf(b.id)));
+  }
+  function automaticChoice(library,item,block,other) {
+    if(block==='editor') return {compatible:true,reason:'Open, inspect, or edit this monomer.'};
+    const pair=block==='a'?[item,other]:[other,item], choices=compatibleLinkages(library,...pair);
+    if(choices.length) return {compatible:true,reason:`Compatible with this partner: ${choices.map(c=>c.label).join(', ')}. Chemistry and connectivity update when selected.`};
+    const supported=list(item.compatible_roles).some(r=>r.compatible!==false&&(r.reactive_sites??r.count)>=2);
+    return {compatible:supported,reason:supported?'Choose this monomer, then a compatible partner. Available chemistry will update automatically.':'No implemented transform for this monomer yet; use the single-monomer editor or import a reviewed source drawing.'};
+  }
   // Share in-flight work as well as completed previews. Only the caller decides
   // which visible cards to request; a long catalog never starts all at once.
   function createPreviewCache(load, concurrency=3) {
@@ -107,7 +132,7 @@
     }
     return {request};
   }
-  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,createPreviewCache};
+  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,createPreviewCache};
   scope.COFdrawLibrary = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);

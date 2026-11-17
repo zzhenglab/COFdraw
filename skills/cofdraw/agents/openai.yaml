@@ -1,6 +1,6 @@
 interface:
   display_name: "COFdraw"
-  short_description: "Draw COF pore patches and export chemical structures"
-  default_prompt: "Use $cofdraw to create a finite COF pore drawing and save its image, editable chemical files, and provenance."
+  short_description: "Draw COFs, preserve source layouts, and inspect models"
+  default_prompt: "Use $cofdraw to create or inspect a COF drawing or structure, preserve source layout and scientific qualifications, and save actual exports with provenance."
 policy:
   allow_implicit_invocation: true

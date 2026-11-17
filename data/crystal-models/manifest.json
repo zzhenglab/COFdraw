@@ -1,0 +1,53 @@
+{
+  "generator": "pyCOFBuilder 0.0.9.4",
+  "generator_metadata_workaround": "Flatten nested D4 connector provenance labels before functional-group substitution; no coordinate or element changes.",
+  "source": "https://github.com/lipelopesoliveira/pyCOFBuilder",
+  "citation_doi": "10.1021/acs.jcim.3c01918",
+  "qualification": "Explicit unrelaxed reticular designs generated for COFdraw; no experimental identity or stability asserted.",
+  "templates": [
+    {
+      "id": "hcb-imine-aa",
+      "label": "Hexagonal imine \u00b7 AA layers",
+      "model_name": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AA",
+      "path": "hcb-imine-aa.cif",
+      "sha256": "f219b593fb469ca0902d8173e298c64189a503dff30d1501ffdd42251c192733",
+      "atoms": 66,
+      "formula": "H24 C36 N6",
+      "minimum_atom_distance_angstrom": 1.099199996722577,
+      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AA. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+    },
+    {
+      "id": "hcb-imine-ab",
+      "label": "Hexagonal imine \u00b7 offset layers",
+      "model_name": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AB1",
+      "path": "hcb-imine-ab.cif",
+      "sha256": "ac1f141b9533baf0de11277f2adecfcb87e5f3806c94c201096ac3f99ecd202b",
+      "atoms": 132,
+      "formula": "H48 C72 N12",
+      "minimum_atom_distance_angstrom": 1.0991999967225767,
+      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AB1. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+    },
+    {
+      "id": "hcb-expanded-aa",
+      "label": "Extended trigonal imine \u00b7 AA layers",
+      "model_name": "T3_TPBZ_NH2_H-L2_BENZ_CHO_H-HCB_A-AA",
+      "path": "hcb-expanded-aa.cif",
+      "sha256": "8afba9902c403759f2bb8cefb31fe76ec2382dceafb2a40848814e4355f215d5",
+      "atoms": 126,
+      "formula": "H48 C72 N6",
+      "minimum_atom_distance_angstrom": 1.0991999025319648,
+      "description": "T3_TPBZ_NH2_H-L2_BENZ_CHO_H-HCB_A-AA. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+    },
+    {
+      "id": "dia-imine",
+      "label": "Diamond-like imine \u00b7 3D network",
+      "model_name": "D4_TTPM_NH2_H-L2_BENZ_CHO_H-DIA_A-1",
+      "path": "dia-imine.cif",
+      "sha256": "9c37d337f28a4bd24f754b4206a06d85e19ad4142e2554348aed9bb81ee8be9e",
+      "atoms": 146,
+      "formula": "H56 C82 N8",
+      "minimum_atom_distance_angstrom": 1.0991999967225703,
+      "description": "D4_TTPM_NH2_H-L2_BENZ_CHO_H-DIA_A-1. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+    }
+  ]
+}

@@ -34,10 +34,16 @@ def main():
     design.add_argument("--request", type=Path, required=True, help="JSON /prepare body")
     render = commands.add_parser("render", help="Render a complete JSON /render request")
     render.add_argument("--request", type=Path, required=True)
+    layout = commands.add_parser("layout", help="Request an explicit layout revision; saves the returned recipe")
+    layout.add_argument("--request", type=Path, required=True)
+    science = commands.add_parser("science", help="Run a documented local structure/analysis endpoint")
+    science.add_argument("endpoint", choices=["library", "model", "patch", "monomer", "porosity", "bet", "measure"])
+    science.add_argument("--request", type=Path)
     for sub in (source, design):
         sub.add_argument("--style", default="standard")
         sub.add_argument("--size", type=int, default=1200, choices=range(500, 2401), metavar="500..2400")
         sub.add_argument("--seed", type=int)
+    source.set_defaults(style="source")
     args = parser.parse_args()
 
     if args.repo:
@@ -59,7 +65,9 @@ def main():
     if output == template or template in output.parents:
         parser.error("Output must be outside the catalog template")
     request_body = None
-    if args.operation in {"design", "render"}:
+    if args.operation == "science" and args.endpoint != "library" and args.request is None:
+        parser.error("A science calculation requires --request with its JSON request body")
+    if args.operation in {"design", "render", "layout"} or (args.operation == "science" and args.request):
         request_body = json.loads(args.request.read_text(encoding="utf-8-sig"))
         if not isinstance(request_body, dict):
             parser.error("Request JSON must be an object")
@@ -68,6 +76,8 @@ def main():
     data = output / "runtime-data"
     shutil.copytree(template / "framework-drawing", data / "framework-drawing",
                     ignore=shutil.ignore_patterns("exports", "*.log", "__pycache__"))
+    if (template / "crystal-models").is_dir():
+        shutil.copytree(template / "crystal-models", data / "crystal-models")
     status_file = output / "server.json"
     command += ["--headless", "--data-dir", str(data), "--status-file", str(status_file)]
     opener = build_opener(ProxyHandler({}))  # Loopback calls must not use an external proxy.
@@ -122,30 +132,37 @@ def main():
             if args.operation == "library":
                 print(json.dumps({"library": str(output / "library.json"), "source_recipes": len(library["source_recipes"])}))
                 return
+            if args.operation == "science":
+                result = json.loads(fetch(base, "/api/drawing/science/" + args.endpoint, request_body))
+            elif args.operation == "layout":
+                result = json.loads(fetch(base, "/api/drawing/layout", request_body))
             if args.operation == "source":
                 body = {"source_recipe_id": args.recipe_id}
             elif args.operation == "design":
                 prepared = json.loads(fetch(base, "/api/drawing/prepare", request_body))
                 write_json(output / "prepared.json", prepared)
                 body = {"recipe": prepared["recipe"]}
-            else:
+            elif args.operation == "render":
                 body = request_body
             if args.operation in {"source", "design"}:
                 body.update(style_id=args.style, size=args.size)
                 if args.seed is not None:
                     body["style_seed"] = args.seed
-            result = json.loads(fetch(base, "/api/drawing/render", body))
+            if args.operation in {"source", "design", "render"}:
+                result = json.loads(fetch(base, "/api/drawing/render", body))
             write_json(output / "result.json", result)
             artifacts = []
-            for extension, path in result["downloads"].items():
-                if extension not in {"svg", "png", "mol", "sdf", "cdxml", "json"}:
+            for extension, path in result.get("downloads", {}).items():
+                if extension not in {"svg", "png", "mol", "sdf", "cdxml", "json", "cif", "xyz", "pdb"}:
                     raise ValueError(f"Unexpected export format: {extension}")
                 content = fetch(base, path)
-                filename = f"drawing.{extension}"
+                prefix = "structure" if args.operation == "science" else "drawing"
+                filename = f"{prefix}.{extension}"
                 (output / filename).write_bytes(content)
                 artifacts.append({"file": filename, "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()})
             write_json(output / "artifacts.json", artifacts)
-            print(json.dumps({"output": str(output), "status": result["status"], "formats": list(result["downloads"])}))
+            print(json.dumps({"output": str(output), "status": result.get("status", result.get("scope", args.operation)),
+                              "formats": list(result.get("downloads", {}))}))
     finally:
         if process is not None and process.poll() is None:
             if os.name == "nt":

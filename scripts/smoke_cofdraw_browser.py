@@ -96,6 +96,11 @@ def main():
           assert monomer_requests.count(cached_item["smiles"])==prior_calls
           page.locator("#library-search").fill("")
           checks.append("Real SVG card grid: lazy off-screen loading, cached filter reuse, scrolling, and 1/2/3/5/6 responsive columns")
+          # This legacy case checks fixed-linkage compatibility; automatic
+          # switching is covered by smoke_cofdraw_studio.py.
+          page.keyboard.press("Escape")
+          page.locator("#auto-chemistry").uncheck()
+          page.locator("#open-monomer-library").click()
           page.locator("#library-sites").select_option("4")
           assert page.locator(".library-row").count()>0
           assert all(text=="4c" for text in page.locator(".library-site-badge").all_text_contents())

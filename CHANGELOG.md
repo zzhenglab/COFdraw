@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — 2026-11-17
+
+- Preserve source geometry and use a shared native chemical renderer across styles. Restore compact, skewed Pyurea and asymmetric UCOF layouts without distorting aromatic rings.
+- Recover reviewed manual annotations: 17 source drawings and 49 monomer presets.
+- Add source colors/halos, molecular-sphere illustration, 13 palettes and custom colors; 20 styles total.
+- Add direct atom adjustment, block editing, undo, rigid-block cleanup and geometry diagnostics.
+- Automatically update supported linkage and connectivity choices after monomer edits.
+- Add local 3D viewer, four explicit periodic templates, CIF import, supercells and CIF/XYZ/PDB exports.
+- Add geometric pore-size/volume/surface screening and separate BET fitting from supplied isotherms.
+- Add RDKit monomer descriptors, Gasteiger charges and optimized 3D conformer export.
+- Update agent skill, methods documentation and Windows package; retain explicit scientific scope.
+
 ## 0.3.0 — 2026-11-17
 
 First public GitHub release of COFdraw's Windows desktop application.

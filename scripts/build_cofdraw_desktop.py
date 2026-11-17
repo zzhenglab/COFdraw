@@ -17,7 +17,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 
 def sha(path):
@@ -120,6 +120,13 @@ def main():
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(data / "framework-drawing" / relative, output)
     validate_catalog(staged / "data")
+    crystal_data = data / "crystal-models"
+    crystal_manifest = json.loads((crystal_data / "manifest.json").read_text("utf-8"))
+    for row in crystal_manifest["templates"]:
+        crystal = (crystal_data / row["path"]).resolve()
+        if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
+            raise SystemExit("Periodic template hash mismatch")
+    shutil.copytree(crystal_data, staged / "data/crystal-models")
     shutil.copy2(icon, staged / "COFdraw.ico")
     shutil.copy2(REPO / "LICENSE", staged / "LICENSE.txt")
     for name in ("README.md", "LICENSE", "CONTRIBUTING.md", "CHANGELOG.md", "SKILL.md", "AGENTS.md"):
@@ -136,8 +143,9 @@ def main():
                 "files": [{"path": p.relative_to(staged).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)}
                           for p in sorted(staged.rglob("*")) if p.is_file()]}
     (staged / "release-manifest.json").write_text(json.dumps(manifest, indent=2), "utf-8")
-    # Both checked locations are inside this repository; no existing output moves.
-    staged.rename(target)
+    # Both checked locations are inside this repository. Keep the build cache
+    # and copy into a fresh target; Windows scanners may hold the staging EXE.
+    shutil.copytree(staged, target)
     with zipfile.ZipFile(archive, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
         for item in sorted(target.rglob("*")):
             if item.is_file():

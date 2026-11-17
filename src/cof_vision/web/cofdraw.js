@@ -2,10 +2,11 @@
 const $ = id => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
 const L = COFdrawLibrary;
-const state = {online: false, busy: false, recipe: null, sourceId: null, sourceMetadata: null, result: null, dirty: false, inputsDirty: false, jsonPending: false, style: "standard", styleCategory:"all", styleOptions:{}, resolvedStyleOptions:{}, seed: null, zoom: 1, library: null, monomers: {}, layoutScale: 1, layoutCenter: [0, 0]};
+const state = {online: false, busy: false, recipe: null, sourceId: null, sourceMetadata: null, result: null, dirty: false, inputsDirty: false, jsonPending: false, style: "standard", styleCategory:"all", styleOptions:{}, resolvedStyleOptions:{}, seed: null, zoom: 1, library: null, monomers: {}, layoutScale: 1, layoutCenter: [0, 0], autoChemistry:true};
 const fallbackPresets = [{id:"imine",label:"Imine · TFB + TAPB",linkage:"imine",monomer_a:"O=Cc1cc(C=O)cc(C=O)c1",monomer_b:"Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",label_a:"TFB",label_b:"TAPB",instances:6},{id:"keto",label:"Ketoenamine · Tp + Pa",linkage:"beta_ketoenamine",monomer_a:"O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",monomer_b:"Nc1ccc(N)cc1",label_a:"Tp",label_b:"Pa",instances:12}];
 const previewURLs = {};
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
+function sourceMode(){return Boolean((state.sourceId||state.recipe?.explicit_graph)&&!state.inputsDirty);}
 function linkageInfo(){return state.library?.linkages?.[$("linkage").value]||{};}
 function templates(){const value=state.library?.templates;return Array.isArray(value)?value:value?Object.entries(value).map(([id,t])=>({id,...t})):[];}
 function selectedTemplate(){return templates().find(t=>t.id===$("template").value);}
@@ -14,6 +15,21 @@ function checkedMonomers(){return {a:checkedMonomer("a"),b:checkedMonomer("b")};
 function templateCheck(template=selectedTemplate()){return template?L.templateCompatibility(template,$("linkage").value,checkedMonomers(),state.library||{}):{compatible:true};}
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
+function monomerChoice(item,block,other){return state.autoChemistry?L.automaticChoice(state.library||{},item,block,other):L.monomerChoice(state.library||{},item,$("linkage").value,block,other);}
+function autoMatchChemistry(){
+  if(!state.autoChemistry||state.sourceId||!state.inputsDirty)return;
+  const pair=checkedMonomers();if(!pair.a||!pair.b)return;
+  const choices=L.compatibleLinkages(state.library,pair.a,pair.b),current=$("linkage").value;
+  const match=choices.find(c=>c.id===current)||choices.find(c=>c.id!=="secondary_amine");
+  if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
+  if(match.swapped){
+    for(const field of ['smiles','label']){const value=$(`${field}-a`).value;$(`${field}-a`).value=$(`${field}-b`).value;$(`${field}-b`).value=value;}
+    [state.monomers.a,state.monomers.b]=[state.monomers.b,state.monomers.a];
+    for(const block of ['a','b']){const item=state.monomers[block];if(previewURLs[block])URL.revokeObjectURL(previewURLs[block]);previewURLs[block]=URL.createObjectURL(new Blob([item.svg],{type:'image/svg+xml'}));$(`preview-${block}`).src=previewURLs[block];$(`formula-${block}`).textContent=item.formula;}
+  }
+  populateLinkages(match.id);
+  $("chemistry-match").textContent=`${choices.length} compatible product choice${choices.length===1?'':'s'} · ${match.swapped?'roles arranged automatically · ':''}connectivity follows reactive sites`;
+}
 function populateLinkages(desired=$("linkage").value){
   const search=$("linkage-search").value.trim().toLowerCase().replaceAll("_"," "),rows=Object.entries(state.library?.linkages||{});
   const select=$("linkage");select.replaceChildren();const groups=new Map();
@@ -27,13 +43,14 @@ function populateLinkages(desired=$("linkage").value){
 function refreshPresetLists(){
   if(!state.library)return;
   for(const block of["a","b"]){const select=$(`preset-${block}`),current=select.value;select.replaceChildren(option("","Custom / pasted structure"));
-    for(const item of state.library.monomer_presets||[]){const choice=L.monomerChoice(state.library,item,$("linkage").value,block,checkedMonomer(block==="a"?"b":"a")),o=option(item.id,`${L.displayName(item)}${choice.compatible?"":" — unavailable for this role"}`);o.disabled=!choice.compatible;o.title=choice.reason;select.append(o);}
+    for(const item of state.library.monomer_presets||[]){const choice=sourceMode()?{compatible:true,reason:"Choose a monomer to begin a new design."}:monomerChoice(item,block,checkedMonomer(block==="a"?"b":"a")),o=option(item.id,`${L.displayName(item)}${choice.compatible?"":" — reference only"}`);o.disabled=!choice.compatible;o.title=choice.reason;select.append(o);}
     const matched=(state.library.monomer_presets||[]).find(item=>item.smiles===$(`smiles-${block}`).value.trim());
     if(current&&Array.from(select.options).some(o=>o.value===current))select.value=current;else if(matched)select.value=matched.id;
   }
   const select=$("cof-preset"),current=select.value;select.replaceChildren();for(const p of state.library.cof_presets||fallbackPresets)if(p.linkage===$("linkage").value)select.append(option(p.id,p.label));select.append(option("custom","Custom monomers"));select.value=Array.from(select.options).some(o=>o.value===current)?current:"custom";
 }
 function refreshTemplates(desired=null){
+  if(sourceMode()){$("template-field").hidden=true;$("pore-field").hidden=true;$("template-description").textContent="This drawing uses its recorded connections and layout. Edit a monomer to begin a new construction.";return;}
   const rows=templates(),available=rows.filter(t=>!t.linkages||t.linkages.includes($("linkage").value));
   $("template-field").hidden=!rows.length;$("pore-field").hidden=Boolean(rows.length);
   if(!rows.length){$("template-description").textContent="Alternating monomers with unconnected outward continuation ports.";return;}
@@ -46,17 +63,17 @@ function refreshTemplates(desired=null){
   if(item?.instances)$("pore").value=String(item.instances);
 }
 function refreshInspectors(){
-  const info=linkageInfo(),roles=info.roles||[];$("linkage-roles").textContent=roles.length?`${roleLabel(roles[0],0)} + ${roleLabel(roles[1],1)}`:(info.description||info.conceptual_motif||"Select a linkage category.");
+  const source=sourceMode(),info=linkageInfo(),roles=info.roles||[];$("linkage-roles").textContent=source?(state.sourceId?"Source-associated precursors":"Recorded graph — associated precursors"):roles.length?`${roleLabel(roles[0],0)} + ${roleLabel(roles[1],1)}`:(info.description||info.conceptual_motif||"Select a linkage category.");
   for(const[block,index]of[["a",0],["b",1]]){
-    const value=checkedMonomer(block),evidence=L.roleEvidence(value,$("linkage").value,roles[index]);$(`role-${block}`).textContent=`Required: ${roleLabel(roles[index],index)}`;
+    const value=checkedMonomer(block),evidence=source?null:L.roleEvidence(value,$("linkage").value,roles[index]);$(`role-${block}`).textContent=source?`${state.sourceId?'Source':'Associated'} precursor ${block.toUpperCase()}`:`Required: ${roleLabel(roles[index],index)}`;
     const named=state.library?.monomer_presets?.find(item=>item.smiles===$(`smiles-${block}`).value.trim()||value?.smiles&&item.smiles===value.smiles);$(`preset-${block}`).title=named?L.displayName(named):"Choose a compatible monomer, or paste a custom structure.";
     let fullName=$(`name-${block}`);if(!fullName){fullName=document.createElement("p");fullName.id=`name-${block}`;fullName.className="monomer-full-name";$(`inspector-${block}`).prepend(fullName);}fullName.textContent=named?L.displayName(named):"";fullName.hidden=!named;
     const chips=$(`groups-${block}`);chips.replaceChildren();for(const group of L.groupRows(value)){const chip=document.createElement("span");chip.className="group-chip";chip.textContent=`${group.count} × ${group.label||group.kind?.replaceAll("_"," ")||"reactive group"}`;chips.append(chip);}
     $(`inspector-${block}`).classList.toggle("incompatible",evidence?.compatible===false);
-    $(`compatibility-${block}`).textContent=(!value?"Update preview to inspect reactive functionality.":evidence?.compatible===false?evidence.reason||"This structure cannot supply the selected role.":evidence?`${evidence.reactive_sites??evidence.count??"Supported"} reactive sites for this role. Attachment positions are checked during construction.`:"Structure valid. Reactive compatibility will be checked during construction.")+(value?.geometry_note?` ${value.geometry_note}`:"");
+    $(`compatibility-${block}`).textContent=source?($(`smiles-${block}`).value.trim()?"Associated precursor for the recorded graph. An automatic construction transform is not implied.":"No associated precursor structure is supplied for this part of the graph."):(!value?"Update preview to inspect reactive functionality.":evidence?.compatible===false?evidence.reason||"This structure cannot supply the selected role.":evidence?`${evidence.reactive_sites??evidence.count??"Supported"} reactive sites for this role. Attachment positions are checked during construction.`:"Structure valid. Reactive compatibility will be checked during construction.")+(value?.geometry_note?` ${value.geometry_note}`:"");
   }
 }
-function refreshChemistry(desiredTemplate=null){refreshPresetLists();refreshInspectors();refreshTemplates(desiredTemplate);sync();}
+function refreshChemistry(desiredTemplate=null){autoMatchChemistry();refreshPresetLists();refreshInspectors();refreshTemplates(desiredTemplate);sync();}
 function notice(text, error=false) { $("notice").textContent=text; $("notice").className=`notice${error ? " error" : ""}`; }
 async function api(path, payload) {
   const response=await fetch(`./api/drawing/${path}`,payload===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -65,11 +82,14 @@ async function api(path, payload) {
   return value;
 }
 function sync() {
-  const linkage=linkageInfo();
-  $("chemistry-note").textContent=linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
+  const source=sourceMode(),linkage=linkageInfo();
+  $("chemistry-note").textContent=source?`${state.sourceId?'Source':'Recorded'} graph loaded. Change presentation or edit the recorded layout; change a precursor to start a new construction.`:linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
+  document.querySelector('.linkage-first').hidden=source;document.querySelector('.auto-chemistry').hidden=source;$("cof-preset").closest('.field').hidden=source;
+  if(source)$("chemistry-match").textContent="The recorded recipe supplies this graph directly; constructor compatibility does not apply.";
+  else if($("chemistry-match").textContent.startsWith("The recorded recipe supplies"))$("chemistry-match").textContent="Linkages and connectivity update as you choose building blocks.";
   const blocked=!state.online||state.busy;
   const incompatible=["a","b"].some(b=>L.roleEvidence(checkedMonomer(b),$("linkage").value,L.roleFor(state.library||{},$("linkage").value,b))?.compatible===false);
-  $("build").disabled=blocked||linkage.supported===false||incompatible||!templateCheck().compatible||(templates().length>0&&!selectedTemplate()); $("random-style").disabled=blocked;
+  $("build").disabled=blocked||source||linkage.supported===false||incompatible||!templateCheck().compatible||(templates().length>0&&!selectedTemplate()); $("random-style").disabled=blocked;
   $("build-from-canvas").disabled=$("build").disabled;
   $("load-source").disabled=blocked||!$("source-select").value;
   $("save-project").disabled=!state.recipe||state.busy||state.jsonPending;
@@ -91,23 +111,31 @@ function sync() {
 }
 function removeIdentity() {
   if(!state.recipe)return;
+  const wasSource=Boolean(state.sourceId);
   state.recipe.derived_from_recipe_id=state.recipe.derived_from_recipe_id||state.recipe.recipe_id;
+  const r=state.recipe;
+  if(!r.source_registration_history&&(r.explicit_graph?.source_coordinates_preserved||r.source_coordinate_provenance||r.layout_evidence||r.source_style?.source_registered))r.source_registration_history={scope:'historical_parent_only',explicit_graph_coordinate_provenance:clone(r.explicit_graph?.coordinate_provenance||null),source_coordinate_provenance:clone(r.source_coordinate_provenance||null),layout_evidence:clone(r.layout_evidence||null),source_style_registration:clone(r.source_style||null)};
+  r.source_registered=false;if('source_coordinates_preserved' in r)r.source_coordinates_preserved=false;if('source_representation_kind' in r)r.source_representation_kind='user_edited_finite_patch';if('source_scope' in r)r.source_scope='User-edited finite chemical patch; original source scope is historical only.';
+  if(r.explicit_graph){r.explicit_graph.source_coordinates_preserved=false;r.explicit_graph.coordinate_provenance={kind:'user_manual_coordinates',source_registered:false,scope:'Edited design; parent registration is historical evidence only.'};}
+  if(r.source_style){r.source_style.source_registered=false;r.source_style.exact_style_equivalence=false;r.source_style.qualification='Inherited presentation on an edited drawing; no source registration asserted.';delete r.source_style.coordinate_evidence_sha256;delete r.source_style.review_evidence_sha256;}
+  for(const key of ['source_coordinate_provenance','coordinate_provenance','layout_evidence'])if(r[key])r[key]={kind:'user_manual_coordinates',source_registered:false,scope:'Current design coordinates; see source_registration_history for original evidence.'};
   for(const k of ["cofex_id","cofex_string","cofex_notation","parent_cofex_id","source","reference","topology","topology_evidence","design_cofex_notation","design_topology"])state.recipe[k]=null;
   Object.assign(state.recipe,{designed_variant:true,ground_truth:false,review_status:"user_design"});state.sourceId=null;state.sourceMetadata=null;
-  updateIdentity();
+  updateIdentity();if(wasSource)refreshInspectors();
 }
-function markInputsChanged() { if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";refreshInspectors();sync(); }
+function markInputsChanged() { const wasSource=sourceMode();if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";if(wasSource)refreshChemistry();else{refreshInspectors();sync();} }
 function syncJSON(){ $("recipe-json").value=state.recipe?JSON.stringify(state.recipe,null,2):"";state.jsonPending=false; }
 function validateRecipeShape(recipe) {
+  if(recipe?.explicit_graph){if(!Array.isArray(recipe.explicit_graph.atoms)||!Array.isArray(recipe.explicit_graph.bonds))throw new Error("This source drawing needs explicit atoms and bonds.");return;}
   if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>24)throw new Error("A recipe needs components, 3–24 instances, and explicit connections.");
   for(const item of recipe.instances)if(!recipe.components[item.component]||!Array.isArray(item.layout_position)||item.layout_position.length!==2||item.layout_position.some(x=>typeof x!=="number"||!Number.isFinite(x)||Math.abs(x)>200))throw new Error("Each block needs a component and finite x/y coordinates between −200 and 200.");
 }
-function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();}
+function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
 function updateIdentity(){
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
   const key=state.sourceId?(metadata.cofex_id||audit?.cofex_id||state.recipe?.cofex_id):null;
   const notation=state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.design_cofex_notation||state.recipe?.design_cofex_notation);
-  $("identity-linkage").textContent=state.library?.linkages?.[state.recipe?.linkage]?.label||$("linkage").selectedOptions[0]?.textContent||state.recipe?.linkage||"Unknown";
+  $("identity-linkage").textContent=state.library?.linkages?.[state.recipe?.linkage]?.label||state.recipe?.linkage||(sourceMode()?(state.sourceId?"Source-recorded bonds":"Explicit recorded bonds"):$("linkage").selectedOptions[0]?.textContent)||"Unknown";
   $("identity-key").textContent=key||"Unassigned design";$("identity-string").textContent=notation||"Not assigned";
   const topology=audit?audit.design_topology:state.recipe?.design_topology,template=audit?audit.selected_template:state.recipe?.selected_template;$("identity-template").textContent=state.sourceId?"Source-visible finite patch":template?.label||(typeof topology==="object"?(topology?.label||topology?.template_id||topology?.name):topology)||(!state.recipe?selectedTemplate()?.label:null)||"Explicit editable connections";
   $("identity-note").textContent=state.sourceId?"Qualified source record and provisional annotation. A displayed precursor key does not independently establish crystal or sample identity.":notation?"Design notation: the template is chosen, with cat0 assumed. This is not an observed material identity or evidence for a periodic structure.":"A monomer combination alone does not establish a unique framework identity.";
@@ -124,7 +152,7 @@ async function saveExport(path,ext){
 function setPreview(block,result){
   if(previewURLs[block])URL.revokeObjectURL(previewURLs[block]);previewURLs[block]=URL.createObjectURL(new Blob([result.svg],{type:"image/svg+xml"}));
   $(`preview-${block}`).src=previewURLs[block];$(`preview-${block}`).hidden=false;$(`preview-label-${block}`).hidden=true;$(`formula-${block}`).textContent=result.formula||"Structure checked";state.monomers[block]={...result,input:$(`smiles-${block}`).value.trim()};
-  refreshPresetLists();refreshInspectors();refreshTemplates();sync();
+  refreshChemistry();
 }
 async function validateMonomer(block,quiet=false){
   const input=$(`smiles-${block}`).value.trim();if(!input)throw new Error(`Enter a SMILES for building block ${block.toUpperCase()}.`);
@@ -136,9 +164,13 @@ function setCombination(preset){
   $("linkage-search").value="";populateLinkages(preset.linkage);$("pore").value=preset.instances;markInputsChanged();const wanted=preset.template_id||templates().find(t=>t.instances===preset.instances&&(!t.linkages||t.linkages.includes(preset.linkage)))?.id;refreshChemistry(wanted);$("cof-preset").value=preset.id;updateIdentity();refreshMonomers();
 }
 function showSourceMonomers(recipe,metadata){
-  const components=Object.entries(recipe.components).filter(([,c])=>c.monomer_smiles),a=components.find(([,c])=>["aryl_aldehyde","tp_trialdehyde"].includes(c.role))||components[0],b=components.find(([,c])=>c.role==="primary_arylamine")||components.find(x=>x!==a);
+  let components=Object.entries(recipe.components||{}).filter(([,c])=>c.monomer_smiles);
+  if(!components.length)components=(metadata?.monomers||[]).filter(m=>m.smiles||m.monomer_smiles).map((m,i)=>[m.label||`precursor-${i+1}`,{...m,monomer_smiles:m.smiles||m.monomer_smiles}]);
+  const a=components.find(([,c])=>["aryl_aldehyde","tp_trialdehyde"].includes(c.role))||components[0],b=components.find(([,c])=>c.role==="primary_arylamine")||components.find(x=>x!==a);
   for(const [block,entry] of [["a",a],["b",b]]){ $(`smiles-${block}`).value=entry?.[1]?.monomer_smiles||"";$(`label-${block}`).value=entry?.[1]?.label||entry?.[0]||block.toUpperCase();$(`preset-${block}`).value="";}
-  const link=recipe.linkage||a?.[1]?.linkage;if(link){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances.length))$("pore").value=recipe.instances.length;refreshChemistry(recipe.template_id);$("cof-preset").value="custom";refreshMonomers();
+  for(const block of ['a','b'])if(!$(`smiles-${block}`).value){delete state.monomers[block];$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;$(`formula-${block}`).textContent="No precursor supplied";}
+  const link=recipe.linkage||a?.[1]?.linkage;if(link&&state.library?.linkages?.[link]){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances?.length))$("pore").value=recipe.instances.length;refreshChemistry(recipe.template_id);$("cof-preset").value="custom";
+  for(const block of ['a','b'])if($(`smiles-${block}`).value.trim())validateMonomer(block,true).catch(e=>notice(e.message,true));
 }
 async function render(){
   if(!state.recipe||state.busy||state.inputsDirty||state.jsonPending)return;
@@ -154,7 +186,7 @@ async function render(){
     exportNote.hidden=Boolean(result.downloads.cdxml);
     exportNote.textContent=result.downloads.cdxml?"":exportAudit.cdxml==="unavailable_in_this_rdkit_build"?"CDXML is unavailable in this local chemistry engine. Use MOL or SDF for chemical editing.":`CDXML was omitted${exportAudit.reason?`: ${exportAudit.reason}`:" because its export could not be validated"}. MOL and SDF remain available.`;
     const chosen=audit.drawing_style;if(chosen){state.style=chosen.id||state.style;state.seed=chosen.seed??state.seed;state.resolvedStyleOptions=clone(chosen.options||{});if(wasRandom)state.styleOptions=clone(chosen.options||{});$("canvas-sheet").classList.toggle("transparent-preview",Boolean(chosen.options?.transparent_background));setStyleDescription();drawStyleControls();}
-    updateIdentity();notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":"Drawing ready. Inspect the connections and continuation ports before saving.");
+    updateIdentity();window.dispatchEvent(new CustomEvent('cofdraw:rendered',{detail:result}));notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":"Drawing ready. Inspect the connections and continuation ports before saving.");
   }catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
 }
 $("build").addEventListener("click",async()=>{
@@ -163,6 +195,7 @@ $("build").addEventListener("click",async()=>{
 });
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 for(const block of ["a","b"]){
+  let validationTimer; $(`smiles-${block}`).addEventListener('input',()=>{clearTimeout(validationTimer);validationTimer=setTimeout(()=>{if($(`smiles-${block}`).value.trim()&&!state.busy)validateMonomer(block,true).catch(()=>{});},650);});
   $(`smiles-${block}`).addEventListener("input",()=>{$(`formula-${block}`).textContent="Preview needs update";$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;delete state.monomers[block];$(`preset-${block}`).value="";markInputsChanged();refreshTemplates();});
   $(`label-${block}`).addEventListener("input",markInputsChanged);
   $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;markInputsChanged();validateMonomer(block).catch(e=>notice(e.message,true));});
@@ -196,7 +229,7 @@ function drawStyles(){
     check.className="style-check";check.textContent="✓";button.append(styleIcon(style),label,check);button.addEventListener("click",()=>chooseStyle(style.id));$("style-list").append(button);
   }
 }
-const styleOptionDefaults={palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit"};
+const styleOptionDefaults={palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit",highlight_width:1,glow_strength:.55,layer_spacing:.04,projection_tilt:35,sphere_scale:1};
 function drawStyleControls(){
   const spec=state.library?.style_controls,root=$("style-control-fields");$("style-controls").hidden=!spec;if(!spec)return;root.replaceChildren();
   const current={...styleOptionDefaults,...state.resolvedStyleOptions,...state.styleOptions},category=state.library.styles.find(s=>s.id===state.style)?.category;
@@ -204,7 +237,11 @@ function drawStyleControls(){
   const names={classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   function changed(key,value){state.styleOptions[key]=value;if(state.recipe)state.dirty=true;sync();}
   for(const[key,label,values]of lists){const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
-  for(const[key,label,min,max,step]of[['font_scale','Label size',.6,1.6,.05],['bond_scale','Bond weight',.5,2.5,.1],['fill_opacity','Fill opacity',.05,.6,.05],...(category==="layered"?[['layer_count','Illustrative layers',2,5,1],['layer_opacity','Back-layer opacity',.05,.7,.05]]:[])]){
+  const swatches=document.createElement('div');swatches.className='palette-swatches';
+  for(const [name,colors] of Object.entries(spec.palette_colors||{})){const button=document.createElement('button');button.className='palette-swatch'+(name===current.palette?' selected':'');button.title=name.replaceAll('_',' ');button.setAttribute('aria-label',button.title+' palette');for(const color of colors){const i=document.createElement('i');i.style.background=color;button.append(i);}button.addEventListener('click',()=>{delete state.styleOptions.custom_palette;changed('palette',name);if(state.recipe&&!state.inputsDirty&&!state.jsonPending)render();else drawStyleControls();});swatches.append(button);}root.prepend(swatches);
+  const custom=document.createElement('div');custom.className='custom-colors';const title=document.createElement('span');title.textContent='Your colors';custom.append(title);const selected=current.custom_palette||spec.palette_colors?.[current.palette]||['#167d9a','#ee796b','#6796b5','#cfb86d'];
+  for(let i=0;i<4;i++){const input=document.createElement('input');input.type='color';input.value=selected[i%selected.length];input.setAttribute('aria-label',`Custom building-block color ${i+1}`);input.addEventListener('input',()=>changed('custom_palette',[...custom.querySelectorAll('input')].map(x=>x.value)));custom.append(input);}root.append(custom);
+  for(const[key,label,min,max,step]of[['font_scale','Label size',.6,1.6,.05],['bond_scale','Bond weight',.5,2.5,.1],['fill_opacity','Fill opacity',.05,.6,.05],['highlight_width','Highlight width',.5,2.5,.1],...(state.style==='glow_outline'?[['glow_strength','Glow softness',0,1,.05]]:[]),...(state.style==='molecular_spheres'?[['sphere_scale','Sphere size',.5,1.6,.05]]:[]),...(category==="layered"?[['layer_count','Illustrative layers',2,5,1],['layer_opacity','Back-layer opacity',.05,.7,.05],['layer_spacing','Layer separation',.015,.09,.005],['projection_tilt','Perspective tilt',0,65,1]]:[])]){
     const field=document.createElement("label");field.className="field";const span=document.createElement("span"),output=document.createElement("output"),input=document.createElement("input");input.id=`style-${key}`;input.dataset.styleOption=key;input.type="range";input.min=min;input.max=max;input.step=step;input.value=current[key];span.textContent=label;output.textContent=String(current[key]);span.append(output);input.addEventListener("input",()=>{output.textContent=input.value;changed(key,Number(input.value));});field.append(span,input);root.append(field);
   }
   const label=document.createElement("label");label.className="checkbox-field";const check=document.createElement("input");check.type="checkbox";check.id="style-transparent_background";check.checked=Boolean(current.transparent_background);check.addEventListener("change",()=>changed("transparent_background",check.checked));label.append(check,document.createTextNode("Transparent image background"));root.append(label);
@@ -224,21 +261,41 @@ function setZoom(value){state.zoom=Math.min(3,Math.max(.5,value));const sheet=$(
 $("zoom-in").addEventListener("click",()=>setZoom(state.zoom+.25));$("zoom-out").addEventListener("click",()=>setZoom(state.zoom-.25));$("zoom-fit").addEventListener("click",()=>setZoom(1));
 function node(name,attrs,text){const e=document.createElementNS(NS,name);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;return e;}
 function layoutPoint(xy){return[320+(xy[0]-state.layoutCenter[0])*state.layoutScale,150-(xy[1]-state.layoutCenter[1])*state.layoutScale];}
-function drawLayout(recalculate=true){
-  const canvas=$("layout-canvas");canvas.replaceChildren();if(!state.recipe)return;const items=state.recipe.instances;
-  if(recalculate){const xs=items.map(i=>i.layout_position[0]),ys=items.map(i=>i.layout_position[1]);state.layoutCenter=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2];state.layoutScale=Math.min(500/Math.max(1,Math.max(...xs)-Math.min(...xs)),210/Math.max(1,Math.max(...ys)-Math.min(...ys)));}
-  const map=new Map(items.map(i=>[i.id,i]));for(const edge of state.recipe.connections){const a=map.get(edge.a?.instance),b=map.get(edge.b?.instance);if(!a||!b)continue;const[x1,y1]=layoutPoint(a.layout_position),[x2,y2]=layoutPoint(b.layout_position);canvas.append(node("line",{x1,y1,x2,y2,stroke:"#b4c5ad","stroke-width":1.5}));}
-  items.forEach((item,i)=>{const[x,y]=layoutPoint(item.layout_position),g=node("g",{class:"block-node","data-index":i});g.append(node("circle",{cx:x,cy:y,r:17,fill:i%2?"#f6edda":"#e3eee0",stroke:i%2?"#b19b69":"#759d79"}),node("text",{x,y:y+4,"text-anchor":"middle","font-size":11,"pointer-events":"none",fill:"#355844"},item.id));canvas.append(g);});
+function blockLayoutPosition(item){
+  const rows=state.recipe?.atom_coordinates?.filter(row=>row.instance===item.id);
+  if(!rows?.length)return item.layout_position;
+  return [0,1].map(axis=>rows.reduce((sum,row)=>sum+row.xy[axis],0)/rows.length);
 }
-function changedLayout(){removeIdentity();state.dirty=true;syncJSON();sync();}
+function moveLayoutBlock(item,position){
+  const previous=blockLayoutPosition(item),delta=position.map((value,axis)=>value-previous[axis]);
+  if(Array.isArray(state.recipe.atom_coordinates)){
+    for(const row of state.recipe.atom_coordinates)if(row.instance===item.id)row.xy=row.xy.map((value,axis)=>value+delta[axis]);
+  }
+  item.layout_position=[...position];
+}
+function drawLayout(recalculate=true){
+  const canvas=$("layout-canvas");canvas.replaceChildren();if(!state.recipe||state.recipe.explicit_graph)return;const items=state.recipe.instances;
+  if(recalculate){const positions=items.map(blockLayoutPosition),xs=positions.map(p=>p[0]),ys=positions.map(p=>p[1]);state.layoutCenter=[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2];state.layoutScale=Math.min(500/Math.max(1,Math.max(...xs)-Math.min(...xs)),210/Math.max(1,Math.max(...ys)-Math.min(...ys)));}
+  const map=new Map(items.map(i=>[i.id,i]));for(const edge of state.recipe.connections){const a=map.get(edge.a?.instance),b=map.get(edge.b?.instance);if(!a||!b)continue;const[x1,y1]=layoutPoint(blockLayoutPosition(a)),[x2,y2]=layoutPoint(blockLayoutPosition(b));canvas.append(node("line",{x1,y1,x2,y2,stroke:"#b4c5ad","stroke-width":1.5}));}
+  items.forEach((item,i)=>{const[x,y]=layoutPoint(blockLayoutPosition(item)),g=node("g",{class:"block-node","data-index":i});g.append(node("circle",{cx:x,cy:y,r:17,fill:i%2?"#f6edda":"#e3eee0",stroke:i%2?"#b19b69":"#759d79"}),node("text",{x,y:y+4,"text-anchor":"middle","font-size":11,"pointer-events":"none",fill:"#355844"},item.id));canvas.append(g);});
+}
+function changedLayout(rebuildCoordinates=false){
+  if(rebuildCoordinates&&Array.isArray(state.recipe.atom_coordinates)){
+    // Attachment or reflection edits need a new assembly. Retain the latest
+    // block positions before discarding coordinates whose atom keys may change.
+    for(const item of state.recipe.instances)item.layout_position=blockLayoutPosition(item);
+    delete state.recipe.atom_coordinates;
+  }
+  removeIdentity();state.recipe.layout_refinement='manual';state.dirty=true;syncJSON();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));
+}
 function drawLayoutTable(){
-  const body=$("layout-rows");body.replaceChildren();if(!state.recipe)return;
-  state.recipe.instances.forEach(item=>{const row=document.createElement("tr"),label=document.createElement("td");label.textContent=item.id;row.append(label);["x","y","incoming_port","outgoing_port","flip_across_attachment_axis"].forEach((key,axis)=>{const cell=document.createElement("td"),input=document.createElement("input");input.setAttribute("aria-label",`${item.id} ${key}`);input.type=axis===4?"checkbox":"number";if(axis===4)input.checked=Boolean(item[key]);else{input.value=axis<2?Number(item.layout_position[axis].toFixed(3)):item[key];input.step=axis<2?".1":"1";input.min=axis<2?"-200":"1";input.max=axis<2?"200":"100";}
-    input.addEventListener("change",()=>{if(state.busy)return;const value=axis===4?input.checked:Number(input.value);if(axis!==4&&(!input.checkValidity()||!Number.isFinite(value))){notice("Enter a valid coordinate or attachment port.",true);drawLayoutTable();return;}if(axis<2)item.layout_position[axis]=value;else if(axis===4)item[key]=value;else{const previous=item[key];for(const edge of state.recipe.connections)for(const end of[edge.a,edge.b])if(end.instance===item.id&&end.port===previous)end.port=value;item[key]=value;}changedLayout();drawLayout();});cell.append(input);row.append(cell);});body.append(row);});
+  const body=$("layout-rows");body.replaceChildren();if(!state.recipe||state.recipe.explicit_graph)return;
+  state.recipe.instances.forEach(item=>{const row=document.createElement("tr"),label=document.createElement("td");label.textContent=item.id;row.append(label);["x","y","incoming_port","outgoing_port","flip_across_attachment_axis"].forEach((key,axis)=>{const cell=document.createElement("td"),input=document.createElement("input");input.setAttribute("aria-label",`${item.id} ${key}`);input.type=axis===4?"checkbox":"number";if(axis===4)input.checked=Boolean(item[key]);else{input.value=axis<2?Number(blockLayoutPosition(item)[axis].toFixed(3)):item[key];input.step=axis<2?"any":"1";input.min=axis<2?"-200":"1";input.max=axis<2?"200":"100";}
+    input.addEventListener("change",()=>{if(state.busy)return;const value=axis===4?input.checked:Number(input.value);if(axis!==4&&(!input.checkValidity()||!Number.isFinite(value))){notice("Enter a valid coordinate or attachment port.",true);drawLayoutTable();return;}if(axis<2){const position=[...blockLayoutPosition(item)];position[axis]=value;moveLayoutBlock(item,position);}else if(axis===4)item[key]=value;else{const previous=item[key];for(const edge of state.recipe.connections)for(const end of[edge.a,edge.b])if(end.instance===item.id&&end.port===previous)end.port=value;item[key]=value;}changedLayout(axis>=2);drawLayout();});cell.append(input);row.append(cell);});body.append(row);});
 }
 let dragged=null;
 $("layout-canvas").addEventListener("pointerdown",e=>{const target=e.target.closest(".block-node");if(!target||state.busy||state.jsonPending)return;dragged=Number(target.dataset.index);e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault();});
-$("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(e.currentTarget.getScreenCTM().inverse());state.recipe.instances[dragged].layout_position=[(p.x-320)/state.layoutScale+state.layoutCenter[0],(150-p.y)/state.layoutScale+state.layoutCenter[1]].map(x=>Math.max(-200,Math.min(200,Number(x.toFixed(3)))));changedLayout();drawLayout(false);});
+$("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(e.currentTarget.getScreenCTM().inverse());const position=[(p.x-320)/state.layoutScale+state.layoutCenter[0],(150-p.y)/state.layoutScale+state.layoutCenter[1]].map(x=>Math.max(-200,Math.min(200,Number(x.toFixed(3)))));moveLayoutBlock(state.recipe.instances[dragged],position);changedLayout();drawLayout(false);});
 for(const type of["pointerup","pointercancel"])$("layout-canvas").addEventListener(type,()=>{if(dragged!==null){dragged=null;syncJSON();drawLayoutTable();}});
 $("recipe-json").addEventListener("input",()=>{state.jsonPending=true;state.dirty=true;sync();});
 $("apply-recipe").addEventListener("click",()=>{try{const input=$("recipe-json").value;if(input.length>200000)throw new Error("Recipe limit is 200 kB.");const value=JSON.parse(input);acceptRecipe(value.recipe||value);notice("Recipe applied as a designed variant. Render to check its chemistry and connections.");}catch(e){notice(e.message,true);}});
@@ -256,7 +313,7 @@ const libraryPreviews=L.createPreviewCache(async smiles=>{
   return {result,url:URL.createObjectURL(new Blob([result.svg],{type:"image/svg+xml"}))};
 },3);
 function libraryItem(){return state.library?.monomer_presets?.find(item=>item.id===libraryView.selected);}
-function libraryChoice(item){const target=$("library-target").value;return L.monomerChoice(state.library||{},item,$("linkage").value,target,target==="editor"?null:checkedMonomer(target==="a"?"b":"a"));}
+function libraryChoice(item){const target=$("library-target").value;return monomerChoice(item,target,target==="editor"?null:checkedMonomer(target==="a"?"b":"a"));}
 function libraryGroups(item){const groups=[...L.groupRows(item),...(item.catalog_reactive_groups||[])],seen=new Set();return groups.filter(g=>{const key=`${g.kind}:${g.count}`;if(seen.has(key))return false;seen.add(key);return true;});}
 async function loadLibraryThumbnail(card,item){
   if(card.dataset.previewState)return;
@@ -360,8 +417,9 @@ async function initialize(){
     $("source-select").replaceChildren();for(const source of library.source_recipes||[]){const o=document.createElement("option");o.value=source.recipe_id;o.textContent=source.label;$("source-select").append(o);}if(!library.source_recipes?.length){const o=document.createElement("option");o.value="";o.textContent="No registered source recipes";$("source-select").append(o);}$("source-count").textContent=library.source_recipes?.length||0;
     drawStyles();drawStyleControls();
     if(library.source_registry_errors?.length)notice("Some source recipes failed integrity checks and are omitted from the library.",true);
-    setCombination(presets[0]);state.inputsDirty=false;setStyleDescription();
+    setCombination(presets[0]);state.inputsDirty=false;setStyleDescription();window.dispatchEvent(new CustomEvent('cofdraw:library',{detail:library}));
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
+window.COFdrawStudio={state,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls};
 initialize();

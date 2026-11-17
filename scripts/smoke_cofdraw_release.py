@@ -46,15 +46,17 @@ def main():
             with urlopen(request, timeout=120) as response:
                 return json.load(response)
         library = api("/api/drawing/library")
-        assert len(library["source_recipes"]) == 4 and not library["source_registry_errors"]
-        assert len(library["styles"]) == 17
-        assert len(library["monomer_presets"]) >= 41
+        assert len(library["source_recipes"]) == 17 and not library["source_registry_errors"]
+        assert len(library["styles"]) == 20
+        assert len(library["monomer_presets"]) >= 49
         assert len(library["templates"]) == 7
         report["library"] = {key: len(library[key]) for key in ("styles", "monomer_presets", "templates", "topology_catalog", "linkages")}
         for source in library["source_recipes"]:
             start = time.monotonic()
             result = api("/api/drawing/render", {"source_recipe_id": source["recipe_id"], "style_id": "red_blue", "size": 800})
-            assert " COFex." in result["audit"]["cofex_string"]
+            assert result["status"] == "source_bound_provisional"
+            if result["audit"].get("cofex_string"):
+                assert " COFex." in result["audit"]["cofex_string"]
             assert set(result["downloads"]) == {"svg", "png", "mol", "sdf", "cdxml", "json"}
             files = {}
             for ext, path in result["downloads"].items():
@@ -79,6 +81,9 @@ def main():
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_browser.py")), "--base-url", base,
                         "--output-dir", str(output / "browser")], check=True, timeout=600, creationflags=hidden)
         report["browser_report"] = json.loads((output / "browser/cofdraw-browser-report.json").read_text(encoding="utf-8"))
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_studio.py")), "--base-url", base,
+                        "--output-dir", str(output / "studio")], check=True, timeout=600, creationflags=hidden)
+        report["studio_report"] = json.loads((output / "studio/studio-smoke-report.json").read_text(encoding="utf-8"))
         native_status = output / "native-window.json"
         with subprocess.Popen([str(executable), "--smoke-window", "--data-dir", str(runtime), "--status-file", str(native_status)], creationflags=hidden) as native:
             try:

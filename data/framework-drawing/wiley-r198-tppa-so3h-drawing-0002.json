@@ -447,5 +447,1332 @@
   "portable_provenance": {
     "upstream_recipe_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827",
     "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged."
-  }
+  },
+  "source_style": {
+    "preferred_style_id": "source",
+    "source_registered": true,
+    "exact_style_equivalence": false,
+    "atom_colors": {
+      "12": "#198181",
+      "38": "#198181",
+      "64": "#198181",
+      "90": "#198181",
+      "116": "#198181",
+      "142": "#198181",
+      "14": "#198181",
+      "19": "#198181",
+      "40": "#198181",
+      "45": "#198181",
+      "66": "#198181",
+      "71": "#198181",
+      "92": "#198181",
+      "97": "#198181",
+      "118": "#198181",
+      "123": "#198181",
+      "144": "#198181",
+      "149": "#198181",
+      "21": "#f48a91",
+      "48": "#f48a91",
+      "73": "#f48a91",
+      "99": "#f48a91",
+      "125": "#f48a91",
+      "152": "#f48a91"
+    },
+    "component_colors": {
+      "tp_triketone": "#f58315",
+      "pa_so3h_ortho_previous": "#198181",
+      "pa_so3h_ortho_next": "#198181"
+    },
+    "edge_style": "dashed",
+    "abbreviation_mode": "condensed",
+    "font_family": "Arial",
+    "qualification": "Previously reviewed manual source anchors. Fonts and stroke details remain reconstructed substitutes.",
+    "coordinate_evidence_sha256": "3de59c14986a4cf8b704efcf07881e20c6cdbadd1513d3815fe3bed14a18e69f",
+    "review_evidence_sha256": "6fa06929239f279ab968c743fbe6f1d7aac9bdc580591aad261d11489f5c2996"
+  },
+  "source_coordinate_provenance": {
+    "source_registered": true,
+    "visible_atom_count": 138,
+    "unobserved_abbreviated_atom_count": 18,
+    "unobserved_atom_indices": [
+      22,
+      23,
+      24,
+      49,
+      50,
+      51,
+      74,
+      75,
+      76,
+      100,
+      101,
+      102,
+      126,
+      127,
+      128,
+      153,
+      154,
+      155
+    ],
+    "source_anchor_sha256": "3de59c14986a4cf8b704efcf07881e20c6cdbadd1513d3815fe3bed14a18e69f",
+    "review_sha256": "6fa06929239f279ab968c743fbe6f1d7aac9bdc580591aad261d11489f5c2996",
+    "uniform_viewport_scale": 0.05437495751958103,
+    "pixel_center": [
+      359.0475813670453,
+      313.13873873776083
+    ],
+    "y_axis_reversed": true,
+    "source_anchor_positions_changed": false,
+    "unobserved_coordinate_method": "Rigid similarity fit of the parent component; illustrative chemical export positions only."
+  },
+  "atom_coordinates": [
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 0,
+      "xy": [
+        -10.061954375934304,
+        10.882535416888272
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 1,
+      "xy": [
+        -8.593830522905616,
+        11.100035246966597
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 2,
+      "xy": [
+        -7.615081287553157,
+        10.012536096574976
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 3,
+      "xy": [
+        -7.995705990190225,
+        8.59878720106587
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 5,
+      "xy": [
+        -6.14695743452447,
+        10.393160799212042
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 6,
+      "xy": [
+        -5.11383324165243,
+        9.414411563859584
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 7,
+      "xy": [
+        -5.7663327318874025,
+        11.80690969472115
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 8,
+      "xy": [
+        -4.2982088788587145,
+        12.133159439838636
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 10,
+      "xy": [
+        -6.745081967239861,
+        12.89440884511277
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 11,
+      "xy": [
+        -6.20133239204405,
+        14.362532698141457
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 12,
+      "xy": [
+        -8.158830862748967,
+        12.568159099995285
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 13,
+      "xy": [
+        -9.137580098101427,
+        13.655658250386905
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 14,
+      "xy": [
+        -8.702580437944778,
+        14.96065723085685
+      ]
+    },
+    {
+      "instance": "Tp0",
+      "fragment_atom_index": 15,
+      "xy": [
+        -9.735704630816818,
+        16.102531338768053
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 1,
+      "xy": [
+        -3.2107097284670942,
+        11.100035246966597
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 2,
+      "xy": [
+        -1.7425858754384063,
+        11.317535077044921
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 3,
+      "xy": [
+        -0.7094616825663665,
+        10.230035926653299
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 4,
+      "xy": [
+        0.7586621704623213,
+        10.556285671770786
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 5,
+      "xy": [
+        1.1392868730993886,
+        12.024409524799474
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 6,
+      "xy": [
+        2.6074107261280766,
+        12.241909354877798
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 8,
+      "xy": [
+        0.10616268022734893,
+        13.111908675191094
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 9,
+      "xy": [
+        0.5411623403839972,
+        14.5256575707002
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 10,
+      "xy": [
+        -0.8354270025297899,
+        14.964766730480575
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 11,
+      "xy": [
+        2.00998971986857,
+        14.070070993356008
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 12,
+      "xy": [
+        1.0346292272316748,
+        15.94012722311747
+      ]
+    },
+    {
+      "instance": "Pa0",
+      "fragment_atom_index": 13,
+      "xy": [
+        -1.361961172801339,
+        12.785658930073609
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 0,
+      "xy": [
+        4.456159281793831,
+        14.036282953023973
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 1,
+      "xy": [
+        5.380533559626709,
+        12.94878380263235
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 2,
+      "xy": [
+        4.9999088569896415,
+        11.535034907123244
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 3,
+      "xy": [
+        3.531785003960954,
+        11.208785162005759
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 5,
+      "xy": [
+        5.9786580923421,
+        10.447535756731623
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 6,
+      "xy": [
+        5.598033389705034,
+        9.142536776261679
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 7,
+      "xy": [
+        7.446781945370788,
+        10.828160459368691
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 8,
+      "xy": [
+        8.425531180723247,
+        9.74066130897707
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 10,
+      "xy": [
+        7.827406648007855,
+        12.241909354877798
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 11,
+      "xy": [
+        9.295530501036543,
+        12.568159099995285
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 12,
+      "xy": [
+        6.848657412655397,
+        13.329408505269418
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 13,
+      "xy": [
+        7.229282115292464,
+        14.797532358298106
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 14,
+      "xy": [
+        8.697405968321153,
+        15.123782103415593
+      ]
+    },
+    {
+      "instance": "Tp1",
+      "fragment_atom_index": 15,
+      "xy": [
+        9.078030670958219,
+        16.537530998924698
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 1,
+      "xy": [
+        7.9905315205665985,
+        8.326912413467964
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 2,
+      "xy": [
+        8.969280755919057,
+        7.293788220595924
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 3,
+      "xy": [
+        10.437404608947745,
+        7.674412923232991
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 4,
+      "xy": [
+        11.470528801819786,
+        6.5869137728413705
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 5,
+      "xy": [
+        11.089904099182718,
+        5.1187899198126825
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 6,
+      "xy": [
+        12.123028292054757,
+        4.031290769421062
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 8,
+      "xy": [
+        9.62178024615403,
+        4.792540174695197
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 9,
+      "xy": [
+        8.58865605328199,
+        5.825664367567236
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 10,
+      "xy": [
+        7.120532200253302,
+        5.445039664930169
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 11,
+      "xy": [
+        7.499548442777014,
+        4.015777069492383
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 12,
+      "xy": [
+        6.7635701503173795,
+        6.919228683149283
+      ]
+    },
+    {
+      "instance": "Pa1",
+      "fragment_atom_index": 13,
+      "xy": [
+        5.67983348971875,
+        5.099513730091016
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 0,
+      "xy": [
+        14.40677650787716,
+        3.3787912791860895
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 1,
+      "xy": [
+        14.026151805240094,
+        1.9106674261574017
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 2,
+      "xy": [
+        12.558027952211406,
+        1.5844176810399155
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 3,
+      "xy": [
+        11.579278716858946,
+        2.671916831431536
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 5,
+      "xy": [
+        12.177403249574338,
+        0.1162938280112276
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 6,
+      "xy": [
+        10.70927939654565,
+        -0.2099559171062586
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 7,
+      "xy": [
+        13.210527442446377,
+        -0.971205322380393
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 8,
+      "xy": [
+        12.829902739809311,
+        -2.439329175409081
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 10,
+      "xy": [
+        14.678651295475065,
+        -0.5905806197433259
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 11,
+      "xy": [
+        15.711775488347106,
+        -1.5693298550957844
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 12,
+      "xy": [
+        15.059275998112133,
+        0.823168275765781
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 13,
+      "xy": [
+        16.52739985114082,
+        1.2037929784028483
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 14,
+      "xy": [
+        17.560524044012862,
+        0.17066878553080864
+      ]
+    },
+    {
+      "instance": "Tp2",
+      "fragment_atom_index": 15,
+      "xy": [
+        18.974272939521967,
+        0.38816861560913274
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 1,
+      "xy": [
+        11.19865401422188,
+        -2.548079090448243
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 2,
+      "xy": [
+        10.872404269104393,
+        -3.96182798595735
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 3,
+      "xy": [
+        9.404280416075705,
+        -4.342452688594417
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 4,
+      "xy": [
+        8.969280755919057,
+        -5.810576541623105
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 5,
+      "xy": [
+        10.002404948791098,
+        -6.898075692014726
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 6,
+      "xy": [
+        9.62178024615403,
+        -8.311824587523832
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 8,
+      "xy": [
+        11.470528801819786,
+        -6.517450989377658
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 9,
+      "xy": [
+        12.503652994691825,
+        -7.550575182249698
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 10,
+      "xy": [
+        13.591874391694217,
+        -6.534324515396796
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 11,
+      "xy": [
+        11.445673298880795,
+        -8.62438072775096
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 12,
+      "xy": [
+        13.563801951464592,
+        -8.65245316798059
+      ]
+    },
+    {
+      "instance": "Pa2",
+      "fragment_atom_index": 13,
+      "xy": [
+        11.905528461976433,
+        -5.103702093868551
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 0,
+      "xy": [
+        10.002404948791098,
+        -10.649947760865818
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 1,
+      "xy": [
+        8.53428109576241,
+        -10.976197505983302
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 2,
+      "xy": [
+        7.555531860409951,
+        -9.888698355591682
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 3,
+      "xy": [
+        7.9905315205665985,
+        -8.420574502562994
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 5,
+      "xy": [
+        6.087408007381263,
+        -10.214948100709169
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 6,
+      "xy": [
+        5.108658772028804,
+        -9.18182390783713
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 7,
+      "xy": [
+        5.706783304744195,
+        -11.683071953737857
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 8,
+      "xy": [
+        4.238659451715508,
+        -12.063696656374924
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 10,
+      "xy": [
+        6.739907497616235,
+        -12.770571104129477
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 11,
+      "xy": [
+        6.359282794979167,
+        -14.238694957158165
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 12,
+      "xy": [
+        8.208031350644923,
+        -12.38994640149241
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 13,
+      "xy": [
+        9.241155543516962,
+        -13.477445551884031
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 14,
+      "xy": [
+        8.860530840879894,
+        -14.891194447393138
+      ]
+    },
+    {
+      "instance": "Tp3",
+      "fragment_atom_index": 15,
+      "xy": [
+        10.002404948791098,
+        -16.08744351282392
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 1,
+      "xy": [
+        3.368660131402211,
+        -11.139322378542046
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 2,
+      "xy": [
+        1.954911235893104,
+        -11.35682220862037
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 3,
+      "xy": [
+        1.5742865332560367,
+        -12.824946061649058
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 4,
+      "xy": [
+        0.10616268022734893,
+        -13.151195806766545
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 5,
+      "xy": [
+        -0.8725865551251096,
+        -12.063696656374924
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 6,
+      "xy": [
+        -2.3407104081537975,
+        -12.335571443972828
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 8,
+      "xy": [
+        -0.4919618524880424,
+        -10.595572803346236
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 9,
+      "xy": [
+        -1.307586215281758,
+        -9.453698695435033
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 10,
+      "xy": [
+        -0.31727684688826363,
+        -8.53743036584676
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 11,
+      "xy": [
+        -2.508653408162178,
+        -10.497933328096458
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 12,
+      "xy": [
+        -2.3932166086500684,
+        -8.421993566334653
+      ]
+    },
+    {
+      "instance": "Pa3",
+      "fragment_atom_index": 13,
+      "xy": [
+        0.9761620005406455,
+        -10.26932305822875
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 0,
+      "xy": [
+        -4.2982088788587145,
+        -14.129945042119003
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 1,
+      "xy": [
+        -5.3313330717307545,
+        -13.042445891727382
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 2,
+      "xy": [
+        -4.896333411574106,
+        -11.574322038698694
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 3,
+      "xy": [
+        -3.428209558545418,
+        -11.193697336061627
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 5,
+      "xy": [
+        -5.929457604446146,
+        -10.486822888307074
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 6,
+      "xy": [
+        -5.494457944289498,
+        -9.073073992797967
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 7,
+      "xy": [
+        -7.397581457474834,
+        -10.81307263342456
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 8,
+      "xy": [
+        -8.376330692827292,
+        -9.725573483032939
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 10,
+      "xy": [
+        -7.778206160111901,
+        -12.281196486453247
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 11,
+      "xy": [
+        -9.191955055621008,
+        -12.607446231570734
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 12,
+      "xy": [
+        -6.745081967239861,
+        -13.368695636844869
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 13,
+      "xy": [
+        -7.180081627396509,
+        -14.836819489873557
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 14,
+      "xy": [
+        -8.593830522905616,
+        -14.94556940491272
+      ]
+    },
+    {
+      "instance": "Tp4",
+      "fragment_atom_index": 15,
+      "xy": [
+        -8.974455225542684,
+        -16.46806821546099
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 1,
+      "xy": [
+        -7.832581117631482,
+        -8.420574502562994
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 2,
+      "xy": [
+        -8.81133035298394,
+        -7.387450309690955
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 3,
+      "xy": [
+        -8.376330692827292,
+        -5.919326456662267
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 4,
+      "xy": [
+        -9.409454885699331,
+        -4.831827306270647
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 5,
+      "xy": [
+        -10.877578738728019,
+        -5.2124520089077135
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 6,
+      "xy": [
+        -11.856327974080479,
+        -4.179327816035674
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 8,
+      "xy": [
+        -11.258203441365087,
+        -6.62620090441682
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 9,
+      "xy": [
+        -12.726327294393775,
+        -6.952450649534307
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 10,
+      "xy": [
+        -12.371763456116481,
+        -8.406241548773231
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 11,
+      "xy": [
+        -13.056281445844501,
+        -5.53141487938543
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 12,
+      "xy": [
+        -14.15143578567439,
+        -7.311087208943344
+      ]
+    },
+    {
+      "instance": "Pa4",
+      "fragment_atom_index": 13,
+      "xy": [
+        -10.279454206012629,
+        -7.713700054808441
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 0,
+      "xy": [
+        -14.194451147422463,
+        -3.3093284957223776
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 1,
+      "xy": [
+        -13.868201402304976,
+        -1.8412046426936897
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 2,
+      "xy": [
+        -12.400077549276288,
+        -1.5149548975762033
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 3,
+      "xy": [
+        -11.42132831392383,
+        -2.602454047967824
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 5,
+      "xy": [
+        -12.019452846639222,
+        -0.0468310445475155
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 6,
+      "xy": [
+        -10.551328993610534,
+        0.2794187005699707
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 7,
+      "xy": [
+        -13.052577039511261,
+        1.0406681058441052
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 8,
+      "xy": [
+        -12.617577379354612,
+        2.508791958872793
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 10,
+      "xy": [
+        -14.52070089253995,
+        0.7144183607266189
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 11,
+      "xy": [
+        -15.445075170372826,
+        1.7475425535986586
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 12,
+      "xy": [
+        -14.901325595177015,
+        -0.753705492302069
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 13,
+      "xy": [
+        -16.315074490686122,
+        -1.1343301949391362
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 14,
+      "xy": [
+        -17.239448768519,
+        -0.0468310445475155
+      ]
+    },
+    {
+      "instance": "Tp5",
+      "fragment_atom_index": 15,
+      "xy": [
+        -18.707572621547687,
+        -0.42745574718458273
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 1,
+      "xy": [
+        -11.040703611286762,
+        2.671916831431536
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 2,
+      "xy": [
+        -10.660078908649696,
+        4.140040684460224
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 3,
+      "xy": [
+        -11.638828144002154,
+        5.173164877332264
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 4,
+      "xy": [
+        -11.258203441365087,
+        6.641288730360952
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 5,
+      "xy": [
+        -9.790079588336399,
+        6.967538475478437
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 6,
+      "xy": [
+        -9.35507992817975,
+        8.435662328507126
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 8,
+      "xy": [
+        -8.75695539546436,
+        5.880039325086817
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 9,
+      "xy": [
+        -9.191955055621008,
+        4.46629042957771
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 10,
+      "xy": [
+        -8.158830862748967,
+        3.4875411942252517
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 11,
+      "xy": [
+        -7.080015000529224,
+        4.441275225312725
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 12,
+      "xy": [
+        -9.225102911249422,
+        2.381564683731445
+      ]
+    },
+    {
+      "instance": "Pa5",
+      "fragment_atom_index": 13,
+      "xy": [
+        -7.122703685098683,
+        2.338875999161986
+      ]
+    }
+  ]
 }

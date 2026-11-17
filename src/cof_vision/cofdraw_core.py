@@ -16,7 +16,7 @@ from rdkit import Chem
 from rdkit.Chem import rdDepictor, rdMolDescriptors
 from rdkit.Chem.Draw import rdMolDraw2D
 
-from .cofdraw_styles import STYLES, PALETTES, style_configuration, decorate_svg
+from .cofdraw_styles import STYLES, PALETTES, style_configuration, decorate_svg, resolved_palette
 MONOMERS = [
     {"id": "tfb", "label": "TFB · benzene-1,3,5-tricarbaldehyde", "smiles": "O=Cc1cc(C=O)cc(C=O)c1", "role": "aldehyde"},
     {"id": "tp", "label": "Tp · triformylphloroglucinol", "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O", "role": "aldehyde"},
@@ -128,23 +128,153 @@ def chosen_style(style_id: str, seed=None):
     return selected,seed
 
 
+def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
+    """Use RDKit's chemical label and bond placement for every presentation.
+
+    Native SVG paths retain wedge/stereo geometry and clip bonds at the actual
+    glyphs. Decorations and colors never ask a second renderer to reinterpret
+    the bond geometry. Collapsed aliases affect only a drawing copy.
+    """
+    import re
+    import xml.etree.ElementTree as ET
+    from rdkit.Geometry import Point2D
+    from .depiction_rings import symmetric_depiction_rings
+    tag = lambda name: '{http://www.w3.org/2000/svg}'+name
+    ET.register_namespace('', 'http://www.w3.org/2000/svg')
+    original_xy = np.asarray(mol.GetConformer().GetPositions())[:, :2]
+    graph_keys = [f"{o['instance']}:{o['fragment_atom_index']}" for o in audit['atom_origin']]
+    hidden = {key for group in rules.get('collapsed_groups', []) for key in group['hidden_atoms']}
+    kept = [i for i, key in enumerate(graph_keys) if key not in hidden]
+    old_to_new = {old: new for new, old in enumerate(kept)}
+    draw_mol = Chem.Mol(mol)
+    Chem.Kekulize(draw_mol, clearAromaticFlags=True)
+    if hidden:
+        editable = Chem.RWMol(draw_mol)
+        for i in reversed(range(mol.GetNumAtoms())):
+            if graph_keys[i] in hidden:
+                editable.RemoveAtom(i)
+        draw_mol = editable.GetMol()
+        draw_mol.UpdatePropertyCache(strict=False)
+    Chem.WedgeMolBonds(draw_mol, draw_mol.GetConformer())
+    symmetric_depiction_rings(draw_mol)
+    drawer = rdMolDraw2D.MolDraw2DSVG(size, size)
+    opt = drawer.drawOptions()
+    opt.useBWAtomPalette(); opt.padding = .10
+    opt.bondLineWidth = (2.8 if style_id == 'bold_color' else 2.)*options['bond_scale']
+    opt.minFontSize = round(12*options['font_scale']); opt.maxFontSize = round(30*options['font_scale'])
+    opt.baseFontSize = .6*options['font_scale']
+    import os
+    font_names = {'Arial': 'arial.ttf', 'Times New Roman': 'times.ttf', 'Cambria': 'cambria.ttc',
+                  'Calibri': 'calibri.ttf', 'Verdana': 'verdana.ttf', 'Courier New': 'cour.ttf', 'Segoe UI': 'segoeui.ttf'}
+    native_font = Path(os.environ.get('WINDIR', 'C:/Windows'))/'Fonts'/font_names[options['font_family']]
+    if native_font.is_file():
+        opt.fontFile = str(native_font)
+    opt.addStereoAnnotation = False; opt.includeMetadata = False
+    opt.prepareMolsBeforeDrawing = False; opt.clearBackground = False
+    # Built-in font files keep exports portable; system families remain in the
+    # style metadata and schematic labels without a host-specific file path.
+    for group in rules.get('collapsed_groups', []):
+        old = graph_keys.index(group['anchor'])
+        opt.atomLabels[old_to_new[old]] = group['label']
+    for i, atom in enumerate(draw_mol.GetAtoms()):
+        if atom.GetAtomicNum() == 0 and style_id != 'standard':
+            opt.atomLabels[i] = ''
+    drawer.DrawMolecule(draw_mol)
+    drawer.FinishDrawing()
+    xy = np.array([[drawer.GetDrawCoords(Point2D(float(p[0]), float(p[1]))).x,
+                    drawer.GetDrawCoords(Point2D(float(p[0]), float(p[1]))).y] for p in original_xy])
+    root = ET.fromstring(drawer.GetDrawingText())
+    defs = ET.Element(tag('defs')); root.insert(0, defs)
+    atom_colors = {}
+    source_style = recipe.get('source_style', {}) if style_id == 'source' else {}
+    source_colors = source_style.get('atom_colors', {})
+    for old in kept:
+        atom_colors[old_to_new[old]] = source_colors.get(str(old), source_colors.get(old,
+            rules.get('atom_colors', {}).get(graph_keys[old], source_style.get('component_colors', {}).get(audit['atom_origin'][old]['component'],
+                rules['component_colors'].get(audit['atom_origin'][old]['component'], '#171717')))))
+    def recolor(element, color):
+        css = element.get('style', '')
+        css = re.sub(r'(?<!-)stroke:(?!none)[^;]+', 'stroke:'+color, css)
+        css = re.sub(r'(?<!-)fill:(?!none)[^;]+', 'fill:'+color, css)
+        element.set('style', css)
+        if element.get('fill') not in (None, 'none'): element.set('fill', color)
+        if element.get('stroke') not in (None, 'none'): element.set('stroke', color)
+    gradients = set()
+    for element in list(root):
+        classes = element.get('class', '')
+        atoms = [int(v) for v in re.findall(r'atom-(\d+)', classes)]
+        bond_match = re.search(r'bond-(\d+)', classes)
+        if not atoms and element.tag.endswith('path'):
+            # RDKit adds a short, unclassified polyline at carbon vertices to
+            # close butt-ended bonds. Color that join with its exact nearest
+            # atom too; leaving it black breaks otherwise colored rings.
+            match = re.fullmatch(r'M\s+([-\d.]+)[ ,]+([-\d.]+)\s+L\s+([-\d.]+)[ ,]+([-\d.]+)\s+L\s+([-\d.]+)[ ,]+([-\d.]+)\s*', element.get('d', ''))
+            if match:
+                values = list(map(float, match.groups()))
+                point = np.array(values[2:4])
+                nearest = min(kept, key=lambda i: float(np.linalg.norm(xy[i]-point)))
+                if np.linalg.norm(xy[nearest]-point) < 1.:
+                    atoms = [old_to_new[nearest]]
+                    element.set('data-vertex-atom', str(nearest))
+        if not atoms:
+            continue
+        if bond_match and len(atoms) >= 2:
+            a, b = atoms[:2]; ca, cb = atom_colors[a], atom_colors[b]
+            if ca != cb:
+                name = 'bond-color-'+bond_match.group(1)
+                if name not in gradients:
+                    p, q = xy[kept[a]], xy[kept[b]]
+                    gradient = ET.SubElement(defs, tag('linearGradient'), {'id': name, 'gradientUnits': 'userSpaceOnUse',
+                        'x1': str(p[0]), 'y1': str(p[1]), 'x2': str(q[0]), 'y2': str(q[1])})
+                    for stop, color in (('0%', ca), ('48%', ca), ('52%', cb), ('100%', cb)):
+                        ET.SubElement(gradient, tag('stop'), {'offset': stop, 'stop-color': color})
+                    gradients.add(name)
+                recolor(element, 'url(#'+name+')')
+            else:
+                recolor(element, ca)
+            if style_id != 'standard' and any(draw_mol.GetAtomWithIdx(i).GetAtomicNum() == 0 for i in atoms):
+                if options['edge_style'] == 'dashed':
+                    element.set('stroke-dasharray', f'{size*.003},{size*.003}')
+        else:
+            if style_id != 'standard' and draw_mol.GetAtomWithIdx(atoms[0]).GetAtomicNum() == 0:
+                root.remove(element)
+                continue
+            recolor(element, atom_colors[atoms[0]])
+        opacities = source_style.get('atom_opacities', {})
+        values = [opacities.get(str(kept[a]), opacities.get(kept[a], source_style.get('fade_opacity', .28) if kept[a] in source_style.get('faded_atoms', []) else 1.)) for a in atoms]
+        if values and min(values) < 1:
+            element.set('opacity', str(max(0., min(1., float(min(values))))))
+    if style_id != 'standard' and options['edge_style'] in ('wavy_cross', 'crossbar'):
+        for port in audit['continuation_ports']:
+            i = port['atom_index']; neighbors = mol.GetAtomWithIdx(i).GetNeighbors()
+            if not neighbors: continue
+            j = neighbors[0].GetIdx(); p, q = xy[j], xy[i]
+            delta = q-p; length = np.linalg.norm(delta)
+            if length < .01: continue
+            tangent = delta/length; normal = np.array([-tangent[1], tangent[0]])
+            center = p+.8*delta; span = length*.48
+            samples = [center+(u-.5)*span*normal+(0 if options['edge_style'] == 'crossbar' else
+                        .045*length*math.sin(6*math.pi*u))*tangent for u in np.linspace(0, 1, 35)]
+            ET.SubElement(root, tag('path'), {'d': 'M '+' L '.join(f'{a:.3f},{b:.3f}' for a, b in samples),
+                'fill': 'none', 'stroke': atom_colors.get(old_to_new.get(j), '#171717'),
+                'stroke-width': str(opt.bondLineWidth), 'stroke-linecap': 'round', 'data-continuation': str(i)})
+    return ET.tostring(root, encoding='unicode'), xy
+
+
 def render_styled(recipe, directory, size, style_id, seed=None, style_options=None, *, prepared_patch=None):
     from .framework_drawing import build_patch, render_recipe
-    from .source_depiction import render_source_svg
+    if style_id == 'source':
+        source_options = {key: recipe.get('source_style', {})[key] for key in ('abbreviation_mode','edge_style') if key in recipe.get('source_style', {})}
+        source_options.update(style_options or {})
+        style_options = source_options
     style_id, seed, options = style_configuration(style_id, seed, style_options)
-    native_standard = style_id == "standard" and not style_options
     directory = Path(directory)
     # Custom SVG styles supply their own images; do not render and discard two
     # potentially expensive native macrocycle images first.
     if prepared_patch is None:
         prepared_patch = build_patch(recipe)
-    audit = render_recipe(recipe, directory, size=size, draw_images=native_standard, prepared_patch=prepared_patch)
-    if native_standard:
-        audit["drawing_style"] = {"id": style_id, "seed": seed, "options": options, "category":"chemical", "chemistry_changed":False}
-        return audit
+    audit = render_recipe(recipe, directory, size=size, draw_images=False, prepared_patch=prepared_patch)
     mol, _ = prepared_patch
-    if any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()) or any(b.GetStereo() not in (Chem.BondStereo.STEREONONE, Chem.BondStereo.STEREOANY) for b in mol.GetBonds()):
-        raise ValueError("Use Standard style for a stereospecified framework; custom literature styles do not yet render stereo marks")
     xy = np.array(mol.GetConformer().GetPositions())[:, :2]; xy[:, 1] *= -1
     span = np.ptp(xy, axis=0)
     scale = size * .82 / max(float(max(span)), 1)
@@ -152,7 +282,7 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
     lengths = [np.linalg.norm(xy[b.GetBeginAtomIdx()] - xy[b.GetEndAtomIdx()]) for b in mol.GetBonds()]
     bond = float(np.median(lengths)); font = min(34, max(12, bond * .50))
     components = list(dict.fromkeys(o["component"] for o in audit["atom_origin"]))
-    colors = PALETTES[options["palette"]]
+    colors = resolved_palette(options)
     colored = style_id in ("red_blue","bold_color","stacked_eclipsed","stacked_slipped","perspective")
     style = {"font_family": options["font_family"], "atom_font_size": font*options["font_scale"],
              "bond_width": max(1, size / 800)*options["bond_scale"]*(1.6 if style_id=="bold_color" else 1),
@@ -167,7 +297,10 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
         style["atom_colors"]={key(a.GetIdx()):atom_palette[a.GetAtomicNum()] for a in mol.GetAtoms() if a.GetAtomicNum() in atom_palette}
     if options["abbreviation_mode"] != "explicit":
         groups, used = [], set()
-        for pattern, label in [("[OX2]-[CH2]-[CH3]", "OEt"), ("[OX2]-[CH3]", "OMe" if options["abbreviation_mode"]=="OMe" else "OCH3"), ("[SX4](=[OX1])(=[OX1])-[OX2H]", "SO3H")]:
+        patterns = [("[OX2]-[CH2]-[CH3]", "OEt"), ("[OX2]-[CH3]", "OMe" if options["abbreviation_mode"]=="OMe" else "OCH3"), ("[SX4](=[OX1])(=[OX1])-[OX2H]", "SO3H")]
+        if options['abbreviation_mode'] == 'source_aldehyde':
+            patterns = [("[CH1](=[OX1])", 'CHO')]
+        for pattern, label in patterns:
             for hit in mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)):
                 if used.intersection(hit) or mol.GetAtomWithIdx(hit[0]).GetDegree() < 2:
                     continue
@@ -176,8 +309,9 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
                     continue
                 # Place the chemically attached S/O glyph next to the incoming
                 # bond, including when the substituent points left.
-                left = xy[hit[0], 0] < xy[parent, 0]
-                displayed = {"SO3H":"HO3S", "OCH3":"H3CO", "OMe":"MeO", "OEt":"EtO"}.get(label, label) if left else label
+                displacement = xy[hit[0]]-xy[parent]
+                left = displacement[0] < -abs(displacement[1])*.25
+                displayed = {"SO3H":"HO3S", "OCH3":"H3CO", "OMe":"MeO", "OEt":"EtO", 'CHO':'OHC'}.get(label, label) if left else label
                 shift = (-1 if left else 1) * (len(displayed)-1) * style["atom_font_size"] * .56 / 2
                 label_xy = [float(xy[hit[0], 0] + shift), float(xy[hit[0], 1])]
                 groups.append({"anchor": key(hit[0]), "label": displayed, "label_xy": label_xy,
@@ -185,18 +319,31 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
                                "attachment_side": "right" if left else "left",
                                "hidden_atoms": [key(i) for i in hit[1:]]}); used.update(hit)
         style["collapsed_groups"] = groups
-    annotation = {"canvas_size": [size, size], "atom_coordinates": [{"instance": o["instance"], "fragment_atom_index": o["fragment_atom_index"], "xy": list(p)} for o, p in zip(audit["atom_origin"], xy)], "style": style}
     stem = directory / recipe["recipe_id"]
-    render_source_svg(mol, audit, annotation, stem.with_suffix(".svg"))
-    svg=decorate_svg(stem.with_suffix(".svg").read_text(encoding="utf-8"),mol,audit,recipe,xy,style_id,options,size)
+    chemical_svg, xy = _native_styled_svg(mol, audit, recipe, style_id, options, style, size)
+    svg=decorate_svg(chemical_svg,mol,audit,recipe,xy,style_id,options,size)
     stem.with_suffix(".svg").write_text(svg,encoding="utf-8")
     import resvg_py
     stem.with_suffix(".png").write_bytes(resvg_py.svg_to_bytes(svg_string=svg, background=None if options["transparent_background"] else "white"))
     descriptor=next(s for s in STYLES if s["id"]==style_id)
     audit["drawing_style"] = {"id": style_id, "seed": seed, "rules": style, "options":options,
                               "category":descriptor["category"],"representation_scope":descriptor["representation_scope"],
-                              "source_registered": False, "chemistry_changed": False,
+                              "source_registered": bool(recipe.get('source_style',{}).get('source_registered')) if style_id=='source' else False, "chemistry_changed": False,
                               "graph_exports":"Underlying single finite chemical graph; visual layers and cartoon symbols are presentation only."}
+    original_xy = np.asarray(mol.GetConformer().GetPositions())[:, :2]
+    atom_keys = [f"{o['instance']}:{o['fragment_atom_index']}" for o in audit['atom_origin']]
+    names = list(dict.fromkeys(o['instance'] for o in audit['atom_origin']))
+    centers = {name: xy[[i for i,o in enumerate(audit['atom_origin']) if o['instance']==name]].mean(0).tolist() for name in names}
+    distances = [np.linalg.norm(original_xy[b.GetBeginAtomIdx()]-original_xy[b.GetEndAtomIdx()]) for b in mol.GetBonds()]
+    pixels = [np.linalg.norm(xy[b.GetBeginAtomIdx()]-xy[b.GetEndAtomIdx()]) for b in mol.GetBonds()]
+    audit['drawing_style']['renderer'] = 'shared-rdkit-chemical-svg'
+    audit['drawing_style']['layout'] = {'canvas_size': [size,size], 'atom_keys': atom_keys,
+        'atom_coordinates': original_xy.tolist(), 'atom_pixels': xy.tolist(),
+        'atom_normalized': (xy/size).tolist(), 'instance_centers_pixels': centers,
+        'instance_centers_normalized': {name: (np.asarray(p)/size).tolist() for name,p in centers.items()},
+        'pixels_per_unit': float(np.median(np.asarray(pixels)/np.asarray(distances))),
+        'coordinate_system': 'cartesian_y_up', 'display_projection': descriptor['category'] == 'layered',
+        'editing_scope': 'Atom pixels describe the unprojected chemical layer; use flat chemical styles for coordinate editing.'}
     return audit
 
 
