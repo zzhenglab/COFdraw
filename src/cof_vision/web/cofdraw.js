@@ -295,7 +295,7 @@ $("reset-style-options").addEventListener("click",()=>chooseStyle(state.style));
 $("random-style").addEventListener("click",()=>chooseStyle("random",crypto.getRandomValues(new Uint32Array(1))[0] % 2147483647));
 $("image-size").addEventListener("change",()=>{if(state.recipe){state.dirty=true;sync();render();}});
 $("render-changes").addEventListener("click",render);
-function setZoom(value){state.zoom=Math.min(3,Math.max(.5,value));const sheet=$("canvas-sheet");sheet.classList.toggle("zoomed",state.zoom!==1);sheet.style.width=state.zoom===1?"100%":`${state.zoom*100}%`;sheet.style.height=state.zoom===1?"100%":`${state.zoom*100}%`;$("zoom-label").textContent=state.zoom===1?"Fit":`${Math.round(state.zoom*100)}%`;}
+function setZoom(value){state.zoom=Math.min(3,Math.max(.5,value));const sheet=$("canvas-sheet");sheet.classList.toggle("zoomed",state.zoom!==1);sheet.style.width=state.zoom===1?"100%":`${state.zoom*100}%`;sheet.style.height=state.zoom===1?"100%":`${state.zoom*100}%`;$("zoom-label").textContent=state.zoom===1?"100%":`${Math.round(state.zoom*100)}%`;}
 $("zoom-in").addEventListener("click",()=>setZoom(state.zoom+.25));$("zoom-out").addEventListener("click",()=>setZoom(state.zoom-.25));$("zoom-fit").addEventListener("click",()=>setZoom(1));
 function node(name,attrs,text){const e=document.createElementNS(NS,name);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;return e;}
 function layoutPoint(xy){return[320+(xy[0]-state.layoutCenter[0])*state.layoutScale,150-(xy[1]-state.layoutCenter[1])*state.layoutScale];}

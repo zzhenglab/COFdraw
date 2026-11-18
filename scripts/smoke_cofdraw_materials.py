@@ -103,6 +103,15 @@ def main():
    with page.expect_download() as download:page.locator('#pxrd-results button').filter(has_text='Save CSV').click()
    download.value.save_as(out/'pxrd.csv');rows=list(csv.DictReader((out/'pxrd.csv').read_text('utf-8').splitlines()));assert len(rows)>1000
    checks.append('Physical model PXRD preview, peak table and numeric CSV export')
+   angle=page.locator('#pxrd-results tr').nth(1).locator('td').first.inner_text()
+   page.locator('#peak-check summary').click()
+   page.locator('#observed-peaks').fill(angle+', 0.9')
+   with page.expect_response('**/api/drawing/science/pxrd-peaks') as compared:page.locator('#check-peaks').click()
+   assert compared.value.ok and any(r['candidate_indices'] for r in compared.value.json()['observed'])
+   page.get_by_text('outside range',exact=True).wait_for()
+   assert page.locator('#pxrd-plot svg line').count()>=1
+   page.screenshot(path=str(out/'observed-peaks.png'))
+   checks.append('Measured peak ticks, candidates and out-of-range observations are visible for the active periodic model')
    page.locator('#xrd-fwhm').fill('0.02');page.locator('#calculate-pxrd').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Model PXRD calculated')")
    assert page.locator('#pxrd-plot svg').count()==1

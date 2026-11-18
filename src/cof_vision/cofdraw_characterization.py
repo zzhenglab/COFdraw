@@ -233,3 +233,41 @@ def powder_xrd(structure, *, wavelength=1.5406, two_theta_min=2, two_theta_max=5
                        "reciprocal_candidates": candidates, "non_extinct_reflections": len(hkls),
                        "profile": "Area-normalized Gaussians, +/-5 sigma support, neighboring peaks included at range edges"},
             "warnings": warnings, "exports": {"csv": csv}}
+def compare_powder_peaks(structure, observed_two_theta, tolerance_degrees, min_relative_intensity, **settings):
+    """Compare supplied peak centers at a fixed wavelength, without fitting a cell or zero shift."""
+    from bisect import bisect_left, bisect_right
+    import csv
+    import io
+
+    if len(set(observed_two_theta)) != len(observed_two_theta):
+        raise ValueError("An observed peak position appears twice.")
+    result = powder_xrd(structure, **settings)
+    peaks = [p for p in result["peaks"] if p["intensity"] >= min_relative_intensity]
+    angles = [p["two_theta_degrees"] for p in peaks]
+    lower, upper = result["parameters"]["two_theta_min"], result["parameters"]["two_theta_max"]
+    rows, accounted = [], set()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["status", "observed_2theta_deg", "calculated_2theta_deg", "observed_minus_calculated_deg", "relative_integrated_intensity", "hkl_family"])
+    def write_peak(status, obs, peak):
+        pos = peak["two_theta_degrees"]
+        writer.writerow([status, obs, pos, obs-pos if obs != "" else "", peak["intensity"],
+                         " | ".join(" ".join(map(str, hkl)) for hkl in peak["hkls"])])
+    for obs in sorted(observed_two_theta):
+        inside = lower <= obs <= upper
+        candidates = list(range(bisect_left(angles, obs-tolerance_degrees), bisect_right(angles, obs+tolerance_degrees))) if inside else []
+        status = "outside range" if not inside else "unmatched" if not candidates else "multiple centers" if len(candidates) > 1 else "one center"
+        rows.append({"observed_two_theta": obs, "status": status, "candidate_indices": candidates})
+        accounted.update(candidates)
+        if not candidates:
+            writer.writerow([status, obs, "", "", "", ""])
+        for i in candidates:
+            write_peak(status, obs, peaks[i])
+    missing = [i for i in range(len(peaks)) if i not in accounted]
+    for i in missing:
+        write_peak("calculated only", "", peaks[i])
+    result.update(kind="experimental_peak_position_comparison", peaks=peaks, peak_count=len(peaks),
+                  observed=rows, calculated_only_indices=missing, exports={"csv": output.getvalue()})
+    result["parameters"].update(tolerance_degrees=tolerance_degrees, min_relative_intensity=min_relative_intensity)
+    result["scope"] = "Candidate reflections at the supplied wavelength. Overlapping peaks, texture and stacking disorder can make several models compatible. No refinement or phase assignment."
+    return result

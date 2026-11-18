@@ -65,6 +65,16 @@ def main():
         page.locator('#appearance-options').evaluate('e=>e.open=true')
         assert page.locator('.identity-summary').is_visible()
         library=page.request.get(f"{base_url}/api/drawing/library").json()
+        page.wait_for_function("!document.getElementById('build').disabled")
+        page.locator('#tool-jump').select_option('balance')
+        page.locator('#calculate-balance').click()
+        page.get_by_text('Weigh block B',exact=True).wait_for()
+        assert page.locator('#balance-results tbody tr,#balance-results tr').count()>=3
+        page.screenshot(path=str(out/'reagent-balance.png'))
+        page.locator('#balance-mass').fill('20')
+        assert not page.locator('#balance-results').inner_text()
+        page.locator('#balance-dialog button[aria-label]').click()
+        checks.append('Tools opens the current reagent pair before rendering; editing the mass clears the previous weigh-out')
         page.wait_for_function("() => document.querySelector('#preview-a').complete && !document.querySelector('#preview-a').hidden")
         page.wait_for_function("() => document.querySelector('.brand-logo').complete && document.querySelector('.brand-logo').naturalWidth>0")
         if library.get("topology_catalog"):
@@ -220,9 +230,25 @@ def main():
         page.locator('.card-heading .sketch-open[data-block="a"]').click()
         page.wait_for_function("() => document.querySelector('#sketch-formula').textContent.length>0")
         page.screenshot(path=str(out/"cofdraw-monomer-editor.png"),full_page=True)
+        page.locator('#sketch-smiles').fill('Nc1ccc(O)cc1')
+        with page.expect_response('**/api/drawing/monomer'):
+            page.locator('#sketch-load-smiles').click()
+        page.locator('#monomer-canvas text').filter(has_text='NH2').wait_for()
+        assert 'OH' in page.locator('#monomer-canvas').text_content()
+        checks.append('Validated aminophenol shows the terminal amine and hydroxyl hydrogens in the sketch')
         page.locator("#sketch-clear").click()
         page.locator('[data-tool="ring-aromatic"]').click()
         canvas=page.locator("#monomer-canvas").bounding_box();page.mouse.click(canvas["x"]+canvas["width"]*.5,canvas["y"]+canvas["height"]*.5)
+        midpoint=page.evaluate("""() => {const b=sketcher.graph.bonds[0],a=sketcher.graph.atoms[b.a],c=sketcher.graph.atoms[b.b];
+            const p=sketcher.screen({x:(a.x+c.x)/2,y:(a.y+c.y)/2});const v=new DOMPoint(...p).matrixTransform(sketcher.svg.getScreenCTM());return [v.x,v.y];}""")
+        page.mouse.move(*midpoint)
+        assert page.locator('#monomer-canvas polyline').count()==1
+        page.mouse.click(*midpoint)
+        graph=page.evaluate("sketcher.exportGraph()")
+        fused=page.request.post(base_url+'/api/drawing/monomer',data={'graph':graph})
+        assert fused.ok and fused.json()['formula']=='C10H8' and '.' not in fused.json()['smiles']
+        page.locator('#monomer-canvas').press('Control+z')
+        checks.append("Fusing benzene onto a bond previews the outside ring, produces connected naphthalene and undoes as one edit")
         with page.expect_response("**/api/drawing/monomer") as checked:page.locator("#sketch-use").click()
         assert checked.value.status==200,checked.value.text()
         assert checked.value.json()["formula"]=="C6H6"

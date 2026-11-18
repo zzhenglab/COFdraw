@@ -94,6 +94,10 @@ def main():
             checks.append('Changing a periodic model clears previous pore results')
             page.locator('[data-science-tab="bet"]').click()
             rows=[(x,5*80*x/((1-x)*(1+79*x))) for x in [.03,.05,.07,.1,.15,.2,.25,.3,.35]]
+            page.locator('#bet-data').fill('0.05,2\n0.08,,3')
+            page.locator('#fit-bet').click()
+            page.wait_for_function("document.getElementById('science-status').textContent.includes('line 2')")
+            assert not page.locator('#bet-results').inner_text()
             page.locator('#bet-data').fill('\n'.join(f'{x},{n}' for x,n in rows));page.locator('#fit-bet').click()
             page.wait_for_function("document.getElementById('science-status').textContent.startsWith('BET fit calculated')")
             assert '487' in page.locator('#bet-results').inner_text();checks.append('BET fit on synthetic known-capacity fixture recovers expected area')

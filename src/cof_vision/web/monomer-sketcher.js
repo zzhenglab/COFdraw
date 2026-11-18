@@ -53,7 +53,11 @@ class MonomerSketcher {
       return;
     }
     if (event.altKey) return;
-    if (key === "delete" || key === "backspace") { event.preventDefault(); this.removeSelected(); }
+    if (key === "delete" || key === "backspace") { event.preventDefault(); this.selected=this.hover||this.selected; this.removeSelected(); }
+    else if (key === "+" || key === "-") {
+      const target=this.hover||this.selected;
+      if(target?.kind==="atom"){event.preventDefault();this.selected=target;this.charge((this.graph.atoms[target.index].charge||0)+(key==="+"?1:-1));}
+    }
     else if (key === "escape") { this.selected = null; this.draw(); }
     else if (["1", "2", "3", "d"].includes(key)) {
       event.preventDefault();
@@ -127,7 +131,7 @@ class MonomerSketcher {
   removeSelected() { if (!this.selected) return; this.connectivityEditable(); this.remember(); if (this.selected.kind === "atom") this.deleteAtom(this.selected.index); else this.graph.bonds.splice(this.selected.index, 1); this.selected = null; this.hover = null; this.changed(); }
   charge(value) { if (this.selected?.kind !== "atom") return false; this.remember(); this.graph.atoms[this.selected.index].charge = Math.max(-4, Math.min(8, Number(value))); this.changed(); return true; }
   ring(p, existing, count, aromatic) {
-    if (this.graph.atoms.length + count > 300) return;
+    if (this.graph.atoms.length + count - (existing >= 0 ? 1 : 0) > 300) throw new Error("The editor limit is 300 atoms.");
     this.remember(); const radius = 1.5 / (2 * Math.sin(Math.PI / count));
     const anchor = existing >= 0 ? this.graph.atoms[existing] : p;
     const angle = existing >= 0 ? this.openAngle(existing) : 0;
@@ -136,6 +140,35 @@ class MonomerSketcher {
     for (let i = 0; i < count; i++) ids.push(i === 0 && existing >= 0 ? existing : this.addAtom(this.endAt(center, angle + Math.PI - i * 2 * Math.PI / count, radius)));
     for (let i = 0; i < count; i++) this.addBond(ids[i], ids[(i + 1) % count], aromatic && i % 2 === 0 ? 2 : 1);
     this.selected = {kind: "atom", index: ids[0]}; this.changed();
+  }
+  fusedRingPoints(bond, count) {
+    const a=this.graph.atoms[bond.a], b=this.graph.atoms[bond.b];
+    const length=Math.hypot(b.x-a.x,b.y-a.y);
+    if(length<.01 || bond.kind || bond.order>2)return null;
+    const others=this.graph.atoms.filter(atom=>atom!==a&&atom!==b);
+    const sides=[1,-1].map(side=>{
+      const points=[];let cursor=b, angle=Math.atan2(b.y-a.y,b.x-a.x), crowding=0;
+      for(let i=0;i<count-2;i++){
+        angle+=side*2*Math.PI/count;
+        cursor=this.endAt(cursor,angle,length);points.push(cursor);
+        for(const atom of others)crowding+=Math.max(0,1.6-Math.hypot(cursor.x-atom.x,cursor.y-atom.y)/length)**2;
+      }
+      return {points,crowding};
+    });
+    const best=sides[0].crowding<=sides[1].crowding?sides[0]:sides[1];
+    return best.points.some(p=>others.some(atom=>Math.hypot(p.x-atom.x,p.y-atom.y)<.55*length))?null:best.points;
+  }
+  fuseRing(index,count,aromatic) {
+    const edge=this.graph.bonds[index], points=this.fusedRingPoints(edge,count);
+    if(!points)throw new Error("Choose a free outside bond for ring fusion.");
+    if(this.graph.atoms.length+points.length>300)throw new Error("The editor limit is 300 atoms.");
+    const hasPi=atom=>this.graph.bonds.some(b=>(b.a===atom||b.b===atom)&&b.order>1);
+    if(aromatic && hasPi(edge.a)!==hasPi(edge.b))throw new Error("Choose a shared edge with compatible conjugation, or draw the ring and set its bond orders.");
+    this.remember();
+    if(aromatic && !hasPi(edge.a))edge.order=2;
+    const path=[edge.b,...points.map(p=>this.addAtom(p)),edge.a];
+    for(let i=0;i<path.length-1;i++)this.addBond(path[i],path[i+1],aromatic && i%2===1?2:1);
+    this.selected={kind:"bond",index};this.changed();
   }
   openAngle(index) {
     if (index < 0) return Math.PI / 6;
@@ -171,7 +204,11 @@ class MonomerSketcher {
     if (event.button !== 0) return; event.preventDefault(); this.svg.focus();
     const p = this.position(event), atom = this.atomAt(p), bond = atom < 0 ? this.bondAt(p) : -1;
     if (this.tool !== "select") this.connectivityEditable();
-    if (this.tool.startsWith("ring")) { this.ring(p, atom, this.tool === "ring5" ? 5 : 6, this.tool === "ring-aromatic"); return; }
+    if (this.tool.startsWith("ring")) {
+      const count=this.tool==="ring5"?5:6, aromatic=this.tool==="ring-aromatic";
+      if(bond>=0)this.fuseRing(bond,count,aromatic);else this.ring(p,atom,count,aromatic);
+      return;
+    }
     if (this.tool === "erase") { this.selected = this.hit(p); this.removeSelected(); return; }
     if (this.tool === "atom") { this.placeElement(p, atom); return; }
     if (this.tool === "select") {
@@ -227,15 +264,40 @@ class MonomerSketcher {
     const b = drag.target >= 0 ? drag.target : this.addAtom(drag.end);
     this.addBond(a, b, this.order, this.kind); this.selected = {kind: "atom", index: b}; this.changed();
   }
-  atomLabel(atom) {
-    const hydrogens = atom.explicit_hs || 0;
+  atomLabel(atom, index=this.graph.atoms.indexOf(atom)) {
+    const bonds=this.graph.bonds.filter(b=>b.a===index||b.b===index);
+    const normalValence={N:3,O:2};
+    let hydrogens=atom.explicit_hs||0;
+    if(normalValence[atom.element] && !atom.charge && !atom.no_implicit && !atom.radical_electrons && bonds.every(b=>!b.kind&&Number.isInteger(b.order))){
+      const used=bonds.reduce((sum,b)=>sum+b.order,0);
+      hydrogens=Math.max(hydrogens,normalValence[atom.element]-used);
+    }
     const charge = atom.charge ? (Math.abs(atom.charge) > 1 ? Math.abs(atom.charge) : "") + (atom.charge > 0 ? "+" : "−") : "";
-    return `${atom.isotope || ""}${atom.element}${hydrogens ? "H" + (hydrogens > 1 ? hydrogens : "") : ""}${charge}`;
+    return `${atom.isotope || ""}${atom.element}${hydrogens ? "H" + (hydrogens > 1 ? hydrogens : "") : ""}${charge}${"•".repeat(atom.radical_electrons||0)}`;
+  }
+  ringInterior(edge,neighbors) {
+    const queue=[edge.a],parent=new Map([[edge.a,-1]]);
+    for(let i=0;i<queue.length&&!parent.has(edge.b);i++){
+      for(const next of neighbors[queue[i]]){
+        if((queue[i]===edge.a&&next===edge.b)||parent.has(next))continue;
+        parent.set(next,queue[i]);queue.push(next);
+      }
+    }
+    if(!parent.has(edge.b))return null;
+    let x=0,y=0,count=0;
+    for(let i=edge.b;i!==-1;i=parent.get(i)){const p=this.graph.atoms[i];x+=p.x;y+=p.y;count++;}
+    return this.screen({x:x/count,y:y/count});
   }
   node(name, attrs = {}, text) { const e = document.createElementNS("http://www.w3.org/2000/svg", name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); if (text !== undefined) e.textContent = text; return e; }
   draw() {
     const s = this.svg; s.replaceChildren();
+    if(this.tool.startsWith("ring") && this.hover?.kind==="bond"){
+      const edge=this.graph.bonds[this.hover.index], points=this.fusedRingPoints(edge,this.tool==="ring5"?5:6);
+      if(points)s.append(this.node("polyline",{points:[this.graph.atoms[edge.b],...points,this.graph.atoms[edge.a]].map(p=>this.screen(p).join(",")).join(" "),fill:"none",stroke:"#258473","stroke-width":1.8,"stroke-dasharray":"4 3","pointer-events":"none"}));
+    }
     if (!this.graph.atoms.length && !this.drag) { s.append(this.node("text", {x:320,y:165,"text-anchor":"middle",class:"sketch-placeholder"}, "Choose a ring or draw a bond")); s.append(this.node("text", {x:320,y:188,"text-anchor":"middle",class:"sketch-placeholder small"}, "Click an atom to change its element. Drag to connect.")); }
+    const neighbors=this.graph.atoms.map(()=>[]);
+    for(const b of this.graph.bonds){neighbors[b.a].push(b.b);neighbors[b.b].push(b.a);}
     this.graph.bonds.forEach((b, index) => {
       const a = this.screen(this.graph.atoms[b.a]), c = this.screen(this.graph.atoms[b.b]); const d = Math.hypot(c[0]-a[0],c[1]-a[1]) || 1, nx = -(c[1]-a[1])/d, ny = (c[0]-a[0])/d;
       if (this.selected?.kind === "bond" && this.selected.index === index) s.append(this.node("line",{x1:a[0],y1:a[1],x2:c[0],y2:c[1],stroke:"#b8e2d5","stroke-width":12,"stroke-linecap":"round"}));
@@ -249,6 +311,14 @@ class MonomerSketcher {
         s.append(this.node("path",{d:`M ${x-ux*7+nx*3} ${y-uy*7+ny*3} L ${x} ${y} L ${x-ux*7-nx*3} ${y-uy*7-ny*3}`,class:"sketch-dative-arrow"}));
         return;
       }
+      const center=(b.order===2||b.order===1.5)?this.ringInterior(b,neighbors):null;
+      if(center){
+        const side=(center[0]-a[0])*nx+(center[1]-a[1])*ny>=0?1:-1;
+        const offset=side*Math.min(4,d*.12),trim=Math.min(5,d*.14);
+        s.append(this.node("line",{x1:a[0],y1:a[1],x2:c[0],y2:c[1],stroke:"#243c3a","stroke-width":1.8}));
+        s.append(this.node("line",{x1:a[0]+nx*offset+ny*trim,y1:a[1]+ny*offset-nx*trim,x2:c[0]+nx*offset-ny*trim,y2:c[1]+ny*offset+nx*trim,stroke:"#243c3a","stroke-width":1.8,...(b.order===1.5?{"stroke-dasharray":"4 3"}:{})}));
+        return;
+      }
       const offsets = b.order === 3 ? [-4,0,4] : b.order === 2 || b.order === 1.5 ? [-2.5,2.5] : [0];
       offsets.forEach((o,j) => s.append(this.node("line",{x1:a[0]+nx*o,y1:a[1]+ny*o,x2:c[0]+nx*o,y2:c[1]+ny*o,stroke:"#243c3a","stroke-width":1.8,"stroke-linecap":"round",...(b.order===1.5&&j===1?{"stroke-dasharray":"4 3"}:{})})));
     });
@@ -256,9 +326,9 @@ class MonomerSketcher {
       const [x,y] = this.screen(atom), selected = this.selected?.kind === "atom" && this.selected.index === index;
       if (selected) s.append(this.node("circle",{cx:x,cy:y,r:12,fill:"#d9f1e8",stroke:"#2b8770"}));
       else if (this.hover?.kind === "atom" && this.hover.index === index) s.append(this.node("circle",{cx:x,cy:y,r:12,class:"sketch-atom-hover"}));
-      const degree = this.graph.bonds.filter(b=>b.a===index||b.b===index).length;
-      if (atom.element !== "C" || atom.charge || atom.isotope || atom.explicit_hs || !degree) {
-        const label = this.atomLabel(atom);
+      const degree = neighbors[index].length;
+      if (atom.element !== "C" || atom.charge || atom.isotope || atom.explicit_hs || atom.radical_electrons || !degree) {
+        const label = this.atomLabel(atom,index);
         s.append(this.node("rect",{x:x-8*label.length/2,y:y-10,width:8*label.length,height:20,fill:"white"}));
         s.append(this.node("text",{x,y:y+5,"text-anchor":"middle",fill:({N:"#3564a6",O:"#b84444",S:"#9a760d",F:"#39834a",Cl:"#39834a",Br:"#934533"})[atom.element]||"#243c3a",class:"sketch-atom"},label));
       } else if (selected) s.append(this.node("circle",{cx:x,cy:y,r:2.5,fill:"#206b56"}));

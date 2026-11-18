@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - 2026-11-18
+
+- Fuse five- or six-membered rings onto an existing outer bond with a placement preview. Ring double bonds use a shorter inner stroke. The sketch shows terminal amine and hydroxyl hydrogens and preserves radical electrons. Hover to change atom charge or delete an item.
+- Open drawing and analysis tools from the workspace header. Use the arrow keys in the structure laboratory to switch tabs.
+- Calculate a two-monomer weigh-out using linkage-specific functional groups, purity and chosen site equivalents.
+- Compare measured PXRD positions with the current periodic model and export candidate reflections, unmatched centers and model assumptions.
+- Malformed BET input now identifies the affected line.
+
 ## 0.8.6 - 2026-11-18
 
 - Build periodic isotope-labelled designs and organic sulfur, phosphorus, silicon and halogen fragments with checked geometry. Preserve isotope masses in crystal analysis, CIF and extended XYZ.

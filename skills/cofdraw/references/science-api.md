@@ -110,3 +110,8 @@ For `solubility`, supply exactly one `monomer_id` or `smiles`. Discover solvent 
 No bundled endpoint runs DFT or xTB, predicts a band gap, or certifies an experimental crystal. For detailed method equations and bounded validation, read `docs/scientific-methods.md` in the repository. Return the actual files with their method, units, assumptions, warnings and unresolved uncertainties.
 
 See [agent-workflows.md](agent-workflows.md) for precise local catalog queries, moving an actual model's `structure` into inspection/PXRD/screening requests, and rereading saved reports by `report_id`. Current schemas from `/science/capabilities` take precedence over examples if the application version changes.
+### Reagent balance and measured diffraction peaks
+
+Use `science reagent-balance` with `monomer_a`, `monomer_b`, `linkage` and `mass_a_mg`. Optional `purity_a_percent` and `purity_b_percent` default to 100 wt %. The default `b_site_equivalents` is one B site per A site. The response keeps the supplied A/B order and reports weights, molecular amounts and reactive-site amounts. The balanced molecule ratio is the inverse ratio of the two site counts. Use this as a feed calculation for the supplied molecular forms.
+
+Use `science pxrd-peaks` with the usual periodic PXRD input and `observed_two_theta`, a list of measured peak centers in degrees. Set `tolerance_degrees` and `min_relative_intensity` explicitly when comparing models. Each returned candidate index points into the returned filtered `peaks` list. The CSV and JSON retain unaccounted peaks on either side. Reflection matches alone cannot identify a unique structure.

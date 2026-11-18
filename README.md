@@ -36,7 +36,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.8.6 |
+| Feature | Included in v0.9.0 |
 | --- | --- |
 | Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
 | Optional LLM API | GPT, Claude or a compatible API can propose catalog parameters for local chemistry checks |
@@ -54,6 +54,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 | Monomer properties | RDKit descriptors, Gasteiger charges, ETKDG conformers, MMFF/UFF optimization, XYZ/SDF |
 | COF quick checks | Check the displayed finite atoms without a CIF; periodic models additionally provide density, cell and network diagnostics |
 | Powder diffraction | Periodic PXRD with hkl; finite Debye scattering; compare chosen stacking arrangements and export CSV |
+| Bench and characterization | Reagent weigh-outs from reactive-site equivalents and purity. Measured PXRD peak checks with candidate hkl and unmatched peaks. |
 | Candidate comparison | Up to eight CIFs under common screening settings; CSV/JSON reports |
 | Evidence and automation | Agent catalog queries, request schemas, saved-report retrieval and reusable agent skill |
 

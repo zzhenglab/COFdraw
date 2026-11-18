@@ -96,3 +96,8 @@ def test_catalog_identity_requires_current_recipe_and_exact_named_precursor_set(
         metadata["monomers"][0]["smiles"] = "CO"
         catalog.write_text(json.dumps({"source_metadata": {"source": metadata}}))
         assert client.get("/api/drawing/sources/source").status_code == 422
+def test_editor_preserves_radical_electrons_across_graph_round_trip():
+    from cof_vision.cofdraw_core import normalize_monomer
+    radical = normalize_monomer(smiles="[O]c1ccccc1")
+    assert radical["graph"]["atoms"][0]["radical_electrons"] == 1
+    assert normalize_monomer(graph=radical["graph"])["smiles"] == radical["smiles"]

@@ -21,6 +21,8 @@
       if(id==='porosity-model-state'&&!periodic&&available&&C.origin==='drawing'){const b=text('button','Measure this drawing’s pore','button outline');b.id='measure-current-finite-pore';b.addEventListener('click',()=>C.work(async api=>{const result=await api('science/measure',C.drawingRequest()),target=$('porosity-results');target.replaceChildren();C.metric(target,'Drawing-plane opening / Å',number(result.diameter_angstrom,2));C.metric(target,'Drawing-plane opening / nm',number(result.diameter_angstrom/10,2));C.note(target,result.scope);C.note(target,'This estimates one opening in the drawing plane. PLD, LCD, density and periodic pore volume require an explicit periodic structure.');downloads(target,result);C.details(target,result);C.status('Measured the current drawing’s opening without a CIF.');}));root.append(b);}
     }
     $('screen-current').disabled=!available;$('calculate-pxrd').disabled=!available;
+    $('check-peaks').disabled=!periodic;
+    $('check-peaks').title=periodic?'':'Build a periodic cell to check measured reflections.';
     $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing');
     $('screen-pores').disabled=!periodic;
     $('calculate-pores').disabled=!periodic;
@@ -95,7 +97,7 @@
       const result=await api('science/screen',{entries,include_porosity:$('screen-pores').checked});showComparison(result);warnings($('comparison-results'),failures);
     });
   });
-  function drawPattern(profile,series=[]){
+  function drawPattern(profile,series=[],observations=[]){
     const root=$('pxrd-plot');root.replaceChildren();const ns='http://www.w3.org/2000/svg';
     const svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 600 285');svg.setAttribute('role','img');svg.setAttribute('aria-label','Calculated model powder diffraction pattern');
     const xs=profile.two_theta_degrees,ys=profile.intensity,min=xs[0],max=xs.at(-1),peak=Math.max(...ys,1);
@@ -108,6 +110,12 @@
     const colors=['#217d70','#c66a46','#7165b5','#2d80b5','#ad5382'];
     const lines=series.length?series:[{profile}];
     lines.forEach((row,index)=>element('path',{d:row.profile.two_theta_degrees.map((x,i)=>(i?'L':'M')+point(x,row.profile.intensity[i]).join(',')).join(' '),fill:'none',stroke:colors[index%colors.length],'stroke-width':1.5,'stroke-linejoin':'round'}));
+    for(const observation of observations){
+      if(observation.status==='outside range')continue;
+      const x=point(observation.observed_two_theta,0)[0];
+      const tick=element('line',{x1:x,x2:x,y1:223,y2:235,stroke:observation.status==='unmatched'?'#ae4833':'#4f548b','stroke-width':2});
+      const title=document.createElementNS(ns,'title');title.textContent=observation.observed_two_theta+'° · '+observation.status;tick.append(title);
+    }
     root.append(svg);
     if(series.length){const legend=text('div','','diffraction-legend');series.forEach((row,index)=>{const label=text('span',row.label);label.style.borderColor=colors[index%colors.length];legend.append(label);});root.append(legend);}
   }
@@ -120,6 +128,28 @@
     else C.note(root,result.scope);
     warnings(root,result.warnings);downloads(root,result);C.details(root,{method:result.method,parameters:result.parameters});
     C.status(periodic?'Model PXRD calculated from the periodic cell. CSV and JSON are ready.':'Finite-stack scattering calculated from the displayed atoms. CSV and JSON are ready; no periodic crystal was inferred.');
+  }));
+  $('check-peaks').addEventListener('click',()=>C.work(async api=>{
+    const input=$('observed-peaks').value.trim();
+    const observed=input?input.split(/[\s,;]+/).map(Number):[];
+    if(!observed.length||observed.length>128||observed.some(v=>!Number.isFinite(v)||v<=0||v>=180))throw new Error('Enter 1–128 peak centers in degrees, separated by spaces or commas.');
+    const fwhm=Number($('xrd-fwhm').value);
+    const result=await api('science/pxrd-peaks',{structure:structure(),...diffractionParameters(),fwhm,step:Math.min(.02,fwhm/2),
+      observed_two_theta:observed,tolerance_degrees:Number($('peak-tolerance').value),min_relative_intensity:Number($('peak-floor').value)});
+    drawPattern(result.profile,[],result.observed);
+    const root=$('pxrd-results');root.replaceChildren();
+    C.note(root,'Ticks mark measured peak centers. Red ticks have no calculated center within tolerance.');
+    table(root,['Observed 2θ / °','Candidate centers / °','Result'],result.observed.map(row=>[number(row.observed_two_theta),
+      row.candidate_indices.map(i=>number(result.peaks[i].two_theta_degrees)).join(', ')||'—',row.status]));
+    C.note(root,result.calculated_only_indices.length+' calculated centers above the intensity cutoff have no measured counterpart.');
+    if(result.calculated_only_indices.length){
+      const details=text('details','');details.append(text('summary','Unmatched calculated centers'));
+      const missing=result.calculated_only_indices.map(i=>result.peaks[i]).sort((a,b)=>b.intensity-a.intensity);
+      table(details,['2θ / °','Relative I / %','Representative h k l'],missing.slice(0,20).map(p=>[number(p.two_theta_degrees),number(p.intensity,1),p.hkls[0].join(' ')]));
+      if(missing.length>20)C.note(details,'Showing the strongest 20. The CSV contains every center.');
+      root.append(details);
+    }
+    C.note(root,result.scope);downloads(root,result);C.status('Peak comparison complete. CSV includes candidate Miller indices.');
   }));
   $('compare-pxrd-stacks').addEventListener('click',()=>C.work(async(api,check)=>{
     const periodic=Boolean(C.structure), origin=C.origin;
@@ -163,7 +193,58 @@
   });
   function clearAnalysis(){for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
   window.addEventListener('cofdraw:structure',()=>{clearAnalysis();syncModelState();});
-  for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max'])$(id).addEventListener('input',()=>{C.invalidate('',false);$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
+  for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max','observed-peaks','peak-tolerance','peak-floor'])$(id).addEventListener('input',()=>{C.invalidate('',false);$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
   $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
+  const balanceDialog=$('balance-dialog');
+  let balanceRevision=0;
+  function balanceAvailable(){return !sourceMode() && Boolean(checkedMonomer('a') && checkedMonomer('b'));}
+  function clearBalance(){
+    balanceRevision++;$('balance-results').replaceChildren();$('balance-status').textContent='';
+    $('calculate-balance').disabled=!balanceAvailable();
+  }
+  function refreshBalancePair(){
+    clearBalance();
+    const design=balanceAvailable();
+    $('balance-pair').textContent=design?['a','b'].map(slot=>slot.toUpperCase()+' · '+($('label-'+slot).value||'custom monomer')).join('   +   '):'Choose a pair in the manual builder to calculate a feed.';
+  }
+  function openBalance(){
+    refreshBalancePair();
+    balanceDialog.showModal();$('balance-mass').focus();
+  }
+  window.addEventListener('cofdraw:state',()=>{if(balanceDialog.open)refreshBalancePair();});
+  $('open-balance').addEventListener('click',openBalance);
+  $('balance-form').addEventListener('input',clearBalance);
+  balanceDialog.addEventListener('close',clearBalance);
+  $('balance-form').addEventListener('submit',async event=>{
+    event.preventDefault();if(!balanceAvailable())return;clearBalance();const revision=balanceRevision;
+    $('calculate-balance').disabled=true;
+    try{
+      const result=await S.api('science/reagent-balance',{monomer_a:$('smiles-a').value,monomer_b:$('smiles-b').value,linkage:$('linkage').value,
+        mass_a_mg:Number($('balance-mass').value),purity_a_percent:Number($('purity-a').value),purity_b_percent:Number($('purity-b').value),b_site_equivalents:Number($('balance-eq').value)});
+      if(revision!==balanceRevision||!balanceDialog.open)return;
+      const root=$('balance-results'),[a,b]=result.reagents;
+      C.metric(root,'Weigh block B',Number(b.weigh_mg.toPrecision(5))+' mg');
+      C.note(root,'Balanced monomer ratio A : B = '+result.balanced_molar_ratio_a_b.join(' : '));
+      table(root,['Block','Formula','Sites','M / g mol⁻¹','Weigh / mg','Molecule / mmol','Sites / mmol'],[a,b].map(r=>[r.block,r.formula,r.sites_per_molecule,number(r.molar_mass_g_mol),number(r.weigh_mg,5),number(r.monomer_mmol,6),number(r.site_mmol,6)]));
+      C.note(root,result.scope);downloads(root,result);
+    }catch(error){if(revision===balanceRevision)$('balance-status').textContent=error.message;}
+    finally{if(revision===balanceRevision)$('calculate-balance').disabled=false;}
+  });
+  $('tool-jump').addEventListener('change',event=>{
+    const name=event.target.value;event.target.value='';
+    if(name==='balance'){openBalance();return;}
+    if(name==='library'||name.startsWith('sketch-')){
+      $('mode-manual').click();
+      if(name==='library')$('open-monomer-library').click();
+      else document.querySelector('.sketch-open[data-block="'+name.slice(-1)+'"]').click();
+      return;
+    }
+    if(!name)return;
+    if(name==='monomer'||name==='bet')$('science-dialog').showModal();
+    else if(C.structure||C.finiteModel)$('science-dialog').showModal();
+    else $('open-science').click();
+    C.tab(name);
+    document.querySelector('[data-science-tab="'+name+'"]').focus();
+  });
   syncModelState();
 })();

@@ -158,6 +158,23 @@ class PowderDrawing(BaseModel):
     b_iso: float = Field(default=0, ge=0, le=20)
 
 
+class PeakComparison(PowderDrawing):
+    observed_two_theta: list[Annotated[float, Field(gt=0, lt=180)]] = Field(min_length=1, max_length=128)
+    tolerance_degrees: float = Field(default=.15, gt=0, le=1)
+    min_relative_intensity: float = Field(default=1, ge=0, le=100)
+
+
+class ReagentBalance(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    monomer_a: str = Field(min_length=1, max_length=4000)
+    monomer_b: str = Field(min_length=1, max_length=4000)
+    linkage: str = Field(min_length=1, max_length=100)
+    mass_a_mg: float = Field(ge=.000001, le=1_000_000)
+    purity_a_percent: float = Field(default=100, ge=.000001, le=100)
+    purity_b_percent: float = Field(default=100, ge=.000001, le=100)
+    b_site_equivalents: float = Field(default=1, ge=.000001, le=100)
+
+
 class ScreenEntry(BaseModel):
     model_config = ConfigDict(extra='forbid')
     name: str = Field(default='Structure', max_length=100)
@@ -823,7 +840,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         from .cofdraw_solubility import DATASET_DOI, SOLVENT_NAMES
         models={'model':ModelDrawing,'patch':Patch3D,'networks':NetworkHypothesis,'monomer':MonomerAnalysis,
                 'solubility':SolubilityScreen,'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
-                'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
+                'pxrd':PowderDrawing,'pxrd-peaks':PeakComparison,'reagent-balance':ReagentBalance,'screen':ScreenBatch,'query':KnowledgeQuery,
                 'finite-inspect':FiniteInspection,'finite-powder':FinitePowder,'stacking':PeriodicStacking,'periodic-options':RenderDrawing,
                 'measure':RenderDrawing,'build-periodic':PeriodicFromDrawing}
         return {'engine_version':__version__, 'schema_version':'cofdraw-capabilities-1',
@@ -926,6 +943,26 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             with lock:result=powder_xrd(**request.model_dump())
             return scientific_result(result,'pxrd',request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/pxrd-peaks')
+    def peak_comparison(request: PeakComparison):
+        from .cofdraw_characterization import compare_powder_peaks
+        try:
+            if len(json.dumps(request.structure)) > 2_000_000:
+                raise ValueError('Structure input limit is 2 MB')
+            with lock:
+                result = compare_powder_peaks(**request.model_dump())
+            return scientific_result(result, 'pxrd-peaks', request.model_dump())
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @router.post('/science/reagent-balance')
+    def weigh_out(request: ReagentBalance):
+        from .cofdraw_bench import reagent_balance
+        try:
+            return scientific_result(reagent_balance(**request.model_dump()), 'reagent-balance', request.model_dump())
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @router.post('/science/screen')
     def screen(request: ScreenBatch):

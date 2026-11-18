@@ -57,6 +57,11 @@ The existing periodic validator allows at most 2000 fully occupied sites. XRD ad
 
 Tests cover cubic Bragg positions and multiplicities, body- and face-centered systematic absences, two-element amplitude interference, triclinic reciprocal metrics, origin and rigid-rotation invariance, supercell extinction/invariance, the squared Debye-Waller attenuation, Gaussian width, CSV fidelity, reproducibility, missing form factors, and bounded failures. The four bundled 2D/3D reticular models are exercised using their actual coordinates. Reference scattering values were independently obtained from Gemmi 0.7.5; CI does not require Gemmi.
 
+## Measured peak positions
+
+The PXRD panel compares user-picked 2θ centers against the current periodic model at the selected wavelength. A symmetric angular window and a cutoff on relative integrated reflection intensity control inclusion. The CSV lists every candidate family with its signed observed-minus-calculated deviation, measured peaks outside the model range, unmatched observations and calculated-only centers. More than one observation may overlap the same candidate. The procedure leaves the cell and zero point fixed. Preferred orientation, stacking disorder and a limited number of reflections can leave several structures consistent with the data. [Statistical representation of stacking disorder in layered COFs](https://doi.org/10.1021/acs.chemmater.1c04365)
+
+
 ## Coefficient provenance and license
 
 Application algorithms and tests retain the repository's MIT license. The generated [coefficient module](https://github.com/zzhenglab/COFdraw/blob/main/src/cof_vision/cofdraw_xray_factors.py) retains its upstream MPL-2.0 notice. It comes from [Gemmi 0.7.5 `include/gemmi/it92.hpp`](https://github.com/project-gemmi/gemmi/blob/v0.7.5/include/gemmi/it92.hpp), copyright Global Phasing Ltd. The complete upstream license is included in [Gemmi-MPL-2.0.txt](third-party-licenses/Gemmi-MPL-2.0.txt). The source module remains available in this repository alongside the executable distribution's documentation.

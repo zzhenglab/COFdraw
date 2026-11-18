@@ -94,6 +94,10 @@ def normalize_monomer(*, smiles=None, molblock=None, graph=None, clean_layout=Fa
         for i, row in enumerate(atoms):
             atom = Chem.Atom(row["element"])
             atom.SetFormalCharge(int(row.get("charge", 0)))
+            radicals = row.get("radical_electrons", 0)
+            if type(radicals) is not int or not 0 <= radicals <= 8:
+                raise ValueError("Radical electron count must be an integer between 0 and 8")
+            atom.SetNumRadicalElectrons(radicals)
             atom.SetIsotope(int(row.get("isotope", 0)))
             atom.SetNumExplicitHs(int(row.get("explicit_hs", 0)))
             atom.SetNoImplicit(bool(row.get("no_implicit", False)))
@@ -134,7 +138,7 @@ def normalize_monomer(*, smiles=None, molblock=None, graph=None, clean_layout=Fa
     # Explicit Kekulé bonds make ordinary benzene bond/atom edits unambiguous.
     editable = Chem.Mol(mol); Chem.Kekulize(editable, clearAromaticFlags=True)
     pos = editable.GetConformer().GetPositions()
-    result_graph = {"atoms": [{"element": a.GetSymbol(), "x": float(pos[a.GetIdx()][0]), "y": float(pos[a.GetIdx()][1]), "charge": a.GetFormalCharge(), "isotope": a.GetIsotope(), "aromatic": a.GetIsAromatic(), "chiral_tag": int(a.GetChiralTag()), "explicit_hs": a.GetNumExplicitHs(), "no_implicit": a.GetNoImplicit()} for a in editable.GetAtoms()],
+    result_graph = {"atoms": [{"element": a.GetSymbol(), "x": float(pos[a.GetIdx()][0]), "y": float(pos[a.GetIdx()][1]), "charge": a.GetFormalCharge(), "isotope": a.GetIsotope(), "aromatic": a.GetIsAromatic(), "chiral_tag": int(a.GetChiralTag()), "explicit_hs": a.GetNumExplicitHs(), "no_implicit": a.GetNoImplicit(), **({"radical_electrons": a.GetNumRadicalElectrons()} if a.GetNumRadicalElectrons() else {})} for a in editable.GetAtoms()],
                     "bonds": [{"a": b.GetBeginAtomIdx(), "b": b.GetEndAtomIdx(), "order": b.GetBondTypeAsDouble(),
                                **({"kind": "dative"} if b.GetBondType() == Chem.BondType.DATIVE else {}),
                                "stereo": int(b.GetStereo()), "stereo_atoms": list(b.GetStereoAtoms()),

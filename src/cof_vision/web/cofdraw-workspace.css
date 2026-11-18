@@ -34,3 +34,13 @@
 #pxrd-plot,#pxrd-results{grid-column:1/-1;min-width:0}
 @media(min-width:760px){.canvas-panel{padding-top:18px;padding-bottom:12px}.canvas-viewport{width:min(100%,max(340px,calc(100dvh - 300px)));height:auto;min-height:0}.appearance-panel{padding-bottom:12px}.identity-summary{max-width:none}.canvas-toolbar h2{font-size:19px}}
 @media(max-width:759px){.canvas-viewport{width:100%;height:auto;min-height:0}.identity-summary{padding:0 12px}.output-bar{display:flex}.output-bar .export-buttons{width:auto;margin-top:0}.canvas-status{font-size:10px}}
+#tool-jump{font:inherit;font-size:13px;color:#25483c;background:#fff;border:1px solid #cbdad3;border-radius:6px;padding:7px 5px;max-width:79px;cursor:pointer}
+#tool-jump:focus-visible,.sketch-tools button:focus-visible{outline:2px solid #23836e;outline-offset:2px}
+#balance-dialog{width:min(610px,94vw)}
+#balance-dialog .input-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#balance-dialog .science-section{margin:4px 0 14px}
+#balance-dialog .materials-table{grid-column:1/-1;overflow:auto}
+#balance-results:empty,#balance-status:empty{display:none}
+#peak-check{margin:8px 0}#peak-check .input-row{margin-top:8px}
+.sketch-tools .ring-glyph{height:18px;width:18px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linejoin:round}
+@media(max-width:480px){#tool-jump{font-size:12px;max-width:65px}.file-actions{flex-wrap:wrap}}

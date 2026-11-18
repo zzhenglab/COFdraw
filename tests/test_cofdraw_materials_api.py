@@ -30,6 +30,38 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
 
+def test_reagent_balance_uses_groups_mass_purity_and_the_user_order(materials):
+    client, _ = materials
+    aldehyde, diamine = 'O=Cc1cc(C=O)cc(C=O)c1', 'Nc1ccc(N)cc1'
+    payload = dict(monomer_a=diamine, monomer_b=aldehyde, linkage='imine', mass_a_mg=10,
+                   purity_a_percent=90, purity_b_percent=80, b_site_equivalents=1.2)
+    result = request(client, 'reagent-balance', payload)
+    a, b = result['reagents']
+    assert result['balanced_molar_ratio_a_b'] == [3, 2] and a['weigh_mg'] == pytest.approx(10)
+    assert a['monomer_mmol'] == pytest.approx(9 / 108.144, rel=1e-4)
+    assert b['site_mmol'] == pytest.approx(1.2 * a['site_mmol'])
+    assert b['weigh_mg'] == pytest.approx((9 / 108.144) * 2 / 3 * 1.2 * 162.144 / .8, rel=1e-4)
+    assert client.get(result['downloads']['json']).json()['inputs']['monomer_a'] == diamine
+    for change in [{'monomer_b':diamine}, {'purity_b_percent':0}, {'monomer_a':diamine+'.O'}]:
+        assert client.post('/api/drawing/science/reagent-balance',json={**payload,**change}).status_code==422
+
+
+def test_observed_peak_comparison_exports_both_sides_and_preserves_hkls(materials):
+    client, _ = materials
+    pos = math.degrees(2 * math.asin(1.5406 / 10))
+    payload = dict(structure=carbon_cell(), observed_two_theta=[1, pos+.04, 19.9], two_theta_min=10,
+                   two_theta_max=44, tolerance_degrees=.05, min_relative_intensity=1)
+    result = request(client, 'pxrd-peaks', payload)
+    outside, within, missing = result['observed']
+    assert [r['status'] for r in [outside,within,missing]] == ['outside range','one center','unmatched']
+    peak=result['peaks'][within['candidate_indices'][0]]
+    assert peak['two_theta_degrees'] == pytest.approx(pos) and len(peak['hkls'])==6
+    assert result['calculated_only_indices']
+    exported=client.get(result['downloads']['csv']).text
+    assert 'calculated only' in exported and 'unmatched' in exported
+    assert client.post('/api/drawing/science/pxrd-peaks',json={**payload,'observed_two_theta':[pos,pos]}).status_code==422
+
+
 def request(client, path, payload):
     response = client.post('/api/drawing/science/'+path, json=payload)
     assert response.status_code == 200, response.text

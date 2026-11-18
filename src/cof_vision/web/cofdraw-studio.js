@@ -23,8 +23,14 @@
     const api=async(path,payload)=>{check();const result=await S.api(path,payload);check();return result;};
     try{await task(api,check);}catch(e){if(e.name!=='ObsoleteScienceResult'&&activeJob===job)status(e.message,true);}finally{if(activeJob===job){activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');syncSource();}}
   }
-  function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.scienceTab===name)));document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();}
+  function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>{const active=b.dataset.scienceTab===name;b.setAttribute('aria-selected',String(active));b.setAttribute('aria-controls','science-'+b.dataset.scienceTab);b.tabIndex=active?0:-1;});document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();}
   document.querySelectorAll('[data-science-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.scienceTab)));
+  document.querySelector('.science-tabs').addEventListener('keydown',event=>{
+    const buttons=[...event.currentTarget.querySelectorAll('[role=tab]')], i=buttons.indexOf(event.target);
+    if(i<0||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    const idx=event.key==='Home'?0:event.key==='End'?buttons.length-1:(i+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
+    event.preventDefault();buttons[idx].click();buttons[idx].focus();
+  });
   $('open-science').addEventListener('click',()=>{
     $('science-dialog').showModal();
     tab('model');
@@ -165,7 +171,16 @@
     window.dispatchEvent(new CustomEvent('cofdraw:geometry',{detail:r}));
     status('Geometric properties complete. Review diameter bounds, effective grid, and accessibility qualifications.');
   }));
-  $('fit-bet').addEventListener('click',()=>work(async api=>{const rows=$('bet-data').value.trim().split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map(line=>line.split(/[\s,;\t]+/).map(Number)).filter(row=>row.length>=2&&row.slice(0,2).every(Number.isFinite));const r=await api('science/bet',{relative_pressures:rows.map(r=>r[0]),uptake_mmol_g:rows.map(r=>r[1]),fit_min:Number($('bet-min').value),fit_max:Number($('bet-max').value),cross_section_nm2:Number($('bet-cross-section').value)});const el=$('bet-results');report(el,r,{surface_area_m2_g:'BET area / m² g⁻¹',bet_area_m2_g:'BET area / m² g⁻¹',monolayer_capacity_mmol_g:'Monolayer capacity / mmol g⁻¹',C:'BET C',r_squared:'R²',points_used:'Fit points'});note(el,r.all_basic_checks_pass?'Basic consistency checks pass.':'One or more basic consistency checks fail. Do not report this fit as a validated BET area.',!r.all_basic_checks_pass);for(const warning of r.warnings||[])note(el,warning,true);details(el,r);if(r.downloads?.json){const b=document.createElement('button');b.className='button outline';b.textContent='Save BET report';b.addEventListener('click',()=>S.saveExport(r.downloads.json,'json'));el.append(b);}status('BET fit calculated from your supplied isotherm. Check the consistency criteria before reporting the area.');}));
+  $('fit-bet').addEventListener('click',()=>work(async api=>{const rows=[];
+    $('bet-results').replaceChildren();
+    for(const [i,raw] of $('bet-data').value.split(/\r?\n/).entries()){
+      const line=raw.trim();if(!line||line.startsWith('#'))continue;
+      if(!rows.length && /^(p\s*\/\s*p[0₀o]|relative[ _]pressure)/i.test(line))continue;
+      const fields=line.split(line.includes(',')?',':line.includes(';')?';':/\s+/).map(field=>field.trim());
+      if(fields.length!==2||fields.some(field=>!field||!Number.isFinite(Number(field))))throw new Error('BET data line '+(i+1)+' needs two numbers: relative pressure and uptake in mmol/g.');
+      rows.push(fields.map(Number));
+    }
+    const r=await api('science/bet',{relative_pressures:rows.map(r=>r[0]),uptake_mmol_g:rows.map(r=>r[1]),fit_min:Number($('bet-min').value),fit_max:Number($('bet-max').value),cross_section_nm2:Number($('bet-cross-section').value)});const el=$('bet-results');report(el,r,{surface_area_m2_g:'BET area / m² g⁻¹',bet_area_m2_g:'BET area / m² g⁻¹',monolayer_capacity_mmol_g:'Monolayer capacity / mmol g⁻¹',C:'BET C',r_squared:'R²',points_used:'Fit points'});note(el,r.all_basic_checks_pass?'Basic consistency checks pass.':'One or more basic consistency checks fail. Do not report this fit as a validated BET area.',!r.all_basic_checks_pass);for(const warning of r.warnings||[])note(el,warning,true);details(el,r);if(r.downloads?.json){const b=document.createElement('button');b.className='button outline';b.textContent='Save BET report';b.addEventListener('click',()=>S.saveExport(r.downloads.json,'json'));el.append(b);}status('BET fit calculated from your supplied isotherm. Check the consistency criteria before reporting the area.');}));
 
   // The 3D canvas displays actual supplied coordinates. It never infers a cell.
   const elementColors={C:'#73818c',H:'#e8edf0',N:'#5597dc',O:'#e76769',S:'#e7c356',P:'#d99a55',B:'#d5ac85',F:'#72cfa4',Cl:'#66bb8c',Br:'#b88b65',I:'#a77ac0',Si:'#bcae9a',Cu:'#d5a477',Zn:'#939eb7',Fe:'#cb895b','*':'#b8bbc3'};
