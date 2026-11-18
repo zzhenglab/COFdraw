@@ -176,8 +176,9 @@ def main():
     data = output / "runtime-data"
     shutil.copytree(template / "framework-drawing", data / "framework-drawing",
                     ignore=shutil.ignore_patterns("exports", "*.log", "__pycache__"))
-    if (template / "crystal-models").is_dir():
-        shutil.copytree(template / "crystal-models", data / "crystal-models")
+    for directory in ("crystal-models", "solubility"):
+        if (template / directory).is_dir():
+            shutil.copytree(template / directory, data / directory)
     status_file = output / "server.json"
     command += ["--headless", "--data-dir", str(data), "--status-file", str(status_file)]
     opener = build_opener(ProxyHandler({}))  # Loopback calls must not use an external proxy.

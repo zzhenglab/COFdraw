@@ -88,6 +88,17 @@ def main():
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_browser.py")), "--base-url", base,
                         "--output-dir", str(output / "browser")], check=True, timeout=600, creationflags=hidden)
         report["browser_report"] = json.loads((output / "browser/cofdraw-browser-report.json").read_text(encoding="utf-8"))
+        agent_input = output / "solubility-request.json"
+        agent_input.write_text(json.dumps({"monomer_id": "tfb", "solvent_ids": ["dioxane"], "solvent_ml": 2}), "utf-8")
+        agent_output = output / "agent-solubility"
+        subprocess.run([sys.executable, str(executable.parent / "skills/cofdraw/scripts/cofdraw_client.py"),
+                        "--exe", str(executable), "--output", str(agent_output),
+                        "science", "solubility", "--request", str(agent_input)],
+                       check=True, timeout=120, creationflags=hidden)
+        agent_result = json.loads((agent_output / "result.json").read_text(encoding="utf-8"))
+        assert agent_result["solvents"][0]["status"] == "reported"
+        assert (agent_output / "structure.csv").is_file()
+        report["agent_solubility"] = {"passed": True, "report_id": agent_result["report_id"]}
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_compatibility.py")), "--base-url", base,
                         "--expected-monomers", str(expected_monomers), "--output-dir", str(output / "compatibility")], check=True, timeout=600, creationflags=hidden)
         report["compatibility_report"] = json.loads((output / "compatibility/compatibility-report.json").read_text(encoding="utf-8"))

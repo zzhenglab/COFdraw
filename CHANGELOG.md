@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4 - 2026-11-18
+
+- Include the offline solubility measurements when the agent helper creates a scratch runtime.
+
 ## 0.8.3 - 2026-11-18
 
 - Screen room-temperature monomer solubility across 19 solvents with reported measurements, estimates with error bands, and mass per chosen solvent volume. Show literature preparation loads when available. Export CSV and JSON.
