@@ -72,6 +72,11 @@ class Patch3D(RenderDrawing):
     twist_degrees: float = Field(default=15, ge=-180, le=180, allow_inf_nan=False)
 
 
+class PeriodicFromDrawing(RenderDrawing):
+    layer_spacing: float | None = Field(default=None, ge=2.5, le=12, allow_inf_nan=False)
+    repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
+
+
 class NetworkHypothesis(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     structure: dict
@@ -163,6 +168,7 @@ class PeriodicStacking(BaseModel):
     stacking: Literal['AA', 'AB', 'ABC', 'slipped'] = 'AA'
     spacing: float = Field(default=3.4, ge=2.5, le=12)
     slip: list[Annotated[float, Field(ge=-20, le=20, allow_inf_nan=False)]] = Field(default=[1.5,0], min_length=2, max_length=2)
+    corrugated_layer: bool = False
 
 
 class ScreenBatch(BaseModel):
@@ -606,10 +612,24 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             return clean_layout(selected_recipe(request))
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
+    def crystal_manifest():
+        path=root/'crystal-models/manifest.json'
+        return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
+
+    def load_crystal_template(item, manifest):
+        from .cofdraw_science import import_cif
+        directory = (root/'crystal-models').resolve()
+        path = (directory/item['path']).resolve()
+        if not path.is_relative_to(directory) or hashlib.sha256(path.read_bytes()).hexdigest()!=item['sha256']:
+            raise ValueError('Crystal template integrity check failed')
+        structure = import_cif(path.read_text(encoding='utf-8'))
+        structure['provenance'].update(template=item['id'], generator=manifest['generator'],
+            model_name=item['model_name'], doi=manifest['citation_doi'], qualification=item['description'])
+        return structure
+
     @router.get('/science/library')
     def scientific_library():
-        path=root/'crystal-models/manifest.json'
-        data=json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
+        data=crystal_manifest()
         return {'templates':data['templates'],'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
 
     @router.get('/science/synthesis-library')
@@ -621,7 +641,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def matched_periodic_options(request: RenderDrawing):
         try:
             from .cofdraw_periodic_options import periodic_options
-            manifest=json.loads((root/'crystal-models/manifest.json').read_text(encoding='utf-8'))
+            manifest=crystal_manifest()
             with lock:return periodic_options(selected_recipe(request),manifest)
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
 
@@ -631,13 +651,10 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             from .cofdraw_science import import_cif, structure_exports
             if bool(request.template_id)==bool(request.cif_text):raise ValueError('Choose one model template or import one CIF')
             if request.template_id:
-                manifest=json.loads((root/'crystal-models/manifest.json').read_text(encoding='utf-8'))
+                manifest=crystal_manifest()
                 matches=[x for x in manifest['templates'] if x['id']==request.template_id]
                 if len(matches)!=1:raise ValueError('Unknown crystal template')
-                item=matches[0];path=(root/'crystal-models'/item['path']).resolve()
-                if not path.is_relative_to((root/'crystal-models').resolve()) or hashlib.sha256(path.read_bytes()).hexdigest()!=item['sha256']:raise ValueError('Crystal template integrity check failed')
-                structure=import_cif(path.read_text(encoding='utf-8'))
-                structure['provenance']={**structure.get('provenance',{}),'template':item['id'],'generator':manifest['generator'],'model_name':item['model_name'],'doi':manifest['citation_doi'],'qualification':item['description']}
+                item=matches[0];structure=load_crystal_template(item,manifest)
                 if request.recipe_match:
                     from .cofdraw_periodic_options import periodic_options
                     options=periodic_options(selected_recipe(request.recipe_match),manifest)
@@ -650,6 +667,47 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             result['scope']='Periodic atomic model with an explicit cell. Built-in templates are unrelaxed reticular designs, not experimentally assigned crystals; imported CIFs retain supplied geometry.'
             return scientific_result(result, 'model', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/build-periodic')
+    def build_periodic(request: PeriodicFromDrawing):
+        try:
+            from .cofdraw_periodic_build import build_periodic_layer
+            from .cofdraw_periodic_options import periodic_options, validated_design
+            from .cofdraw_science import structure_exports
+
+            recipe = selected_recipe(request)
+            manifest = crystal_manifest()
+            with lock:
+                try:
+                    design = validated_design(recipe)
+                    options = periodic_options(recipe, manifest, design=design)
+                except (ValueError, KeyError, TypeError) as exc:
+                    return {'available': False, 'reason': str(exc)}
+                matches = {o['id'] for o in options['options']}
+                item = next((entry for entry in manifest['templates']
+                             if entry['id'] in matches and entry['model_name'].endswith('-AA')), None)
+                if item and request.layer_spacing is None:
+                    structure = load_crystal_template(item, manifest)
+                    structure['provenance']['drawing_match'] = item['precursor_match']
+                    structure['provenance']['spacing_angstrom'] = structure['cell'][2][2]
+                    validation = {'matched_template': item['id'], 'template_cif_sha256': item['sha256']}
+                else:
+                    try:
+                        structure, validation = build_periodic_layer(design[0], spacing=request.layer_spacing)
+                    except ValueError as exc:
+                        return {'available': False, 'reason': str(exc)}
+                result = structure_exports(structure, repeats=tuple(request.repeats))
+            result.update(available=True, cell_validation=validation,
+                scope='Unrelaxed periodic starting model of the selected precursor chemistry and planar connectivity. AA layer spacing is a model parameter.')
+            provenance = structure['provenance']
+            result['exports']['cif'] = result['exports']['cif'].replace('data_COFdraw\n', (
+                'data_COFdraw\n# COFdraw unrelaxed AA starting model.\n'
+                f"# Template {design[0]['selected_template']['id']}; layer spacing {provenance['spacing_angstrom']:.4f} angstrom.\n"
+                + (f"# Meso phenyl tilt {provenance['phenyl_tilt_degrees']} degrees.\n"
+                   if provenance.get('phenyl_tilt_degrees') else '')), 1)
+            return scientific_result(result, 'build-periodic', request.model_dump())
+        except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @router.post('/science/patch')
     def patch_model(request: Patch3D):
@@ -724,7 +782,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
                 'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
                 'finite-inspect':FiniteInspection,'finite-powder':FinitePowder,'stacking':PeriodicStacking,'periodic-options':RenderDrawing,
-                'measure':RenderDrawing}
+                'measure':RenderDrawing,'build-periodic':PeriodicFromDrawing}
         return {'engine_version':__version__, 'schema_version':'cofdraw-capabilities-1',
                 'operations':{name:{'method':'POST','path':f'/api/drawing/science/{name}',
                                     'request_schema':model.model_json_schema()} for name,model in models.items()},

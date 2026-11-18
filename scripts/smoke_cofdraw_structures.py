@@ -42,10 +42,10 @@ def main():
                 page.wait_for_function('!window.COFdrawStudio.state.busy')
             build()
             held=[]
-            def delay_first_patch(route):
+            def delay_first_cell(route):
                 if not held:held.append((route,route.fetch()))
                 else:route.continue_()
-            page.route('**/api/drawing/science/patch',delay_first_patch)
+            page.route('**/api/drawing/science/build-periodic',delay_first_cell)
             page.locator('#open-science').click()
             page.wait_for_function("document.getElementById('science-status').textContent==='Calculating locally…'")
             for _ in range(50):
@@ -58,17 +58,18 @@ def main():
             page.locator('#preset-b').select_option('pa')
             page.wait_for_function("!document.getElementById('build').disabled && document.getElementById('preset-b').value==='pa'")
             build()
-            expected=page.evaluate('window.COFdrawStudio.state.result.audit.atoms*3')
-            with page.expect_response('**/api/drawing/science/patch') as fresh:page.locator('#open-science').click()
+            expected=66
+            with page.expect_response('**/api/drawing/science/build-periodic') as fresh:page.locator('#open-science').click()
             assert fresh.value.status==200
-            page.wait_for_function('n=>window.COFdrawScience.viewer.atoms.length===n',arg=expected)
+            page.wait_for_function('n=>window.COFdrawScience.structure?.atoms.length===n',arg=expected)
             assert 'Pa' in page.locator('#viewer-provenance').inner_text()
             held[0][0].fulfill(response=held[0][1]);page.wait_for_timeout(150)
-            assert page.evaluate('window.COFdrawScience.viewer.atoms.length')==expected
+            assert page.evaluate('window.COFdrawScience.structure.atoms.length')==expected
             assert 'Pa' in page.locator('#viewer-provenance').inner_text()
-            page.unroute('**/api/drawing/science/patch',delay_first_patch)
+            page.unroute('**/api/drawing/science/build-periodic',delay_first_cell)
             checks.append('Current drawing opens by default; delayed A response cannot replace the freshly generated B drawing or its provenance')
 
+            page.locator('#finite-view-options > summary').click()
             page.locator('#compare-stacks').click();page.wait_for_function("document.querySelectorAll('#stack-comparison button').length===5")
             initial=page.evaluate('window.COFdrawScience.viewer.atoms.map(a=>[a.x,a.y,a.z])')
             for mode in ['AB','ABC','slipped','twisted']:

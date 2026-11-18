@@ -160,7 +160,9 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
     symmetric_depiction_rings(draw_mol)
     drawer = rdMolDraw2D.MolDraw2DSVG(size, size)
     opt = drawer.drawOptions()
-    opt.useBWAtomPalette(); opt.padding = .10
+    opt.useBWAtomPalette(); opt.padding = .16 if style_id == 'gradient_stack' else .10
+    if style_id == 'gradient_stack':
+        drawer.SetOffset(0, -round(size*.07))
     opt.bondLineWidth = (2.8 if style_id == 'bold_color' else 2.)*options['bond_scale']
     opt.minFontSize = round(12*options['font_scale']); opt.maxFontSize = round(30*options['font_scale'])
     opt.baseFontSize = .6*options['font_scale']
@@ -343,7 +345,8 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
         'atom_normalized': (xy/size).tolist(), 'instance_centers_pixels': centers,
         'instance_centers_normalized': {name: (np.asarray(p)/size).tolist() for name,p in centers.items()},
         'pixels_per_unit': float(np.median(np.asarray(pixels)/np.asarray(distances))),
-        'coordinate_system': 'cartesian_y_up', 'display_projection': descriptor['category'] == 'layered',
+        'coordinate_system': 'cartesian_y_up',
+        'display_projection': descriptor['category'] == 'layered' and not descriptor.get('flat_foreground', False),
         'editing_scope': 'Atom pixels describe the unprojected chemical layer; use flat chemical styles for coordinate editing.'}
     return audit
 

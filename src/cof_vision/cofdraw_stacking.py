@@ -8,7 +8,29 @@ from .cofdraw_network import inspect_periodic_network
 from .cofdraw_science import normalize_structure, structure_exports, _finite, MAX_ATOMS
 
 
-def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0)):
+def _connected_layer_lifts(network, atom_count):
+    neighbors = [[] for _ in range(atom_count)]
+    for edge in network['edges']:
+        a, b, tz = edge['a'], edge['b'], edge['translation'][2]
+        neighbors[a].append((b, tz))
+        neighbors[b].append((a, -tz))
+    lifts, todo = {0: 0}, [0]
+    while todo:
+        a = todo.pop()
+        for b, tz in neighbors[a]:
+            height = lifts[a]+tz
+            if b in lifts:
+                if height != lifts[b]:
+                    raise ValueError('The covalent layer connects periodically along c.')
+            else:
+                lifts[b] = height
+                todo.append(b)
+    if len(lifts) != atom_count:
+        raise ValueError('Corrugated stacking requires one connected periodic layer in the cell.')
+    return np.array([lifts[i] for i in range(atom_count)])
+
+
+def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0), corrugated_layer=False):
     parent = normalize_structure(structure)
     if stacking not in ('AA', 'AB', 'ABC', 'slipped'):
         raise ValueError('Periodic stacking supports AA, AB, ABC and slipped; arbitrary twist is not a periodic cell construction')
@@ -27,7 +49,7 @@ def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0)):
     start = heights[(int(np.argmax(gaps)) + 1) % len(heights)]
     unwrapped = (fraction[:, 2] - start) % 1
     thickness = float(np.ptp(unwrapped) * height)
-    if thickness > .35:
+    if thickness > .35 and not corrugated_layer:
         raise ValueError('Stack comparison requires one near-planar layer parallel to a,b (thickness ≤0.35 Å). Choose a single-layer model; 3D networks and multilayer cells cannot be restacked automatically.')
     # Lift the boundary-wrapped atoms into one physical layer before checking
     # its connectivity. A raw edge translation along c may merely join atoms
@@ -40,6 +62,12 @@ def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0)):
         raise ValueError('Cannot verify a single periodic layer within the bounded contact search: ' + str(exc)) from exc
     if network['short_contact_count']:
         raise ValueError('Cannot verify a single periodic layer: implausibly short contacts require inspection before restacking')
+    if corrugated_layer:
+        lifts = _connected_layer_lifts(network, len(fraction))
+        lifted_heights = fraction[:, 2]+lifts
+        start, thickness = float(lifted_heights.min()), float(np.ptp(lifted_heights)*height)
+        if thickness >= spacing-.05:
+            raise ValueError(f'Layer thickness is {thickness:.2f} Å. Increase the stacking spacing.')
     contacts = network['edges'] + network['borderline_contacts']
     if any(edge['translation'][2] + int(lifts[edge['a']]) - int(lifts[edge['b']]) != 0 for edge in contacts):
         raise ValueError('Cannot restack: distance-inferred or borderline covalent contacts connect different layers along c')
@@ -61,11 +89,14 @@ def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0)):
     c = count * spacing * normal + (delta if stacking == 'slipped' else 0)
     new_cell = np.vstack([cell[:2], c])
     inverse = np.linalg.inv(new_cell)
-    atoms = []
+    atoms, wraps = [], []
     for layer in range(count):
         translation = layer * spacing * normal + (layer * delta if stacking in ('AB', 'ABC') else 0)
-        for atom, position in zip(parent['atoms'], base + translation):
-            atoms.append({**atom, 'fractional': ((position @ inverse) % 1).tolist(), 'layer': layer})
+        raw = (base+translation) @ inverse
+        wrap = np.floor(raw+1e-10).astype(int)
+        wraps.append(wrap)
+        for atom, point in zip(parent['atoms'], raw-wrap):
+            atoms.append({**atom, 'fractional': point.tolist(), 'layer': layer})
     model = {'periodic': True, 'cell': new_cell.tolist(), 'atoms': atoms,
              'provenance': {'kind': 'explicit_periodic_stacking_hypothesis', 'stacking': stacking,
                             'spacing_angstrom': spacing, 'slip_angstrom_in_ab_frame': shift.tolist(),
@@ -78,6 +109,19 @@ def periodic_stacking(structure, *, stacking='AA', spacing=3.4, slip=(1.5, 0)):
                                                  'sensitivity_margin_angstrom': network['threshold_sensitivity']['distance_margin_angstrom'],
                                                  'experimentally_assigned_connectivity': False},
                             'qualification': 'Chosen unrelaxed stacking of the supplied planar layer; no experimental stacking assignment.'}}
+    if corrugated_layer:
+        output_network = inspect_periodic_network(model)
+        edges = set()
+        for layer, wrap in enumerate(wraps):
+            offset = layer*len(fraction)
+            for edge in network['edges']:
+                a, b = edge['a'], edge['b']
+                image = np.r_[edge['translation'][:2], 0]+wrap[b]-wrap[a]
+                edges.add((offset+a, offset+b, tuple(image)))
+        observed = {(e['a'],e['b'],tuple(e['translation'])) for e in output_network['edges']}
+        if output_network['short_contact_count'] or edges != observed:
+            raise ValueError('This stacking creates interlayer contacts or changes the inferred covalent bonds. Adjust the spacing or slip.')
+        model['provenance']['layer_validation']['output_atom_edges_verified'] = len(edges)
     result = structure_exports(model)
     result.update(kind='periodic_stacking_hypothesis',
                   parameters={'stacking': stacking, 'spacing_angstrom': spacing, 'slip_angstrom': shift.tolist(),

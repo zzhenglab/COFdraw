@@ -240,7 +240,15 @@ function styleIcon(style){
   const span=document.createElement("span");span.className="style-icon";span.setAttribute("aria-hidden","true");const svg=node("svg",{viewBox:"0 0 56 48",fill:"none"});
   const kind=style.preview_kind||style.id,layered=style.category==="layered"||/stack|layer|3d/.test(kind),schematic=style.category==="schematic"||/cartoon|schematic/.test(kind);
   const colored=/color|red|blue|highlight|filled/.test(kind),color=colored?"#527ba1":"#647c68",points="28,7 44,16 44,34 28,43 12,34 12,16";
-  if(layered){svg.append(node("polygon",{points,transform:"translate(-4,-5)",fill:"#83a6c0","fill-opacity":.15,stroke:"#6f98b2","stroke-opacity":.4}),node("polygon",{points,transform:"translate(3,0)",fill:"#92b495","fill-opacity":.2,stroke:"#789b7b","stroke-opacity":.6}));}
+  if(kind==='gradient_stack'){
+    for(const [depth,shade] of [[3,'#74a7a9'],[2,'#9ababa'],[1,'#b6d0c5']]){
+      svg.append(node('polygon',{points,transform:`translate(${depth},${depth*2-2}) scale(.96,.88)`,stroke:shade,'stroke-width':2}));
+    }
+  }else if(kind==='sphere_cutaway'){
+    for(const [x,y,r] of [[12,16,5],[12,34,5],[20,39,4],[20,11,4],[28,7,3]]){
+      svg.append(node('circle',{cx:x,cy:y,r,fill:'#bc8fba','fill-opacity':.72}));
+    }
+  }else if(layered){svg.append(node("polygon",{points,transform:"translate(-4,-5)",fill:"#83a6c0","fill-opacity":.15,stroke:"#6f98b2","stroke-opacity":.4}),node("polygon",{points,transform:"translate(3,0)",fill:"#92b495","fill-opacity":.2,stroke:"#789b7b","stroke-opacity":.6}));}
   svg.append(node("polygon",{points,stroke:color,"stroke-width":schematic?2.6:1.3,fill:/fill|highlight/.test(kind)?"#c9dce9":"none","fill-opacity":.6}));
   if(!schematic){svg.append(node("path",{d:"M17 18v13 M28 37l11-6 M28 13l11 6",stroke:color,"stroke-width":1}));if(colored)svg.append(node("path",{d:"M28 7 44 16v18",stroke:"#bd7461","stroke-width":2}));
     for(const[x,y,txt]of[[9,18,"N"],[43,37,"N"]]){svg.append(node("rect",{x:x-2,y:y-7,width:9,height:10,fill:"white"}),node("text",{x,y,fill:color,"font-size":9,"font-family":/serif/.test(kind)?"Georgia,serif":"Arial,sans-serif"},txt));}
@@ -260,7 +268,9 @@ function drawStyles(){
 const styleOptionDefaults={palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit",highlight_width:1,glow_strength:.55,layer_spacing:.04,projection_tilt:35,sphere_scale:1};
 function drawStyleControls(){
   const spec=state.library?.style_controls,root=$("style-control-fields");$("style-controls").hidden=!spec;if(!spec)return;root.replaceChildren();
-  const current={...styleOptionDefaults,...state.resolvedStyleOptions,...state.styleOptions},category=state.library.styles.find(s=>s.id===state.style)?.category;
+  const current={...styleOptionDefaults,...state.resolvedStyleOptions,...state.styleOptions};
+  const hasLayers=['stacked_eclipsed','stacked_slipped','gradient_stack'].includes(state.style);
+  const hasSpheres=['molecular_spheres','sphere_cutaway'].includes(state.style);
   const lists=[['palette','Color palette',spec.palettes||[]],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
   const names={classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   function changed(key,value){state.styleOptions[key]=value;if(state.recipe)state.dirty=true;sync();}
@@ -269,7 +279,7 @@ function drawStyleControls(){
   for(const [name,colors] of Object.entries(spec.palette_colors||{})){const button=document.createElement('button');button.className='palette-swatch'+(name===current.palette?' selected':'');button.title=name.replaceAll('_',' ');button.setAttribute('aria-label',button.title+' palette');for(const color of colors){const i=document.createElement('i');i.style.background=color;button.append(i);}button.addEventListener('click',()=>{delete state.styleOptions.custom_palette;changed('palette',name);if(state.recipe&&!state.inputsDirty&&!state.jsonPending)render();else drawStyleControls();});swatches.append(button);}root.prepend(swatches);
   const custom=document.createElement('div');custom.className='custom-colors';const title=document.createElement('span');title.textContent='Your colors';custom.append(title);const selected=current.custom_palette||spec.palette_colors?.[current.palette]||['#167d9a','#ee796b','#6796b5','#cfb86d'];
   for(let i=0;i<4;i++){const input=document.createElement('input');input.type='color';input.value=selected[i%selected.length];input.setAttribute('aria-label',`Custom building-block color ${i+1}`);input.addEventListener('input',()=>changed('custom_palette',[...custom.querySelectorAll('input')].map(x=>x.value)));custom.append(input);}root.append(custom);
-  for(const[key,label,min,max,step]of[['font_scale','Label size',.6,1.6,.05],['bond_scale','Bond weight',.5,2.5,.1],['fill_opacity','Fill opacity',.05,.6,.05],['highlight_width','Highlight width',.5,2.5,.1],...(state.style==='glow_outline'?[['glow_strength','Glow softness',0,1,.05]]:[]),...(state.style==='molecular_spheres'?[['sphere_scale','Sphere size',.5,1.6,.05]]:[]),...(category==="layered"?[['layer_count','Illustrative layers',2,5,1],['layer_opacity','Back-layer opacity',.05,.7,.05],['layer_spacing','Layer separation',.015,.09,.005],['projection_tilt','Perspective tilt',0,65,1]]:[])]){
+  for(const[key,label,min,max,step]of[['font_scale','Label size',.6,1.6,.05],['bond_scale','Bond weight',.5,2.5,.1],['fill_opacity','Fill opacity',.05,.6,.05],['highlight_width','Highlight width',.5,2.5,.1],...(state.style==='glow_outline'?[['glow_strength','Glow softness',0,1,.05]]:[]),...(hasSpheres?[['sphere_scale','Sphere size',.5,1.6,.05]]:[]),...(hasLayers?[['layer_count','Illustrative layers',2,5,1],['layer_opacity','Back-layer opacity',.05,.7,.05],['layer_spacing','Layer separation',.015,.09,.005]]:[]),...(hasLayers||state.style==='perspective'?[['projection_tilt','Perspective tilt',0,65,1]]:[])]){
     const field=document.createElement("label");field.className="field";const span=document.createElement("span"),output=document.createElement("output"),input=document.createElement("input");input.id=`style-${key}`;input.dataset.styleOption=key;input.type="range";input.min=min;input.max=max;input.step=step;input.value=current[key];span.textContent=label;output.textContent=String(current[key]);span.append(output);input.addEventListener("input",()=>{output.textContent=input.value;changed(key,Number(input.value));});field.append(span,input);root.append(field);
   }
   const label=document.createElement("label");label.className="checkbox-field";const check=document.createElement("input");check.type="checkbox";check.id="style-transparent_background";check.checked=Boolean(current.transparent_background);check.addEventListener("change",()=>changed("transparent_background",check.checked));label.append(check,document.createTextNode("Transparent image background"));root.append(label);

@@ -19,18 +19,24 @@ _PORPHINE = Chem.MolFromSmarts(
 )
 
 
-def has_free_base_porphyrin(mol):
+def free_base_porphyrin_core(mol):
     """Recognize one neutral, fully conjugated porphine core, not a catalog ID."""
     matches = mol.GetSubstructMatches(_PORPHINE, maxMatches=2)
     if len(matches) != 1:
-        return False
+        return ()
     atoms = [mol.GetAtomWithIdx(i) for i in matches[0]]
     if any(a.GetFormalCharge() or a.GetHybridization() != Chem.HybridizationType.SP2
            or a.GetNumRadicalElectrons() for a in atoms):
-        return False
+        return ()
     nitrogens = [a for a in atoms if a.GetAtomicNum() == 7]
-    return (all(a.GetDegree() == 2 for a in nitrogens)
-            and sorted(a.GetTotalNumHs() for a in nitrogens) == [0, 0, 1, 1])
+    if (all(a.GetDegree() == 2 for a in nitrogens)
+            and sorted(a.GetTotalNumHs() for a in nitrogens) == [0, 0, 1, 1]):
+        return matches[0]
+    return ()
+
+
+def has_free_base_porphyrin(mol):
+    return bool(free_base_porphyrin_core(mol))
 
 
 def compute_2d_coords(mol, **kwargs):

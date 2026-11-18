@@ -29,6 +29,16 @@ def main():
    page.locator('#mode-manual').click();page.locator('#build').click()
    page.wait_for_function('window.COFdrawStudio.state.result && !window.COFdrawStudio.state.busy')
    page.locator('#open-science').click()
+   page.wait_for_function("window.COFdrawScience.origin==='current-periodic'")
+   assert page.evaluate('window.COFdrawScience.structure.atoms.length')==57
+   assert page.evaluate('window.COFdrawScience.viewer.bonds.length')>0
+   assert 'unrelaxed periodic cell' in page.locator('#viewer-provenance').inner_text()
+   with page.expect_download() as download:page.locator('#structure-exports button').filter(has_text='CIF').click()
+   download.value.save_as(out/'current-drawing.cif')
+   assert 'COFdraw unrelaxed AA starting model' in (out/'current-drawing.cif').read_text('utf8')
+   checks.append('Opening 3D & properties produces a downloadable matched CIF for the current drawing')
+   page.locator('#finite-view-options > summary').click()
+   page.locator('#build-patch-3d').click()
    page.wait_for_function('window.COFdrawScience.finiteModel && !document.querySelector(".science-controls").classList.contains("science-busy")')
    page.locator('[data-science-tab="inspect"]').click();page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Checked the displayed finite')")
@@ -38,7 +48,7 @@ def main():
    page.locator('[data-science-tab="porosity"]').click();page.locator('#measure-current-finite-pore').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Measured the current')")
    assert page.locator('#porosity-results .metric-card').count()==2
-   assert 'not a physical pore diameter' in page.locator('#porosity-results').inner_text()
+   assert 'lower bound for the projected opening' in page.locator('#porosity-results').inner_text()
    assert page.locator('#calculate-pores').is_disabled()
    checks.append('Finite drawing opening can be measured directly from pore tools with explicit periodic-property limits')
    page.locator('[data-science-tab="pxrd"]').click();page.locator('#calculate-pxrd').click()
@@ -54,13 +64,12 @@ def main():
    assert page.locator('.diffraction-legend span').count()==5
    page.screenshot(path=str(out/'cofdraw-finite-stacking-patterns.png'))
    checks.append('Five finite stacking patterns compare the same drawing under chosen transforms')
-   page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .find-matching-periodic').click()
-   page.wait_for_selector('#inspect-model-state [data-template-id="hcb-tfb-tapb-aa"]')
-   page.locator('#inspect-model-state [data-template-id="hcb-tfb-tapb-aa"]').click()
-   page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Matching periodic design generated')")
+   page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .build-cif-from-drawing').click()
+   page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model and CIF ready')")
    assert page.evaluate('window.COFdrawScience.structure.atoms.length')==57
    assert page.evaluate('window.COFdrawScience.viewer.bonds.length')>0
-   assert 'matched to the current precursors' in page.locator('#viewer-provenance').inner_text()
+   assert 'unrelaxed periodic cell' in page.locator('#viewer-provenance').inner_text()
+   page.locator('[data-science-tab="inspect"]').click()
    page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Structure check complete')")
    assert '2D' in page.locator('#inspection-results').inner_text()

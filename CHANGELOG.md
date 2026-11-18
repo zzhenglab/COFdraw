@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.2 - 2026-11-18
+
+- Move Appearance above Geometry and put Randomize style beside Measure pore. The pore arrow shows its diameter in nanometers and the method is expandable.
+- Add Gradient layers and Spheres and bonds, four palettes, and coordinated random style combinations.
+- Open a periodic CIF for supported current drawings. Assemble unrelaxed hexagonal and square models from the chosen precursors and connectivity when there is no bundled match. Keep a finite preview available for drawings that need a separate crystal model.
+
 ## 0.8.1 - 2026-11-18
 
 - Use symmetric porphyrin ring depictions in monomer previews and generated COF drawings, preserving inner N-H atoms and saved source coordinates.

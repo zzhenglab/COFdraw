@@ -61,7 +61,7 @@
     const width = Math.max(1.5, canvasSize[0] / 500), font = Math.max(20, canvasSize[0] * .034);
     const length = Math.hypot(b[0] - a[0], b[1] - a[1]), head = Math.min(font * .6, length * .15);
     const color = '#205f70', group = node('g', {'data-cofdraw-pore-measurement': '1'});
-    group.append(node('title', {}, `${result.diameter_nm.toFixed(2)} nm — 2D drawing estimate; sampled inscribed-circle diameter`));
+    group.append(node('title', {}, `Pore opening · ${result.diameter_nm.toFixed(2)} nm`));
     group.append(node('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: color,
       'stroke-width': width, 'data-measured-diameter': result.diameter_nm}));
     // Triangle tips coincide exactly with the reported diameter endpoints.
@@ -69,7 +69,6 @@
     const textStyle = {'text-anchor': 'middle', 'font-family': 'Arial, sans-serif', fill: color,
       stroke: '#ffffff', 'stroke-width': font * .23, 'stroke-linejoin': 'round', 'paint-order': 'stroke'};
     group.append(node('text', {...textStyle, x: center[0], y: center[1]-font*.62, 'font-size': font, 'font-weight': '600'}, `${result.diameter_nm.toFixed(2)} nm`));
-    group.append(node('text', {...textStyle, x: center[0], y: center[1]+font*1.1, 'font-size': font*.55}, '2D estimate'));
     return group;
   }
   async function annotatedSVG(record) {
@@ -123,7 +122,7 @@
       const layout = audit.drawing_style?.layout, points = transform(result, layout);
       const canvasSize = layout.canvas_size, group = makeGroup(result, points, canvasSize);
       svg.setAttribute('viewBox', `0 0 ${canvasSize.join(' ')}`);
-      svg.setAttribute('aria-label', `${result.diameter_nm.toFixed(2)} nanometers, 2D drawing estimate`);
+      svg.setAttribute('aria-label', `Pore opening, ${result.diameter_nm.toFixed(2)} nanometers`);
       svg.append(group); svg.toggleAttribute('hidden', false);
       active = {result, group, canvasSize, recipe, render: S.state.result, revision};
       const record = active, controls = document.createElement('div');
@@ -135,7 +134,6 @@
       }
       const hide = document.createElement('button'); hide.className = 'button quiet'; hide.textContent = 'Remove arrow';
       hide.addEventListener('click', clear); controls.append(hide); $('pore-measurement').append(controls);
-      note('The arrow spans the sampled inscribed circle. Ordinary image exports remain unannotated; these buttons include the arrow and its 2D-estimate label.');
     } catch (error) {note(error.message);}
   }
   window.addEventListener('cofdraw:pore-measured', event => show(event.detail));

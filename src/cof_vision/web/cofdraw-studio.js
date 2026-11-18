@@ -4,13 +4,18 @@
   const S=window.COFdrawStudio, $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
   const copy=value=>JSON.parse(JSON.stringify(value));
   let scienceBusy=false, currentStructure=null, geometryMode=false, geometryDrag=null, geometryHistory=[], lastRenderedRecipe=null;
-  let revision=0, activeJob=null, origin=null, basePeriodic=null, hypothesis=null, drawingKey='', compareResults=[];
+  let revision=0, activeJob=null, origin=null, basePeriodic=null, hypothesis=null, drawingKey='', currentLayer=null;
   const fmt=(x,d=2)=>Number.isFinite(x)?Number(x).toLocaleString(undefined,{maximumFractionDigits:d}):'—';
   const stackLabels={AA:'AA · aligned',AB:'AB · alternating',ABC:'ABC · three-step',slipped:'Slipped · progressive',twisted:'Twisted · rotated'};
   function status(message,error=false){$('science-status').textContent=message;$('science-status').classList.toggle('error',error);}
   function signature(){return JSON.stringify([S.state.sourceId,S.state.recipe,S.state.inputsDirty,S.state.jsonPending,$('smiles-a').value,$('smiles-b').value]);}
   function drawingName(){return S.state.sourceId?`Source drawing · ${S.state.sourceMetadata?.label||S.state.recipe?.label||S.state.sourceId}`:`Current design · ${$('label-a').value||'A'} + ${$('label-b').value||'B'}`;}
-  function syncSource(){const valid=Boolean(S.state.recipe&&!S.state.inputsDirty&&!S.state.jsonPending);$('current-drawing-label').textContent=valid?drawingName():'Create or apply the current drawing before generating its 3D layers.';$('build-patch-3d').disabled=!valid;$('compare-stacks').disabled=!valid;}
+  function drawingReady(){return Boolean(S.state.recipe&&!S.state.inputsDirty&&!S.state.jsonPending);}
+  function syncSource(){
+    const valid=drawingReady();
+    $('current-drawing-label').textContent=valid?drawingName():'Create or apply a drawing to generate its model.';
+    for(const id of ['build-current-cell','build-patch-3d','compare-stacks']) $(id).disabled=!valid;
+  }
   function invalidate(message,clearViewer=true){revision++;activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');if(clearViewer){currentStructure=null;origin=null;viewer.set({atoms:[],bonds:[]});$('structure-exports').replaceChildren();$('structure-warnings').replaceChildren();$('structure-scope').textContent=message||'';$('viewer-title').textContent='Ready for a new structure';$('viewer-provenance').textContent=message||'';}for(const id of ['porosity-results','monomer-results'])$(id).replaceChildren();window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:{invalidated:true}}));if(message)status(message);syncSource();}
   async function work(task){
     if(scienceBusy)return;const job={revision};activeJob=job;scienceBusy=true;document.querySelector('.science-controls').classList.add('science-busy');status('Calculating locally…');
@@ -20,7 +25,16 @@
   }
   function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.scienceTab===name)));document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();}
   document.querySelectorAll('[data-science-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.scienceTab)));
-  $('open-science').addEventListener('click',()=>{$('science-dialog').showModal();$('structure-source').value='drawing';sourceMode();tab('model');if(S.state.recipe&&!S.state.inputsDirty&&!S.state.jsonPending)generatePatch();requestAnimationFrame(()=>viewer.draw());});
+  $('open-science').addEventListener('click',()=>{
+    $('science-dialog').showModal();
+    tab('model');
+    if(origin!=='current-periodic'){
+      $('structure-source').value='drawing';
+      sourceMode();
+      if(drawingReady()) generateCurrentCell(true);
+    }
+    requestAnimationFrame(()=>viewer.draw());
+  });
   $('close-science').addEventListener('click',()=>$('science-dialog').close());
   function metric(container,label,value){const row=document.createElement('div');row.className='metric-card';const title=document.createElement('span'),number=document.createElement('strong');title.textContent=label;number.textContent=value;row.append(title,number);container.append(row);}
   function note(container,text,warning=false){if(!text)return;const p=document.createElement('p');p.className=`metric-note${warning?' warning':''}`;p.textContent=text;container.append(p);}
@@ -29,33 +43,87 @@
   function exportsFor(result){$('structure-exports').replaceChildren();for(const [ext,path] of Object.entries(result.downloads||{})){const b=document.createElement('button');b.className='button outline';b.textContent=ext.toUpperCase();b.addEventListener('click',()=>S.saveExport(path,ext));$('structure-exports').append(b);}if(result.viewer){const b=document.createElement('button');b.className='button outline';b.textContent='View PNG';b.addEventListener('click',async()=>{try{const data=$('structure-canvas').toDataURL('image/png');if(window.pywebview?.api?.save_image)await window.pywebview.api.save_image('COFdraw-3D-view.png',data);else{const a=document.createElement('a');a.href=data;a.download='COFdraw-3D-view.png';a.click();}}catch(e){status(e.message,true);}});$('structure-exports').append(b);}}
   function display(result,title,kind='periodic'){
     currentStructure=result.structure||null;origin=kind;viewer.set(result.viewer||{atoms:[],bonds:[]});$('viewer-title').textContent=title;
-    $('viewer-provenance').textContent=kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration is not established':'Independent periodic model / imported CIF · separate from the 2D drawing';
+    const provenance = currentStructure?.provenance;
+    $('viewer-provenance').textContent=kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='current-periodic'?`${drawingName()} · unrelaxed periodic cell`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration hypothesis':'Independent periodic model / imported CIF';
     $('structure-scope').textContent=result.scope||result.qualification||result.viewer?.scope||(kind==='drawing'?'Finite layers scaled from the 2D drawing; no periodic crystal or optimized stacking is inferred.':'Model coordinates in Å; inspect geometry and provenance before simulation.');
     const warnings=$('structure-warnings'),routine=[];warnings.replaceChildren();for(const warning of result.warnings||[]){if(/^(Finite illustrative layers|No interlayer covalent|Do not use this preview|Translated copies are|The requested number|Inspect contacts and relaxation|Imported\/proposed coordinates|CIF\/extended XYZ retain|PDB is a coordinate)/.test(warning))routine.push(warning);else note(warnings,warning,true);}if(routine.length){const box=document.createElement('details'),summary=document.createElement('summary');box.className='model-notes';summary.textContent=`Model notes (${routine.length})`;box.append(summary);for(const warning of routine)note(box,warning);warnings.append(box);}
     if(Number.isFinite(result.minimum_intercopy_distance_angstrom))metric($('structure-warnings'),'Closest intercopy atoms / Å',fmt(result.minimum_intercopy_distance_angstrom,3));
+    if(kind==='current-periodic'&&provenance?.spacing_angstrom) {
+      note(warnings,`${provenance.stacking || 'AA'} layers · ${fmt(provenance.spacing_angstrom)} Å spacing`);
+    }
     if(result.viewer?.periodic===true&&!(result.viewer.bonds?.length))note($('structure-warnings'),'Viewer sticks are inferred from distances; they do not assign bond orders or validate the periodic network.');
     $('porosity-results').replaceChildren();exportsFor(result);window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:result}));
   }
   function drawingRequest(){if(!S.state.recipe)throw new Error('Create or open a drawing first.');if(S.state.inputsDirty||S.state.jsonPending)throw new Error('Apply your input changes first.');return S.state.sourceId?{source_recipe_id:S.state.sourceId}:{recipe:copy(S.state.recipe)};}
   const repeats=()=>['a','b','c'].map(x=>Number($(`repeat-${x}`).value));
   function patchRequest(stacking=$('patch-stacking').value){return {...drawingRequest(),layers:Number($('patch-layers').value),layer_spacing:Number($('patch-spacing').value),stacking,slip:[Number($('patch-slip-x').value),Number($('patch-slip-y').value)],twist_degrees:Number($('patch-twist').value)};}
-  function generatePatch(){return work(async api=>{const request=patchRequest(),r=await api('science/patch',request);display(r,`Current drawing · ${stackLabels[request.stacking]}`,'drawing');status('Current drawing refreshed in 3D. Finite layers are an illustration, not a periodic crystal.');});}
-  function clearComparison(){compareResults=[];$('stack-comparison').replaceChildren();}
-  function sourceMode(){const periodic=$('structure-source').value==='periodic';$('drawing-model-controls').hidden=periodic;$('periodic-model-controls').hidden=!periodic;invalidate(periodic?'Choose a periodic template or import a CIF. This model is separate from the current drawing.':'Generate layers from the latest current drawing.');clearComparison();basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;}
+  async function showFinite(api){
+    const request=patchRequest(), result=await api('science/patch',request);
+    display(result,`Current drawing · ${stackLabels[request.stacking]}`,'drawing');
+  }
+  function generatePatch(){return work(async api=>{await showFinite(api);status('Finite layers ready.');});}
+  function cellNote(message){
+    $('current-cell-result').textContent=message;
+    $('current-cell-result').hidden=!message;
+  }
+  function generateCurrentCell(useFiniteFallback=false){
+    return work(async api=>{
+      const value=$('current-cell-spacing').value;
+      const result=await api('science/build-periodic',{
+        ...drawingRequest(), layer_spacing:value===''?null:Number(value), repeats:[2,2,2]
+      });
+      if(!result.available){
+        cellNote(result.reason);
+        if(useFiniteFallback){
+          $('finite-view-options').open=true;
+          await showFinite(api);
+        }
+        status(useFiniteFallback?'Showing finite layers. See the model panel for CIF options.':result.reason);
+        return;
+      }
+      currentLayer=result.structure;
+      display(result,'Current drawing · periodic AA','current-periodic');
+      cellNote(`CIF ready · ${result.structure.atoms.length} atoms per unit cell · ${fmt(result.structure.provenance.spacing_angstrom)} Å layer spacing`);
+      $('finite-view-options').open=false;
+      status('Periodic model and CIF ready. PXRD and pore geometry are available.');
+    });
+  }
+  function clearComparison(){$('stack-comparison').replaceChildren();}
+  function sourceMode(){
+    const periodic=$('structure-source').value==='periodic';
+    $('drawing-model-controls').hidden=periodic;
+    $('periodic-model-controls').hidden=!periodic;
+    invalidate(periodic?'Choose a model template or import a CIF.':'Build a periodic cell or view finite layers for this drawing.');
+    cellNote('');
+    clearComparison();
+    currentLayer=null;
+    basePeriodic=null;
+    hypothesis=null;
+    $('network-comparison').hidden=true;
+  }
+  function openCurrentCell(){
+    tab('model');
+    if($('structure-source').value!=='drawing'){
+      $('structure-source').value='drawing';
+      sourceMode();
+    }
+    return generateCurrentCell(false);
+  }
   $('structure-source').addEventListener('change',sourceMode);
+  $('build-current-cell').addEventListener('click',()=>generateCurrentCell(false));
+  $('current-cell-spacing').addEventListener('input',()=>{
+    currentLayer=null;
+    invalidate('Layer spacing changed. Build the CIF again.',origin==='current-periodic');
+    cellNote('');
+  });
   $('build-patch-3d').addEventListener('click',generatePatch);
-  for(const id of ['patch-layers','patch-spacing','patch-stacking','patch-slip-x','patch-slip-y','patch-twist'])$(id).addEventListener('input',()=>{invalidate('Layer settings changed. Regenerate the current drawing or compare stackings.');clearComparison();});
+  for(const id of ['patch-layers','patch-spacing','patch-stacking','patch-slip-x','patch-slip-y','patch-twist'])$(id).addEventListener('input',()=>{
+    invalidate('Layer settings changed. Generate a preview or compare stackings.',origin==='drawing');
+    clearComparison();
+  });
   function thumbnail(canvas,model){const c=canvas.getContext('2d'),w=canvas.width,h=canvas.height,atoms=model.atoms||[],pts=atoms.map(a=>[a.x+.45*a.z,a.y+.65*a.z]);c.fillStyle='#f3f7f8';c.fillRect(0,0,w,h);if(!pts.length)return;const lo=[0,1].map(k=>Math.min(...pts.map(p=>p[k]))),hi=[0,1].map(k=>Math.max(...pts.map(p=>p[k]))),scale=Math.min((w-18)/(hi[0]-lo[0]+1),(h-18)/(hi[1]-lo[1]+1)),point=i=>[w/2+(pts[i][0]-(lo[0]+hi[0])/2)*scale,h/2-(pts[i][1]-(lo[1]+hi[1])/2)*scale],colors=['#2e8a91','#de995e','#8279b0','#72a881'];c.lineWidth=.8;for(const bond of model.bonds||[]){const a=bond.a??bond[0],b=bond.b??bond[1],p=point(a),q=point(b);c.strokeStyle=colors[(atoms[a].layer||0)%colors.length];c.beginPath();c.moveTo(...p);c.lineTo(...q);c.stroke();}}
-  $('compare-stacks').addEventListener('click',()=>work(async(api,check)=>{const requested=patchRequest(),rows=[];for(const mode of Object.keys(stackLabels))rows.push({mode,result:await api('science/patch',{...requested,stacking:mode})});check();compareResults=rows;$('stack-comparison').replaceChildren();for(const {mode,result} of rows){const button=document.createElement('button'),canvas=document.createElement('canvas'),label=document.createElement('span');button.className='stack-option';button.dataset.stacking=mode;canvas.width=180;canvas.height=120;label.textContent=stackLabels[mode];button.append(canvas,label);thumbnail(canvas,result.viewer);button.addEventListener('click',()=>{$('patch-stacking').value=mode;display(result,`Current drawing · ${stackLabels[mode]}`,'drawing');for(const b of $('stack-comparison').children)b.setAttribute('aria-pressed',String(b===button));status(`${stackLabels[mode]} comparison selected. All five models use the same drawing and layer parameters.`);});$('stack-comparison').append(button);}$('stack-comparison').firstElementChild.click();}));
+  $('compare-stacks').addEventListener('click',()=>work(async(api,check)=>{const requested=patchRequest(),rows=[];for(const mode of Object.keys(stackLabels))rows.push({mode,result:await api('science/patch',{...requested,stacking:mode})});check();$('stack-comparison').replaceChildren();for(const {mode,result} of rows){const button=document.createElement('button'),canvas=document.createElement('canvas'),label=document.createElement('span');button.className='stack-option';button.dataset.stacking=mode;canvas.width=180;canvas.height=120;label.textContent=stackLabels[mode];button.append(canvas,label);thumbnail(canvas,result.viewer);button.addEventListener('click',()=>{$('patch-stacking').value=mode;display(result,`Current drawing · ${stackLabels[mode]}`,'drawing');for(const b of $('stack-comparison').children)b.setAttribute('aria-pressed',String(b===button));status(`${stackLabels[mode]} comparison selected. All five models use the same drawing and layer parameters.`);});$('stack-comparison').append(button);}$('stack-comparison').firstElementChild.click();}));
   let crystalTemplates=[];
-  function buildMatchedPeriodic(option,request){return work(async api=>{
-    const r=await api('science/model',{template_id:option.id,recipe_match:request,repeats:repeats()});
-    basePeriodic={result:r,title:option.label};hypothesis=null;$('network-comparison').hidden=true;
-    $('structure-source').value='periodic';$('drawing-model-controls').hidden=true;$('periodic-model-controls').hidden=false;
-    $('crystal-template').value=option.id;templateNote();display(r,option.label,'matched-periodic');
-    $('viewer-provenance').textContent='Periodic design matched to the current precursors and chosen connectivity · unrelaxed hypothesis';
-    status('Matching periodic design generated. Inspect geometry before interpreting pore properties or PXRD.');
-  });}
   function templateNote(){const item=crystalTemplates.find(t=>t.id===$('crystal-template').value);$('crystal-template-note').textContent=item?.description||'';}
   $('crystal-template').addEventListener('change',()=>{templateNote();invalidate('Periodic template changed. Generate it to replace the displayed model.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
   async function loadScience(){try{const data=await S.api('science/library');crystalTemplates=data.templates||[];$('crystal-template').replaceChildren();for(const t of crystalTemplates){const o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('crystal-template').append(o);}$('crystal-template').value=crystalTemplates.some(t=>t.id==='dia-imine')?'dia-imine':crystalTemplates[0]?.id;templateNote();}catch(e){status(e.message,true);}}
@@ -124,16 +192,42 @@
   $('undo-geometry').addEventListener('click',()=>{const previous=geometryHistory.pop();if(!previous)return;S.acceptRecipe(previous.recipe,previous.sourceId,previous.metadata);$('undo-geometry').disabled=!geometryHistory.length;S.render();});
   $('render-geometry').addEventListener('click',()=>S.render());
   $('clean-geometry').addEventListener('click',async()=>{if(S.state.busy)return;try{remember();const r=await S.api('layout',{...drawingRequest(),operation:'clean'});S.acceptRecipe(r.recipe);await S.render();const review=S.geometryReviewMessage(r.audit?.layout_refinement);geometryMessage(review||'Geometry cleaned as a new design. Source alignment is preserved in the original source recipe.');if(review)S.notice(`Drawing created. ${review}`);}catch(e){S.notice(e.message,true);}});
-  $('measure-pore').addEventListener('click',async()=>{const recipe=S.state.recipe,rendered=S.state.result,key=signature();try{if(!rendered||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)throw new Error('Render the current drawing before measuring its pore.');const result=await S.api('science/measure',drawingRequest());if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)return;const el=$('pore-measurement');el.replaceChildren();const title=document.createElement('strong');title.textContent=`Drawing-plane opening: ${fmt(result.diameter_angstrom,2)} \u00c5 (${fmt(result.diameter_angstrom/10,2)} nm)`;const p=document.createElement('p');p.textContent=result.scope;el.append(title,p);el.hidden=false;window.dispatchEvent(new CustomEvent('cofdraw:pore-measured',{detail:{result,audit:rendered.audit,recipe}}));}catch(e){if(signature()===key)S.notice(e.message,true);}});
+  $('measure-pore').addEventListener('click',async()=>{
+    const recipe=S.state.recipe,rendered=S.state.result,key=signature();
+    try{
+      if(!rendered||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)throw new Error('Render the current drawing before measuring its pore.');
+      const result=await S.api('science/measure',drawingRequest());
+      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)return;
+      const el=$('pore-measurement'),title=document.createElement('strong');
+      title.textContent=`Pore opening · ${fmt(result.diameter_nm,2)} nm`;
+      const method=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
+      method.className='measurement-method';
+      summary.textContent='Measurement method';
+      body.textContent=result.scope;
+      method.append(summary,body);
+      el.replaceChildren(title,method);
+      el.hidden=false;
+      window.dispatchEvent(new CustomEvent('cofdraw:pore-measured',{detail:{result,audit:rendered.audit,recipe}}));
+    }catch(e){if(signature()===key)S.notice(e.message,true);}
+  });
   function drawSourceGallery(library){const root=$('source-gallery');root.replaceChildren();for(const source of library.source_recipes||[]){const b=document.createElement('button'),icon=document.createElement('span'),text=document.createElement('div'),small=document.createElement('small');icon.textContent='⬡';text.textContent=source.label||source.recipe_id;small.textContent=source.layout_origin==='source_coordinates'?'Source-aligned coordinates':'Qualified source drawing';text.append(small);b.append(icon,text);b.addEventListener('click',async()=>{if(S.state.busy)return;try{const r=await S.api(`sources/${encodeURIComponent(source.recipe_id)}`);S.acceptRecipe(r.recipe,source.recipe_id,r.metadata);S.showSourceMonomers(r.recipe,r.metadata);S.state.style=r.recipe.source_style?'source':'standard';S.state.styleOptions={};await S.render();}catch(e){S.notice(e.message,true);}});root.append(b);}}
   window.addEventListener('cofdraw:layoutchanged',()=>{lastRenderedRecipe=null;drawHandles();$('pore-measurement').hidden=true;});
   window.addEventListener('cofdraw:library',e=>{drawSourceGallery(e.detail);loadScience();});
   window.addEventListener('cofdraw:rendered',()=>{lastRenderedRecipe=S.state.recipe;$('pore-measurement').hidden=true;drawHandles();$('layout-details').hidden=Boolean(S.state.recipe?.explicit_graph);const audit=S.state.result?.audit,review=S.state.sourceId?'':S.geometryReviewMessage(audit?.layout_refinement),messages=[review,...(audit?.layout_diagnostics?.warnings||[])].filter(Boolean);if(messages.length||!geometryMode)geometryMessage(messages.join(' '));});
   for(const [ids,target] of [[['probe-radius','pore-samples','pore-refinement'],'porosity-results'],[['bet-data','bet-min','bet-max','bet-cross-section'],'bet-results'],[['descriptor-block','descriptor-conformers','smiles-a','smiles-b'],'monomer-results']])for(const id of ids)$(id).addEventListener('input',()=>{invalidate('',false);$(target).replaceChildren();});
-  function drawingChanged(){const key=signature();syncSource();if(key===drawingKey)return;drawingKey=key;clearComparison();const matched=origin==='matched-periodic';if(matched){basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;}invalidate('The current drawing changed. Regenerate its 3D layers or matching periodic design.', $('structure-source').value==='drawing'||origin==='monomer'||matched);}
+  function drawingChanged(){
+    const key=signature();
+    syncSource();
+    if(key===drawingKey)return;
+    drawingKey=key;
+    clearComparison();
+    cellNote('');
+    currentLayer=null;
+    invalidate('The current drawing changed. Generate its model again.', $('structure-source').value==='drawing'||origin==='monomer'||origin==='current-periodic');
+  }
   window.addEventListener('cofdraw:state',drawingChanged);
   window.addEventListener('cofdraw:layoutchanged',drawingChanged);
   drawingKey=signature();syncSource();
-  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},patchRequest,drawingRequest,buildMatchedPeriodic,viewer,work,status,metric,note,details,display,tab,invalidate};
+  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return origin==='current-periodic'?currentLayer||currentStructure:currentStructure;},patchRequest,drawingRequest,drawingReady,openCurrentCell,viewer,work,status,metric,note,details,display,tab,invalidate};
   if(S.state.library){drawSourceGallery(S.state.library);loadScience();}
 })();

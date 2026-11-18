@@ -1,4 +1,6 @@
 """A periodic design must match chemistry and unchanged incidence, not labels."""
+from collections import Counter
+import hashlib
 from copy import deepcopy
 from pathlib import Path
 import json
@@ -65,3 +67,53 @@ def test_actual_api_match_is_revalidated_before_model_generation(tmp_path):
         result=valid.json();match=result['structure']['provenance']['drawing_match']
         assert match['preserves_drawing_coordinates'] is False
         assert client.get(result['downloads']['cif']).status_code==200
+        automatic=client.post('/api/drawing/science/build-periodic',json=request).json()
+        assert automatic['available'] is True
+        assert automatic['cell_validation']['template_cif_sha256']==hashlib.sha256(
+            (tmp_path/'crystal-models/hcb-imine-aa.cif').read_bytes()).hexdigest()
+        assert automatic['structure']['atoms']==result['structure']['atoms']
+
+
+@pytest.mark.parametrize('a,b,linkage,template,formula,joins', [
+    ('tp','pa','beta_ketoenamine','hcb_3_2',{'C':36,'N':6,'O':6,'H':24},6),
+    ('ta','tapp','imine','sql_4_2',{'C':60,'N':8,'H':38},4),
+])
+def test_builds_an_unbundled_current_cell_with_real_bonds_and_cif(tmp_path,a,b,linkage,template,formula,joins):
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    from cof_vision.cofdraw_network import inspect_periodic_network
+    from cof_vision.cofdraw_science import import_cif
+    catalog=Path(__file__).resolve().parents[1]/'data/framework-drawing/catalog/current.json'
+    rows={row['id']:row['smiles'] for row in json.loads(catalog.read_text('utf8'))['monomer_presets']}
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        prepared=client.post('/api/drawing/prepare',json=dict(monomer_a=rows[a],monomer_b=rows[b],linkage=linkage,template_id=template))
+        assert prepared.status_code==200,prepared.text
+        drawing=prepared.json()['recipe']
+        response=client.post('/api/drawing/science/build-periodic',json={'recipe':drawing})
+        assert response.status_code==200,response.text
+        result=response.json()
+        assert result['available'],result
+        cif=client.get(result['downloads']['cif']).text
+        assert 'unrelaxed AA starting model' in cif
+        cell=import_cif(cif)
+        assert Counter(atom['element'] for atom in cell['atoms'])==formula
+        assert result['structure']['provenance']['kind']=='cofdraw_periodic_starting_model'
+        assert result['structure']['provenance']['linkage']==linkage
+        network=inspect_periodic_network(cell)
+        assert network['dimensions']==[2] and network['quotient_component_count']==1
+        assert not network['short_contacts'] and not network['isolated_atom_indices']
+        assert network['edge_count']==result['cell_validation']['expected_atom_edges_verified']
+        assert len(drawing['connections'])>joins
+        if template=='sql_4_2':
+            assert result['structure']['provenance']['tilted_phenyl_ring_count']==4
+            shifted=client.post('/api/drawing/science/stacking',json={
+                'structure':result['structure'],'stacking':'AB','spacing':5.,'corrugated_layer':True})
+            assert shifted.status_code==200,shifted.text
+            assert len(shifted.json()['structure']['atoms'])==2*sum(formula.values())
+            pxrd=client.post('/api/drawing/science/pxrd',json={
+                'structure':shifted.json()['structure'],'two_theta_max':20.})
+            assert pxrd.status_code==200,pxrd.text
+            assert pxrd.json()['peaks'] and client.get(pxrd.json()['downloads']['csv']).status_code==200
+        drawing['connections'].pop()
+        drawing['design_template_signature']=design_signature(drawing)
+        rejected=client.post('/api/drawing/science/build-periodic',json={'recipe':drawing}).json()
+        assert rejected['available'] is False and 'downloads' not in rejected

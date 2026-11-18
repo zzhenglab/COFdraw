@@ -104,7 +104,7 @@ def measure_drawing(recipe):
                   "coordinate_anchors": [{"atom_index": i, "xy": (xy[i] / scale).tolist()}
                                          for i in anchor_indices],
                   "meaning": "Horizontal diameter of the sampled inscribed circle; not a wall-to-wall width",
-                  "label_qualification": "2D drawing estimate"}
+                  "label_qualification": "Pore opening"}
     return {"diameter_angstrom":2*best[0],"diameter_nm":best[0]/5,
             "center_angstrom":best[1].tolist(),"annotation":annotation,
             "projected_ring_area_angstrom2":area(ring),"ring_atoms":len(ring),
@@ -112,4 +112,4 @@ def measure_drawing(recipe):
             "grid_diagonal_angstrom":float(np.linalg.norm((hi-lo)/89)),
             "sampling_lower_bound":True,"explicit_hydrogens_included":sum(a.GetAtomicNum()==1 for a in mol.GetAtoms()),
             "method":"Largest sampled circle constrained inside the largest projected macrocycle in the bounded symmetric ring basis, excluding all explicit-atom van der Waals disks",
-            "scope":"2D drawing estimate with conventional bond-length scaling; implicit H, stacking, and out-of-plane distortion are omitted. Sampling gives a lower bound for this projection, not a physical pore diameter. Use a periodic 3D model for physical pore screening."}
+            "scope":"Largest sampled opening in the drawing plane, calibrated by conventional bond lengths. The value is a lower bound for the projected opening. Periodic pore calculations use a cell and its explicit atomic coordinates."}

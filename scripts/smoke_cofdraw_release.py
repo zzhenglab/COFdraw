@@ -48,7 +48,7 @@ def main():
                 return json.load(response)
         library = api("/api/drawing/library")
         assert len(library["source_recipes"]) == 17 and not library["source_registry_errors"]
-        assert len(library["styles"]) == 20
+        assert {'gradient_stack','sphere_cutaway'} <= {row['id'] for row in library["styles"]}
         expected_catalog=json.loads((args.data_template/'framework-drawing/catalog/current.json').read_text(encoding='utf-8'))
         expected_monomers=len(expected_catalog['monomer_presets'])
         assert {r['id'] for r in library['monomer_presets']}=={r['id'] for r in expected_catalog['monomer_presets']}

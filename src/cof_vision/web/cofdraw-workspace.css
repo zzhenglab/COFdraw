@@ -18,7 +18,14 @@
 .output-bar strong{margin:0;font-size:12px}
 .output-bar .button{padding:6px 9px;min-height:30px;font-size:11px}
 .appearance-options>summary{padding:12px 0}
+.canvas-panel .canvas-appearance,.geometry-options{display:block;margin-top:10px;padding:0 12px;background:#fff;border:1px solid #d6e1da;border-radius:8px}
+.canvas-appearance .appearance-options{margin:0;border:0}
+.geometry-options>summary{padding:12px 0;color:#355f51;font-size:12px;font-weight:600;cursor:pointer}
+.geometry-tools{margin-bottom:0}
+.geometry-options[open]{padding-bottom:10px}
 .layout-details{margin-top:10px;padding:10px 12px}
+.measurement-method{margin-top:5px;color:var(--muted);font-size:11px}
+.measurement-method>summary{cursor:pointer}
 .science-model-state{font-size:11px;line-height:1.65;padding:10px 12px;margin:0 0 13px;border:1px solid #d2e2db;border-radius:7px;background:#edf5ef;color:#416b59}
 .science-model-state .button{font-size:11px;padding:6px 9px;margin:7px 5px 0 0;min-height:30px}
 .diffraction-legend{display:flex;flex-wrap:wrap;gap:8px 15px;font-size:11px;margin:10px 0}

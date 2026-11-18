@@ -71,7 +71,7 @@ def test_annotation_endpoints_bind_exact_reported_diameter_to_drawing_coordinate
     assert result['diameter_nm'] * 10 == pytest.approx(result['diameter_angstrom'])
     assert endpoints[0, 1] == endpoints[1, 1]
     assert 'inscribed circle' in annotation['meaning']
-    assert annotation['label_qualification'] == '2D drawing estimate'
+    assert annotation['label_qualification'] == 'Pore opening'
     for anchor in annotation['coordinate_anchors']:
         assert anchor['xy'] == pytest.approx(points[anchor['atom_index']])
     # Every point on the diameter stays clear of explicit-atom exclusion disks.
@@ -89,7 +89,7 @@ def test_measure_api_retains_annotation_units_and_scope(tmp_path):
     assert len(result['annotation']['endpoints']) == 2
     assert result['diameter_nm'] == pytest.approx(result['diameter_angstrom'] / 10)
     assert result['sampling_lower_bound'] is True
-    assert 'not a physical pore diameter' in result['scope']
+    assert 'lower bound for the projected opening' in result['scope']
 
 
 def test_explicit_hydrogen_is_an_obstacle_in_the_supplied_projection():

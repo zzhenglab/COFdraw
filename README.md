@@ -36,7 +36,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.8.1 |
+| Feature | Included in v0.8.2 |
 | --- | --- |
 | Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
 | Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |
@@ -44,7 +44,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 | Precursor accessibility | Offline RDKit SA Score for finite monomers and declared precursor summaries; a heuristic, not ASKCOS or COF synthesis prediction |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
 | Geometry editing | Bond-angle-aware rigid-block layout, direct atom drag, block editing, undo, and geometry warnings |
-| Presentation | 20 styles, 13 palettes, custom colors, source highlights, halos, and illustrative layers |
+| Presentation | 22 styles, 17 palettes, custom colors, highlights, gradient layers, and shaded spheres |
 | Figure / chemical export | PNG, SVG, MOL, SDF, CDXML, and editable JSON |
 | 3D structures | Current-drawing layers, stacking comparisons, multiple representations, periodic templates, CIF import and coordinate export |
 | Network hypotheses | Explicit translated periodic copies with group colors and collision checks; interpenetration remains a qualified hypothesis |
@@ -63,7 +63,7 @@ Choose A, then pick from compatible B structures. The current pair stays visible
 
 The [literature review](docs/yaghi-literature-review.md) adds 37 finite monomers checked against specific published structures, bringing the library to 118. Twenty additions have supported drawing roles; 17 remain reference-only. The searchable coverage ledger records 294 title-screened entries, 100 selected research/background entries, reviewed pages and unresolved structures. It is a qualified figure-based review, not an exhaustive main-paper/SI audit.
 
-Open **3D & properties** to check the current drawing immediately. For supported precursor pairs, **Find a periodic design for these monomers** offers a corresponding unrelaxed cell. The default TFB/TAPB design now has a matched model; other drawings retain finite checks and scattering unless a matching model or CIF is available. Stacking comparisons distinguish finite illustrations from explicit periodic cells.
+Open **3D & properties** to build an unrelaxed periodic CIF for supported current drawings. It uses your declared chemistry and chosen hexagonal or square connectivity. Finite previews remain available for any drawing and for cases that need a corresponding CIF.
 
 Source drawings retain their recorded coordinates and presentation. The restored Pyurea and UCOF layouts use source-informed block positions rather than forcing a rectangular or regular-hexagonal arrangement. These are qualified reconstructions, not exact image registrations. See the [recovered drawing catalog](docs/recovered-source-drawings.md).
 
@@ -87,7 +87,7 @@ The new layout preserves molecular blocks while correcting their connection angl
 
 ![Five selectable stacking illustrations with layer colors and a mixed sphere/skeletal view](docs/assets/cofdraw-stacking-v062.png)
 
-![Exported drawing with a double-ended pore-size arrow and qualified 2D estimate](docs/assets/cofdraw-pore-measure-v062.png)
+![Exported drawing with a double-ended pore-opening arrow](docs/assets/cofdraw-pore-measure.png)
 
 </details>
 

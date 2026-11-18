@@ -48,7 +48,7 @@ def main():
             page.locator('#build').click();page.wait_for_function("window.COFdrawStudio.state.result && !window.COFdrawStudio.state.busy")
             page.screenshot(path=str(output/'studio-standard.png'));checks.append('Default drawing rendered with real backend')
             page.locator('#measure-pore').click();page.locator('#pore-measurement').wait_for(state='visible')
-            assert 'Drawing-plane opening' in page.locator('#pore-measurement').inner_text()
+            assert 'Pore opening' in page.locator('#pore-measurement').inner_text()
             checks.append('Bounded 2D pore opening measurement displayed')
             page.locator('#smiles-b').fill('NNC(=O)c1ccc(C(=O)NN)cc1')
             page.wait_for_function("document.getElementById('linkage').value==='acylhydrazone'")
@@ -59,6 +59,7 @@ def main():
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1' && !window.COFdrawStudio.state.busy")
             page.locator('[data-style="source"]').click();page.wait_for_function("!window.COFdrawStudio.state.busy")
             page.screenshot(path=str(output/'studio-source-halo.png'));checks.append('Recovered source alignment and halo style rendered')
+            page.locator('#geometry-options > summary').click()
             page.locator('#edit-geometry').click();handles=page.locator('#geometry-overlay [data-atom]');assert handles.count()>50
             before=page.evaluate('JSON.stringify(window.COFdrawStudio.state.recipe.explicit_graph.atoms[0].xy)')
             handles.first.scroll_into_view_if_needed()

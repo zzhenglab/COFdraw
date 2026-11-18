@@ -134,7 +134,7 @@ def main():
     layout = commands.add_parser("layout", help="Request an explicit layout revision; saves the returned recipe")
     layout.add_argument("--request", type=Path, required=True)
     science = commands.add_parser("science", help="Run a documented local structure/analysis endpoint")
-    science.add_argument("endpoint", choices=["library", "capabilities", "query", "model", "patch", "networks", "monomer", "porosity", "geometry", "synthesis-library", "adsorption-engine", "adsorption", "bet", "measure", "inspect", "pxrd", "screen", "finite-inspect", "finite-powder", "stacking", "periodic-options"])
+    science.add_argument("endpoint", choices=["library", "capabilities", "query", "model", "patch", "networks", "monomer", "porosity", "geometry", "synthesis-library", "adsorption-engine", "adsorption", "bet", "measure", "inspect", "pxrd", "screen", "finite-inspect", "finite-powder", "stacking", "periodic-options", "build-periodic"])
     science.add_argument("--request", type=Path)
     for sub in (source, design):
         sub.add_argument("--style", default="standard")

@@ -41,7 +41,17 @@ The bundled periodic examples were generated with **pyCOFBuilder 0.0.9.4**: HCB 
 
 `/science/periodic-options` compares an unchanged drawing-template signature, implemented linkage, and the two exact canonical isomeric precursor graphs with explicit match records in the bundled model manifest. It also reconstructs the expected product fragments and rejects edited chemistry that no longer follows those declarations. A match returns a bounded choice of separately generated models; it does not fit the finite drawing's coordinates to a cell. An empty result includes a reason and leaves finite-model checks available.
 
-Selecting a returned option through `/science/model` with `recipe_match` revalidates that binding and the model file's manifest hash. The resulting CIF has the periodic model's own unrelaxed coordinates and records the precursor match in provenance. It does not acquire the drawing's literature identity. A source drawing without a matching unchanged design signature, modified connectivity, a new precursor, or an unsupported linkage cannot be converted this way. There is no arbitrary finite-patch-to-CIF procedure. Agents can follow the [current-model workflow](../skills/cofdraw/references/agent-workflows.md#a-periodic-structure-inspection-workflow) without silently selecting an unrelated model.
+Selecting a returned option through `/science/model` with `recipe_match` revalidates that binding and the model file's manifest hash. The CIF and its provenance record the unrelaxed coordinates and the precursor match.
+
+### Building a periodic cell from the current drawing
+
+`/science/build-periodic` accepts the declared recipe. It verifies the same precursor chemistry and template incidence. With automatic spacing it first tries an exact bundled AA match. Otherwise it assembles the reacted building blocks on the chosen HCB 3+3, HCB 3+2, SQL 4+2 or SQL 4+4 connection graph. It uses each reactive port once across explicit cell translations. Building blocks are kept rigid while their orientations, positions and the cell vectors are fitted to the port directions and connection lengths.
+
+The initial coordinates use a 1.40 Å drawing bond scale. Inter-block bonds target 1.29 Å for double bonds and 1.42 Å for single bonds. Hydrogens are added to the reacted blocks before their connection placeholders are removed. Supported fragments are neutral overall and contain C, H, B, N, O or F. Specified stereochemistry, isotope labels, radicals and unsupported topologies require supplied coordinates. Para-substituted meso phenyl rings on supported porphyrins are tilted 60° to reduce steric overlap. This is a chosen starting geometry inspired by observed aryl tilt in porphyrins. [Porphyrin diffraction study](https://journals.iucr.org/e/issues/2014/10/00/lx2293/)
+
+The builder checks the periodic atomic edges against the intended graph, tests short contacts and verifies a connected rank-two layer. Automatic spacing uses 3.4 Å for the planar construction and starts at 5.0 Å for tilted phenyl arms. An explicit spacing is checked as supplied. The CIF is P1, with the unrelaxed model and its spacing identified in the header. The JSON stores the cell, precursor record and validation, including intended bonds and any formal charges for newly assembled models. Partial charges and experimental crystal identity require their own evidence.
+
+Drawings without a supported declared template or a valid fit return `available: false` and a reason. The finite preview remains available. Phase assignment, stability and geometry relaxation require separate work. [Current-model workflow for agents](../skills/cofdraw/references/agent-workflows.md#a-periodic-structure-inspection-workflow)
 
 ## Finite layer illustrations
 

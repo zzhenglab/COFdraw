@@ -21,6 +21,10 @@ PALETTES.update({
     'earth': ['#a96743', '#6e8c63', '#7795aa', '#b68c98'],
     'colorblind': ['#0072b2', '#e69f00', '#009e73', '#cc79a7'],
     'sunlight': ['#e9b82c', '#32a4b0', '#9a77b9', '#df8066'],
+    'lagoon': ['#236d87', '#62aeaa', '#5575b0', '#e4b682'],
+    'orchid': ['#6d548e', '#c3739f', '#7999bd', '#a9b67d'],
+    'ember': ['#a8464a', '#dd9768', '#665f91', '#bca570'],
+    'jade': ['#32795f', '#a2b97d', '#617faa', '#d28983'],
 })
 FONTS=["Arial","Times New Roman","Cambria","Calibri","Verdana","Courier New","Segoe UI"]
 STYLES=[
@@ -44,12 +48,29 @@ STYLES=[
     {"id":"cartoon_overlay","label":"Chemical + cartoon regions","description":"Full chemical drawing over soft building-block symbols.","category":"schematic"},
     {"id":"glow_outline","label":"Soft molecular glow","description":"Soft colored light follows the chemical bonds while preserving the sharp drawing.","category":"chemical"},
     {"id":"molecular_spheres","label":"Molecular spheres illustration","description":"Shaded atoms and rods on the existing 2D coordinates; an illustrative molecular projection.","category":"layered"},
+    {"id":"gradient_stack","label":"Gradient layers","description":"A sharp chemical drawing over tilted sheets with depth and color gradients.","category":"layered",
+     "flat_foreground":True,"design_reference":"https://www.sciencedirect.com/science/article/pii/S2451929423003662"},
+    {"id":"sphere_cutaway","label":"Spheres and bonds","description":"Shaded atoms fade into a fully readable chemical drawing.","category":"layered",
+     "flat_foreground":True,"design_reference":"https://doi.org/10.1021/jacs.5c01990"},
 ]
 for row in STYLES:
     row["preview_kind"]=row["id"]
     row["representation_scope"]=("Illustrative layers/projection; not a crystal structure or CIF." if row["category"]=="layered" else
                                   "Building-block schematic; consult monomers and chemical exports for atom-level structure." if row["category"]=="schematic" else
                                   "Chemical depiction; presentation does not change connectivity.")
+
+# Pair colors and line weights with the presentation rather than drawing each
+# setting independently. The saved resolved style is still fully editable.
+RANDOM_STYLES = (
+    ('gradient_stack', ('lagoon', 'orchid', 'ember', 'jade')),
+    ('gradient_stack', ('ocean_coral', 'lavender_mint', 'purple_gold')),
+    ('sphere_cutaway', ('lagoon', 'orchid', 'jade', 'rose_slate')),
+    ('pastel_blocks', ('lavender_mint', 'pastel', 'forest_berry', 'ember')),
+    ('ring_fill', ('cobalt_citrus', 'orchid', 'jade', 'ocean_coral')),
+    ('red_blue', ('colorblind', 'rose_slate', 'earth', 'lagoon')),
+    ('glow_outline', ('sunlight', 'ocean_coral', 'lavender_mint')),
+)
+
 
 def style_configuration(style_id, seed=None, options=None):
     options=dict(options or {})
@@ -58,10 +79,15 @@ def style_configuration(style_id, seed=None, options=None):
     if set(options)-allowed: raise ValueError("Unknown style options: "+", ".join(sorted(set(options)-allowed)))
     if style_id=="random":
         seed=random.SystemRandom().randrange(2**31) if seed is None else seed
-        rng=random.Random(seed); style_id=rng.choice(STYLES[1:])["id"]
-        defaults={"palette":rng.choice(list(PALETTES)),"font_family":rng.choice(FONTS),"font_scale":rng.choice([.9,1,1.1]),
-                  "bond_scale":rng.choice([.8,1,1.3]),"fill_opacity":rng.choice([.12,.2,.3]),"layer_opacity":rng.choice([.16,.25,.35]),
-                  "layer_count":rng.choice([2,3,4]),"edge_style":rng.choice(["wavy_cross","dashed","crossbar"])}
+        rng=random.Random(seed)
+        style_id, palettes = rng.choice(RANDOM_STYLES)
+        defaults={"palette":rng.choice(palettes),"font_scale":rng.choice([1.,1.05,1.1]),
+                  "bond_scale":rng.choice([.95,1.1,1.25]),"fill_opacity":rng.choice([.16,.21,.27])}
+        if style_id=='gradient_stack':
+            defaults.update(layer_count=rng.choice([3,4,5]), layer_spacing=rng.choice([.038,.044,.05]),
+                            layer_opacity=rng.choice([.46,.55,.64]), projection_tilt=rng.choice([37,44,50]))
+        elif style_id=='sphere_cutaway':
+            defaults.update(sphere_scale=rng.choice([.9,1.,1.12]))
         defaults.update(options); options=defaults
     if style_id not in {s["id"] for s in STYLES}: raise ValueError("Unknown drawing style")
     defaults={"palette":"classic","font_family":"Times New Roman" if style_id=="serif" else "Arial","font_scale":1.,"bond_scale":1.,
@@ -76,6 +102,10 @@ def style_configuration(style_id, seed=None, options=None):
     elif style_id in ('stacked_eclipsed', 'stacked_slipped', 'perspective'):
         defaults['palette'] = 'ocean_coral'
         defaults['layer_opacity'] = .38
+    elif style_id == 'gradient_stack':
+        defaults.update(palette='lagoon', layer_count=5, layer_spacing=.044, layer_opacity=.56, projection_tilt=43.)
+    elif style_id == 'sphere_cutaway':
+        defaults.update(palette='orchid', sphere_scale=1.)
     defaults.update(options)
     if defaults["palette"] not in PALETTES or defaults["font_family"] not in FONTS: raise ValueError("Choose a supported palette and font")
     if defaults["edge_style"] not in {"wavy_cross","dashed","crossbar","bond_stub"}: raise ValueError("Unknown continuation mark")
@@ -111,6 +141,93 @@ def hull(points):
         upper.append(p)
     return lower[:-1]+upper[:-1]
 
+def _segments(mol, xy, *, real_only=False):
+    for bond in mol.GetBonds():
+        a, b = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        if real_only and not (mol.GetAtomWithIdx(a).GetAtomicNum() and mol.GetAtomWithIdx(b).GetAtomicNum()):
+            continue
+        yield f'M {xy[a][0]:.3f},{xy[a][1]:.3f} L {xy[b][0]:.3f},{xy[b][1]:.3f}'
+
+
+def _mix(first, second, fraction):
+    channels = [round((1-fraction)*int(first[i:i+2],16)+fraction*int(second[i:i+2],16)) for i in (1,3,5)]
+    return '#'+''.join(f'{value:02x}' for value in channels)
+
+
+def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options):
+    paths = ' '.join(_segments(mol, xy, real_only=True))
+    if not paths:
+        return
+    count = options['layer_count']-1
+    center = (xy.min(0)+xy.max(0))/2
+    tilt = math.radians(options['projection_tilt'])
+    vertical = .96-.31*(1-math.cos(tilt))
+    skew = -.18*options['projection_tilt']
+    spacing = min(options['layer_spacing']*size, size*.20/count)
+    # Keep the front chemical layer clear where an underlying sheet crosses it.
+    mask = ET.SubElement(defs,tag('mask'),{'id':'front-bond-clearance','maskUnits':'userSpaceOnUse',
+                                          'x':'0','y':'0','width':str(size),'height':str(size)})
+    ET.SubElement(mask,tag('rect'),{'width':str(size),'height':str(size),'fill':'white'})
+    ET.SubElement(mask,tag('path'),{'d':' '.join(_segments(mol,xy)), 'fill':'none','stroke':'black',
+                                     'stroke-width':str(bond*.42),'stroke-linecap':'round'})
+    sheets = ET.SubElement(root,tag('g'),{'data-layer':'gradient-stack','mask':'url(#front-bond-clearance)'})
+    ring_faces = ' '.join('M '+' L '.join(f'{xy[i][0]:.3f},{xy[i][1]:.3f}' for i in ring)+' Z'
+                          for ring in mol.GetRingInfo().AtomRings() if 3<=len(ring)<=8)
+    for k in range(count,0,-1):
+        weight = k/count
+        name = f'depth-ramp-{k}'
+        gradient = ET.SubElement(defs,tag('linearGradient'),{'id':name,'gradientUnits':'userSpaceOnUse',
+            'x1':str(size*.19),'y1':str(size*.23),'x2':str(size*.84),'y2':str(size*.83)})
+        for stop, color in (('0%',_mix(palette[0], '#ffffff', .16+.22*weight)),
+                            ('55%', _mix(palette[1], '#ffffff', .17)),
+                            ('100%', _mix(palette[-1], '#ffffff', .20))):
+            ET.SubElement(gradient,tag('stop'),{'offset':stop,'stop-color':color})
+        layer = ET.SubElement(sheets,tag('g'),{'data-illustrative-layer':str(k),
+            'transform':f'translate({center[0]+k*spacing*.24},{center[1]+k*spacing}) '
+                        f'skewX({skew}) scale(.97,{vertical}) translate({-center[0]},{-center[1]})',
+            'opacity':str(options['layer_opacity']*(1-.24*weight))})
+        base = {'d':paths,'fill':'none','stroke-linecap':'round','stroke-linejoin':'round'}
+        ET.SubElement(layer,tag('path'),{**base,'stroke':_mix(palette[0],'#253342',.48),
+            'stroke-width':str(bond*.68),'transform':f'translate(0,{bond*.086})'})
+        ET.SubElement(layer,tag('path'),{'d':ring_faces,'fill':f'url(#{name})'})
+        ET.SubElement(layer,tag('path'),{**base,'stroke':f'url(#{name})','stroke-width':str(bond*.65)})
+
+
+def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False):
+    atom_colors={6:'#6c8190',7:'#476fcd',8:'#db5d59',16:'#d3ac41',5:'#c99a7d',9:'#61b887',17:'#61b887'}
+    for color in sorted(set(atom_colors.values())|set(colors.values())):
+        gradient=ET.SubElement(defs,tag('radialGradient'),{'id':'sphere-'+color[1:],'cx':'29%','cy':'24%','r':'76%'})
+        for stop, shade in (('0%','#ffffff'),('35%',color),('100%',_mix(color,'#22313b',.72))):
+            ET.SubElement(gradient,tag('stop'),{'offset':stop,'stop-color':shade})
+    spheres=ET.Element(tag('g'),{'data-layer':'illustrative-spheres','data-coordinate-scope':'Illustrative shaded atoms on drawing coordinates'})
+    ET.SubElement(spheres,tag('path'),{'d':' '.join(_segments(mol,xy,real_only=cutaway)),
+        'stroke':'#91a5ad','stroke-width':str(bond*(.27 if cutaway else .16)),'stroke-linecap':'round','fill':'none'})
+    for i,atom in enumerate(mol.GetAtoms()):
+        p=xy[i]; atomic=atom.GetAtomicNum()
+        if not atomic and cutaway:
+            continue
+        component=colors[audit['atom_origin'][i]['component']]
+        color=component if cutaway and atomic==6 else atom_colors.get(atomic,component)
+        radius=bond*(.43 if cutaway else .22 if atomic==6 else .26)*options['sphere_scale']
+        attrs={'cx':str(p[0]),'cy':str(p[1]),'r':str(radius),'stroke':color,'stroke-width':'.5','data-atom':str(i)}
+        if atomic:
+            attrs['fill']='url(#sphere-'+color[1:]+')'
+        else:
+            attrs.update(fill='none',r=str(bond*.10),stroke='#6d7b83',**{'stroke-dasharray':'2,2'})
+        ET.SubElement(spheres,tag('circle'),attrs)
+    if cutaway:
+        lo, hi = xy.min(0), xy.max(0)
+        ramp = ET.SubElement(defs,tag('linearGradient'),{'id':'cutaway-fade','gradientUnits':'userSpaceOnUse',
+            'x1':str(lo[0]),'y1':str(lo[1]),'x2':str(hi[0]),'y2':str(lo[1]+.39*(hi[1]-lo[1]))})
+        for offset, opacity in (('0%','0.94'),('34%','0.80'),('67%','0'),('100%','0')):
+            ET.SubElement(ramp,tag('stop'),{'offset':offset,'stop-color':'white','stop-opacity':opacity})
+        mask=ET.SubElement(defs,tag('mask'),{'id':'sphere-cutaway-mask','maskUnits':'userSpaceOnUse',
+            'x':'0','y':'0','width':'100%','height':'100%'})
+        ET.SubElement(mask,tag('rect'),{'width':'100%','height':'100%','fill':'url(#cutaway-fade)'})
+        spheres.set('mask','url(#sphere-cutaway-mask)')
+    return spheres
+
+
 def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
     ET.register_namespace('',"http://www.w3.org/2000/svg")
     tag=lambda name:"{http://www.w3.org/2000/svg}"+name
@@ -137,6 +254,8 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
     fills=source_style.get('component_fills',{})
     lengths=[np.linalg.norm(np.asarray(xy)[b.GetBeginAtomIdx()]-np.asarray(xy)[b.GetEndAtomIdx()]) for b in mol.GetBonds()]
     bond_length=float(np.median(lengths)) if lengths else size*.04
+    if style_id=='gradient_stack':
+        _gradient_layers(tag,defs,root,mol,xy,palette,bond_length,size,options)
     halo=source_style.get('halo')
     if style_id=='glow_outline' or halo:
         blur=ET.SubElement(defs,tag('filter'),{'id':'molecular-glow','x':'-30%','y':'-30%','width':'160%','height':'160%'})
@@ -200,28 +319,11 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
                 ET.SubElement(full,tag('polygon'),{"points":" ".join(f"{x},{y}" for x,y in pts),"fill":colors[owner[name]]})
             label=ET.SubElement(full,tag('text'),{"x":str(center[0]),"y":str(center[1]+radius+size*.019),"text-anchor":"middle","font-family":options['font_family'],"font-size":str(size*.018),"fill":"#283c40"})
             label.text=str(component.get('label',owner[name]))[:24]
-    elif style_id=='molecular_spheres':
-        atom_colors={6:'#6c8190',7:'#476fcd',8:'#db5d59',16:'#d3ac41',5:'#c99a7d',9:'#61b887',17:'#61b887'}
-        for color in set(atom_colors.values())|set(colors.values()):
-            gradient=ET.SubElement(defs,tag('radialGradient'),{'id':'sphere-'+color[1:],'cx':'30%','cy':'25%','r':'75%'})
-            ET.SubElement(gradient,tag('stop'),{'offset':'0%','stop-color':'#ffffff'})
-            ET.SubElement(gradient,tag('stop'),{'offset':'35%','stop-color':color})
-            ET.SubElement(gradient,tag('stop'),{'offset':'100%','stop-color':'#22313b'})
-        spheres=ET.SubElement(full,tag('g'),{'data-layer':'illustrative-spheres','data-coordinate-scope':'2D depiction; not a molecular conformer'})
-        for b in mol.GetBonds():
-            a,c=b.GetBeginAtomIdx(),b.GetEndAtomIdx();p,q=xy[a],xy[c]
-            ET.SubElement(spheres,tag('path'),{'d':f'M {p[0]},{p[1]} L {q[0]},{q[1]}','stroke':'#9cabb2',
-                'stroke-width':str(bond_length*.16),'stroke-linecap':'round','fill':'none'})
-        for i,atom in enumerate(mol.GetAtoms()):
-            p=xy[i]
-            if atom.GetAtomicNum()==0:
-                ET.SubElement(spheres,tag('circle'),{'cx':str(p[0]),'cy':str(p[1]),'r':str(bond_length*.10),
-                    'fill':'none','stroke':'#6d7b83','stroke-width':'1.5','stroke-dasharray':'2,2'})
-                continue
-            color=atom_colors.get(atom.GetAtomicNum(),colors[audit['atom_origin'][i]['component']])
-            radius=bond_length*(.22 if atom.GetAtomicNum()==6 else .26)*options['sphere_scale']
-            ET.SubElement(spheres,tag('circle'),{'cx':str(p[0]),'cy':str(p[1]),'r':str(radius),'fill':'url(#sphere-'+color[1:]+')',
-                                               'stroke':color,'stroke-width':'.5','data-atom':str(i)})
+    elif style_id in ('molecular_spheres','sphere_cutaway'):
+        cutaway=style_id=='sphere_cutaway'
+        full.append(_sphere_layer(tag,defs,mol,xy,colors,audit,bond_length,options,cutaway=cutaway))
+        if cutaway:
+            full.append(chemical)
     else:full.append(chemical)
     if style_id in ('stacked_eclipsed','stacked_slipped','perspective'):
         count=options['layer_count'] if style_id!='perspective' else 1

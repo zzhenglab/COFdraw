@@ -79,7 +79,9 @@ def main():
             diameter = math.dist(*pixels) / scale * result['annotation']['angstrom_per_drawing_unit']
             assert abs(diameter - result['diameter_angstrom']) < 1e-8
             assert f"{result['diameter_nm']:.2f} nm" in page.locator('#pore-measurement-overlay').text_content()
-            checks.append('Visible double-ended arrow matches exact backend diameter and nm label')
+            assert page.locator('#pore-measurement-overlay text').count()==1
+            assert '2D estimate' not in page.locator('#pore-measurement').inner_text()
+            checks.append('Visible double-ended arrow has the exact backend diameter and a single nm label')
             page.locator('#canvas-viewport').scroll_into_view_if_needed()
             page.screenshot(path=str(output / 'pore-arrow-1280.png'))
             for width, height in [(1024, 900), (390, 844)]:
@@ -118,6 +120,15 @@ def main():
             assert 'data-cofdraw-pore-measurement' not in original
             checks.append('Annotation leaves ordinary figure and chemical exports unchanged')
             page.locator('#appearance-options').evaluate('element=>element.open=true')
+            page.locator('[data-style="gradient_stack"]').click()
+            page.wait_for_function('!COFdrawStudio.state.busy && COFdrawStudio.state.result.audit.drawing_style.id==="gradient_stack"')
+            assert page.locator('#random-style').evaluate('e=>e.previousElementSibling.id==="measure-pore"')
+            assert page.evaluate('!!(document.querySelector("#appearance-options").compareDocumentPosition(document.querySelector("#geometry-options")) & Node.DOCUMENT_POSITION_FOLLOWING)')
+            page.locator('#measure-pore').click()
+            page.locator('#pore-measurement-overlay').wait_for(state='visible')
+            page.locator('#canvas-viewport').scroll_into_view_if_needed()
+            page.screenshot(path=str(output / 'gradient-layers-with-pore-arrow.png'))
+            checks.append('Gradient layers retain a flat measurable foreground and the main toolbar exposes Randomize style')
             page.locator('[data-style="perspective"]').click()
             page.wait_for_function('!COFdrawStudio.state.busy && COFdrawStudio.state.result.audit.drawing_style.id==="perspective"')
             assert page.locator('#pore-measurement-overlay').is_hidden()

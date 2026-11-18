@@ -12,15 +12,11 @@
     for(const id of ['inspect-model-state','pxrd-model-state','porosity-model-state']){
       const root=$(id);root.replaceChildren();root.append(text('span',periodic?'Current view: periodic atomic model with a unit cell.':available?'Current view: finite atoms from the drawing. Checks and finite-cluster scattering are available without a CIF. Density, PLD and periodic Bragg peaks require a periodic cell.':'Generate your drawing in 3D, or select a periodic model.'));
       if(!periodic){const b=text('button','Choose a periodic model','button outline');b.addEventListener('click',()=>{C.tab('model');$('structure-source').value='periodic';$('structure-source').dispatchEvent(new Event('change'));});root.append(b);}
-      if(!periodic&&available&&C.origin==='drawing'){
-        const find=text('button','Find a periodic design for these monomers','button outline');find.classList.add('find-matching-periodic');
-        find.addEventListener('click',()=>C.work(async api=>{
-          const request=C.drawingRequest(),result=await api('science/periodic-options',request),choices=text('div','','matching-periodic-options');
-          root.querySelector('.matching-periodic-options')?.remove();choices.append(text('p',result.reason));
-          for(const option of result.options){const button=text('button',`Use ${option.label}`,'button outline');button.dataset.templateId=option.id;button.addEventListener('click',()=>C.buildMatchedPeriodic(option,request));choices.append(button);}
-          if(result.options.length)choices.append(text('small','Same precursors and chosen connectivity; new unrelaxed coordinates and unit cell.'));
-          root.append(choices);C.status(result.reason);
-        }));root.append(find);
+      if(!periodic&&C.drawingReady()){
+        const generate=text('button','Build CIF from current drawing','button outline');
+        generate.classList.add('build-cif-from-drawing');
+        generate.addEventListener('click',C.openCurrentCell);
+        root.append(generate);
       }
       if(id==='porosity-model-state'&&!periodic&&available&&C.origin==='drawing'){const b=text('button','Measure this drawing’s pore','button outline');b.id='measure-current-finite-pore';b.addEventListener('click',()=>C.work(async api=>{const result=await api('science/measure',C.drawingRequest()),target=$('porosity-results');target.replaceChildren();C.metric(target,'Drawing-plane opening / Å',number(result.diameter_angstrom,2));C.metric(target,'Drawing-plane opening / nm',number(result.diameter_angstrom/10,2));C.note(target,result.scope);C.note(target,'This estimates one opening in the drawing plane. PLD, LCD, density and periodic pore volume require an explicit periodic structure.');downloads(target,result);C.details(target,result);C.status('Measured the current drawing’s opening without a CIF.');}));root.append(b);}
     }
@@ -126,16 +122,33 @@
     C.status(periodic?'Model PXRD calculated from the periodic cell. CSV and JSON are ready.':'Finite-stack scattering calculated from the displayed atoms. CSV and JSON are ready; no periodic crystal was inferred.');
   }));
   $('compare-pxrd-stacks').addEventListener('click',()=>C.work(async(api,check)=>{
-    const periodic=Boolean(C.structure),parent=periodic?structure():C.patchRequest(),modes=periodic?['AA','AB','ABC','slipped']:['AA','AB','ABC','slipped','twisted'],rows=[];
+    const periodic=Boolean(C.structure), origin=C.origin;
+    const parent=periodic?C.stackingLayer:C.patchRequest();
+    const modes=periodic?['AA','AB','ABC','slipped']:['AA','AB','ABC','slipped','twisted'];
+    const spacing=origin==='current-periodic'&&parent.provenance?.spacing_angstrom
+      ?parent.provenance.spacing_angstrom:Number($('patch-spacing').value);
+    const slip=[Number($('patch-slip-x').value),Number($('patch-slip-y').value)];
+    const corrugated_layer=origin==='current-periodic'&&Boolean(parent.provenance?.tilted_phenyl_ring_count);
+    const rows=[], rejected=[];
     for(const mode of modes){
-      const model=await api(periodic?'science/stacking':'science/patch',periodic?{structure:parent,stacking:mode,spacing:Number($('patch-spacing').value),slip:[Number($('patch-slip-x').value),Number($('patch-slip-y').value)]}:{...parent,stacking:mode});
-      const result=await pattern(api,periodic?model.structure:model.viewer,periodic);rows.push({label:mode,profile:result.profile,result,model});
+      try{
+        const input=periodic?{structure:parent,stacking:mode,spacing,slip,corrugated_layer}:{...parent,stacking:mode};
+        const model=await api(periodic?'science/stacking':'science/patch',input);
+        const result=await pattern(api,periodic?model.structure:model.viewer,periodic);
+        rows.push({label:mode,profile:result.profile,result,model});
+      }catch(error){
+        if(error.name==='ObsoleteScienceResult')throw error;
+        rejected.push(`${mode} · ${error.message}`);
+      }
     }
+    if(!rows.length)throw new Error(rejected[0]||'No stacking pattern could be calculated.');
     check();drawPattern(rows[0].profile,rows);const root=$('pxrd-results');root.replaceChildren();
     C.note(root,periodic?'Same supplied planar layer, explicit periodic AA / AB / ABC / progressive-slip cells. Geometry is unrelaxed. Arbitrary twist needs a commensurate cell.':'Same finite drawing and layer count under five chosen transforms. These are Debye scattering curves, without reciprocal-lattice peaks or hkl assignments.');
     C.note(root,'Each curve is normalized to its own maximum. This compares shape and positions, not absolute scattering power or phase fractions.');
-    for(const row of rows){const box=text('div','','metric-note');box.append(text('strong',row.label));downloads(box,row.result);const view=text('button','View this arrangement','button outline');view.addEventListener('click',()=>{C.invalidate('',false);C.display(row.model,`${row.label} · ${periodic?'periodic stacking hypothesis':'finite drawing stack'}`,periodic?'periodic':'drawing');$('patch-stacking').value=row.label;C.status(`${row.label} comparison selected. Recalculate to inspect this arrangement.`);});box.append(view);root.append(box);}
-    warnings(root,rows[0].result.warnings);C.status(`${rows.length} stacking patterns compared under identical calculation settings.`);
+    for(const row of rows){const box=text('div','','metric-note');box.append(text('strong',row.label));downloads(box,row.result);const view=text('button','View this arrangement','button outline');view.addEventListener('click',()=>{C.invalidate('',false);C.display(row.model,`${row.label} · ${periodic?'periodic stacking hypothesis':'finite drawing stack'}`,origin==='current-periodic'?origin:periodic?'periodic':'drawing');if(!periodic)$('patch-stacking').value=row.label;C.status(`${row.label} comparison selected. Recalculate to inspect this arrangement.`);});box.append(view);root.append(box);}
+    warnings(root,rejected);
+    warnings(root,rows[0].result.warnings);
+    C.status(`${rows.length} stacking patterns compared under identical calculation settings.`);
   }));
   $('viewer-axis').addEventListener('change',()=>{
     const axis=$('viewer-axis').value;if(axis==='free')return;const index={a:0,b:1,c:2}[axis],direction=C.viewer.model?.cell?.[index];
