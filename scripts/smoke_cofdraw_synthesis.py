@@ -125,10 +125,8 @@ def main():
             page.locator("details.source-library").evaluate("el=>el.open=true")
             page.locator("#source-select").select_option("ucof-source-layout-v1")
             page.locator("#load-source").click()
-            page.wait_for_function("window.COFdrawStudio.state.sourceId==='ucof-source-layout-v1' && !window.COFdrawStudio.state.busy")
-            if page.evaluate("window.COFdrawStudio.state.dirty"):
-                page.locator("#render-changes").click()
-                page.wait_for_function("!window.COFdrawStudio.state.dirty && !window.COFdrawStudio.state.busy")
+            page.wait_for_function("""COFdrawStudio.state.result?.audit.original_recipe_id==='ucof-source-layout-v1'
+                && !COFdrawStudio.state.busy && !COFdrawStudio.state.dirty""")
             source = page.evaluate("window.COFdrawStudio.state.result.audit.precursor_synthetic_accessibility")
             assert card.is_visible() and source["complete"] and source["total_count"] == 2
             assert "not a synthesis route or COF reaction/yield prediction" in card.inner_text()

@@ -293,13 +293,14 @@ def main():
         page.locator("#framework-image").evaluate("i=>i.decode()")
         page.screenshot(path=str(out/"cofdraw-source.png"),full_page=True)
         checks.append("Source recipe displays qualified COFex ID and full notation")
-        page.locator(".layout-details").evaluate("e=>e.open=true")
+        page.locator("#geometry-options > summary").click()
+        page.locator(".layout-details > summary").click()
         coordinate=page.locator("#layout-rows input").first;coordinate.fill(str(float(coordinate.input_value())+.1));coordinate.press("Tab")
         assert page.locator("#identity-key").inner_text()=="Unassigned design"
         with page.expect_response("**/api/drawing/render") as edited:page.locator("#render-changes").click()
         assert edited.value.status==200,edited.value.text();assert edited.value.json()["audit"]["cofex_id"] is None
         checks.append("Source coordinate edits strip active reference identity before re-render")
-        page.set_viewport_size({"width":390,"height":844});page.locator(".layout-details").evaluate("e=>e.open=false")
+        page.set_viewport_size({"width":390,"height":844});page.locator("#geometry-options").evaluate("e=>e.open=false")
         page.screenshot(path=str(out/"cofdraw-mobile.png"),full_page=True)
         assert page.evaluate("() => document.documentElement.scrollWidth<=innerWidth+1")
         checks.append("390 px layout has no horizontal overflow")
