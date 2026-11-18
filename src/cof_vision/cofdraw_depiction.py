@@ -1,12 +1,6 @@
-"""Scoped coordinate generation for conventional free-base porphyrin drawings.
-
-RDKit's default macrocycle layout flattens the pyrroles. Its built-in ring
-template gives the four rings regular pentagonal geometry without changing the
-graph. Opt in per molecule, never through global depiction preferences. This
-is a 2D drawing convention, not an optimized molecular geometry.
-"""
+"""Scoped 2D layouts for porphyrin macrocycles and triptycene-based monomers."""
 from rdkit import Chem
-from rdkit.Chem import rdDepictor
+from rdkit.Chem import rdCoordGen, rdDepictor
 
 
 # Porphine connectivity, independent of substituents, atom order, isotope and
@@ -17,6 +11,7 @@ _PORPHINE = Chem.MolFromSmarts(
     "~[#6]~[#6]3~[#7]~[#6](~[#6]~[#6]4~[#6]~[#6]~[#6]~1~[#7]~4)"
     "~[#6]~[#6]~3)~[#6]~[#6]~2"
 )
+_TRIPTYCENE = Chem.MolFromSmiles("c1ccc2c(c1)C1c3ccccc3C2c2ccccc21")
 
 
 def free_base_porphyrin_core(mol):
@@ -48,4 +43,14 @@ def compute_2d_coords(mol, **kwargs):
     """
     if has_free_base_porphyrin(mol):
         kwargs.update(useRingTemplates=True, forceRDKit=True)
+    elif not kwargs and mol.HasSubstructMatch(_TRIPTYCENE):
+        # CoordGen depicts the three blades separately. Rescale its ~1 Å
+        # drawing bonds to the RDKit convention used by the sketch toolbar.
+        rdCoordGen.AddCoords(mol)
+        conformer = mol.GetConformer()
+        for atom in mol.GetAtoms():
+            index = atom.GetIdx()
+            position = conformer.GetAtomPosition(index)
+            conformer.SetAtomPosition(index, (1.5 * position.x, 1.5 * position.y, 0.))
+        return conformer.GetId()
     return rdDepictor.Compute2DCoords(mol, **kwargs)

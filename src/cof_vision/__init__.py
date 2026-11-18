@@ -1,3 +1,3 @@
 """COF Vision: evidence-linked structures from scientific figures."""
 
-__version__ = "0.8.2"
+__version__ = "0.8.3"

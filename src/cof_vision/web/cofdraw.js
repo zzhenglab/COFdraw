@@ -378,12 +378,12 @@ function drawLibraryEvidence(item){
   $("library-audit-qualifier").textContent=groundTruth?"This catalog record is explicitly marked as ground truth; its source records and scope are shown below.":explicitProvisional?"Source-catalog candidate — not ground truth. Review evidence does not establish synthetic feasibility.":"No monomer-level ground-truth status is supplied. Keep the source record's scope and qualifiers.";
   $("library-name-scope").textContent=item.name_scope||"Abbreviations can refer to different molecules in different papers.";
   const records=$("library-evidence-records");records.replaceChildren();
-  for(const row of evidence){const entry=document.createElement("li");entry.textContent=[row.annotation_id||row.source_label||"Source record",row.source_page!==undefined?`page ${row.source_page}`:null,row.review_status?`review: ${row.review_status.replaceAll("_"," ")}`:null,row.ground_truth===false?"not ground truth":row.ground_truth===true?"marked ground truth":null].filter(Boolean).join(" · ");records.append(entry);}
+  for(const row of evidence){const entry=document.createElement("li");entry.textContent=[row.annotation_id||row.source_label||"Source record",row.reported_framework,row.source_locator,row.source_page!==undefined?`page ${row.source_page}`:null,row.review_status?row.review_status.replaceAll("_"," "):null,row.ground_truth===false?"provisional":row.ground_truth===true?"marked ground truth":null].filter(Boolean).join(" · ");records.append(entry);}
   if(!evidence.length){const entry=document.createElement("li");entry.textContent=item.review_status?`Catalog review: ${item.review_status.replaceAll("_"," ")}`:"No per-source review record is supplied for this entry.";records.append(entry);}
   if(item.master_binding&&typeof item.master_binding==="object"){const binding=item.master_binding,entry=document.createElement("li"),details=document.createElement("details"),summary=document.createElement("summary"),qualification=document.createElement("p");summary.textContent=binding.status==="source_doi_and_finite_precursor_graph_match"?"Master-key match: source DOI and finite precursor graph":"Master-key audit record";qualification.textContent=[binding.qualification,binding.ground_truth===false?"This match is not a human ground-truth admission.":null].filter(Boolean).join(" ");details.append(summary,qualification);for(const key of ["record_ids","component_ids","reference_index_sha256","master_sha256","mapped_sha256","installation_receipt_sha256"]){const value=binding[key];if(!value)continue;const line=document.createElement("p");line.className="library-audit-record";line.textContent=`${key.replaceAll("_"," ")}: ${Array.isArray(value)?value.join(", "):String(value)}`;details.append(line);}entry.append(details);records.append(entry);}
   const links=$("library-source-links");links.replaceChildren();const dois=[...new Set([...(item.source_dois||[]),...evidence.map(row=>row.source_doi)].filter(value=>typeof value==="string"&&/^10\.\d{4,9}\/\S+$/i.test(value)))];
   for(const doi of dois){const link=document.createElement("a");link.href=`https://doi.org/${doi}`;link.target="_blank";link.rel="noopener noreferrer";link.textContent=doi;links.append(link);}
-  $("library-limitations").textContent=[...(Array.isArray(item.limitations)?item.limitations:[]),item.compatibility_scope].filter(value=>typeof value==="string").join(" ");
+  $("library-limitations").textContent=[...(Array.isArray(item.limitations)?item.limitations:[]),item.compatibility_scope,item.qualification].filter(value=>typeof value==="string").join(" ");
 }
 async function loadLibraryThumbnail(card,item){
   if(card.dataset.previewState)return;
@@ -405,6 +405,7 @@ async function selectLibraryItem(id,expand=true){
   const symmetry=item.point_group||item.symmetry;$("library-geometry").textContent=[item.geometry_hint?.replaceAll("_"," "),symmetry?`Point group: ${Array.isArray(symmetry)?symmetry.join(", "):symmetry}`:null].filter(Boolean).join("; ")||"Not assigned";
   const chips=$("library-groups");chips.replaceChildren();for(const group of libraryGroups(item)){const chip=document.createElement("span");chip.className="group-chip";chip.textContent=`${group.count} × ${group.label||group.kind.replaceAll("_"," ")}`;chips.append(chip);}
   const choice=libraryChoice(item),target=$("library-target").value;$("library-compatibility").textContent=choice.reason;$("library-compatibility").classList.toggle("unavailable",!choice.compatible);$("library-apply").disabled=!choice.compatible||libraryView.busy;$("library-edit").disabled=libraryView.busy;$("library-apply").textContent=target==="editor"?"Open single monomer":`Use as ${target.toUpperCase()}`;
+  $("library-solubility").disabled=libraryView.busy;
   drawLibraryEvidence(item);if(expand){$("library-evidence-panel").open=false;requestAnimationFrame(()=>{$("library-detail-panel").scrollIntoView({block:"nearest"});$("library-detail-panel").querySelector("summary").focus({preventScroll:true});});}
   if(!$("library-detail-panel").open)return;
   $("library-preview").hidden=true;$("library-preview-state").hidden=false;$("library-preview-state").textContent="Preparing local structure preview…";
@@ -449,6 +450,10 @@ async function applyLibraryItem(item=libraryItem()){
 $("open-monomer-library").addEventListener("click",()=>openLibrary("a"));document.querySelectorAll(".library-open").forEach(b=>b.addEventListener("click",()=>openLibrary(b.dataset.block)));
 $("monomer-library-dialog").addEventListener("close",()=>libraryView.observer?.disconnect());
 $("library-detail-panel").addEventListener("toggle",()=>{if($("library-detail-panel").open&&libraryView.selected)selectLibraryItem(libraryView.selected,false);});
+$("library-solubility").addEventListener("click",()=>{
+  const item=libraryItem();
+  if(item)window.COFdrawSolubility.open(item.smiles,item.abbreviation||item.label);
+});
 for(const id of["library-search","library-sites","library-show-all"])$(id).addEventListener(id==="library-search"?"input":"change",drawLibrary);
 $("library-target").addEventListener('change',()=>{$("library-show-all").checked=false;drawLibrary();});
 document.querySelectorAll("[data-library-target]").forEach(button=>button.addEventListener("click",()=>setLibraryTarget(button.dataset.libraryTarget)));
@@ -469,22 +474,95 @@ $("open-topology-library").addEventListener("click",()=>{$("topology-search").va
 // Monomer sketch dialog: no optical models or remote editor dependencies.
 let activeBlock="a",sketchBusy=false,sketchResult=null,sketchHydrating=false,sketchTextPending=false;
 function sketchMessage(text,error=false){$("sketch-message").textContent=text;$("sketch-message").className=`sketch-message${error?" error":""}`;}
-function sketchControls(){document.querySelectorAll("#sketch-dialog button,#sketch-dialog select,#sketch-dialog textarea").forEach(el=>el.disabled=sketchBusy);$("monomer-canvas").style.pointerEvents=sketchBusy?"none":"";}
-const sketcher=new MonomerSketcher($("monomer-canvas"),()=>{if(!sketchHydrating){sketchResult=null;sketchTextPending=false;$("sketch-smiles").value="";$("sketch-formula").textContent="Graph edited · validate to apply";sketchMessage("Graph edited. Use this building block to validate its chemistry.");}},text=>sketchMessage(text,true));
-function hydrateSketch(result){sketchHydrating=true;try{sketcher.load(result.graph);}finally{sketchHydrating=false;}sketchResult=result;sketchTextPending=false;$("sketch-smiles").value=result.smiles;$("sketch-formula").textContent=result.formula;sketchMessage(sketcher.hasStereo()?"Assigned stereo is retained. Move atoms here; edit stereospecific SMILES for connectivity changes.":"Structure checked. Draw a bond, add a ring, or choose an element to change an atom.");}
+function sketchControls(){
+  document.querySelectorAll("#sketch-dialog button,#sketch-dialog textarea").forEach(el=>el.disabled=sketchBusy);
+  const canvas=$("monomer-canvas");
+  canvas.style.pointerEvents=sketchBusy?"none":"";
+  canvas.setAttribute("aria-disabled",String(sketchBusy));
+  $("atom-charge").disabled=sketchBusy||sketcher.selected?.kind!=="atom";
+}
+const sketcher=new MonomerSketcher($("monomer-canvas"),()=>{
+  if(!sketchHydrating){
+    sketchResult=null;sketchTextPending=false;$("sketch-smiles").value="";
+    $("sketch-formula").textContent="Graph edited";
+    sketchMessage("Use this building block to check and apply the sketch.");
+  }
+},text=>sketchMessage(text,true),atom=>{
+  $("atom-charge").disabled=sketchBusy||!atom;
+  $("atom-charge").value=atom?.charge??0;
+});
+function hydrateSketch(result){
+  sketchHydrating=true;try{sketcher.load(result.graph);}finally{sketchHydrating=false;}
+  sketchResult=result;sketchTextPending=false;$("sketch-smiles").value=result.smiles;
+  $("sketch-formula").textContent=result.formula;
+  sketchMessage(sketcher.hasStereo()?"Assigned stereo is retained. Move atoms here, or edit the stereospecific SMILES to change connectivity.":"Click an atom to extend a bond, or drag to connect atoms.");
+}
 async function sketchRequest(payload){sketchBusy=true;sketchControls();try{const result=await api("monomer",payload);hydrateSketch(result);return result;}finally{sketchBusy=false;sketchControls();}}
-async function openSketch(block,libraryMonomer=null){activeBlock=block;$("sketch-title").textContent=`Building block ${block.toUpperCase()} · ${$(`label-${block}`).value}`;if(libraryMonomer)$("sketch-title").textContent=`Single monomer - ${libraryMonomer.abbreviation||libraryMonomer.full_name||libraryMonomer.id}`;$("sketch-use").textContent=libraryMonomer?`Use as building block ${block.toUpperCase()}`:"Use this building block";$("sketch-dialog").showModal();sketchResult=null;sketchTextPending=false;sketchHydrating=true;sketcher.clear();sketcher.history=[];sketcher.future=[];sketchHydrating=false;sketchMessage(libraryMonomer?"Edit or import one monomer. Save its MOL without creating a framework.":"Draw a bond, import a MOL, or load SMILES.");$("sketch-smiles").value=libraryMonomer?libraryMonomer.smiles:$(`smiles-${block}`).value;$("sketch-formula").textContent="";try{if($("sketch-smiles").value.trim())await sketchRequest({smiles:$("sketch-smiles").value.trim()});}catch(e){sketchMessage(e.message,true);}}
+async function openSketch(block,libraryMonomer=null){
+  activeBlock=block;
+  $("sketch-title").textContent=libraryMonomer
+    ? libraryMonomer.abbreviation||libraryMonomer.full_name||libraryMonomer.id
+    : `Building block ${block.toUpperCase()} · ${$(`label-${block}`).value}`;
+  $("sketch-use").textContent=libraryMonomer?`Use as building block ${block.toUpperCase()}`:"Use this building block";
+  $("sketch-dialog").showModal();sketchResult=null;sketchTextPending=false;sketchHydrating=true;
+  sketcher.clear();sketchHydrating=false;sketcher.setTool("bond","1");
+  sketchMessage("Draw a bond, import a MOL, or load SMILES.");
+  $("sketch-smiles").value=libraryMonomer?libraryMonomer.smiles:$(`smiles-${block}`).value;
+  $("sketch-formula").textContent="";
+  try{if($("sketch-smiles").value.trim())await sketchRequest({smiles:$("sketch-smiles").value.trim()});}
+  catch(e){sketchMessage(e.message,true);}
+  sketcher.history=[];sketcher.future=[];$("monomer-canvas").focus({preventScroll:true});
+}
 document.querySelectorAll(".sketch-open").forEach(b=>b.addEventListener("click",()=>openSketch(b.dataset.block)));
-document.querySelectorAll(".sketch-tools button[data-tool]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".sketch-tools button").forEach(x=>x.classList.remove("active"));b.classList.add("active");$("other-element").value="";sketcher.setTool(b.dataset.tool,b.dataset.value);}));
-$("other-element").addEventListener("change",()=>{if($("other-element").value){document.querySelectorAll(".sketch-tools button").forEach(x=>x.classList.remove("active"));sketcher.setTool("atom",$("other-element").value);}});
+const sketchTools=[...document.querySelectorAll(".sketch-tools button[data-tool]")];
+sketchTools.forEach(button=>button.addEventListener("click",()=>{
+  sketcher.setTool(button.dataset.tool,button.dataset.value);
+  $("monomer-canvas").focus({preventScroll:true});
+}));
+$("monomer-canvas").addEventListener("sketchtool",({detail:{tool,value}})=>{
+  let matched=false;
+  for(const button of sketchTools){
+    const active=button.dataset.tool===tool&&(button.dataset.value||"")===value;
+    button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));matched||=active;
+  }
+  const other=tool==="atom"&&!matched;
+  $("sketch-elements").classList.toggle("active",other);
+  $("sketch-elements").textContent=other?`Elements · ${value}`:"Elements";
+});
+$("sketch-elements").addEventListener("click",mountElementPicker($("element-dialog"),symbol=>{
+  sketcher.setTool("atom",symbol);$("monomer-canvas").focus({preventScroll:true});
+}));
 $("sketch-undo").addEventListener("click",()=>sketcher.undo());$("sketch-redo").addEventListener("click",()=>sketcher.redo());$("sketch-clear").addEventListener("click",()=>sketcher.clear());
-$("atom-charge").addEventListener("change",()=>{if(!sketcher.charge($("atom-charge").value))sketchMessage("Select an atom with Move before setting its charge.",true);});
+$("atom-charge").addEventListener("change",event=>{
+  const field=event.target;
+  if(!field.value||!field.checkValidity()){field.value=sketcher.graph.atoms[sketcher.selected.index].charge;sketchMessage("Enter a whole atom charge from −4 to +8.",true);return;}
+  sketcher.charge(field.value);
+});
 $("sketch-smiles").addEventListener("input",()=>{sketchTextPending=true;sketchMessage("SMILES changed. Load it to replace the sketch, or apply it with Use this building block.");});
 $("sketch-load-smiles").addEventListener("click",()=>sketchRequest({smiles:$("sketch-smiles").value.trim()}).catch(e=>sketchMessage(e.message,true)));
-$("sketch-clean").addEventListener("click",()=>sketchRequest(sketchTextPending?{smiles:$("sketch-smiles").value.trim()}:{graph:sketcher.exportGraph(),clean_layout:true}).catch(e=>sketchMessage(e.message,true)));
+async function cleanSketch(){
+  if(sketchBusy||sketcher.drag)return;
+  try{
+    await sketchRequest({...sketchInput(),clean_layout:true});
+    sketchMessage("Layout cleaned. Undo restores the previous drawing.");
+  }catch(e){sketchMessage(e.message,true);}
+}
+$("sketch-clean").addEventListener("click",cleanSketch);
+$("sketch-dialog").addEventListener("keydown",event=>{
+  if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==="k"){
+    event.preventDefault();cleanSketch();
+  }
+});
 $("sketch-import").addEventListener("click",()=>$("mol-file").click());
 $("mol-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>500000)throw new Error("MOL import limit is 500 kB.");const text=await file.text();if(text.includes("$$$$"))throw new Error("Import a single-molecule MOL file; split multi-record SDF files first.");await sketchRequest({molblock:text});}catch(error){sketchMessage(error.message,true);}finally{e.target.value="";}});
-async function checkedSketch(){return sketchRequest(sketchTextPending?{smiles:$("sketch-smiles").value.trim()}:{graph:sketcher.exportGraph()});}
+function sketchInput(){return sketchTextPending?{smiles:$("sketch-smiles").value.trim()}:{graph:sketcher.exportGraph()};}
+async function checkedSketch(){return !sketchTextPending&&sketchResult?sketchResult:sketchRequest(sketchInput());}
+$("sketch-solubility").addEventListener("click",async()=>{
+  try{
+    const result=await checkedSketch();
+    window.COFdrawSolubility.open(result.smiles,`${$("sketch-title").textContent} · ${result.formula}`);
+  }catch(e){sketchMessage(e.message,true);}
+});
 $("sketch-export").addEventListener("click",async()=>{try{const r=await checkedSketch();await saveText(`COFdraw-monomer-${activeBlock.toUpperCase()}.mol`,r.molblock,"chemical/x-mdl-molfile");}catch(e){sketchMessage(e.message,true);}});
 $("sketch-use").addEventListener("click",async()=>{try{const result=await checkedSketch();$(`smiles-${activeBlock}`).value=result.smiles;$(`preset-${activeBlock}`).value="";setPreview(activeBlock,result);markInputsChanged();$("sketch-dialog").close();notice(`Building block ${activeBlock.toUpperCase()} updated · ${result.formula}. Create a drawing to apply it.`);}catch(e){sketchMessage(e.message,true);}});
 $("sketch-cancel").addEventListener("click",()=>$("sketch-dialog").close());

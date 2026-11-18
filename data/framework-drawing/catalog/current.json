@@ -1,5 +1,5 @@
 {
-  "catalog_version": "cofdraw-literature-reviewed-monomers-8",
+  "catalog_version": "cofdraw-literature-reviewed-monomers-9",
   "created_at_utc": "2026-11-17T16:45:06.666156+00:00",
   "ground_truth": false,
   "reviewer_type": "agent",
@@ -10127,6 +10127,251 @@
       ],
       "compatibility_scope": "Recognized functional groups do not validate source identity, topology, crystallization, reaction yield or any unimplemented multistep transformation.",
       "name_scope": "Exact finite graph; abbreviations remain paper-scoped."
+    },
+    {
+      "id": "dhp_cho4",
+      "abbreviation": "DHP",
+      "label": "DHP · Tetraaldehyde-functionalized 6,13-dihydropentacene",
+      "full_name": "Tetraaldehyde-functionalized 6,13-dihydropentacene",
+      "smiles": "O=Cc1ccc(C(c2ccc(C=O)cc2)=c2c3cc4ccccc4cc3c(=C(c3ccc(C=O)cc3)c3ccc(C=O)cc3)c3cc4ccccc4cc23)cc1",
+      "canonical_smiles": "O=Cc1ccc(C(c2ccc(C=O)cc2)=c2c3cc4ccccc4cc3c(=C(c3ccc(C=O)cc3)c3ccc(C=O)cc3)c3cc4ccccc4cc23)cc1",
+      "formula": "C52H32O4",
+      "isotopic_formula": "C52H32O4",
+      "role": "aryl_aldehyde",
+      "reactive_sites": 4,
+      "geometry_hint": "v_shaped_tetratopic",
+      "node_symmetry": null,
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "review_status": "agent_reviewed_primary_figure",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reported_source_reaction_supported": false,
+      "qualification": "Finite precursor graph from the indicated primary figure. Reported framework connectivity requires an independently supplied 3D structure.",
+      "source_dois": [
+        "10.1021/jacs.6c17514"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/jacs.6c17514",
+          "source_title": "Local Structure and Dynamics of Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2608.19106v1/figures/Figure1.png",
+          "source_asset_sha256": "7c7c384837eb43ec1cf4940ece56918758ab531b622e55384a57b7feb4ce5e2a",
+          "source_locator": "arXiv v1 Figure 1a",
+          "source_label": "DHP",
+          "reported_framework": "COF-682",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ]
+    },
+    {
+      "id": "hapt",
+      "abbreviation": "HAPT",
+      "label": "HAPT · 2,3,6,7,14,15-Hexakis(4-aminophenyl)triptycene",
+      "full_name": "2,3,6,7,14,15-Hexakis(4-aminophenyl)triptycene",
+      "smiles": "Nc1ccc(-c2cc3c(cc2-c2ccc(N)cc2)C2c4cc(-c5ccc(N)cc5)c(-c5ccc(N)cc5)cc4C3c3cc(-c4ccc(N)cc4)c(-c4ccc(N)cc4)cc32)cc1",
+      "canonical_smiles": "Nc1ccc(-c2cc3c(cc2-c2ccc(N)cc2)C2c4cc(-c5ccc(N)cc5)c(-c5ccc(N)cc5)cc4C3c3cc(-c4ccc(N)cc4)c(-c4ccc(N)cc4)cc32)cc1",
+      "formula": "C56H44N6",
+      "isotopic_formula": "C56H44N6",
+      "role": "primary_arylamine",
+      "reactive_sites": 6,
+      "geometry_hint": "trigonal_prismatic",
+      "node_symmetry": null,
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "review_status": "agent_reviewed_primary_figure",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reported_source_reaction_supported": false,
+      "qualification": "Finite precursor graph from the indicated primary figure. Reported framework connectivity requires an independently supplied 3D structure.",
+      "source_dois": [
+        "10.1021/jacs.6c17514"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/jacs.6c17514",
+          "source_title": "Local Structure and Dynamics of Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2608.19106v1/figures/Figure1.png",
+          "source_asset_sha256": "7c7c384837eb43ec1cf4940ece56918758ab531b622e55384a57b7feb4ce5e2a",
+          "source_locator": "arXiv v1 Figure 1b",
+          "source_label": "HAPT",
+          "reported_framework": "COF-612",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 6
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 6,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 6,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 6,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ]
+    },
+    {
+      "id": "hbc_la12",
+      "abbreviation": "HBC-LA12",
+      "label": "HBC-LA12 · Dodecaaldehyde-functionalized hexabenzocoronene",
+      "full_name": "Dodecaaldehyde-functionalized hexabenzocoronene",
+      "smiles": "COc1c(-c2ccc(C=O)cc2)cc(-c2ccc(C=O)cc2)c(OC)c1-c1cc2c3cc(-c4c(OC)c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c4OC)cc4c5cc(-c6c(OC)c(-c7ccc(C=O)cc7)cc(-c7ccc(C=O)cc7)c6OC)cc6c7cc(-c8c(OC)c(-c9ccc(C=O)cc9)cc(-c9ccc(C=O)cc9)c8OC)cc8c9cc(-c%10c(OC)c(-c%11ccc(C=O)cc%11)cc(-c%11ccc(C=O)cc%11)c%10OC)cc%10c%11cc(-c%12c(OC)c(-c%13ccc(C=O)cc%13)cc(-c%13ccc(C=O)cc%13)c%12OC)cc%12c(c1)c2c1c(c34)c(c56)c(c78)c(c%109)c1c%12%11",
+      "canonical_smiles": "COc1c(-c2ccc(C=O)cc2)cc(-c2ccc(C=O)cc2)c(OC)c1-c1cc2c3cc(-c4c(OC)c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c4OC)cc4c5cc(-c6c(OC)c(-c7ccc(C=O)cc7)cc(-c7ccc(C=O)cc7)c6OC)cc6c7cc(-c8c(OC)c(-c9ccc(C=O)cc9)cc(-c9ccc(C=O)cc9)c8OC)cc8c9cc(-c%10c(OC)c(-c%11ccc(C=O)cc%11)cc(-c%11ccc(C=O)cc%11)c%10OC)cc%10c%11cc(-c%12c(OC)c(-c%13ccc(C=O)cc%13)cc(-c%13ccc(C=O)cc%13)c%12OC)cc%12c(c1)c2c1c(c34)c(c56)c(c78)c(c%109)c1c%12%11",
+      "formula": "C174H114O24",
+      "isotopic_formula": "C174H114O24",
+      "role": "aryl_aldehyde",
+      "reactive_sites": 12,
+      "geometry_hint": "hexagonal_prismatic",
+      "node_symmetry": null,
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "review_status": "agent_reviewed_primary_figure",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "reported_source_reaction_supported": false,
+      "qualification": "Reference connectivity follows the two primary Figure 1 drawings, where both methoxy groups are adjacent to the core attachment. The textual dimethoxy locants differ. The 12-site 3D construction is outside the current templates.",
+      "source_dois": [
+        "10.1021/jacs.6c17514",
+        "10.48550/arXiv.2610.24418"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/jacs.6c17514",
+          "source_title": "Local Structure and Dynamics of Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2608.19106v1/figures/Figure1.png",
+          "source_asset_sha256": "7c7c384837eb43ec1cf4940ece56918758ab531b622e55384a57b7feb4ce5e2a",
+          "source_locator": "arXiv v1 Figure 1b",
+          "source_label": "HBC-LA12",
+          "reported_framework": "COF-612",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        },
+        {
+          "source_doi": "10.48550/arXiv.2610.24418",
+          "source_title": "Reticulating Local Dynamics in Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2610.24418v1/Figures/Figure1.png",
+          "source_asset_sha256": "48f5e5bf8cc267f235a003cabfffab77571812c0a06ffca306f5b551390263a0",
+          "source_locator": "arXiv v1 Figure 1a",
+          "source_label": "HBC-LA12",
+          "reported_framework": "COF-412",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ],
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 12
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 12,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 12,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 12,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 12,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 12,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ]
     }
   ],
   "cof_presets": [
@@ -14647,5 +14892,92 @@
     "path": "catalog/yaghi-literature-coverage.json",
     "sha256": "dfbc44f003878c9b9d79b6bfe5ab81c60429de84c4f09141fa89131096b837cc",
     "ground_truth": false
+  },
+  "recent_monomer_update": {
+    "previous_catalog_sha256": "9e23b7e71f02adc0da75185666a218e717c51565641c0b5a557abab3272f5d1c",
+    "ground_truth": false,
+    "added_ids": [
+      "dhp_cho4",
+      "hapt",
+      "hbc_la12"
+    ],
+    "additional_occurrences": {
+      "tapm": [
+        {
+          "source_doi": "10.1021/jacs.6c17514",
+          "source_title": "Local Structure and Dynamics of Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2608.19106v1/figures/Figure1.png",
+          "source_asset_sha256": "7c7c384837eb43ec1cf4940ece56918758ab531b622e55384a57b7feb4ce5e2a",
+          "source_locator": "arXiv v1 Figure 1a",
+          "source_label": "TAM",
+          "reported_framework": "COF-682",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ],
+      "hfptp_h": [
+        {
+          "source_doi": "10.48550/arXiv.2610.24418",
+          "source_title": "Reticulating Local Dynamics in Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2610.24418v1/Figures/Figure1.png",
+          "source_asset_sha256": "48f5e5bf8cc267f235a003cabfffab77571812c0a06ffca306f5b551390263a0",
+          "source_locator": "arXiv v1 Figure 1b",
+          "source_label": "Trip-CHO",
+          "reported_framework": "COF-564",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ],
+      "pytta": [
+        {
+          "source_doi": "10.48550/arXiv.2610.24418",
+          "source_title": "Reticulating Local Dynamics in Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2610.24418v1/Figures/Figure1.png",
+          "source_asset_sha256": "48f5e5bf8cc267f235a003cabfffab77571812c0a06ffca306f5b551390263a0",
+          "source_locator": "arXiv v1 Figure 1a",
+          "source_label": "PyTTA",
+          "reported_framework": "COF-412",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        },
+        {
+          "source_doi": "10.48550/arXiv.2610.24418",
+          "source_title": "Reticulating Local Dynamics in Three-Dimensional Covalent Organic Frameworks",
+          "source_document_kind": "image",
+          "source_asset_url": "https://arxiv.org/html/2610.24418v1/Figures/Figure1.png",
+          "source_asset_sha256": "48f5e5bf8cc267f235a003cabfffab77571812c0a06ffca306f5b551390263a0",
+          "source_locator": "arXiv v1 Figure 1b",
+          "source_label": "PyTTA",
+          "reported_framework": "COF-564",
+          "ground_truth": false,
+          "review_status": "agent_reviewed_primary_figure"
+        }
+      ]
+    },
+    "preparation_loadings": [
+      {
+        "monomer_id": "dhp_cho4",
+        "solvent_id": "dioxane",
+        "mass_mg": 50.0,
+        "solvent_ml": 2.0,
+        "source_doi": "10.1021/jacs.6c17514",
+        "source_locator": "SI §S1.1",
+        "temperature_k": null,
+        "method": "Reported dissolution by sonication"
+      },
+      {
+        "monomer_id": "tapm",
+        "solvent_id": "dioxane",
+        "mass_mg": 26.4,
+        "solvent_ml": 2.0,
+        "source_doi": "10.1021/jacs.6c17514",
+        "source_locator": "SI §S1.1",
+        "temperature_k": null,
+        "method": "Reported dissolution by sonication"
+      }
+    ]
   }
 }

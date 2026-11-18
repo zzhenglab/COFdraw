@@ -58,6 +58,10 @@ In **BET from isotherm**, paste two columns: relative pressure `p/p0` and uptake
 
 In **Monomer descriptors**, choose A or B and a conformer count. RDKit supplies molecular descriptors and empirical Gasteiger charges, generates ETKDG conformers, and minimizes with MMFF94s or UFF when supported. Export XYZ/SDF and the method report. Energies compare conformers of the same monomer; they are not xTB, DFT or orbital energies. See [scientific methods](scientific-methods.md) for detailed assumptions and limitations.
 
+**Screen solubility** is available in the descriptor pane, monomer library details and editor. Set a solvent volume to compare reported and estimated concentrations and masses near 25 °C. Expand each result for source or validation details, or save CSV and JSON. [Solubility method](scientific-methods.md#monomer-solubility-screening)
+
+The editor's **Elements** button opens the common-element periodic picker. Pick an atom symbol and click the canvas or an existing atom. Use **Move** to select an atom's formal charge and the arrow tool to connect a donor to an acceptor. Press 1, 2 or 3 over a bond to change its order. Press **Ctrl+Shift+K** to clean up the layout and **Ctrl+Z** to restore the preceding layout.
+
 ## Materials inspection and evidence
 
 Use **Quick check**, **PXRD**, and **Compare CIF files** to inspect composition, density, cell geometry and inferred periodic networks, compare candidate CIFs, and calculate model diffraction. Lattice-axis views, hydrogen visibility and atom tables support inspection. Catalog information and saved reports remain available to agents through the local API; the former Find information panel is removed. Follow the [materials workflow guide](materials-workflows.md) for instructions and interpretation.

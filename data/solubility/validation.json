@@ -1,0 +1,315 @@
+{
+  "schema": "cofdraw-solubility-1",
+  "dataset": "BigSolDB 2.2",
+  "dataset_doi": "10.5281/zenodo.22648301",
+  "license": "CC-BY-4.0",
+  "source_sha256": {
+    "BigSolDBv2.2.csv": "6b63f86601369f92530bedf6b93c3fb92a2731390b28a0aabf55ad005acba401",
+    "BigSolDBv2.2_methods.csv": "1ed6e3aadfd6095c4ff3e5f9307087ba7ec4a688201b94e8b5efc4827a635eae"
+  },
+  "measurements_sha256": "dad747fe9736d8e3ad2b4086a7707452e454773fb1f4766495118893d5baef9e",
+  "rows": 7753,
+  "unique_solutes": 1324,
+  "neutral_organic_estimator_solutes": 1173,
+  "preparation_rdkit_version": "2026.09.2",
+  "protocol": {
+    "split": "Five folds by Bemis–Murcko scaffold; acyclic molecules grouped by canonical SMILES.",
+    "baseline": "Training-solute median in the same solvent, evaluated on the same held-out predictions.",
+    "band": "Larger of the full and multi-aromatic held-out 90th-percentile absolute errors, with a 0.75 log-unit floor. The multi-aromatic error is pooled across solvents if the solvent has fewer than 20 aromatic estimates.",
+    "eligibility": "At least 25 held-out predictions and lower MAE than the solvent median. Also require improvement for the multi-aromatic subset when it has 20 or more estimates."
+  },
+  "solvents": {
+    "dmf": {
+      "enabled": true,
+      "reference_solutes": 227,
+      "predicted": 167,
+      "mae_log10": 0.7952,
+      "median_baseline_mae_log10": 0.8862,
+      "p90_absolute_error_log10": 1.6013,
+      "screening_half_width_log10": 1.6064,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 98,
+        "predicted": 72,
+        "mae_log10": 0.8324,
+        "median_baseline_mae_log10": 0.9135,
+        "p90_absolute_error_log10": 1.6064
+      }
+    },
+    "dmac": {
+      "enabled": false,
+      "reference_solutes": 44,
+      "predicted": 7,
+      "mae_log10": 0.5917,
+      "median_baseline_mae_log10": 0.6242,
+      "p90_absolute_error_log10": 1.0771,
+      "screening_half_width_log10": null,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 23,
+        "predicted": 7,
+        "mae_log10": 0.5917,
+        "median_baseline_mae_log10": 0.6242,
+        "p90_absolute_error_log10": 1.0771
+      }
+    },
+    "dmso": {
+      "enabled": false,
+      "reference_solutes": 101,
+      "predicted": 51,
+      "mae_log10": 0.7448,
+      "median_baseline_mae_log10": 0.7178,
+      "p90_absolute_error_log10": 1.4735,
+      "screening_half_width_log10": null,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 46,
+        "predicted": 26,
+        "mae_log10": 0.7515,
+        "median_baseline_mae_log10": 0.683,
+        "p90_absolute_error_log10": 1.6328
+      }
+    },
+    "nmp": {
+      "enabled": true,
+      "reference_solutes": 75,
+      "predicted": 30,
+      "mae_log10": 0.6368,
+      "median_baseline_mae_log10": 0.766,
+      "p90_absolute_error_log10": 1.7017,
+      "screening_half_width_log10": 1.7017,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 33,
+        "predicted": 14,
+        "mae_log10": 0.6404,
+        "median_baseline_mae_log10": 0.6613,
+        "p90_absolute_error_log10": 1.0179
+      }
+    },
+    "dioxane": {
+      "enabled": true,
+      "reference_solutes": 196,
+      "predicted": 144,
+      "mae_log10": 0.7358,
+      "median_baseline_mae_log10": 0.8202,
+      "p90_absolute_error_log10": 1.5244,
+      "screening_half_width_log10": 1.5244,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 79,
+        "predicted": 59,
+        "mae_log10": 0.674,
+        "median_baseline_mae_log10": 0.7922,
+        "p90_absolute_error_log10": 1.4605
+      }
+    },
+    "thf": {
+      "enabled": true,
+      "reference_solutes": 163,
+      "predicted": 86,
+      "mae_log10": 0.5873,
+      "median_baseline_mae_log10": 0.6631,
+      "p90_absolute_error_log10": 1.243,
+      "screening_half_width_log10": 1.243,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 74,
+        "predicted": 40,
+        "mae_log10": 0.5278,
+        "median_baseline_mae_log10": 0.6364,
+        "p90_absolute_error_log10": 1.0783
+      }
+    },
+    "mesitylene": {
+      "enabled": false,
+      "reference_solutes": 0,
+      "predicted": 0,
+      "screening_half_width_log10": null,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 0,
+        "predicted": 0
+      }
+    },
+    "odcb": {
+      "enabled": false,
+      "reference_solutes": 0,
+      "predicted": 0,
+      "screening_half_width_log10": null,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 0,
+        "predicted": 0
+      }
+    },
+    "acoh": {
+      "enabled": true,
+      "reference_solutes": 53,
+      "predicted": 31,
+      "mae_log10": 0.6468,
+      "median_baseline_mae_log10": 0.7982,
+      "p90_absolute_error_log10": 0.9271,
+      "screening_half_width_log10": 1.4484,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 14,
+        "predicted": 6,
+        "mae_log10": 0.7836,
+        "median_baseline_mae_log10": 0.8636,
+        "p90_absolute_error_log10": 2.7221
+      }
+    },
+    "toluene": {
+      "enabled": true,
+      "reference_solutes": 220,
+      "predicted": 157,
+      "mae_log10": 0.6961,
+      "median_baseline_mae_log10": 0.9936,
+      "p90_absolute_error_log10": 1.5596,
+      "screening_half_width_log10": 1.5596,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 119,
+        "predicted": 95,
+        "mae_log10": 0.6017,
+        "median_baseline_mae_log10": 0.9238,
+        "p90_absolute_error_log10": 1.2455
+      }
+    },
+    "acetone": {
+      "enabled": true,
+      "reference_solutes": 604,
+      "predicted": 536,
+      "mae_log10": 0.7243,
+      "median_baseline_mae_log10": 0.8899,
+      "p90_absolute_error_log10": 1.5084,
+      "screening_half_width_log10": 1.5084,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 241,
+        "predicted": 211,
+        "mae_log10": 0.6901,
+        "median_baseline_mae_log10": 0.8612,
+        "p90_absolute_error_log10": 1.4103
+      }
+    },
+    "mecn": {
+      "enabled": true,
+      "reference_solutes": 520,
+      "predicted": 457,
+      "mae_log10": 0.727,
+      "median_baseline_mae_log10": 0.9248,
+      "p90_absolute_error_log10": 1.5602,
+      "screening_half_width_log10": 1.5602,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 219,
+        "predicted": 195,
+        "mae_log10": 0.6711,
+        "median_baseline_mae_log10": 0.856,
+        "p90_absolute_error_log10": 1.5464
+      }
+    },
+    "etoac": {
+      "enabled": true,
+      "reference_solutes": 686,
+      "predicted": 611,
+      "mae_log10": 0.6522,
+      "median_baseline_mae_log10": 0.8954,
+      "p90_absolute_error_log10": 1.3581,
+      "screening_half_width_log10": 1.3581,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 291,
+        "predicted": 260,
+        "mae_log10": 0.5988,
+        "median_baseline_mae_log10": 0.8521,
+        "p90_absolute_error_log10": 1.2636
+      }
+    },
+    "dcm": {
+      "enabled": true,
+      "reference_solutes": 90,
+      "predicted": 30,
+      "mae_log10": 0.7436,
+      "median_baseline_mae_log10": 0.9497,
+      "p90_absolute_error_log10": 1.3179,
+      "screening_half_width_log10": 1.4484,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 46,
+        "predicted": 17,
+        "mae_log10": 0.6512,
+        "median_baseline_mae_log10": 0.7634,
+        "p90_absolute_error_log10": 1.1674
+      }
+    },
+    "chloroform": {
+      "enabled": true,
+      "reference_solutes": 112,
+      "predicted": 50,
+      "mae_log10": 0.8324,
+      "median_baseline_mae_log10": 1.1352,
+      "p90_absolute_error_log10": 1.8698,
+      "screening_half_width_log10": 2.1977,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 61,
+        "predicted": 28,
+        "mae_log10": 0.8645,
+        "median_baseline_mae_log10": 1.2764,
+        "p90_absolute_error_log10": 2.1977
+      }
+    },
+    "ethanol": {
+      "enabled": true,
+      "reference_solutes": 910,
+      "predicted": 819,
+      "mae_log10": 0.7264,
+      "median_baseline_mae_log10": 0.957,
+      "p90_absolute_error_log10": 1.4883,
+      "screening_half_width_log10": 1.4883,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 389,
+        "predicted": 352,
+        "mae_log10": 0.6906,
+        "median_baseline_mae_log10": 0.9511,
+        "p90_absolute_error_log10": 1.423
+      }
+    },
+    "methanol": {
+      "enabled": true,
+      "reference_solutes": 757,
+      "predicted": 675,
+      "mae_log10": 0.7123,
+      "median_baseline_mae_log10": 0.9199,
+      "p90_absolute_error_log10": 1.4063,
+      "screening_half_width_log10": 1.4063,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 325,
+        "predicted": 295,
+        "mae_log10": 0.702,
+        "median_baseline_mae_log10": 0.9252,
+        "p90_absolute_error_log10": 1.3262
+      }
+    },
+    "ipoh": {
+      "enabled": true,
+      "reference_solutes": 710,
+      "predicted": 628,
+      "mae_log10": 0.6999,
+      "median_baseline_mae_log10": 0.8984,
+      "p90_absolute_error_log10": 1.4997,
+      "screening_half_width_log10": 1.4997,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 296,
+        "predicted": 262,
+        "mae_log10": 0.6421,
+        "median_baseline_mae_log10": 0.8678,
+        "p90_absolute_error_log10": 1.3819
+      }
+    },
+    "water": {
+      "enabled": true,
+      "reference_solutes": 552,
+      "predicted": 481,
+      "mae_log10": 0.8177,
+      "median_baseline_mae_log10": 1.4993,
+      "p90_absolute_error_log10": 1.7097,
+      "screening_half_width_log10": 1.9079,
+      "two_or_more_aromatic_rings": {
+        "reference_solutes": 235,
+        "predicted": 214,
+        "mae_log10": 0.9404,
+        "median_baseline_mae_log10": 1.5623,
+        "p90_absolute_error_log10": 1.9079
+      }
+    }
+  }
+}

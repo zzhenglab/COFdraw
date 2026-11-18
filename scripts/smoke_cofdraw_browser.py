@@ -1,4 +1,4 @@
-"""Actual local COFdraw browser flow. No inference, training, or remote resources."""
+"""Actual local COFdraw browser flow using only bundled resources."""
 from __future__ import annotations
 import argparse, json, socket, sys, threading, time, traceback
 from pathlib import Path
@@ -124,6 +124,28 @@ def main():
           assert page.locator("#smiles-a").input_value()==original_a
           checks.append("Broad library4c filter, visible disabled partner reasons, and single-monomer MOL export without changing A")
           page.locator("#open-monomer-library").click()
+          page.locator("#library-search").fill("Trip-CHO")
+          assert page.locator('[data-id="hfptp_h"]').count()==1
+          page.locator("#library-search").fill("TFB")
+          page.locator('[data-id="tfb"] .inspect-monomer').click()
+          with page.expect_response("**/api/drawing/science/solubility") as first_screen:
+            page.locator("#library-solubility").click()
+          first = first_screen.value.json()
+          measured = next(row for row in first["solvents"] if row["solvent_id"]=="dioxane")
+          assert measured["status"]=="reported" and measured["source_doi"]
+          page.locator("#solubility-output .solubility-reported").first.wait_for()
+          page.locator("#solubility-volume").fill("2")
+          with page.expect_response("**/api/drawing/science/solubility") as next_screen:
+            page.locator("#solubility-run").click()
+          scaled = next(row for row in next_screen.value.json()["solvents"] if row["solvent_id"]=="dioxane")
+          assert abs(scaled["mass_mg"]-2*measured["mass_mg"])<1e-8
+          with page.expect_download() as solvent_csv:
+            page.locator("#solubility-exports button",has_text="Save CSV").click()
+          solvent_csv.value.save_as(out/"tfb-solubility.csv")
+          page.screenshot(path=str(out/"cofdraw-solubility.png"),full_page=True)
+          page.get_by_role("button",name="Close solubility screening").click()
+          page.locator("#library-search").fill("")
+          checks.append("Library aliases and reported solubility, solvent-volume scaling, and CSV export")
           page.locator('[data-id="tfb"] .library-use').click()
           page.wait_for_function("() => document.querySelector('#library-target').value==='b'")
           assert page.locator('[data-id="tfb"]').count()==0
@@ -212,9 +234,42 @@ def main():
         page.locator('[data-tool="bond"][data-value="1"]').click()
         canvas=page.locator("#monomer-canvas").bounding_box();page.mouse.click(canvas["x"]+20,canvas["y"]+20)
         assert "assigned stereochemistry" in page.locator("#sketch-message").inner_text()
-        with page.expect_response("**/api/drawing/monomer") as stereo_applied:page.locator("#sketch-use").click()
-        assert stereo_applied.value.json()["smiles"]==original
+        page.locator("#sketch-use").click()
+        assert page.locator("#smiles-a").input_value()==original
         checks.append("Stereo graph retained; unsupported stereo connectivity edit is blocked explicitly")
+        page.locator('.card-heading .sketch-open[data-block="a"]').click()
+        page.wait_for_function("() => document.querySelector('#sketch-formula').textContent.length>0")
+        page.locator("#sketch-clear").click()
+        page.locator("#sketch-elements").click()
+        page.locator("#element-search").fill("Zn")
+        page.get_by_role("button",name="Zinc (Zn)",exact=True).click()
+        canvas = page.locator("#monomer-canvas").bounding_box()
+        cx, cy = canvas["x"]+canvas["width"]/2, canvas["y"]+canvas["height"]/2
+        page.mouse.click(cx+65,cy+15)
+        page.locator("#atom-charge").fill("2")
+        page.locator("#atom-charge").press("Tab")
+        page.locator('[data-tool="atom"][data-value="N"]').click()
+        page.mouse.click(cx-65,cy)
+        page.get_by_role("button",name="Coordination bond",exact=True).click()
+        page.mouse.move(cx-65,cy);page.mouse.down();page.mouse.move(cx+65,cy+15,steps=6);page.mouse.up()
+        arrow = page.locator("#monomer-canvas .sketch-dative")
+        original_span = float(arrow.get_attribute("x2"))-float(arrow.get_attribute("x1"))
+        with page.expect_response("**/api/drawing/monomer") as zinc:
+          page.keyboard.press("Control+Shift+K")
+        assert zinc.value.status==200 and zinc.value.json()["smiles"]=="[NH3]->[Zn+2]"
+        page.wait_for_function("() => document.querySelector('#sketch-message').textContent.startsWith('Layout cleaned')")
+        clean_span = float(arrow.get_attribute("x2"))-float(arrow.get_attribute("x1"))
+        assert abs(clean_span-original_span)>10
+        draft_graph = zinc.value.request.post_data_json["graph"]
+        page.locator("#sketch-undo").click()
+        with page.expect_response("**/api/drawing/science/solubility") as metal_screen:
+          with page.expect_response("**/api/drawing/monomer") as undo_checked:
+            page.locator("#sketch-solubility").click()
+        assert undo_checked.value.request.post_data_json["graph"]==draft_graph
+        assert all(row["status"]=="unavailable" for row in metal_screen.value.json()["solvents"])
+        page.get_by_role("button",name="Close solubility screening").click()
+        page.locator("#sketch-cancel").click()
+        checks.append("Periodic picker, formal charge, metal coordination, Ctrl+Shift+K with undo, and graph-bound screening")
         page.locator("#linkage").select_option("beta_ketoenamine")
         page.locator("#cof-preset").select_option("tppa-pore-v1")
         keto=build()
@@ -326,7 +381,7 @@ def main():
     finally:
       if server is not None:
         server.should_exit=True;worker.join(timeout=10)
-      report={"checks":checks,"javascript_errors":errors,"api_errors":api_errors,"failure":failure,"model_inference":False,"training":False,"data_dir":str(args.data_dir) if args.data_dir else None,"base_url":base_url,"server_ownership":"external_untouched" if args.base_url else "owned_python_thread"}
+      report={"checks":checks,"javascript_errors":errors,"api_errors":api_errors,"failure":failure,"data_dir":str(args.data_dir) if args.data_dir else None,"base_url":base_url,"server_ownership":"external_untouched" if args.base_url else "owned_python_thread"}
       (out/"cofdraw-browser-report.json").write_text(json.dumps(report,indent=2),encoding="utf-8")
       print(json.dumps(report,indent=2))
 

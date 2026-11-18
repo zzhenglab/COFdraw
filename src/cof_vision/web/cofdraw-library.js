@@ -69,7 +69,7 @@
     const tokens=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
     return list(rows).filter(item=>{
       if(count!=="all"&&connectionCount(item)!==Number(count))return false;
-      const text=[item.abbreviation,item.full_name,item.label,item.id,...list(item.literature_names)].filter(Boolean).join(" ").toLowerCase();
+      const text=[item.abbreviation,item.full_name,item.label,item.id,...list(item.literature_names),...list(item.aliases)].filter(Boolean).join(" ").toLowerCase();
       return tokens.every(token=>text.includes(token));
     });
   }

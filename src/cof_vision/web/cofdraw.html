@@ -5,7 +5,7 @@
   <meta name="description" content="COFdraw — local chemical framework drawing from monomers and explicit pore recipes.">
   <title>COFdraw — Chemical drawing studio</title>
   <link rel="icon" type="image/png" href="./cofdraw-logo.png"><link rel="stylesheet" href="./cofdraw.css"><link rel="stylesheet" href="./cofdraw-studio.css"><link rel="stylesheet" href="./cofdraw-materials.css"><link rel="stylesheet" href="./cofdraw-describe.css"><link rel="stylesheet" href="./cofdraw-identity.css"><link rel="stylesheet" href="./cofdraw-picker.css"><link rel="stylesheet" href="./cofdraw-workspace.css"><link rel="stylesheet" href="./cofdraw-chat.css">
-  <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
+  <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
 </head>
 <body data-start-mode="describe">
   <header class="appbar">
@@ -134,7 +134,7 @@
       <div class="library-toolbar"><label class="field library-search-field"><span class="sr-only">Search monomer names and aliases</span><input id="library-search" type="search" placeholder="Search name, abbreviation or alias" autocomplete="off"></label><label class="field library-sites-field"><span class="sr-only">Reactive connection sites</span><select id="library-sites" aria-label="Filter by reactive connection sites"><option value="all">All sites</option><option value="2">2 sites</option><option value="3">3 sites</option><option value="4">4 sites</option><option value="6">6 sites</option></select></label></div>
       <div class="library-status-line"><p id="library-context" class="library-context" aria-live="polite"></p><label id="library-show-all-field" class="library-show-all" hidden><input id="library-show-all" type="checkbox"> Show all</label></div>
       <div class="library-browser"><div><div class="library-collection-heading"><p id="library-count" class="library-count" aria-live="polite"></p><span>Structures &middot; select or inspect</span></div><div id="library-list" class="library-list" aria-label="Monomer structure collection" tabindex="0"></div></div>
-        <details id="library-detail-panel" class="library-detail-panel" hidden><summary>Monomer details <span id="library-detail-label"></span></summary><section class="library-detail" aria-live="polite"><h3 id="library-name">Choose a monomer</h3><p id="library-full-name"></p><div class="library-preview"><img id="library-preview" alt="Selected monomer structure" hidden><span id="library-preview-state">Local chemical preview</span></div><div id="library-groups" class="group-chips"></div><dl><dt>Reactive sites</dt><dd id="library-site-count"></dd><dt>Geometry / symmetry</dt><dd id="library-geometry"></dd></dl><p id="library-compatibility" class="library-compatibility"></p><div class="library-detail-actions"><button id="library-apply" class="button primary" disabled>Use monomer</button><button id="library-edit" class="button outline" disabled>Open in editor</button></div>
+        <details id="library-detail-panel" class="library-detail-panel" hidden><summary>Monomer details <span id="library-detail-label"></span></summary><section class="library-detail" aria-live="polite"><h3 id="library-name">Choose a monomer</h3><p id="library-full-name"></p><div class="library-preview"><img id="library-preview" alt="Selected monomer structure" hidden><span id="library-preview-state">Local chemical preview</span></div><div id="library-groups" class="group-chips"></div><dl><dt>Reactive sites</dt><dd id="library-site-count"></dd><dt>Geometry / symmetry</dt><dd id="library-geometry"></dd></dl><p id="library-compatibility" class="library-compatibility"></p><div class="library-detail-actions"><button id="library-apply" class="button primary" disabled>Use monomer</button><button id="library-edit" class="button outline" disabled>Open in editor</button><button id="library-solubility" class="button quiet" disabled>Screen solubility</button></div>
           <details id="library-evidence-panel" class="library-evidence"><summary>Source and review evidence</summary><p id="library-audit-qualifier"></p><p id="library-name-scope"></p><ul id="library-evidence-records"></ul><div id="library-source-links" class="library-source-links"></div><p id="library-limitations"></p></details>
         </section></details>
       </div>
@@ -142,7 +142,63 @@
     </div>
   </dialog>
   <dialog id="topology-dialog" class="library-dialog topology-dialog"><form method="dialog" class="dialog-header"><div><p class="eyebrow">TOPOLOGY REFERENCE</p><h2>Connectivity, geometry, and symmetry</h2></div><button class="icon-button" aria-label="Close topology references">&times;</button></form><div class="library-body"><label class="field"><span>Search names, net codes, or descriptions</span><input id="topology-search" type="search" placeholder="e.g. sql, kgm, 3D, cage"></label><p class="small-note">Reference entries describe reported possibilities. Reactive-site count, molecular point-group symmetry, and a periodic net are different properties. These references do not automatically construct a crystal or assign a source COF identity.</p><div id="topology-list" class="topology-list"></div></div></dialog>
-  <dialog id="sketch-dialog" class="sketch-dialog"><form method="dialog" class="dialog-header"><div><p class="eyebrow">MONOMER EDITOR</p><h2 id="sketch-title">Building block A</h2></div><button class="icon-button" aria-label="Close monomer editor">×</button></form><div class="sketch-body"><div class="sketch-tools" aria-label="Chemical drawing tools"><button data-tool="select" title="Select and move atoms">Move</button><button data-tool="bond" data-value="1" class="active" title="Single bond">—</button><button data-tool="bond" data-value="2" title="Double bond">═</button><button data-tool="bond" data-value="3" title="Triple bond">≡</button><button data-tool="ring-aromatic" title="Benzene ring">⌬</button><button data-tool="ring6" title="Six-membered ring">⬡</button><button data-tool="ring5" title="Five-membered ring">⬟</button><span class="tool-separator"></span><button data-tool="atom" data-value="C">C</button><button data-tool="atom" data-value="N">N</button><button data-tool="atom" data-value="O">O</button><button data-tool="atom" data-value="S">S</button><label class="sr-only" for="other-element">Other element</label><select id="other-element"><option value="">More</option><option>P</option><option>F</option><option>Cl</option><option>Br</option><option>I</option><option>B</option><option>Si</option><option>H</option></select><button data-tool="erase" title="Delete atom or bond">Erase</button></div><svg id="monomer-canvas" viewBox="0 0 640 360" tabindex="0" role="application" aria-label="Monomer sketch canvas. Use drawing tools, or paste SMILES below for a keyboard-accessible input."></svg><div class="sketch-secondary"><button id="sketch-undo" class="text-button">Undo</button><button id="sketch-redo" class="text-button">Redo</button><button id="sketch-clear" class="text-button">Clear</button><button id="sketch-clean" class="text-button">Clean layout</button><label>Selected atom charge <select id="atom-charge"><option value="0">0</option><option value="1">+1</option><option value="-1">−1</option><option value="2">+2</option><option value="-2">−2</option><option value="3">+3</option><option value="-3">−3</option></select></label></div><div id="sketch-message" class="sketch-message" role="status" aria-live="polite">Drag from an atom to draw a bond. Click a bond to apply the selected order.</div><label class="field"><span>SMILES · an alternative to drawing</span><textarea id="sketch-smiles" rows="2" spellcheck="false" maxlength="4000"></textarea></label><div class="sketch-imports"><button id="sketch-load-smiles" class="button outline">Load SMILES</button><button id="sketch-import" class="button quiet">Import MOL</button><button id="sketch-export" class="button quiet">Save monomer MOL</button><input id="mol-file" type="file" accept=".mol,.sdf,chemical/x-mdl-molfile" hidden><span id="sketch-formula"></span></div><p class="small-note">Basic 2D graph editor. Assigned stereo is retained on import; use stereospecific SMILES or a full chemical editor for stereo or connectivity changes to such molecules.</p></div><div class="dialog-footer"><button id="sketch-cancel" class="button quiet">Cancel</button><button id="sketch-use" class="button primary">Use this building block</button></div></dialog>
+  <dialog id="sketch-dialog" class="sketch-dialog">
+    <form method="dialog" class="dialog-header">
+      <div><p class="eyebrow">MONOMER EDITOR</p><h2 id="sketch-title">Building block A</h2></div>
+      <button class="icon-button" aria-label="Close monomer editor">&times;</button>
+    </form>
+    <div class="sketch-body">
+      <div class="sketch-tools" role="group" aria-label="Chemical drawing tools">
+        <button data-tool="select" title="Select and move atoms" aria-pressed="false">Move</button>
+        <button data-tool="bond" data-value="1" class="active" title="Single bond (1)" aria-label="Single bond" aria-pressed="true">&mdash;</button>
+        <button data-tool="bond" data-value="2" title="Double bond (2)" aria-label="Double bond" aria-pressed="false">&#9552;</button>
+        <button data-tool="bond" data-value="3" title="Triple bond (3)" aria-label="Triple bond" aria-pressed="false">&equiv;</button>
+        <button data-tool="bond" data-value="dative" title="Coordination bond from donor to acceptor (D)" aria-label="Coordination bond" aria-pressed="false">&rarr;</button>
+        <button data-tool="ring-aromatic" title="Benzene ring" aria-label="Benzene ring" aria-pressed="false">&#9004;</button>
+        <button data-tool="ring6" title="Six-membered ring" aria-label="Six-membered ring" aria-pressed="false">&#11041;</button>
+        <button data-tool="ring5" title="Five-membered ring" aria-label="Five-membered ring" aria-pressed="false">&#11039;</button>
+        <span class="tool-separator"></span>
+        <button data-tool="atom" data-value="C" aria-pressed="false">C</button>
+        <button data-tool="atom" data-value="N" aria-pressed="false">N</button>
+        <button data-tool="atom" data-value="O" aria-pressed="false">O</button>
+        <button data-tool="atom" data-value="S" aria-pressed="false">S</button>
+        <button id="sketch-elements" aria-haspopup="dialog" title="Periodic table">Elements</button>
+        <button data-tool="erase" title="Delete atom or bond" aria-pressed="false">Erase</button>
+      </div>
+      <svg id="monomer-canvas" viewBox="0 0 640 360" tabindex="0" role="application" aria-label="Monomer sketch canvas. Use drawing tools or enter SMILES below."></svg>
+      <div class="sketch-secondary">
+        <button id="sketch-undo" class="text-button" title="Ctrl+Z">Undo</button>
+        <button id="sketch-redo" class="text-button" title="Ctrl+Shift+Z">Redo</button>
+        <button id="sketch-clear" class="text-button">Clear</button>
+        <button id="sketch-clean" class="text-button" title="Ctrl+Shift+K" aria-keyshortcuts="Control+Shift+K Meta+Shift+K">Clean layout</button>
+        <label>Atom charge <input id="atom-charge" type="number" min="-4" max="8" step="1" value="0" disabled></label>
+      </div>
+      <div id="sketch-message" class="sketch-message" role="status" aria-live="polite"></div>
+      <details class="sketch-shortcuts">
+        <summary>Drawing shortcuts</summary>
+        <p>Click an atom with a bond tool to extend the structure. Drag to connect atoms or hold Alt to place a bond freely. Hover over a bond and press 1, 2, 3, or D to change its type. Press D again to reverse a coordination arrow.</p>
+        <p>Use Move to drag atoms or select an atom for a charge edit. Use Ctrl+Shift+K (Command+Shift+K on Mac) to clean up angles and spacing. Undo keeps your previous layout.</p>
+      </details>
+      <label class="field"><span>SMILES</span><textarea id="sketch-smiles" rows="2" spellcheck="false" maxlength="4000"></textarea></label>
+      <div class="sketch-imports">
+        <button id="sketch-load-smiles" class="button outline">Load SMILES</button>
+        <button id="sketch-import" class="button quiet">Import MOL</button>
+        <button id="sketch-export" class="button quiet">Save monomer MOL</button>
+        <button id="sketch-solubility" class="button quiet">Screen solubility</button>
+        <input id="mol-file" type="file" accept=".mol,.sdf,chemical/x-mdl-molfile" hidden><span id="sketch-formula"></span>
+      </div>
+    </div>
+    <div class="dialog-footer"><button id="sketch-cancel" class="button quiet">Cancel</button><button id="sketch-use" class="button primary">Use this building block</button></div>
+  </dialog>
+  <dialog id="element-dialog" class="sketch-dialog" aria-labelledby="element-title">
+    <form method="dialog" class="dialog-header"><h2 id="element-title">Periodic table</h2><button class="icon-button" aria-label="Close periodic table">&times;</button></form>
+    <div class="sketch-body">
+      <label class="field"><span>Find an element</span><input id="element-search" type="search" placeholder="e.g. Zn, zinc, 30"></label>
+      <div class="element-grid-scroll"><div id="element-grid" class="element-grid"></div></div>
+      <p id="element-match" class="small-note" role="status"></p>
+      <p class="small-note">Common elements for molecular and coordination drawings. Pick an element, then click the canvas or an existing atom.</p>
+    </div>
+  </dialog>
   <dialog id="help-dialog" class="help-dialog"><form method="dialog" class="dialog-header"><h2>A local chemical drawing kit</h2><button class="icon-button" aria-label="Close help">×</button></form><div class="help-body"><ol><li><strong>Choose your monomers.</strong> Use a preset, paste SMILES, or draw atoms and bonds. The local chemistry engine checks each structure.</li><li><strong>Build a finite patch.</strong> Choose linkage chemistry, check the reactive groups, and select a compatible connectivity template. Inspect attachment ports; the preset is a design choice.</li><li><strong>Choose a style and save.</strong> Chemical, layered, and schematic styles have separate depiction scopes. PNG and SVG preserve the drawing. MOL preserves the atom/bond graph. A project JSON preserves monomers, recipe, coordinates, and style choices.</li></ol><p>Source recipes come from provisional agent annotations. Their source hash and qualified COFex record are separate from a designed variant. A finite patch does not specify a full periodic crystal, and COF graph extraction accuracy has not been established by this drawing tool.</p><p>The basic editor supports element, charge, single/double/triple bond, and ring editing. It does not assign new wedge or axial stereochemistry. Model inference is not required to draw.</p><a href="./drawing.html">Open the original recipe workbench</a></div></dialog>
 
   <dialog id="science-dialog" class="science-dialog">
@@ -179,7 +235,7 @@
         </section>
       </div>
 
-      <div id="science-monomer" class="science-pane" hidden><h3>Fast monomer descriptors</h3><p class="science-intro">Graph descriptors and a sampled 3D conformer, calculated locally.</p><label class="field"><span>Building block</span><select id="descriptor-block"><option value="a">Building block A</option><option value="b">Building block B</option></select></label><label class="field"><span>Conformer samples</span><select id="descriptor-conformers"><option value="4">4 · quick</option><option value="8">8 · broader search</option><option value="1">1 · preview</option></select></label><button id="calculate-monomer" class="button primary full">Calculate descriptors &amp; 3D</button><div id="monomer-results" class="science-results"></div></div>
+      <div id="science-monomer" class="science-pane" hidden><h3>Fast monomer descriptors</h3><p class="science-intro">Graph descriptors and a sampled 3D conformer, calculated locally.</p><label class="field"><span>Building block</span><select id="descriptor-block"><option value="a">Building block A</option><option value="b">Building block B</option></select></label><label class="field"><span>Conformer samples</span><select id="descriptor-conformers"><option value="4">4 · quick</option><option value="8">8 · broader search</option><option value="1">1 · preview</option></select></label><button id="calculate-monomer" class="button primary full">Calculate descriptors &amp; 3D</button><button id="descriptor-solubility" class="button outline full">Screen solubility</button><div id="monomer-results" class="science-results"></div></div>
       <div id="science-porosity" class="science-pane" hidden><h3>Level 1 · geometric properties</h3><p class="science-intro">Deterministic pore geometry from a periodic CIF or model: PLD, LCD, connected accessible area and volume, density, and void fraction.</p><div id="porosity-model-state" class="science-model-state"></div><label class="field"><span>Probe radius / Å</span><input id="probe-radius" type="number" value="1.82" min="0" max="5" step="0.01"></label><label class="field"><span>Requested grid step</span><select id="pore-samples"><option value="0.9">0.9 Å · quick</option><option value="0.6" selected>0.6 Å · standard</option><option value="0.35">0.35 Å · finer</option></select></label><label class="auto-chemistry"><input id="pore-refinement" type="checkbox"> Compare a second, finer grid</label><p class="small-note">Work limits may coarsen the grid. Results show the effective resolution and diameter bounds.</p><button id="calculate-pores" class="button primary full">Calculate geometric properties</button><div id="porosity-results" class="science-results" aria-live="polite"></div><p class="small-note">Fixed hard-sphere geometry, not BET or gas adsorption. Accessible volume means connected probe-center space. Surface quadrature and unresolved narrow channels require convergence review.</p></div>
       <div id="science-bet" class="science-pane" hidden><h3>Fit a BET surface area</h3><p class="science-intro">Paste adsorption data as two columns: relative pressure P/P₀ and uptake in mmol/g. This fits supplied data; it does not invent an isotherm.</p><label class="field"><span>Adsorption data</span><textarea id="bet-data" rows="9" placeholder="P/P₀, mmol/g
 0.05, 3.2
@@ -191,4 +247,21 @@
     </section></div>
   </dialog>
 
+  <dialog id="solubility-dialog" class="sketch-dialog solubility-dialog" aria-labelledby="solubility-title">
+    <form method="dialog" class="dialog-header">
+      <div><p class="eyebrow">MONOMER DESCRIPTORS</p><h2 id="solubility-title">Solubility screening</h2></div>
+      <button class="icon-button" aria-label="Close solubility screening">&times;</button>
+    </form>
+    <div class="sketch-body">
+      <h3 id="solubility-monomer"></h3>
+      <p class="science-intro">Compare individual solvents near 25 &deg;C.</p>
+      <form id="solubility-form" class="solubility-controls">
+        <label class="field"><span>Volume of each solvent / mL</span><input id="solubility-volume" type="number" value="1" min="0.01" max="1000" step="any" required></label>
+        <button id="solubility-run" class="button primary">Screen solvents</button>
+      </form>
+      <p id="solubility-status" class="small-note" role="status"></p>
+      <div id="solubility-output"></div>
+      <div id="solubility-exports" class="sketch-imports"></div>
+    </div>
+  </dialog>
 </body></html>

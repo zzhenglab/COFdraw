@@ -50,6 +50,22 @@ def read_catalog(data_root: Path) -> dict:
     return value
 
 
+def catalog_monomers(catalog):
+    occurrences = catalog.get("recent_monomer_update", {}).get("additional_occurrences", {})
+    rows = []
+    for monomer in catalog.get("monomer_presets", MONOMERS):
+        extra = occurrences.get(monomer["id"])
+        if extra:
+            monomer = {
+                **monomer,
+                "aliases": list(dict.fromkeys([*monomer.get("aliases", []), *(e["source_label"] for e in extra)])),
+                "source_dois": sorted({*monomer.get("source_dois", []), *(e["source_doi"] for e in extra)}),
+                "source_evidence": [*monomer.get("source_evidence", []), *extra],
+            }
+        rows.append(monomer)
+    return rows
+
+
 def _number(value, limit=10000):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or abs(value) > limit:
         raise ValueError("Sketch coordinates must be finite numbers")
@@ -92,7 +108,10 @@ def normalize_monomer(*, smiles=None, molblock=None, graph=None, clean_layout=Fa
                 raise ValueError("Bond endpoint is missing")
             if row["order"] not in kinds or rw.GetBondBetweenAtoms(a, b):
                 raise ValueError("Unsupported or duplicate bond")
-            rw.AddBond(a, b, kinds[row["order"]])
+            kind = row.get("kind")
+            if kind not in (None, "dative") or (kind == "dative" and row["order"] != 1):
+                raise ValueError("Unsupported bond kind")
+            rw.AddBond(a, b, Chem.BondType.DATIVE if kind == "dative" else kinds[row["order"]])
         mol = rw.GetMol(); mol.AddConformer(conf)
         for row in bonds:
             bond = mol.GetBondBetweenAtoms(row["a"], row["b"])
@@ -116,7 +135,10 @@ def normalize_monomer(*, smiles=None, molblock=None, graph=None, clean_layout=Fa
     editable = Chem.Mol(mol); Chem.Kekulize(editable, clearAromaticFlags=True)
     pos = editable.GetConformer().GetPositions()
     result_graph = {"atoms": [{"element": a.GetSymbol(), "x": float(pos[a.GetIdx()][0]), "y": float(pos[a.GetIdx()][1]), "charge": a.GetFormalCharge(), "isotope": a.GetIsotope(), "aromatic": a.GetIsAromatic(), "chiral_tag": int(a.GetChiralTag()), "explicit_hs": a.GetNumExplicitHs(), "no_implicit": a.GetNoImplicit()} for a in editable.GetAtoms()],
-                    "bonds": [{"a": b.GetBeginAtomIdx(), "b": b.GetEndAtomIdx(), "order": b.GetBondTypeAsDouble(), "stereo": int(b.GetStereo()), "stereo_atoms": list(b.GetStereoAtoms()), "direction": int(b.GetBondDir())} for b in editable.GetBonds()]}
+                    "bonds": [{"a": b.GetBeginAtomIdx(), "b": b.GetEndAtomIdx(), "order": b.GetBondTypeAsDouble(),
+                               **({"kind": "dative"} if b.GetBondType() == Chem.BondType.DATIVE else {}),
+                               "stereo": int(b.GetStereo()), "stereo_atoms": list(b.GetStereoAtoms()),
+                               "direction": int(b.GetBondDir())} for b in editable.GetBonds()]}
     drawer = rdMolDraw2D.MolDraw2DSVG(600, 400)
     drawer.drawOptions().useBWAtomPalette(); drawer.drawOptions().includeMetadata = False
     rdMolDraw2D.PrepareAndDrawMolecule(drawer, mol); drawer.FinishDrawing()

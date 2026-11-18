@@ -109,7 +109,8 @@ def describe_catalog(library):
             aliases.extend([identifier.replace("_", "-"), identifier.replace("_", " ")])
         monomers.append({"id": identifier, "label": row.get("label", identifier),
                          "abbreviation": row.get("abbreviation", identifier), "full_name": row.get("full_name", ""),
-                         "aliases": _unique(aliases), "compatible_roles": deepcopy(row.get("compatible_roles", []))})
+                         "aliases": _unique(aliases), "compatible_roles": deepcopy(row.get("compatible_roles", []))
+                         if row.get("automatic_prepare_supported") is not False else []})
         if row.get("smiles"):
             smiles_ids.setdefault(canonical(row["smiles"]), []).append(identifier)
     by_id = {row["id"]: row for row in monomers}

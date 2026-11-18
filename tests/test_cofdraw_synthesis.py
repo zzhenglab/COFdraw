@@ -77,7 +77,7 @@ def test_all_catalog_monomers_score_offline_and_keep_qualified_reference_entries
     monkeypatch.setattr(socket, "create_connection", no_network)
     rows = deepcopy(CATALOG["monomer_presets"])
     result = synthesis.catalog_scores(rows)
-    assert result["count"] == result["available_count"] == len(rows) == 118
+    assert result["count"] == result["available_count"] == len(rows)
     assert {r["id"] for r in result["monomers"]} == {r["id"] for r in rows}
     assert all(1 <= r["synthetic_accessibility"]["score"] <= 10 for r in result["monomers"])
     original = {r["id"]: r for r in rows}

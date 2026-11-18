@@ -125,16 +125,21 @@ def test_exact_additive_history_and_manifest_bindings(catalog, rows):
     assert audit['previous_catalog_sha256'] == BASELINE_81_SHA256
     assert len(baseline['monomer_presets']) == audit['original_monomer_count'] == 81
     assert len(SELECTED) == len(audit['added_ids']) == 37
-    assert len(rows) == audit['monomer_count'] == 118
+    prior_path = DATA / 'catalog/history' / (audit['catalog_sha256'] + '.json')
+    assert audit['catalog_sha256'] == digest(prior_path) == catalog['recent_monomer_update']['previous_catalog_sha256']
+    prior = {r['id']: r for r in read(prior_path)['monomer_presets']}
+    assert len(prior) == audit['monomer_count'] == 118
     assert len({row['canonical_smiles'] for row in SELECTED.values()}) == 37
     assert set(audit['added_ids']) == set(SELECTED)
-    assert set(rows) == {r['id'] for r in baseline['monomer_presets']} | set(SELECTED)
+    assert set(prior) == {r['id'] for r in baseline['monomer_presets']} | set(SELECTED)
+    assert set(rows) - set(prior) == set(catalog['recent_monomer_update']['added_ids']) == {'dhp_cho4', 'hapt', 'hbc_la12'}
+    for identifier, previous in prior.items():
+        assert rows[identifier] == previous
     for old in baseline['monomer_presets']:
         assert rows[old['id']] == old
     for field in ('recipe_bindings', 'source_metadata', 'source_registry_sha256'):
         assert catalog[field] == baseline[field]
     assert audit['registry_sha256'] == digest(DATA / 'registry.json')
-    assert audit['catalog_sha256'] == digest(DATA / 'catalog/current.json')
     assert audit['selection_sha256'] == digest(SELECTION_PATH)
     assert audit['ground_truth'] is False and audit['source_pixels_distributed'] is False
     assert audit['research_annotations_modified'] is False

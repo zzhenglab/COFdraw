@@ -26,3 +26,42 @@
 @media(min-width:1200px){.library-list{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(min-width:1440px){.library-list{grid-template-columns:repeat(5,minmax(0,1fr))}}@media(min-width:1800px){.library-list{grid-template-columns:repeat(6,minmax(0,1fr))}}@media(max-width:750px){.library-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.library-row{padding:10px}.library-thumbnail{height:140px}.library-filters{grid-template-columns:1fr 1fr}.library-filters .field:first-child{grid-column:1/-1}}@media(max-width:650px){.library-body{padding:14px}.library-preview{height:150px}.topology-list{grid-template-columns:1fr;max-height:none}.library-dialog{max-height:calc(100dvh - 20px)}#monomer-library-dialog{width:calc(100vw - 20px);max-width:calc(100vw - 20px)}.library-detail{grid-template-columns:1fr;padding:0 12px 12px}.library-detail>*,.library-detail .library-preview{grid-column:1;grid-row:auto}.library-detail .library-preview{height:150px}.library-detail-actions .button{flex:1}.library-collection-heading{align-items:start}.library-collection-heading>span{max-width:105px;text-align:right}.library-list{max-height:50dvh}.library-context{font-size:10px}.library-semantics{font-size:10px}.library-filters{gap:9px}.library-dialog .dialog-header{padding:15px}.library-card-name{font-size:10px}}@media(max-width:419px){.library-list{grid-template-columns:1fr}.library-thumbnail{height:165px}.library-card-name{min-height:0}.library-card-status{margin-bottom:9px}.library-card-actions .library-use{min-width:105px}}@media(prefers-reduced-motion:reduce){.library-row[data-preview-state=loading] .thumbnail-state{animation:none}}
 
 .library-show-all{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 12px}.library-show-all[hidden]{display:none}.library-show-all input{width:auto;margin:0;flex:none}
+
+#monomer-canvas:focus-visible{outline:2px solid #4d9680;outline-offset:2px}
+#monomer-canvas[data-tool="select"]{cursor:grab}
+#monomer-canvas[data-tool="erase"],#monomer-canvas[data-tool="atom"],#monomer-canvas[data-tool="bond"]{cursor:crosshair}
+.sketch-bond-hover{stroke:#d9ede4;stroke-width:9;stroke-linecap:round}
+.sketch-atom-hover{fill:#e7f3ed;stroke:#91bbaa}
+.sketch-dative,.sketch-dative-arrow{stroke:#315d75;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sketch-secondary #atom-charge{width:62px;padding:5px}
+.sketch-shortcuts{font-size:11px;line-height:1.6;color:var(--muted);margin:10px 0}
+.sketch-shortcuts summary,.solubility-notes summary,.solubility-table summary{cursor:pointer}
+.sketch-shortcuts p{margin:6px 0}
+.element-grid-scroll{overflow:auto;margin:12px 0}
+.element-grid{display:grid;grid-template-columns:repeat(17,minmax(30px,1fr));gap:4px;min-width:574px}
+.element-cell{padding:4px 2px;min-height:42px;border:1px solid #b8d8cb;border-radius:5px;background:#eaf5ef;color:#264f42;display:grid;place-items:center}
+.element-cell.transition{background:#e9f1f8;border-color:#bed1df;color:#2e506f}
+.element-cell small{font-size:9px;font-weight:400}
+.element-cell strong{font-size:14px}
+.element-cell:enabled:hover,.element-cell:focus-visible{border-color:#26735d;background:#cce9dd}
+.element-cell:disabled{opacity:.23}
+#element-match:empty{display:none}
+.solubility-dialog{width:760px}
+.solubility-dialog h3{font-size:15px;margin:0 0 5px}
+.solubility-controls{display:flex;align-items:end;flex-wrap:wrap;gap:9px;margin:12px 0}
+.solubility-controls .field{margin:0}
+.solubility-controls input{max-width:155px}
+.solubility-table-scroll{max-height:370px;overflow:auto;border:1px solid var(--line);border-radius:7px}
+.solubility-table{font-size:12px;border-collapse:separate;border-spacing:0;width:100%;min-width:440px;font-variant-numeric:tabular-nums}
+.solubility-table th,.solubility-table td{padding:9px 10px;border-bottom:1px solid #e7eee7;text-align:left;vertical-align:top}
+.solubility-table thead th{position:sticky;top:0;background:#eff5ef;font-size:11px}
+.solubility-table tbody th{font-weight:600}
+.solubility-table tbody tr:nth-child(even){background:#f9fcf8}
+.solubility-table td small{display:block;margin-top:4px;color:var(--muted);white-space:nowrap}
+.solubility-table td p{font-size:11px;line-height:1.5;max-width:230px;margin:7px 0 0}
+.solubility-reported{color:#176750}
+.solubility-estimated{color:#715719}
+.solubility-notes,.solubility-loadings{color:#456457;background:#f5f8f4;border-radius:6px;padding:9px 12px;font-size:11px;line-height:1.55;margin:9px 0}
+.solubility-notes p,.solubility-loadings p{margin:5px 0}
+.solubility-notes ul{padding-left:17px;margin:6px 0}
+.solubility-dialog a{color:#126751}

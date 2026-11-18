@@ -17,7 +17,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.8.2"
+VERSION = "0.8.3"
 
 
 def validate_synthesis_resources(directory=None):
@@ -156,6 +156,11 @@ def main():
         if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
             raise SystemExit("Periodic template hash mismatch")
     shutil.copytree(crystal_data, staged / "data/crystal-models")
+    solubility_data = data / "solubility"
+    solubility_manifest = json.loads((solubility_data / "validation.json").read_text("utf-8"))
+    if sha(solubility_data / "measurements.csv") != solubility_manifest["measurements_sha256"]:
+        raise SystemExit("Solubility reference hash mismatch")
+    shutil.copytree(solubility_data, staged / "data/solubility")
     # Immutable engine/profile resources belong to the application, independent
     # of a user's writable catalog-data location.
     shutil.copytree(REPO / "data/raspa", staged / "data/raspa")
@@ -184,6 +189,8 @@ def main():
                 "executable_sha256": sha(staged / "COFdraw.exe"),
                 "catalog_sha256": catalog["catalog_sha256"],
                 "synthetic_accessibility": {"method_id": "rdkit_sa_score", "fragment_table": synthesis_resource},
+                "solubility": {"dataset_doi": solubility_manifest["dataset_doi"],
+                               "measurements_sha256": solubility_manifest["measurements_sha256"]},
                 "files": [{"path": p.relative_to(staged).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)}
                           for p in sorted(staged.rglob("*")) if p.is_file()]}
     (staged / "release-manifest.json").write_text(json.dumps(manifest, indent=2), "utf-8")

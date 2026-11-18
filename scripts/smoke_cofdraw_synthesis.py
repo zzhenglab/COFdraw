@@ -64,9 +64,9 @@ def main():
 
             library = page.request.get(base + "/api/drawing/library").json()
             report = page.request.get(base + "/api/drawing/science/synthesis-library").json()
-            assert report["count"] == report["available_count"] == 118
+            assert report["count"] == report["available_count"] >= 121
             page.locator("#open-monomer-library").click()
-            assert page.locator("#library-list .library-row").count() == 118
+            assert page.locator("#library-list .library-row").count() == report["count"]
             for row in library["monomer_presets"]:
                 score = row["synthetic_accessibility"]
                 assert score["available"] and score["fragment_table_verified"]

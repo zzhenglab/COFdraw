@@ -36,11 +36,11 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.8.2 |
+| Feature | Included in v0.8.3 |
 | --- | --- |
 | Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
 | Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |
-| Monomer library | 118 presets, structure cards, stable A/B choices, compatible partners, and automatic linkage/template selection |
+| Monomer library | 121 presets, structure cards, compatible partners, automatic chemistry, and offline solubility screening |
 | Precursor accessibility | Offline RDKit SA Score for finite monomers and declared precursor summaries; a heuristic, not ASKCOS or COF synthesis prediction |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
 | Geometry editing | Bond-angle-aware rigid-block layout, direct atom drag, block editing, undo, and geometry warnings |

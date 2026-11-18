@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.3 - 2026-11-18
+
+- Screen room-temperature monomer solubility across 19 solvents with reported measurements, estimates with error bands, and mass per chosen solvent volume. Show literature preparation loads when available. Export CSV and JSON.
+- Add DHP, HAPT, and the figure-based HBC-LA12 reference. Find existing monomers by TAM and Trip-CHO, with source evidence in their details.
+- Add a periodic picker for common elements, directed coordination bonds, bond-order shortcuts, snapped chain drawing, and undoable Ctrl+Shift+K cleanup. Use a three-blade triptycene depiction in monomer previews.
+
 ## 0.8.2 - 2026-11-18
 
 - Move Appearance above Geometry and put Randomize style beside Measure pore. The pore arrow shows its diameter in nanometers and the method is expandable.

@@ -90,6 +90,20 @@ class MonomerAnalysis(BaseModel):
     conformers: int = Field(default=4, ge=1, le=8)
 
 
+class SolubilityScreen(BaseModel):
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    smiles: str | None = Field(default=None, min_length=1, max_length=10000)
+    monomer_id: str | None = Field(default=None, min_length=1, max_length=80)
+    solvent_ids: list[Annotated[str, Field(min_length=1, max_length=24)]] | None = Field(default=None, min_length=1, max_length=19)
+    solvent_ml: float = Field(default=1.0, ge=0.01, le=1000)
+
+    @model_validator(mode="after")
+    def exclusive_monomer(self):
+        if (self.smiles is None) == (self.monomer_id is None):
+            raise ValueError("Supply a monomer ID or one SMILES")
+        return self
+
+
 class PoreAnalysis(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     structure: dict
@@ -296,7 +310,7 @@ def validate_recipe(recipe: dict) -> None:
 
 def create_drawing_router(data_root: Path) -> APIRouter:
     from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, render_recipe, build_patch
-    from .cofdraw_core import STYLES, MONOMERS, PRESETS, read_catalog, normalize_monomer, render_styled, export_chemical_formats
+    from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
     from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
     from .cofdraw_styles import PALETTES, FONTS
 
@@ -363,7 +377,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             except (ValueError, KeyError, OSError) as exc:
                 errors.append(str(exc))
         from .cofdraw_synthesis import synthetic_accessibility
-        monomers = decorated_monomers(catalog.get('monomer_presets', MONOMERS))
+        monomers = decorated_monomers(catalog_monomers(catalog))
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
@@ -635,7 +649,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     @router.get('/science/synthesis-library')
     def synthesis_library():
         from .cofdraw_synthesis import catalog_scores
-        return catalog_scores(read_catalog(root).get('monomer_presets', MONOMERS))
+        return catalog_scores(catalog_monomers(read_catalog(root)))
 
     @router.post('/science/periodic-options')
     def matched_periodic_options(request: RenderDrawing):
@@ -737,6 +751,32 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             return scientific_result(result, 'monomer', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
+    @router.post('/science/solubility')
+    def analyze_solubility(request: SolubilityScreen):
+        from .cofdraw_solubility import screen_solubility
+        from .framework_drawing import canonical
+        try:
+            catalog = read_catalog(root)
+            monomers = {row['id']: row for row in catalog_monomers(catalog)}
+            smiles = request.smiles
+            if request.monomer_id is not None:
+                entry = monomers.get(request.monomer_id)
+                if entry is None:
+                    raise ValueError('Unknown monomer ID')
+                smiles = entry['smiles']
+            loadings = [
+                {**record, 'canonical_smiles': canonical(monomers[record['monomer_id']]['smiles'])}
+                for record in catalog.get('recent_monomer_update', {}).get('preparation_loadings', [])
+            ]
+            result = screen_solubility(smiles, root / 'solubility',
+                                       solvent_ids=request.solvent_ids, solvent_ml=request.solvent_ml,
+                                       preparation_loadings=loadings)
+            return scientific_result(result, 'solubility', request.model_dump())
+        except OSError as exc:
+            raise HTTPException(503, 'The offline solubility reference data could not be read') from exc
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
     @router.post('/science/porosity')
     def analyze_porosity(request: PoreAnalysis):
         try:
@@ -778,8 +818,9 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         from . import __version__
         from .cofdraw_knowledge import capability_inventory
         from .cofdraw_adsorption import AdsorptionRequest
+        from .cofdraw_solubility import DATASET_DOI, SOLVENT_NAMES
         models={'model':ModelDrawing,'patch':Patch3D,'networks':NetworkHypothesis,'monomer':MonomerAnalysis,
-                'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
+                'solubility':SolubilityScreen,'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
                 'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
                 'finite-inspect':FiniteInspection,'finite-powder':FinitePowder,'stacking':PeriodicStacking,'periodic-options':RenderDrawing,
                 'measure':RenderDrawing,'build-periodic':PeriodicFromDrawing}
@@ -788,6 +829,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                                     'request_schema':model.model_json_schema()} for name,model in models.items()},
                 'workflows':capability_inventory(),
                 'synthesis_library':{'method':'GET','path':'/api/drawing/science/synthesis-library'},
+                'solubility':{'solvents':SOLVENT_NAMES,'dataset_doi':DATASET_DOI},
                 'adsorption':{'engine':'/api/drawing/science/adsorption/engine',
                               'start':{'method':'POST','path':'/api/drawing/science/adsorption/jobs','request_schema':AdsorptionRequest.model_json_schema()},
                               'poll':'/api/drawing/science/adsorption/jobs/{job_id}',

@@ -30,6 +30,19 @@ def test_editor_rejects_invalid_valence_and_unconnected_graph():
         normalize_monomer(graph=value)
 
 
+def test_editor_clean_and_mol_preserve_donor_direction_and_metal_charge():
+    graph = {
+        "atoms": [{"element": "N", "x": 0, "y": 0}, {"element": "Zn", "x": 5, "y": 1, "charge": 2}],
+        "bonds": [{"a": 0, "b": 1, "order": 1, "kind": "dative"}],
+    }
+    clean = normalize_monomer(graph=graph, clean_layout=True)
+    assert clean["smiles"] == "[NH3]->[Zn+2]"
+    assert clean["graph"]["bonds"][0]["kind"] == "dative"
+    assert clean["graph"]["atoms"][1]["charge"] == 2
+    assert normalize_monomer(graph=clean["graph"])["smiles"] == clean["smiles"]
+    assert normalize_monomer(molblock=clean["molblock"])["smiles"] == clean["smiles"]
+
+
 def test_every_style_exports_same_chemical_graph_and_random_is_reproducible(tmp_path):
     with TestClient(create_app(tmp_path)) as client:
         # Sulfonated Tp/Pa exercises condensed labels without repeating the

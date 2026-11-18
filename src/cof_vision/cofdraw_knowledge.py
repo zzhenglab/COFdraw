@@ -105,6 +105,9 @@ def capability_inventory():
         ("monomer-conformers", "/api/drawing/science/monomer", "MonomerAnalysis", "Molecular descriptors and force-field conformers",
          "Complete finite molecules; seeded ETKDG and MMFF/UFF. Empirical charges and force-field energies are not DFT, band gaps or crystal stability.",
          {"smiles": "Nc1ccc(N)cc1", "conformers": 2}, ["xyz", "sdf", "json"]),
+        ("monomer-solubility", "/api/drawing/science/solubility", "SolubilityScreen", "Screen neat-solvent solubility near room temperature",
+         "Exact equilibrium records, bounded analog estimates and separate reported preparation loads. Mass is relative to starting solvent volume.",
+         {"monomer_id": "ta", "solvent_ids": ["dmf", "dioxane", "ethanol"], "solvent_ml": 2}, ["csv", "json"]),
         ("periodic-model", "/api/drawing/science/model", "ModelDrawing", "Import periodic CIF or select an unrelaxed model",
          "Explicit cell and coordinates; supercell export does not optimize or experimentally validate the structure.",
          {"template_id": "hcb-imine-aa", "repeats": [2, 2, 1]}, ["cif", "xyz", "pdb", "json"]),
@@ -169,6 +172,7 @@ def capability_inventory():
 
 def _catalog_records(data_root):
     from .cofdraw_chemistry import TEMPLATES, library_linkages, inspect_monomer
+    from .cofdraw_core import catalog_monomers
     from .cofdraw_styles import STYLES
 
     root = Path(data_root).resolve()
@@ -194,10 +198,10 @@ def _catalog_records(data_root):
                     [coverage['scope'],paper.get('review_scope',''),*coverage['limitations']]))
         except (ValueError,OSError,KeyError) as exc:
             errors.append({'record_type':'literature','reason':str(exc)})
-    for row in catalog.get("monomer_presets", []):
+    for row in catalog_monomers(catalog) if catalog else []:
         runtime=inspect_monomer(row['smiles'])
         records.append(_record("monomer", row["id"], row.get("full_name", row.get("label", row["id"])), row,
-            {"status": "catalogued_monomer", "automatic_prepare_supported": any(r['reactive_sites']>=2 for r in runtime['compatible_roles']),
+            {"status": "catalogued_monomer", "automatic_prepare_supported": row.get('automatic_prepare_supported') is not False and any(r['reactive_sites']>=2 for r in runtime['compatible_roles']),
              "runtime_compatible_roles":runtime['compatible_roles'],"runtime_reactive_groups":runtime['reactive_groups'],
              "scope": "Library presence does not establish a supported reaction, periodic net or synthesis feasibility."},
             {**catalog_provenance, "source_dois": row.get("source_dois", []), "source_evidence": row.get("source_evidence", [])}, _qualifications(row)))
