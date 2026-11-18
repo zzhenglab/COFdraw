@@ -91,6 +91,37 @@ def main():
             def ids():
                 return page.locator(".library-row").evaluate_all("rows => rows.map(row=>row.dataset.id)")
 
+            search=page.locator("#combination-search")
+            starts=page.locator("#cof-preset")
+            assert starts.locator('option[value^="pair:"]').count()>len(library["cof_presets"])
+            search.fill("TpPa")
+            assert "Tp + Pa" in starts.locator('option[value="tppa-pore-v1"]').inner_text()
+            starts.select_option("tppa-pore-v1")
+            ready()
+            assert page.locator("#linkage").input_value()=="beta_ketoenamine"
+            search.fill("COF300")
+            assert starts.locator('option[value="source:cof-300-projection-v1"]').count()==1
+            search.fill("Pyurea")
+            starts.select_option("source:pyurea-source-layout-v1")
+            page.wait_for_function("window.COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && !window.COFdrawStudio.state.busy")
+            assert starts.input_value()=="source:pyurea-source-layout-v1"
+            search.fill("nAnOtExTnOmAtCh")
+            assert "No matches" in page.locator("#combination-count").inner_text()
+            assert starts.input_value()=="source:pyurea-source-layout-v1"
+            search.fill("imine")
+            candidate=starts.locator('option[value^="pair:"]').first.get_attribute("value")
+            starts.select_option(candidate)
+            ready()
+            assert page.evaluate("window.COFdrawStudio.state.sourceId===null")
+            with page.expect_response("**/api/drawing/prepare") as prepared:
+                page.locator("#build").click()
+            assert prepared.value.ok
+            page.wait_for_function("!window.COFdrawStudio.state.busy")
+            search.fill("")
+            starts.select_option(library["cof_presets"][0]["id"])
+            ready()
+            checks.append("Search and build matched pairs across linkages, open a named recorded COF, and return to a new design")
+
             # The old automatic fallback incorrectly allowed TFB to partner TFB.
             page.locator("#open-monomer-library").click()
             assert page.locator("#library-current-a").inner_text() == "TFB"

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+- Drag the horizontal separation slider to move from overlaid stacking patterns to individual 2θ axes. The exported SVG keeps the chosen layout.
+- Search starting combinations by COF, building block or linkage. Auto includes compatible designs across linkage families and gives recorded COF drawings their own entries.
+- Comparing again after viewing an imported model’s AB or ABC arrangement reuses the original layer.
+
 ## 0.9.0 - 2026-11-18
 
 - Fuse five- or six-membered rings onto an existing outer bond with a placement preview. Ring double bonds use a shorter inner stroke. The sketch shows terminal amine and hydroxyl hydrogens and preserves radical electrons. Hover to change atom charge or delete an item.

@@ -5,6 +5,7 @@ const L = COFdrawLibrary;
 const state = {online: false, busy: false, recipe: null, sourceId: null, sourceMetadata: null, result: null, dirty: false, inputsDirty: false, jsonPending: false, style: "standard", styleCategory:"all", styleOptions:{}, resolvedStyleOptions:{}, seed: null, zoom: 1, library: null, monomers: {}, layoutScale: 1, layoutCenter: [0, 0], autoChemistry:true};
 const fallbackPresets = [{id:"imine",label:"Imine · TFB + TAPB",linkage:"imine",monomer_a:"O=Cc1cc(C=O)cc(C=O)c1",monomer_b:"Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",label_a:"TFB",label_b:"TAPB",instances:6},{id:"keto",label:"Ketoenamine · Tp + Pa",linkage:"beta_ketoenamine",monomer_a:"O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",monomer_b:"Nc1ccc(N)cc1",label_a:"Tp",label_b:"Pa",instances:12}];
 const previewURLs = {};
+let combinations=[], combinationFilter=null;
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function sourceMode(){return Boolean((state.sourceId||state.recipe?.explicit_graph)&&!state.inputsDirty);}
 function linkageInfo(){return state.library?.linkages?.[$("linkage").value]||{};}
@@ -34,7 +35,8 @@ function constructionCheck(){
 function autoMatchChemistry(){
   if(!state.autoChemistry||sourceMode())return;
   const pair=checkedMonomers();if(!pair.a||!pair.b){$("chemistry-match").textContent='Choose both building blocks and wait for their structure checks.';return;}
-  const match=L.automaticPlan(state.library,pair.a,pair.b);
+  const preferred=combinations.find(p=>p.id===$("cof-preset").value && p.monomer_a===pair.a.input && p.monomer_b===pair.b.input);
+  const match=L.automaticPlan(state.library,pair.a,pair.b,preferred);
   if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
   populateLinkages(match.id);
   const template=templates().find(item=>item.id===match.template_id);
@@ -62,7 +64,31 @@ function refreshPresetLists(){
     const matched=(state.library.monomer_presets||[]).find(item=>item.smiles===$(`smiles-${block}`).value.trim());
     select.value=matched?.id||"";
   }
-  const select=$("cof-preset"),current=select.value;select.replaceChildren();for(const p of state.library.cof_presets||fallbackPresets)if(p.linkage===$("linkage").value)select.append(option(p.id,p.label));select.append(option("custom","Custom monomers"));select.value=Array.from(select.options).some(o=>o.value===current)?current:"custom";
+  refreshCombinations();
+}
+function refreshCombinations(force=false){
+  const query=$("combination-search").value.trim().toLowerCase(), linkage=state.autoChemistry?'':$("linkage").value;
+  const key=JSON.stringify([query,linkage]);
+  if(!force&&combinationFilter===key)return;
+  combinationFilter=key;
+  const select=$("cof-preset"),current=state.sourceId?'source:'+state.sourceId:select.value;
+  const groups=new Map(),words=query.split(/\s+/).filter(Boolean),fragment=document.createDocumentFragment();
+  fragment.append(option("custom","Custom monomers"));
+  let found=0,selected=false;
+  for(const row of combinations){
+    if(linkage ? row.linkage!==linkage&&!row.source : row.linkage==='secondary_amine')continue;
+    if(!words.every(word=>row.search.includes(word)))continue;
+    if(!groups.has(row.group)){
+      const group=document.createElement('optgroup');group.label=row.group;fragment.append(group);groups.set(row.group,group);
+    }
+    groups.get(row.group).append(option(row.id,row.label));found++;if(row.id===current)selected=true;
+  }
+  const previous=combinations.find(row=>row.id===current);
+  if(!selected&&previous&&query&&(!linkage||previous.source||previous.linkage===linkage)){
+    const group=document.createElement('optgroup');group.label='Current selection';group.append(option(current,previous.label));fragment.append(group);selected=true;
+  }
+  select.replaceChildren(fragment);select.value=selected?current:"custom";
+  $("combination-count").textContent=found===0?'No matches. Try a COF, monomer or linkage name.':found+' '+(found===1?'choice':'choices');
 }
 function refreshTemplates(desired=null){
   if(sourceMode()){$("template-field").hidden=true;$("pore-field").hidden=true;$("template-description").textContent="This drawing uses its recorded connections and layout. Edit a monomer to begin a new construction.";return;}
@@ -99,7 +125,7 @@ async function api(path, payload) {
 function sync() {
   const source=sourceMode(),linkage=linkageInfo();
   $("chemistry-note").textContent=source?`${state.sourceId?'Source':'Recorded'} graph loaded. Change presentation or edit the recorded layout; change a precursor to start a new construction.`:linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
-  document.querySelector('.linkage-first').hidden=source;document.querySelector('.auto-chemistry').hidden=source;$("cof-preset").closest('.field').hidden=source;
+  document.querySelector('.linkage-first').hidden=source;document.querySelector('.auto-chemistry').hidden=source;$("combination-search").disabled=state.busy;
   if(source)$("chemistry-match").textContent="The recorded recipe supplies this graph directly; constructor compatibility does not apply.";
   else if($("chemistry-match").textContent.startsWith("The recorded recipe supplies"))$("chemistry-match").textContent="Linkages and connectivity update as you choose building blocks.";
   const blocked=!state.online||state.busy;
@@ -195,7 +221,7 @@ function showSourceMonomers(recipe,metadata){
   const a=components.find(([,c])=>["aryl_aldehyde","tp_trialdehyde"].includes(c.role))||components[0],b=components.find(([,c])=>c.role==="primary_arylamine")||components.find(x=>x!==a);
   for(const [block,entry] of [["a",a],["b",b]]){ $(`smiles-${block}`).value=entry?.[1]?.monomer_smiles||"";$(`label-${block}`).value=entry?.[1]?.label||entry?.[0]||block.toUpperCase();$(`preset-${block}`).value="";}
   for(const block of ['a','b'])if(!$(`smiles-${block}`).value){delete state.monomers[block];$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;$(`formula-${block}`).textContent="No precursor supplied";}
-  const link=recipe.linkage||a?.[1]?.linkage;if(link&&state.library?.linkages?.[link]){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances?.length))$("pore").value=recipe.instances.length;refreshChemistry(recipe.template_id);$("cof-preset").value="custom";
+  const link=recipe.linkage||a?.[1]?.linkage;if(link&&state.library?.linkages?.[link]){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances?.length))$("pore").value=recipe.instances.length;refreshChemistry(recipe.template_id);if(state.sourceId)refreshCombinations(true);else $("cof-preset").value="custom";
   for(const block of ['a','b'])if($(`smiles-${block}`).value.trim())validateMonomer(block,true).catch(e=>notice(e.message,true));
 }
 async function render(){
@@ -228,7 +254,13 @@ for(const block of ["a","b"]){
   $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;const choice=monomerChoice(item,block,checkedMonomer(block==='a'?'b':'a'));if(!choice.compatible){refreshPresetLists();notice(choice.reason,true);return;}$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;delete state.monomers[block];markInputsChanged();refreshChemistry();validateMonomer(block).catch(e=>notice(e.message,true));});
 }
 document.querySelectorAll(".validate-monomer").forEach(b=>b.addEventListener("click",()=>validateMonomer(b.dataset.block).catch(e=>notice(e.message,true))));
-$("cof-preset").addEventListener("change",()=>{const preset=(state.library?.cof_presets||fallbackPresets).find(p=>p.id===$("cof-preset").value);if(preset){setCombination(preset);notice("Starting monomers loaded. Create a drawing, or open an audited source recipe below.");}});
+$("combination-search").addEventListener("input",()=>refreshCombinations());
+$("cof-preset").addEventListener("change",()=>{
+  const row=combinations.find(p=>p.id===$("cof-preset").value);
+  if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
+  if(row){setCombination(row);notice("Starting pair loaded. Create a drawing to check its connections.");}
+  else if(sourceMode()){markInputsChanged();refreshMonomers();}
+});
 $("auto-chemistry").addEventListener("change",()=>{state.autoChemistry=$("auto-chemistry").value==='auto';if(state.autoChemistry)markInputsChanged();refreshChemistry();});
 $("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry();updateIdentity();});
 $("linkage-search").addEventListener("input",()=>populateLinkages());
@@ -596,7 +628,7 @@ async function applyDescriptionPlan(plan){
 async function initialize(){
   try{
     const library=await api("library");state.library=library;state.online=true;$("engine-dot").classList.add("live");$("engine-status").textContent="Local chemistry engine · ready";$("catalog-version").textContent=library.catalog_version||"Built-in drawing library";
-    const presets=library.cof_presets?.length?library.cof_presets:fallbackPresets;library.cof_presets=presets;populateLinkages("imine");refreshChemistry();
+    const presets=library.cof_presets?.length?library.cof_presets:fallbackPresets;library.cof_presets=presets;combinations=L.startingCombinations(library);populateLinkages("imine");refreshChemistry();
     $("source-select").replaceChildren();for(const source of library.source_recipes||[]){const o=document.createElement("option");o.value=source.recipe_id;o.textContent=source.label;$("source-select").append(o);}if(!library.source_recipes?.length){const o=document.createElement("option");o.value="";o.textContent="No registered source recipes";$("source-select").append(o);}$("source-count").textContent=library.source_recipes?.length||0;
     drawStyles();drawStyleControls();
     if(library.source_registry_errors?.length)notice("Some source recipes failed integrity checks and are omitted from the library.",true);

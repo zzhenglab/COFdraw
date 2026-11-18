@@ -117,15 +117,61 @@
     const supported=list(item.compatible_roles).some(r=>library.linkages?.[r.linkage]?.supported===true&&r.compatible!==false&&(r.reactive_sites??r.count)>=2);
     return {compatible:supported,reason:supported?'Choose this monomer, then a compatible partner. Available chemistry will update automatically.':'No implemented transform for this monomer yet; use the single-monomer editor or import a reviewed source drawing.'};
   }
-  function automaticPlan(library,a,b) {
+  function automaticPlan(library,a,b,preferred=null) {
     const choices=compatibleLinkages(library,a,b);
     // A reduced product state always requires an explicit manual choice.
-    const chosen=choices.find(choice=>choice.id!=='secondary_amine');
+    const allowed=choices.filter(choice=>choice.id!=='secondary_amine');
+    const chosen=allowed.find(choice=>choice.id===preferred?.linkage)||allowed[0];
     if(!chosen)return null;
     const raw=library.templates,templates=Array.isArray(raw)?raw:Object.values(raw||{});
     const eligible=templates.filter(template=>chosen.templates.includes(template.id));
-    const template=eligible.find(item=>Array.isArray(item.allow_pairs)&&item.allow_pairs.length)||eligible[0];
+    const template=eligible.find(item=>item.id===preferred?.template_id)||eligible.find(item=>item.allow_pairs?.length)||eligible[0];
     return {...chosen,template_id:template?.id||null,choice_count:choices.length};
+  }
+  function startingCombinations(library) {
+    const blocks=library.monomer_presets||[], byId=new Map(blocks.map(b=>[b.id,b]));
+    const sources=new Map((library.source_recipes||[]).map(s=>[s.recipe_id,s]));
+    const searchText=(...parts)=>{
+      const terms=parts.flat(Infinity).filter(Boolean).join(' ').toLowerCase();
+      return terms+' '+terms.replace(/[-‐‑–·]/g,'');
+    };
+    const names=b=>b?[b.id,b.abbreviation,b.full_name,b.aliases||[],b.literature_names||[]]:[];
+    const pairKey=(a,b,link)=>JSON.stringify([...[a,b].sort(),link]);
+    const occupied=new Set(), rows=[];
+    for(const preset of library.cof_presets||[]){
+      const a=byId.get(preset.monomer_a_id), b=byId.get(preset.monomer_b_id);
+      const name=sources.get(preset.source_recipe_id)?.literature_name;
+      const pair=preset.label_a+' + '+preset.label_b;
+      const label=name?name+' · '+pair:preset.label;
+      rows.push({...preset,label,group:name?'Named starting pairs':'Catalog designs',
+        search:searchText(label,preset.linkage,library.linkages[preset.linkage]?.label,names(a),names(b))});
+      if(a&&b)occupied.add(pairKey(a.canonical_smiles||a.smiles,b.canonical_smiles||b.smiles,preset.linkage));
+    }
+    for(const source of sources.values()){
+      const label=source.literature_name||source.label;
+      rows.push({id:'source:'+source.recipe_id,source,group:'Recorded drawings',label,
+        search:searchText(label,source.label,source.recipe_id,(source.monomers||[]).map(names),(source.monomers||[]).map(m=>m.label))});
+    }
+    const templates=new Map(Object.values(library.templates||{}).map(t=>[t.id,t]));
+    const reactive=blocks.filter(b=>b.compatible_roles?.length&&!b.catalog_use?.startsWith('reference_only'));
+    const generated=[];
+    for(let i=0;i<reactive.length;i++)for(let j=i+1;j<reactive.length;j++){
+      const a=reactive[i], b=reactive[j], sa=a.canonical_smiles||a.smiles, sb=b.canonical_smiles||b.smiles;
+      if(sa===sb)continue;
+      const plan=automaticPlan(library,a,b), template=templates.get(plan?.template_id);
+      if(!template?.allow_pairs?.length)continue;
+      const key=pairKey(sa,sb,plan.id);
+      if(occupied.has(key))continue;
+      occupied.add(key);
+      const [left,right]=plan.swapped?[b,a]:[a,b];
+      const labelA=left.abbreviation||left.id, labelB=right.abbreviation||right.id;
+      const label=labelA+' + '+labelB;
+      generated.push({id:'pair:'+left.id+':'+right.id+':'+plan.id,label,label_a:labelA,label_b:labelB,
+        monomer_a:left.smiles,monomer_b:right.smiles,linkage:plan.id,template_id:template.id,instances:template.instances,
+        group:(template.id==='chain_2_2'?'Open-chain designs · ':'Matched pairs · ')+plan.label,
+        search:searchText(label,plan.id,plan.label,names(left),names(right),template.label)});
+    }
+    return rows.concat(generated.sort((a,b)=>a.group.localeCompare(b.group)||a.label.localeCompare(b.label)));
   }
   // Share in-flight work as well as completed previews. Only the caller decides
   // which visible cards to request; a long catalog never starts all at once.
@@ -145,7 +191,7 @@
     }
     return {request};
   }
-  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,createPreviewCache};
+  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,startingCombinations,createPreviewCache};
   scope.COFdrawLibrary = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);

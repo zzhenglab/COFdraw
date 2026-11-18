@@ -98,6 +98,9 @@
     });
   });
   let patternVisible=false;
+  let positionTraces=null;
+  const separation=$('pattern-separation');
+  separation.addEventListener('input',()=>positionTraces?.(Number(separation.value)));
   function updatePatternView(){
     const hasPattern=Boolean($('pxrd-plot').querySelector('svg'));
     const active=document.querySelector('[data-science-tab="pxrd"]').getAttribute('aria-selected')==='true';
@@ -115,6 +118,10 @@
     catch(error){C.status(error.message,true);}
   });
   function drawPattern(profile,series=[],observations=[],report={}){
+    positionTraces=null;
+    const comparison=series.length>1;
+    $('pattern-spacing').hidden=!comparison;
+    separation.value='0';
     const root=$('pxrd-plot');root.replaceChildren();const ns='http://www.w3.org/2000/svg';
     const svg=document.createElementNS(ns,'svg');svg.setAttribute('role','img');
     const xs=profile.two_theta_degrees,min=xs[0],max=xs.at(-1);
@@ -128,33 +135,64 @@
     element('title',{},title);
     const provenance=$('viewer-provenance').textContent+' · '+$('viewer-title').textContent;
     $('pattern-source').textContent=provenance;
-    element('metadata',{},JSON.stringify({source:provenance,operation:report.operation,parameters:report.parameters,
+    const metadata={source:provenance,operation:report.operation,parameters:report.parameters,
       model_sha256:report.structure_sha256,report_id:report.report_id,observed:observations.map(r=>r.observed_two_theta),
-      series:series.map(r=>({label:r.label,report_id:r.result.report_id,structure_sha256:r.result.structure_sha256})),normalization:'Each curve normalized to 100'}));
+      series:series.map(r=>({label:r.label,report_id:r.result.report_id,structure_sha256:r.result.structure_sha256})),normalization:'Each curve normalized to 100'};
+    const metadataNode=element('metadata',{},JSON.stringify(metadata));
     element('text',{x:52,y:14,fill:'#254b43','font-size':12},title+' · λ '+$('xrd-wavelength').value+' Å');
-    element('path',{d:'M52 20V235H577',fill:'none',stroke:'#9aafa6','stroke-width':1});
+    element('path',{d:'M52 20V235',fill:'none',stroke:'#9aafa6','stroke-width':1});
     for(const intensity of [0,50,100]){
       const y=Number(point(min,intensity)[1]);
       element('line',{x1:48,x2:52,y1:y,y2:y,stroke:'#9aafa6'});
       element('text',{x:44,y:y+4,'text-anchor':'end',fill:'#657a70','font-size':10},String(intensity));
     }
-    for(let i=0;i<=5;i++){const value=min+(max-min)*i/5,x=point(value,0)[0];element('path',{d:`M${x} 235v5`,stroke:'#9aafa6'});element('text',{x,y:255,'text-anchor':'middle',fill:'#657a70','font-size':11},value.toFixed(1));}
-    element('text',{x:315,y:278,'text-anchor':'middle',fill:'#375e52','font-size':12},'2θ / degrees');
+    const sharedAxis=element('g',{});
+    sharedAxis.append(element('path',{d:'M52 235H577',stroke:'#9aafa6'}));
+    for(let i=0;i<=5;i++){const value=min+(max-min)*i/5,x=point(value,0)[0];sharedAxis.append(element('path',{d:`M${x} 235v5`,stroke:'#9aafa6'}),element('text',{x,y:255,'text-anchor':'middle',fill:'#657a70','font-size':11},value.toFixed(1)));}
+    const axisTitle=element('text',{x:315,y:278,'text-anchor':'middle',fill:'#375e52','font-size':12},'2θ / degrees');
     element('text',{x:15,y:130,transform:'rotate(-90 15 130)','text-anchor':'middle',fill:'#375e52','font-size':12},'Relative intensity');
     const colors=['#217d70','#c66a46','#7165b5','#2d80b5','#ad5382'];
     const lines=series.length?series:[{profile}];
-    lines.forEach((row,index)=>element('path',{d:row.profile.two_theta_degrees.map((x,i)=>(i?'L':'M')+point(x,row.profile.intensity[i]).join(',')).join(' '),fill:'none',stroke:colors[index%colors.length],'stroke-width':1.5,'stroke-linejoin':'round'}));
+    const traces=lines.map((row,index)=>element('path',{'data-trace':row.label||'current',d:row.profile.two_theta_degrees.map((x,i)=>(i?'L':'M')+point(x,row.profile.intensity[i]).join(',')).join(' '),fill:'none',stroke:colors[index%colors.length],'stroke-width':1.5,'stroke-linejoin':'round','vector-effect':'non-scaling-stroke'}));
     for(const observation of observations){
       if(observation.status==='outside range')continue;
       const x=point(observation.observed_two_theta,0)[0];
       const tick=element('line',{x1:x,x2:x,y1:223,y2:235,stroke:observation.status==='unmatched'?'#ae4833':'#4f548b','stroke-width':2});
       const title=document.createElementNS(ns,'title');title.textContent=observation.observed_two_theta+'° · '+observation.status;tick.append(title);
     }
+    const legend=element('g',{});
     if(series.length)series.forEach((row,i)=>{
-      const x=55+i*105;element('line',{x1:x,x2:x+16,y1:305,y2:305,stroke:colors[i%colors.length],'stroke-width':2});
-      element('text',{'data-series-label':row.label,x:x+20,y:309,'font-size':10,fill:'#375e52'},row.label);
+      const x=52+(i+0.24)*525/series.length;legend.append(element('line',{x1:x,x2:x+16,y1:305,y2:305,stroke:colors[i%colors.length],'stroke-width':2}),
+        element('text',{'data-series-label':row.label,x:x+20,y:309,'font-size':10,fill:'#375e52'},row.label));
     });
     if(observations.length)element('text',{x:52,y:309,'font-size':11,fill:'#375e52'},'Measured peak ticks · violet: candidate center within tolerance · red: unmatched');
+    if(comparison){
+      const axes=element('g',{'data-pattern-axes':'local'});
+      positionTraces=value=>{
+        const n=traces.length, total=525, panel=(total-12*(n-1))/n;
+        const width=total-(total-panel)*value, stride=(total-width)/(n-1);
+        const partial=value>0&&value<1, extra=(n-1)*16;
+        const label=value===0?'0 · Overlay':value===1?'1 · Side by side':value.toFixed(2);
+        $('pattern-separation-value').textContent=label;separation.setAttribute('aria-valuetext',label);
+        metadata.horizontal_separation=value;metadataNode.textContent=JSON.stringify(metadata);
+        sharedAxis.setAttribute('display',value?'none':'inline');axes.replaceChildren();
+        axisTitle.setAttribute('y',278+(partial?extra:0));legend.setAttribute('transform','translate(0 '+(partial?extra:0)+')');
+        svg.setAttribute('viewBox','0 0 600 '+(322+extra));
+        traces.forEach((trace,i)=>{
+          const left=52+i*stride, y=235+(partial?i*16:0);
+          trace.setAttribute('transform',`translate(${left} 0) scale(${width/total} 1) translate(-52 0)`);
+          if(!value)return;
+          const color=colors[i%colors.length];
+          axes.append(element('path',{d:`M${left} ${y+3}v-3h${width}v3`,fill:'none',stroke:color}));
+          const divisions=width>220?4:2;
+          for(let j=0;j<=divisions;j++){
+            const x=left+width*j/divisions;
+            axes.append(element('text',{x,y:y+12,'text-anchor':j===0?'start':j===divisions?'end':'middle',fill:color,'font-size':10},(min+(max-min)*j/divisions).toFixed(1)));
+          }
+        });
+      };
+      positionTraces(0);
+    }
     root.append(svg);
     patternVisible=true;updatePatternView();
   }
@@ -214,7 +252,7 @@
     check();drawPattern(rows[0].profile,rows,[],rows[0].result);const root=$('pxrd-results');root.replaceChildren();
     C.note(root,periodic?'Same supplied planar layer, explicit periodic AA / AB / ABC / progressive-slip cells. Geometry is unrelaxed. Arbitrary twist needs a commensurate cell.':'Same finite drawing and layer count under five chosen transforms. These are Debye scattering curves, without reciprocal-lattice peaks or hkl assignments.');
     C.note(root,'Each curve is normalized to its own maximum. This compares shape and positions, not absolute scattering power or phase fractions.');
-    for(const row of rows){const box=text('div','','metric-note');box.append(text('strong',row.label));downloads(box,row.result);const view=text('button','View this arrangement','button outline');view.addEventListener('click',()=>{C.invalidate('',false);C.display(row.model,`${row.label} · ${periodic?'periodic stacking hypothesis':'finite drawing stack'}`,origin==='current-periodic'?origin:periodic?'periodic':'drawing');if(!periodic)$('patch-stacking').value=row.label;C.status(`${row.label} comparison selected. Recalculate to inspect this arrangement.`);});box.append(view);root.append(box);}
+    for(const row of rows){const box=text('div','','metric-note');box.append(text('strong',row.label));downloads(box,row.result);const view=text('button','View this arrangement','button outline');view.addEventListener('click',()=>{C.invalidate('',false);C.display(row.model,`${row.label} · ${periodic?'periodic stacking hypothesis':'finite drawing stack'}`,origin==='current-periodic'?origin:periodic?'periodic':'drawing',periodic?parent:null);if(!periodic)$('patch-stacking').value=row.label;C.status(`${row.label} comparison selected. Recalculate to inspect this arrangement.`);});box.append(view);root.append(box);}
     warnings(root,rejected);
     warnings(root,rows[0].result.warnings);
     C.status(`${rows.length} stacking patterns compared under identical calculation settings.`);
@@ -230,7 +268,7 @@
     if(C.structure)table(root,['Site','Element','Fractional x','y','z'],C.structure.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,...a.fractional.map(x=>number(x,5))]));
     else table(root,['Atom','Element','x / Å','y / Å','z / Å'],C.viewer.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,number(a.x,5),number(a.y,5),number(a.z,5)]));
   });
-  function clearAnalysis(){for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
+  function clearAnalysis(){positionTraces=null;$('pattern-spacing').hidden=true;for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
   window.addEventListener('cofdraw:structure',()=>{clearAnalysis();patternVisible=false;updatePatternView();syncModelState();});
   for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max','observed-peaks','peak-tolerance','peak-floor'])$(id).addEventListener('input',()=>{C.invalidate('',false);$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
   $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});

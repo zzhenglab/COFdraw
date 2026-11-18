@@ -62,6 +62,9 @@ def main():
    page.locator('#compare-pxrd-stacks').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('5 stacking patterns compared')",timeout=120000)
    assert page.locator('#pxrd-plot [data-series-label]').count()==5
+   slider=page.locator('#pattern-separation')
+   slider.focus();page.keyboard.press('End')
+   assert slider.input_value()=='1' and page.locator('#pxrd-plot [data-pattern-axes] path').count()==5
    page.screenshot(path=str(out/'cofdraw-finite-stacking-patterns.png'))
    checks.append('Five finite stacking patterns compare the same drawing under chosen transforms')
    page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .build-cif-from-drawing').click()
@@ -128,7 +131,31 @@ def main():
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('4 stacking patterns compared')",timeout=120000)
    assert page.locator('#pxrd-plot [data-series-label]').count()==4
    assert 'explicit periodic AA' in page.locator('#pxrd-results').inner_text()
+   assert slider.input_value()=='0'
+   paths=page.locator('#pxrd-plot [data-trace]')
+   bounds="paths => paths.map(p=>{const r=p.getBoundingClientRect();return [r.left,r.right]})"
+   overlay=paths.evaluate_all(bounds)
+   assert all(abs(x-overlay[0][0])<1 for x,_ in overlay)
+   originals=paths.evaluate_all("paths=>paths.map(p=>p.getAttribute('d'))")
+   slider.fill('0.5')
+   middle=paths.evaluate_all(bounds)
+   assert middle[0][0]<middle[1][0]<middle[0][1]
+   slider.focus();page.keyboard.press('End')
+   split=paths.evaluate_all(bounds)
+   assert all(right<split[i+1][0] for i,(_,right) in enumerate(split[:-1]))
+   assert originals==paths.evaluate_all("paths=>paths.map(p=>p.getAttribute('d'))")
+   with page.expect_download() as separated:page.locator('#save-pattern-svg').click()
+   split_svg=out/'stacking-side-by-side.svg';separated.value.save_as(split_svg)
+   saved=json.loads(ET.parse(split_svg).getroot().find('{http://www.w3.org/2000/svg}metadata').text)
+   assert saved['horizontal_separation']==1 and len(saved['series'])==4
    page.screenshot(path=str(out/'cofdraw-periodic-stacking-pxrd.png'))
+   slider.focus();page.keyboard.press('Home');assert slider.input_value()=='0'
+   assert paths.evaluate_all(bounds)==overlay
+   page.locator('#pxrd-results button').filter(has_text='View this arrangement').nth(1).click()
+   assert slider.is_hidden() and page.locator('#viewer-title').inner_text().startswith('AB')
+   page.locator('#compare-pxrd-stacks').click()
+   page.wait_for_function("document.getElementById('science-status').textContent.startsWith('4 stacking patterns compared')",timeout=120000)
+   checks.append('Horizontal separation preserves angles and exports all panels; comparing again from AB uses the parent layer')
    checks.append('Four actual periodic stacking cells produce overlaid Bragg PXRD and individual report downloads')
    assert page.locator('[data-science-tab="knowledge"]').count()==0
    queried=page.request.post(base+'/api/drawing/science/query',data={'query':'Pyurea','record_types':['source'],'limit':20}).json()
@@ -138,6 +165,14 @@ def main():
    report=page.request.get(base+'/api/drawing/science/reports/'+reports[0]['report_id']).json();assert report['report_id'] and report['input_sha256'] and report['inputs']
    caps=page.request.get(base+'/api/drawing/science/capabilities').json();assert 'pxrd' in caps['operations'] and caps['workflows']
    checks.append('Agents discover schemas and retrieve saved reports with input hashes through the API')
+   page.locator('[data-science-tab="model"]').click()
+   page.locator('#cif-file').set_input_files({'name':'oversize.cif','mimeType':'text/plain','buffer':b' ' * 2000001})
+   page.wait_for_function("document.getElementById('science-status').textContent.includes('2 MB')")
+   page.locator('#network-hypothesis > summary').click()
+   page.locator('#build-networks').click()
+   page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Generate a periodic model')")
+   assert page.evaluate('window.COFdrawScience.structure===null')
+   checks.append('A failed replacement CIF import clears the previous frame and network-copy parent')
    page.set_viewport_size({'width':390,'height':844});page.locator('[data-science-tab="inspect"]').click()
    assert page.locator('#science-dialog').evaluate('e=>e.scrollWidth<=e.clientWidth+1');checks.append('Materials tools fit390px viewport without horizontal overflow')
    assert not errors,errors;browser.close()
