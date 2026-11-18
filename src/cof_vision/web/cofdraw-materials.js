@@ -97,13 +97,47 @@
       const result=await api('science/screen',{entries,include_porosity:$('screen-pores').checked});showComparison(result);warnings($('comparison-results'),failures);
     });
   });
-  function drawPattern(profile,series=[],observations=[]){
+  let patternVisible=false;
+  function updatePatternView(){
+    const hasPattern=Boolean($('pxrd-plot').querySelector('svg'));
+    const active=document.querySelector('[data-science-tab="pxrd"]').getAttribute('aria-selected')==='true';
+    const show=active&&hasPattern&&patternVisible;
+    $('pattern-view').hidden=!show;$('model-view').hidden=show;
+    $('return-to-pattern').hidden=!active||!hasPattern||show;
+    if(!show)requestAnimationFrame(()=>C.viewer.draw());
+  }
+  $('return-to-model').addEventListener('click',()=>{patternVisible=false;updatePatternView();$('return-to-pattern').focus();});
+  $('return-to-pattern').addEventListener('click',()=>{patternVisible=true;updatePatternView();$('return-to-model').focus();});
+  window.addEventListener('cofdraw:science-tab',updatePatternView);
+  $('save-pattern-svg').addEventListener('click',async()=>{
+    const svg=$('pxrd-plot').querySelector('svg');if(!svg)return;
+    try{await S.saveText('COFdraw-powder-pattern.svg',new XMLSerializer().serializeToString(svg),'image/svg+xml');}
+    catch(error){C.status(error.message,true);}
+  });
+  function drawPattern(profile,series=[],observations=[],report={}){
     const root=$('pxrd-plot');root.replaceChildren();const ns='http://www.w3.org/2000/svg';
-    const svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 600 285');svg.setAttribute('role','img');svg.setAttribute('aria-label','Calculated model powder diffraction pattern');
-    const xs=profile.two_theta_degrees,ys=profile.intensity,min=xs[0],max=xs.at(-1),peak=Math.max(...ys,1);
-    const point=(x,y)=>[52+(x-min)/(max-min)*525,235-y/peak*205];
+    const svg=document.createElementNS(ns,'svg');svg.setAttribute('role','img');
+    const xs=profile.two_theta_degrees,min=xs[0],max=xs.at(-1);
+    const point=(x,y)=>[(52+(x-min)/(max-min)*525).toFixed(2),(235-y/100*205).toFixed(2)];
     function element(tag,attrs,label){const el=document.createElementNS(ns,tag);for(const [key,value] of Object.entries(attrs))el.setAttribute(key,value);if(label!==undefined)el.textContent=label;svg.append(el);return el;}
+    const title=C.structure?'Simulated powder diffraction':'Finite-cluster scattering';
+    $('pattern-title').textContent=title;
+    svg.setAttribute('aria-label',title);
+    svg.setAttribute('viewBox','0 0 600 322');
+    svg.setAttribute('font-family','Arial, sans-serif');
+    element('title',{},title);
+    const provenance=$('viewer-provenance').textContent+' · '+$('viewer-title').textContent;
+    $('pattern-source').textContent=provenance;
+    element('metadata',{},JSON.stringify({source:provenance,operation:report.operation,parameters:report.parameters,
+      model_sha256:report.structure_sha256,report_id:report.report_id,observed:observations.map(r=>r.observed_two_theta),
+      series:series.map(r=>({label:r.label,report_id:r.result.report_id,structure_sha256:r.result.structure_sha256})),normalization:'Each curve normalized to 100'}));
+    element('text',{x:52,y:14,fill:'#254b43','font-size':12},title+' · λ '+$('xrd-wavelength').value+' Å');
     element('path',{d:'M52 20V235H577',fill:'none',stroke:'#9aafa6','stroke-width':1});
+    for(const intensity of [0,50,100]){
+      const y=Number(point(min,intensity)[1]);
+      element('line',{x1:48,x2:52,y1:y,y2:y,stroke:'#9aafa6'});
+      element('text',{x:44,y:y+4,'text-anchor':'end',fill:'#657a70','font-size':10},String(intensity));
+    }
     for(let i=0;i<=5;i++){const value=min+(max-min)*i/5,x=point(value,0)[0];element('path',{d:`M${x} 235v5`,stroke:'#9aafa6'});element('text',{x,y:255,'text-anchor':'middle',fill:'#657a70','font-size':11},value.toFixed(1));}
     element('text',{x:315,y:278,'text-anchor':'middle',fill:'#375e52','font-size':12},'2θ / degrees');
     element('text',{x:15,y:130,transform:'rotate(-90 15 130)','text-anchor':'middle',fill:'#375e52','font-size':12},'Relative intensity');
@@ -116,14 +150,19 @@
       const tick=element('line',{x1:x,x2:x,y1:223,y2:235,stroke:observation.status==='unmatched'?'#ae4833':'#4f548b','stroke-width':2});
       const title=document.createElementNS(ns,'title');title.textContent=observation.observed_two_theta+'° · '+observation.status;tick.append(title);
     }
+    if(series.length)series.forEach((row,i)=>{
+      const x=55+i*105;element('line',{x1:x,x2:x+16,y1:305,y2:305,stroke:colors[i%colors.length],'stroke-width':2});
+      element('text',{'data-series-label':row.label,x:x+20,y:309,'font-size':10,fill:'#375e52'},row.label);
+    });
+    if(observations.length)element('text',{x:52,y:309,'font-size':11,fill:'#375e52'},'Measured peak ticks · violet: candidate center within tolerance · red: unmatched');
     root.append(svg);
-    if(series.length){const legend=text('div','','diffraction-legend');series.forEach((row,index)=>{const label=text('span',row.label);label.style.borderColor=colors[index%colors.length];legend.append(label);});root.append(legend);}
+    patternVisible=true;updatePatternView();
   }
   function diffractionParameters(){return {wavelength:Number($('xrd-wavelength').value),two_theta_min:Number($('xrd-min').value),two_theta_max:Number($('xrd-max').value)};}
   async function pattern(api,model,periodic){return api(periodic?'science/pxrd':'science/finite-powder',{...diffractionParameters(),...(periodic?{structure:model,fwhm:Number($('xrd-fwhm').value),step:Math.min(.02,Number($('xrd-fwhm').value)/2)}:{model,step:.1})});}
   $('calculate-pxrd').addEventListener('click',()=>C.work(async api=>{
     const periodic=Boolean(C.structure),result=await pattern(api,periodic?structure():finite(),periodic);
-    drawPattern(result.profile);const root=$('pxrd-results');root.replaceChildren();
+    drawPattern(result.profile,[],[],result);const root=$('pxrd-results');root.replaceChildren();
     if(result.peaks)table(root,['2θ / °','d / Å','Relative I','h k l'],[...result.peaks].sort((a,b)=>b.intensity-a.intensity).slice(0,12).map(p=>[number(p.two_theta_degrees),number(p.d_spacing_angstrom),number(p.intensity,1),p.hkls.map(h=>Array.isArray(h)?h.join(' '):JSON.stringify(h)).join('; ')]));
     else C.note(root,result.scope);
     warnings(root,result.warnings);downloads(root,result);C.details(root,{method:result.method,parameters:result.parameters});
@@ -136,7 +175,7 @@
     const fwhm=Number($('xrd-fwhm').value);
     const result=await api('science/pxrd-peaks',{structure:structure(),...diffractionParameters(),fwhm,step:Math.min(.02,fwhm/2),
       observed_two_theta:observed,tolerance_degrees:Number($('peak-tolerance').value),min_relative_intensity:Number($('peak-floor').value)});
-    drawPattern(result.profile,[],result.observed);
+    drawPattern(result.profile,[],result.observed,result);
     const root=$('pxrd-results');root.replaceChildren();
     C.note(root,'Ticks mark measured peak centers. Red ticks have no calculated center within tolerance.');
     table(root,['Observed 2θ / °','Candidate centers / °','Result'],result.observed.map(row=>[number(row.observed_two_theta),
@@ -172,7 +211,7 @@
       }
     }
     if(!rows.length)throw new Error(rejected[0]||'No stacking pattern could be calculated.');
-    check();drawPattern(rows[0].profile,rows);const root=$('pxrd-results');root.replaceChildren();
+    check();drawPattern(rows[0].profile,rows,[],rows[0].result);const root=$('pxrd-results');root.replaceChildren();
     C.note(root,periodic?'Same supplied planar layer, explicit periodic AA / AB / ABC / progressive-slip cells. Geometry is unrelaxed. Arbitrary twist needs a commensurate cell.':'Same finite drawing and layer count under five chosen transforms. These are Debye scattering curves, without reciprocal-lattice peaks or hkl assignments.');
     C.note(root,'Each curve is normalized to its own maximum. This compares shape and positions, not absolute scattering power or phase fractions.');
     for(const row of rows){const box=text('div','','metric-note');box.append(text('strong',row.label));downloads(box,row.result);const view=text('button','View this arrangement','button outline');view.addEventListener('click',()=>{C.invalidate('',false);C.display(row.model,`${row.label} · ${periodic?'periodic stacking hypothesis':'finite drawing stack'}`,origin==='current-periodic'?origin:periodic?'periodic':'drawing');if(!periodic)$('patch-stacking').value=row.label;C.status(`${row.label} comparison selected. Recalculate to inspect this arrangement.`);});box.append(view);root.append(box);}
@@ -192,7 +231,7 @@
     else table(root,['Atom','Element','x / Å','y / Å','z / Å'],C.viewer.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,number(a.x,5),number(a.y,5),number(a.z,5)]));
   });
   function clearAnalysis(){for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
-  window.addEventListener('cofdraw:structure',()=>{clearAnalysis();syncModelState();});
+  window.addEventListener('cofdraw:structure',()=>{clearAnalysis();patternVisible=false;updatePatternView();syncModelState();});
   for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max','observed-peaks','peak-tolerance','peak-floor'])$(id).addEventListener('input',()=>{C.invalidate('',false);$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
   $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
   const balanceDialog=$('balance-dialog');

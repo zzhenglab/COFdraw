@@ -61,7 +61,7 @@ def main():
    checks.append('Displayed finite atoms yield actual Debye scattering and CSV without fictitious hkl')
    page.locator('#compare-pxrd-stacks').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('5 stacking patterns compared')",timeout=120000)
-   assert page.locator('.diffraction-legend span').count()==5
+   assert page.locator('#pxrd-plot [data-series-label]').count()==5
    page.screenshot(path=str(out/'cofdraw-finite-stacking-patterns.png'))
    checks.append('Five finite stacking patterns compare the same drawing under chosen transforms')
    page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .build-cif-from-drawing').click()
@@ -111,6 +111,14 @@ def main():
    page.get_by_text('outside range',exact=True).wait_for()
    assert page.locator('#pxrd-plot svg line').count()>=1
    page.screenshot(path=str(out/'observed-peaks.png'))
+   assert page.locator('#pattern-view').is_visible() and page.locator('#model-view').is_hidden()
+   with page.expect_download() as exported:page.locator('#save-pattern-svg').click()
+   svg_path=out/'observed-peaks.svg';exported.value.save_as(svg_path)
+   import xml.etree.ElementTree as ET
+   metadata=json.loads(ET.parse(svg_path).getroot().find('{http://www.w3.org/2000/svg}metadata').text)
+   assert metadata['report_id']==compared.value.json()['report_id'] and len(metadata['observed'])==2
+   page.locator('#return-to-model').click();assert page.locator('#structure-canvas').is_visible()
+   page.locator('#return-to-pattern').click();assert page.locator('#pattern-view').is_visible()
    checks.append('Measured peak ticks, candidates and out-of-range observations are visible for the active periodic model')
    page.locator('#xrd-fwhm').fill('0.02');page.locator('#calculate-pxrd').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Model PXRD calculated')")
@@ -118,7 +126,7 @@ def main():
    checks.append('Narrow PXRD width automatically uses adequate profile sampling')
    page.locator('#xrd-fwhm').fill('0.15');page.locator('#compare-pxrd-stacks').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('4 stacking patterns compared')",timeout=120000)
-   assert page.locator('.diffraction-legend span').count()==4
+   assert page.locator('#pxrd-plot [data-series-label]').count()==4
    assert 'explicit periodic AA' in page.locator('#pxrd-results').inner_text()
    page.screenshot(path=str(out/'cofdraw-periodic-stacking-pxrd.png'))
    checks.append('Four actual periodic stacking cells produce overlaid Bragg PXRD and individual report downloads')

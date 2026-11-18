@@ -23,7 +23,7 @@
     const api=async(path,payload)=>{check();const result=await S.api(path,payload);check();return result;};
     try{await task(api,check);}catch(e){if(e.name!=='ObsoleteScienceResult'&&activeJob===job)status(e.message,true);}finally{if(activeJob===job){activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');syncSource();}}
   }
-  function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>{const active=b.dataset.scienceTab===name;b.setAttribute('aria-selected',String(active));b.setAttribute('aria-controls','science-'+b.dataset.scienceTab);b.tabIndex=active?0:-1;});document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();}
+  function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>{const active=b.dataset.scienceTab===name;b.setAttribute('aria-selected',String(active));b.setAttribute('aria-controls','science-'+b.dataset.scienceTab);b.tabIndex=active?0:-1;});document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();window.dispatchEvent(new Event("cofdraw:science-tab"));}
   document.querySelectorAll('[data-science-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.scienceTab)));
   document.querySelector('.science-tabs').addEventListener('keydown',event=>{
     const buttons=[...event.currentTarget.querySelectorAll('[role=tab]')], i=buttons.indexOf(event.target);

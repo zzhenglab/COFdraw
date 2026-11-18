@@ -44,3 +44,8 @@
 #peak-check{margin:8px 0}#peak-check .input-row{margin-top:8px}
 .sketch-tools .ring-glyph{height:18px;width:18px;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linejoin:round}
 @media(max-width:480px){#tool-jump{font-size:12px;max-width:65px}.file-actions{flex-wrap:wrap}}
+#pattern-view[hidden],#model-view[hidden]{display:none}
+#pattern-view .viewer-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+#pattern-title{margin:0 auto 0 0;font-size:16px}
+#pattern-view #pxrd-plot svg{width:100%;height:auto;max-height:none;background:white;border:1px solid #d3e0da;border-radius:6px;padding:8px;box-sizing:border-box}
+#return-to-pattern{margin-bottom:10px}
