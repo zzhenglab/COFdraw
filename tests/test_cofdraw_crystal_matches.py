@@ -1,11 +1,9 @@
 """Independent runtime checks for chemically matched periodic hypotheses."""
-from collections import Counter
 from pathlib import Path
 import hashlib
 import json
 
 from rdkit import Chem
-import pytest
 
 from cof_vision.cofdraw_network import inspect_periodic_network
 from cof_vision.cofdraw_science import import_cif
@@ -34,22 +32,6 @@ def test_match_manifest_hashes_and_exact_precursor_scope():
         if row['id'] == 'dia-imine':
             assert binding['drawing_template_ids'] == [] and binding['requires_explicit_topology_choice']
     assert 'beta-ketoenamine' in audit['excluded_beta_ketoenamine_candidate']['reason']
-
-
-@pytest.mark.parametrize('name,formula,dimension', [
-    ('hcb-imine-aa', {'C':36,'H':24,'N':6}, 2),
-    ('hcb-imine-ab', {'C':72,'H':48,'N':12}, 2),
-    ('hcb-expanded-aa', {'C':72,'H':48,'N':6}, 2),
-    ('dia-imine', {'C':82,'H':56,'N':8}, 3),
-    ('hcb-tfb-tapb-aa', {'C':33,'H':21,'N':3}, 2),
-])
-def test_exact_product_atom_balance_and_periodicity(name, formula, dimension):
-    model = import_cif((DATA/(name+'.cif')).read_text())
-    assert Counter(a['element'] for a in model['atoms']) == formula
-    net = inspect_periodic_network(model)
-    assert net['dimensions'] == [dimension]
-    assert net['short_contact_count'] == 0 and net['isolated_atom_indices'] == []
-    assert not net['threshold_sensitivity']['classification_changed']
 
 
 def _adjacency_signature(elements, edges):

@@ -18,6 +18,7 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry import Point3D
 from .depiction_rings import symmetric_depiction_rings
+from .cofdraw_depiction import compute_2d_coords
 
 VERSION = "cof-chemical-patch-1"
 TP = "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
@@ -164,8 +165,9 @@ def _ports(mol):
     return out
 
 
-def _fragment_layout(mol, incoming, outgoing, position, previous, following, flip_across_attachment_axis=False, endpoint_alignment=False):
-    rdDepictor.Compute2DCoords(mol, canonOrient=False, forceRDKit=True)
+def _fragment_layout(mol, incoming, outgoing, position, previous, following, flip_across_attachment_axis=False, endpoint_alignment=False, porphyrin_template=False):
+    depict = compute_2d_coords if porphyrin_template else rdDepictor.Compute2DCoords
+    depict(mol, canonOrient=False, forceRDKit=True)
     coords = np.array(mol.GetConformer().GetPositions())[:, :2]
     real = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]
     center = coords[real].mean(axis=0)
@@ -298,7 +300,8 @@ def build_patch(recipe: dict):
                 nxt = (2*position-np.asarray(prev)).tolist()
         coords[name] = _fragment_layout(mol, item["incoming_port"], item["outgoing_port"], position, prev, nxt,
                                        item.get("flip_across_attachment_axis", False),
-                                       recipe.get('layout_refinement') == 'bond_angle_pose_v2')
+                                       recipe.get('layout_refinement') == 'bond_angle_pose_v2',
+                                       bool(recipe.get('designed_variant')) and not recipe.get('atom_coordinates'))
         angle = item.get('layout_rotation_degrees', 0)
         if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle):
             raise ValueError('Block rotation must be a finite angle')

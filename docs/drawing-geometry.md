@@ -8,6 +8,8 @@ The six-block Tp/TAPB imine design retains the supplied enol form. BPDA denotes 
 
 ## Deterministic rigid-block fitting
 
+Porphyrin monomers use RDKit's built-in ring templates before rigid-block fitting. This keeps the four pyrrole rings balanced and the inner nitrogen atoms directed toward the center; it changes depiction coordinates, not connectivity, hydrogen counts, or tautomer assignments. Imported coordinates are retained unless **Clean layout** is requested. Saved source coordinates still take precedence.
+
 New assembled designs and explicit **Clean layout** requests use `bond_angle_pose_v2`. The implementation orients blocks using the actual retained attachment atoms, handles linear linkers with a stable proper rotation, and evaluates four deterministic patterns of unspecified connection-side choices. A damped Gauss–Newton fit adjusts only whole-block rotations and translations. It neither stretches aromatic rings nor assigns E/Z stereochemistry. Explicit stereochemistry bypasses automatic angle reorientation and remains flagged for review.
 
 A candidate must improve the combined angle/length score, keep junction-length error within 12%, and introduce no new nonbonded overlaps or proper crossings between nonincident bond segments. The audit reports `quality: regular` only when maximum junction-angle deviation is at most 15°, junction-length error is at most 12%, and no overlaps or crossings are detected. Otherwise it reports `needs_review`. These are depiction checks, not physical strain limits or guarantees of legibility. Angle references are 180° for SP atoms, 109.5° for SP3 atoms and 120° otherwise; the overlap threshold is 0.35 times the median bond length.

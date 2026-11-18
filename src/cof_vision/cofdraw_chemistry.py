@@ -6,7 +6,7 @@ import hashlib
 import json
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import rdDepictor
+from .cofdraw_depiction import compute_2d_coords
 from .framework_drawing import ARYL_HYDROXYLAMINE_SMARTS, LINKAGE_LIBRARY, TP, canonical, linkage_fragment, _ports
 
 ROLE_LABELS = {"aryl_aldehyde":"Aromatic aldehyde", "primary_arylamine":"Primary aromatic amine",
@@ -80,7 +80,7 @@ def decorated_monomers(rows):
     return output
 
 def best_port_pair(component, angle):
-    mol=Chem.MolFromSmiles(component["fragment_smiles"]); rdDepictor.Compute2DCoords(mol)
+    mol=Chem.MolFromSmiles(component["fragment_smiles"]); compute_2d_coords(mol)
     xy=np.asarray(mol.GetConformer().GetPositions())[:,:2]
     center=xy[[a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]].mean(0)
     ports=_ports(mol); candidates=[]

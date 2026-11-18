@@ -1,7 +1,6 @@
 """Periodic graph invariants and real template geometry, not mocked chemistry."""
 import itertools
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -123,20 +122,3 @@ def test_work_limit_rejects_instead_of_truncating_periodic_search(monkeypatch):
     monkeypatch.setattr(network, 'MAX_IMAGE_PAIRS', 1)
     with pytest.raises(ValueError, match='work bound'):
         network.inspect_periodic_network(structure(np.diag([1.54]*3).tolist(), [[.5]*3]))
-
-
-@pytest.mark.parametrize('template,dimension,components,atoms,edges', [
-    ('hcb-imine-aa', 2, 1, 66, 72), ('hcb-imine-ab', 2, 2, 132, 144),
-    ('hcb-expanded-aa', 2, 1, 126, 138), ('dia-imine', 3, 1, 146, 160),
-])
-def test_real_hydrogen_complete_models_recover_layer_and_3d_connectivity(template, dimension, components, atoms, edges):
-    path = Path(__file__).resolve().parents[1]/'data/crystal-models'/f'{template}.cif'
-    result = network.inspect_periodic_network(import_cif(path.read_text('utf-8')))
-    assert result['dimensions'] == [dimension]
-    assert result['quotient_component_count'] == components
-    assert result['atom_count'] == atoms and result['edge_count'] == edges
-    assert result['short_contact_count'] == 0
-    assert result['isolated_atom_indices'] == []
-    assert not result['threshold_sensitivity']['classification_changed']
-    assert all(row['coordination'] == 1 for row in result['coordination']['per_atom'] if row['element'] == 'H')
-    assert result['coordination']['unusual_atoms'] == []

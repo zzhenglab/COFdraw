@@ -13,10 +13,11 @@ import random
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import rdDepictor, rdMolDescriptors
+from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .cofdraw_styles import STYLES, PALETTES, style_configuration, decorate_svg, resolved_palette
+from .cofdraw_depiction import compute_2d_coords
 MONOMERS = [
     {"id": "tfb", "label": "TFB · benzene-1,3,5-tricarbaldehyde", "smiles": "O=Cc1cc(C=O)cc(C=O)c1", "role": "aldehyde"},
     {"id": "tp", "label": "Tp · triformylphloroglucinol", "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O", "role": "aldehyde"},
@@ -108,7 +109,7 @@ def normalize_monomer(*, smiles=None, molblock=None, graph=None, clean_layout=Fa
     if mol.GetNumAtoms() > 400 or len(Chem.GetMolFrags(mol)) != 1:
         raise ValueError("A monomer must be one connected structure with at most 400 atoms")
     if clean_layout or not mol.GetNumConformers():
-        rdDepictor.Compute2DCoords(mol)
+        compute_2d_coords(mol)
     Chem.AssignStereochemistry(mol, cleanIt=False, force=True)
     canonical = Chem.MolToSmiles(mol, isomericSmiles=True)
     # Explicit Kekulé bonds make ordinary benzene bond/atom edits unambiguous.

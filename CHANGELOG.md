@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1 - 2026-11-18
+
+- Use symmetric porphyrin ring depictions in monomer previews and generated COF drawings, preserving inner N-H atoms and saved source coordinates.
+- Remove unused screenshots and superseded validation files; consolidate duplicate crystal-model tests while retaining their chemical and network checks.
+
 ## 0.8.0 - 2026-11-17
 
 - Check the displayed finite atoms and calculate finite Debye scattering without a CIF. Keep periodic density, pore geometry and Bragg PXRD distinct.
