@@ -61,7 +61,13 @@ for row in STYLES:
 
 # Pair colors and line weights with the presentation rather than drawing each
 # setting independently. The saved resolved style is still fully editable.
+ELEMENT_SCHEMES = {
+    "conventional": {7:"#245bd1", 8:"#d82c2c", 9:"#268a4b", 16:"#b18d0c", 15:"#c05c22", 5:"#bd598c", 17:"#268a4b", 35:"#93552b", 53:"#823c9c"},
+    "deep_ink": {7:"#244487", 8:"#ad3540", 9:"#207458", 16:"#946c09", 15:"#a95522", 5:"#9e557e", 17:"#437b38", 35:"#86432b", 53:"#704582"},
+    "jewel": {7:"#5944a6", 8:"#c64059", 9:"#10857d", 16:"#ab7213", 15:"#c36225", 5:"#9e528c", 17:"#317544", 35:"#98452f", 53:"#7f3c80"},
+}
 RANDOM_STYLES = (
+    ('hetero_colors', ('classic', 'ink')),
     ('gradient_stack', ('lagoon', 'orchid', 'ember', 'jade')),
     ('gradient_stack', ('ocean_coral', 'lavender_mint', 'purple_gold')),
     ('sphere_cutaway', ('lagoon', 'orchid', 'jade', 'rose_slate')),
@@ -75,7 +81,7 @@ RANDOM_STYLES = (
 def style_configuration(style_id, seed=None, options=None):
     options=dict(options or {})
     allowed={"palette","font_family","font_scale","bond_scale","layer_count","layer_opacity","fill_opacity","edge_style","transparent_background","abbreviation_mode",
-             "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
+             "element_scheme", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
     if set(options)-allowed: raise ValueError("Unknown style options: "+", ".join(sorted(set(options)-allowed)))
     if style_id=="random":
         seed=random.SystemRandom().randrange(2**31) if seed is None else seed
@@ -88,12 +94,13 @@ def style_configuration(style_id, seed=None, options=None):
                             layer_opacity=rng.choice([.46,.55,.64]), projection_tilt=rng.choice([37,44,50]))
         elif style_id=='sphere_cutaway':
             defaults.update(sphere_scale=rng.choice([.9,1.,1.12]))
+        defaults["element_scheme"] = rng.choice(list(ELEMENT_SCHEMES))
         defaults.update(options); options=defaults
     if style_id not in {s["id"] for s in STYLES}: raise ValueError("Unknown drawing style")
     defaults={"palette":"classic","font_family":"Times New Roman" if style_id=="serif" else "Arial","font_scale":1.,"bond_scale":1.,
               "layer_count":3,"layer_opacity":.24,"fill_opacity":.18,"edge_style":"dashed" if style_id=="mono_dashed" else "crossbar" if style_id=="serif" else "wavy_cross",
               "transparent_background":False,"abbreviation_mode":"condensed" if style_id=="compact_labels" else "explicit"}
-    defaults.update(custom_palette=None, highlight_width=1., glow_strength=.55,
+    defaults.update(element_scheme="style_default", custom_palette=None, highlight_width=1., glow_strength=.55,
                     layer_spacing=.04, projection_tilt=35., sphere_scale=1.)
     if style_id in ('pastel_blocks', 'cartoon_overlay'):
         defaults['palette'] = 'lavender_mint'
@@ -107,6 +114,8 @@ def style_configuration(style_id, seed=None, options=None):
     elif style_id == 'sphere_cutaway':
         defaults.update(palette='orchid', sphere_scale=1.)
     defaults.update(options)
+    if defaults["element_scheme"] not in ("style_default", *ELEMENT_SCHEMES):
+        raise ValueError("Choose a supported atom color scheme")
     if defaults["palette"] not in PALETTES or defaults["font_family"] not in FONTS: raise ValueError("Choose a supported palette and font")
     if defaults["edge_style"] not in {"wavy_cross","dashed","crossbar","bond_stub"}: raise ValueError("Unknown continuation mark")
     if defaults["abbreviation_mode"] not in {"explicit","condensed","OMe",'source_aldehyde'}: raise ValueError("Unknown abbreviation style")
@@ -195,6 +204,7 @@ def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options):
 
 def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False):
     atom_colors={6:'#6c8190',7:'#476fcd',8:'#db5d59',16:'#d3ac41',5:'#c99a7d',9:'#61b887',17:'#61b887'}
+    atom_colors.update(ELEMENT_SCHEMES.get(options.get("element_scheme"), {}))
     for color in sorted(set(atom_colors.values())|set(colors.values())):
         gradient=ET.SubElement(defs,tag('radialGradient'),{'id':'sphere-'+color[1:],'cx':'29%','cy':'24%','r':'76%'})
         for stop, shade in (('0%','#ffffff'),('35%',color),('100%',_mix(color,'#22313b',.72))):

@@ -80,6 +80,8 @@ def main():
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.on('request', lambda request: requests.append(request.url) if request.url.endswith('/prepare') else None)
             page.goto(base)
+            assert page.locator('#mode-manual').get_attribute('aria-selected') == 'true'
+            page.locator('#mode-describe').click()
             page.wait_for_function('window.COFdrawDescribe?.state.catalog && window.COFdrawStudio.state.online && !window.COFdrawDescribe.state.busy')
 
             def idle():
@@ -94,6 +96,13 @@ def main():
             def status():
                 return page.evaluate('window.COFdrawDescribe.state.plan?.status')
 
+            prompt('BD + 13C-Tfppy')
+            assert status() == 'needs_input' and page.locator('#describe-monomer-b').input_value() == 'tfppy_13c'
+            page.locator('button[data-monomer-choice="recovered_bd"]').click(); idle()
+            assert status() == 'ready'
+            assert {page.locator('#describe-monomer-'+slot).input_value() for slot in ('a','b')} == {'tfppy_13c','recovered_bd'}
+            checks.append('Choosing an ambiguous BD by full name preserves its labelled partner and validates the pair')
+            page.locator('#chat-new').click()
             prompt('Draw TFB and TAPB')
             assert status() == 'ready'
             follow('Make it pastel')
@@ -148,6 +157,14 @@ def main():
             page.locator('#chat-new').click()
             page.locator('#describe-provider > summary').click()
             page.locator('#describe-mode').select_option('llm')
+            assert page.locator('#describe-service').input_value() == 'openai'
+            assert page.locator('#describe-model').input_value().startswith('gpt-')
+            page.locator('#describe-api-key').fill(token)
+            page.locator('#describe-service').select_option('anthropic')
+            assert page.locator('#describe-model').input_value().startswith('claude-')
+            assert page.locator('#describe-api-key').input_value() == '' and page.locator('#describe-base-url').is_hidden()
+            checks.append('Named GPT and Claude select their model defaults and clear the key when switching providers')
+            page.locator('#describe-service').select_option('compatible')
             page.locator('#describe-base-url').fill(f'http://127.0.0.1:{provider.server_port}/v1')
             page.locator('#describe-model').fill('local-fixture')
             page.locator('#describe-api-key').fill(token)

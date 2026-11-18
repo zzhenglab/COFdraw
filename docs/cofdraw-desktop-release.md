@@ -14,11 +14,11 @@ The application and executable icons use the supplied faceted teal logo with a t
 
 If an older downloaded release reports `Failed to resolve Python.Runtime.Loader.Initialize`, replace it with v0.6.1 or later. Windows can retain an Internet-zone marking on extracted DLLs; the included application configuration supports loading the bundled assemblies without removing those markings or changing machine settings. See [Windows startup troubleshooting](windows-startup.md).
 
-Start in **Describe a COF**. Type a sentence such as `Draw TFB and TAPB with an imine linkage in pastel colors`, or choose a built-in example. Analyze the description, review the selected monomers, linkage, finite layout and style, then create the drawing. Names and words are matched to existing catalog records. The review shows assumptions and unresolved instructions; an unsupported or ambiguous request cannot become a ready drawing silently. Source-name matches open the qualified source recipe. A proposed design does not inherit the identity of a named material.
+The app starts in **Build manually**. Choose **Describe a COF** to open chat. Type a sentence such as `Draw TFB and TAPB with an imine linkage in pastel colors`, or choose a built-in example. Analyze the description, review the selected monomers, linkage, finite layout and style, then create the drawing. Names and words are matched to existing catalog records. The review shows assumptions and unresolved instructions; an unsupported or ambiguous request cannot become a ready drawing silently. Source-name matches open the qualified source recipe. A proposed design does not inherit the identity of a named material.
 
-Rules mode needs no key or network. Expand the optional API settings to use an OpenAI-compatible language model with your endpoint, model and API key. Only an explicit API-mode analysis sends the description and compact catalog. The key remains transient and is excluded from saved projects and calculation reports. Review or edit the returned selections locally without another provider request. See [LLM API setup](llm-api.md) for endpoint requirements and supported behavior.
+Rules mode needs no key or network. Open **Chat provider** to choose GPT, Claude, or a custom compatible endpoint and enter an API key. Only an explicit API-mode analysis sends the description and compact catalog. The key remains transient and is excluded from saved projects and calculation reports. Review or edit the returned selections locally without another provider request. See [LLM API setup](llm-api.md) for endpoint requirements and supported behavior.
 
-Use **Build manually** to choose or edit monomers directly. Advanced drawing and source controls remain available without crowding the initial description workflow.
+Use **Build manually** to choose or edit monomers directly. Advanced drawing and source controls remain available in the manual workspace.
 
 ## Draw and save
 

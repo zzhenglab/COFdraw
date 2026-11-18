@@ -16,7 +16,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem.Draw import rdMolDraw2D
 
-from .cofdraw_styles import STYLES, PALETTES, style_configuration, decorate_svg, resolved_palette
+from .cofdraw_styles import STYLES, PALETTES, ELEMENT_SCHEMES, style_configuration, decorate_svg, resolved_palette
 from .cofdraw_depiction import compute_2d_coords
 MONOMERS = [
     {"id": "tfb", "label": "TFB · benzene-1,3,5-tricarbaldehyde", "smiles": "O=Cc1cc(C=O)cc(C=O)c1", "role": "aldehyde"},
@@ -317,8 +317,8 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
              "component_colors": {c: colors[i % len(colors)] if colored else "#171717" for i, c in enumerate(components)}}
     def key(i):
         o = audit["atom_origin"][i]; return f"{o['instance']}:{o['fragment_atom_index']}"
-    if style_id == "hetero_colors":
-        atom_palette={7:"#245bd1",8:"#d82c2c",16:"#b18d0c",15:"#c05c22",5:"#bd598c",9:"#268a4b",17:"#268a4b",35:"#93552b",53:"#823c9c"}
+    if style_id == "hetero_colors" or options["element_scheme"] in ELEMENT_SCHEMES:
+        atom_palette=ELEMENT_SCHEMES.get(options["element_scheme"], ELEMENT_SCHEMES["conventional"])
         style["atom_colors"]={key(a.GetIdx()):atom_palette[a.GetAtomicNum()] for a in mol.GetAtoms() if a.GetAtomicNum() in atom_palette}
     if options["abbreviation_mode"] != "explicit":
         groups, used = [], set()

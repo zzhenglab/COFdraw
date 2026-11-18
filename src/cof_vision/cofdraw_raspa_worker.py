@@ -51,11 +51,12 @@ def run(directory):
         raise ValueError("Unexpected RASPA runtime version")
     pt = Chem.GetPeriodicTable()
     pseudo, parameters, index = [], [], {}
-    for element in sorted({a["element"] for a in structure["atoms"]}):
+    from cof_vision.cofdraw_science import site_mass
+    for element, isotope in sorted({(a["element"], a.get("isotope", 0)) for a in structure["atoms"]}):
         atom = data["framework"][element]
-        index["framework:"+element] = len(pseudo)
-        pseudo.append(raspa.PseudoAtom(name="framework_"+element, framework_type=True,
-                                      mass=pt.GetAtomicWeight(element), charge=0., atomic_number=pt.GetAtomicNumber(element), source=atom["source"]))
+        index[element, isotope] = len(pseudo)
+        pseudo.append(raspa.PseudoAtom(name="framework_"+element+(str(isotope) if isotope else ""), framework_type=True,
+                                      mass=site_mass({"element": element, "isotope": isotope}), charge=0., atomic_number=pt.GetAtomicNumber(element), source=atom["source"]))
         parameters.append(raspa.VDWParameters(atom["epsilon_K"], atom["sigma_angstrom"]))
     for gas in manifest["gases"]:
         for atom in data["gases"][gas]["sites"]:
@@ -86,7 +87,7 @@ def run(directory):
     parameters = _cell_parameters(structure["cell"])
     framework = raspa.Framework(force_field=ff, component_name="COFdraw_explicit_framework",
                                 simulation_box=raspa.SimulationBox(*parameters), space_group_hall_number=1,
-                                defined_atoms=[raspa.Atom(position=tuple(a["fractional"]), charge=a["charge"], type=index["framework:"+a["element"]], is_fractional=True) for a in structure["atoms"]],
+                                defined_atoms=[raspa.Atom(position=tuple(a["fractional"]), charge=a["charge"], type=index[a["element"], a.get("isotope", 0)], is_fractional=True) for a in structure["atoms"]],
                                 number_of_unit_cells=manifest["repeats"])
     system = raspa.System(force_field=ff, framework_components=framework, components=components,
                          external_temperature=manifest["temperature_K"], external_pressure=manifest["pressure_Pa"], initial_number_of_molecules=[0]*len(components))

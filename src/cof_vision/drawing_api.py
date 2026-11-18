@@ -214,7 +214,8 @@ class DescriptionSelection(BaseModel):
 
 class DescriptionLLM(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    base_url: str = Field(default='https://api.openai.com/v1', max_length=1000)
+    provider: Literal['compatible', 'openai', 'anthropic'] = 'compatible'
+    base_url: str | None = Field(default=None, max_length=1000)
     model: str = Field(min_length=1, max_length=150)
     api_key: SecretStr = Field(default=SecretStr(''), exclude=True, repr=False)
 
@@ -312,7 +313,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, render_recipe, build_patch
     from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
     from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
-    from .cofdraw_styles import PALETTES, FONTS
+    from .cofdraw_styles import PALETTES, FONTS, ELEMENT_SCHEMES
 
     router = APIRouter(prefix="/api/drawing", tags=["COF drawing"])
     root = data_root.resolve()
@@ -381,7 +382,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
-                "style_controls": {"palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
+                "style_controls": {"element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": monomers,
@@ -412,7 +413,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         if request.mode == 'llm':
             from .cofdraw_llm import select_with_llm
             try:
-                proposal = select_with_llm(text, describe_catalog(catalog), base_url=request.llm.base_url,
+                proposal = select_with_llm(text, describe_catalog(catalog), base_url=request.llm.base_url, provider=request.llm.provider,
                                            model=request.llm.model,
                                            api_key=request.llm.api_key.get_secret_value())
                 selection = proposal['selection']
@@ -464,7 +465,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             if request.mode == 'llm' and not local_help:
                 from .cofdraw_llm import select_with_llm
                 proposal = select_with_llm(model_turn_text(text, context, current_library), describe_catalog(current_library),
-                    base_url=request.llm.base_url, model=request.llm.model, api_key=secret)
+                    base_url=request.llm.base_url, provider=request.llm.provider, model=request.llm.model, api_key=secret)
                 selection = proposal['selection']
             result = describe_turn(text, current_library, context=context, selection=selection,
                 allow_unmatched_words=bool(selection) and (request.mode == 'llm' or request.selection is not None))
@@ -710,7 +711,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                         structure, validation = build_periodic_layer(design[0], spacing=request.layer_spacing)
                     except ValueError as exc:
                         return {'available': False, 'reason': str(exc)}
-                result = structure_exports(structure, repeats=tuple(request.repeats))
+                result = structure_exports(structure, repeats=tuple(request.repeats), periodic_bonds=validation.get("periodic_bonds"))
             result.update(available=True, cell_validation=validation,
                 scope='Unrelaxed periodic starting model of the selected precursor chemistry and planar connectivity. AA layer spacing is a model parameter.')
             provenance = structure['provenance']

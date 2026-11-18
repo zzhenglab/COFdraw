@@ -2,7 +2,7 @@
 "use strict";
 (() => {
   const S=window.COFdrawStudio, $=id=>document.getElementById(id);
-  const state={catalog:null,plan:null,selection:null,selectionEdited:false,busy:false,revision:0,startMode:'describe',context:null,history:[],activeText:'',activeContext:null,applied:false};
+  const state={catalog:null,plan:null,selection:null,selectionEdited:false,busy:false,revision:0,startMode:'manual',context:null,history:[],activeText:'',activeContext:null,applied:false};
   let currentSnapshot=null;
   const fields={source_recipe_id:'describe-source',monomer_a_id:'describe-monomer-a',monomer_b_id:'describe-monomer-b',linkage:'describe-linkage',template_id:'describe-template',style_id:'describe-style',palette:'describe-palette'};
   const clone=value=>JSON.parse(JSON.stringify(value));
@@ -55,7 +55,7 @@
     $('chat-text').disabled=blocked;$('chat-send').disabled=blocked||!state.context||!$('chat-text').value.trim();
     $('chat-send').textContent=$('describe-mode').value==='llm'?'Review with model API':'Review follow-up';
     document.querySelectorAll('#chat-suggestions button,#chat-actions button').forEach(button=>button.disabled=blocked);
-    for(const id of ['describe-text','describe-mode','describe-base-url','describe-model','describe-api-key','describe-edit-text',...Object.values(fields),'mode-describe','mode-manual'])$(id).disabled=blocked;
+    for(const id of ['describe-text','describe-material-name','describe-mode','describe-service','describe-base-url','describe-model','describe-api-key','describe-edit-text',...Object.values(fields),'mode-describe','mode-manual'])$(id).disabled=blocked;
     $('describe-demos').querySelectorAll('button').forEach(button=>button.disabled=blocked);
     for(const id of ['edit-geometry','clean-geometry','measure-pore'])$(id).disabled=blocked||!S.state.recipe;
   }
@@ -68,7 +68,7 @@
   for(const name of ['describe','manual'])$('mode-'+name).addEventListener('click',()=>startMode(name));
   document.querySelector('.start-modes').addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-    event.preventDefault();const mode=event.key==='Home'?'describe':event.key==='End'?'manual':state.startMode==='describe'?'manual':'describe';startMode(mode);$('mode-'+mode).focus();
+    event.preventDefault();const mode=event.key==='Home'?'manual':event.key==='End'?'describe':state.startMode==='describe'?'manual':'describe';startMode(mode);$('mode-'+mode).focus();
   });
   function showInputs(show){$('describe-inputs').hidden=!show;$('describe-edit-text').hidden=show;$('describe-current-text').textContent=$('describe-text').value.trim();provider();}
   $('describe-edit-text').addEventListener('click',()=>{showInputs(true);$('describe-text').focus();});
@@ -81,12 +81,24 @@
     if(state.catalog)message('Analyze the current description and choices before creating a drawing.');
     provider();controls();
   }
+  $('describe-material-name').addEventListener('change',()=>{
+    const select=$('describe-material-name');if(!select.value)return;
+    $('describe-text').value='Draw '+select.value;select.value='';invalidate({reset:true});$('describe-text').focus();
+  });
   $('describe-text').addEventListener('input',()=>invalidate({reset:true}));
   function provider(){
     const remote=$('describe-mode').value==='llm';$('describe-llm-settings').hidden=!remote;$('describe-local-note').hidden=remote;$('describe-mode-label').textContent=remote?'Model API':'Local rules';
     $('describe-analyze').textContent=state.selectionEdited?'Check revised choices':remote?'Analyze with model API':'Analyze description';
     $('describe-analyze').hidden=Boolean(!state.selectionEdited&&$('describe-inputs').hidden);
   }
+  const providers={openai:['https://api.openai.com/v1','gpt-5.4-mini'],anthropic:['https://api.anthropic.com/v1','claude-sonnet-4-6'],compatible:['','']};
+  function selectProvider(){
+    const service=$('describe-service').value, [base,model]=providers[service];
+    $('describe-url-field').hidden=service!=='compatible';
+    $('describe-base-url').value=base;$('describe-model').value=model;$('describe-api-key').value='';
+  }
+  selectProvider();
+  $('describe-service').addEventListener('change',()=>{selectProvider();invalidate({reset:true});});
   $('describe-mode').addEventListener('change',()=>{provider();invalidate({reset:true});});
   for(const id of ['describe-base-url','describe-model','describe-api-key'])$(id).addEventListener('input',()=>invalidate({reset:true}));
   function fill(id,rows,empty){const select=$(id);select.replaceChildren();const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=empty;select.append(placeholder);for(const row of rows||[]){const option=document.createElement('option');option.value=row.id||row.recipe_id;option.textContent=row.label||row.full_name||row.abbreviation||option.value;if(row.supported===false)option.textContent+=' · reference only';select.append(option);}}
@@ -140,7 +152,14 @@
     $('describe-choice-summary').hidden=['help','reset'].includes(plan.operation);
     const badge=$('describe-plan-state');badge.textContent=plan.operation==='help'?'Tool guide':plan.status==='ready'?'Ready to draw':plan.status==='unsupported'?'Not supported':'Needs your input';badge.className='plan-state '+(plan.status==='ready'?'ready':'');
     $('describe-scope').textContent=plan.scope||'This creates a finite chemical drawing. It does not assign a crystal structure or validate synthesis.';
-    const feedback=$('describe-feedback');feedback.replaceChildren();list(feedback,'Resolve before drawing',plan.unresolved,true);list(feedback,'Please review',plan.warnings,true);list(feedback,'Available alternatives',plan.alternatives);
+    const feedback=$('describe-feedback');feedback.replaceChildren();list(feedback,'Resolve before drawing',plan.unresolved,true);list(feedback,'Please review',plan.warnings,true);
+    const alternatives=plan.alternatives||[];
+    for(const choice of alternatives.filter(row=>row.kind==='monomer_choice')){
+      const button=document.createElement('button');button.type='button';button.className='button outline';button.textContent=choice.label;button.dataset.monomerChoice=choice.id;
+      button.addEventListener('click',()=>{selectValue(fields[choice.field],choice.id);state.selection=selectionFromFields();state.selectionEdited=true;analyze();});
+      feedback.append(button);
+    }
+    list(feedback,'Available alternatives',alternatives.filter(row=>row.kind!=='monomer_choice'));
     const evidence=$('describe-evidence-content');evidence.replaceChildren();list(evidence,'Matched catalog records',Array.isArray(plan.matches)?plan.matches:Object.entries(plan.matches||{}).map(([key,value])=>`${key.replaceAll('_',' ')}: ${readable(value)}`));list(evidence,'Model interpretation',plan.interpretation?.explanation);list(evidence,'Assumptions',plan.assumptions);$('describe-evidence').hidden=!evidence.childElementCount;
     message(plan.status==='ready'?'The plan is ready. Review the exact choices, then create your drawing.':plan.status==='unsupported'?'This request is outside the supported drawing workflows. Review the alternatives.':'Some choices need clarification. Edit the description or selections, then analyze again.');
     if(plan.operation==='help')message('Local guidance only. Open a tool to supply inputs and run a calculation.');
@@ -158,7 +177,7 @@
     if(mode==='llm'){
       const base=$('describe-base-url').value.trim(),model=$('describe-model').value.trim();
       if(!base||!model){message('Enter your provider API base URL and model name first.',true);$('describe-provider').open=true;(!base?$('describe-base-url'):$('describe-model')).focus();return;}
-      payload.llm={base_url:base,model,api_key:$('describe-api-key').value};
+      payload.llm={provider:$('describe-service').value,base_url:base,model,api_key:$('describe-api-key').value};
     }
     const previous=state.plan?{text:state.activeText,summary:state.plan.summary,status:state.plan.status,applied:state.applied}:null;
     state.plan=null;state.busy=true;$('describe-review').hidden=true;message(mode==='llm'?'Sending your new message and catalog IDs to the selected provider…':'Checking the message against the local catalog…');controls();
@@ -167,6 +186,10 @@
     finally{payload.llm=null;state.busy=false;controls();}
   }
   $('describe-analyze').addEventListener('click',analyze);
+  $('describe-material-name').addEventListener('change',()=>{
+    const select=$('describe-material-name');if(!select.value)return;
+    $('describe-text').value='Draw '+select.value;select.value='';invalidate({reset:true});$('describe-text').focus();
+  });
   $('describe-text').addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();analyze();}});
   async function create(){
     if(state.busy||S.state.busy||state.plan?.status!=='ready')return;
@@ -181,6 +204,13 @@
     try{
       const catalog=await S.api('describe/catalog');if(!Array.isArray(catalog.demos)||!Array.isArray(catalog.monomers))throw new Error('Description choices are unavailable. Retry when the local engine is ready.');state.catalog=catalog;
       fill('describe-source',catalog.sources,'New design from monomers');fill('describe-monomer-a',catalog.monomers,'Choose monomer A');fill('describe-monomer-b',catalog.monomers,'Choose monomer B');fill('describe-linkage',catalog.linkages,'Auto — from monomers and description');fill('describe-template',catalog.templates,'Auto — from reactive sites and description');fill('describe-style',catalog.styles,'Default style');fill('describe-palette',catalog.palettes,'Style default');
+      const names=$('describe-material-name');names.replaceChildren(new Option('Choose a material…',''));
+      for(const [label,rows] of [['Registered drawings',catalog.sources.map(s=>[s.label,s.id])],
+          ['Literature precursor pairs',(catalog.named_designs||[]).map(s=>[s.name,s.name])]]){
+        const group=document.createElement('optgroup');group.label=label;
+        for(const [name,value] of rows)group.append(new Option(name,value));
+        names.append(group);
+      }
       const demos=$('describe-demos');demos.replaceChildren();for(const demo of catalog.demos){const button=document.createElement('button');button.type='button';button.textContent=demo.label;button.dataset.demo=demo.id;button.addEventListener('click',()=>{$('describe-text').value=demo.text;invalidate({reset:true});$('describe-text').focus();});demos.append(button);}
       provider();message('Local rules are ready. Describe your idea or choose an example.');
     }catch(error){state.catalog=null;message(error.message,true);$('describe-analyze').textContent='Retry description tools';$('describe-demos').replaceChildren();}

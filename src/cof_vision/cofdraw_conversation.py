@@ -8,7 +8,7 @@ import json
 import re
 
 from .cofdraw_describe import (SELECTION_KEYS, _choices, _find, _mask, _normal,
-                              describe_catalog, describe_cof)
+                              describe_catalog, describe_cof, expand_material_names)
 
 FIELDS = {"source_recipe_id": "sources", "monomer_a_id": "monomers", "monomer_b_id": "monomers",
           "linkage": "linkages", "template_id": "templates", "style_id": "styles", "palette": "palettes"}
@@ -117,7 +117,13 @@ def describe_turn(text, library, context=None, selection=None, *, allow_unmatche
         result = _response(text, answer, context)
         result["actions"] = [{"id": action, "label": label}]
         return result
-    normalized = _normal(text)
+    normalized, labels = expand_material_names(_normal(text))
+    if labels:
+        result = describe_turn(normalized, library, context=context, selection=selection,
+                               allow_unmatched_words=allow_unmatched_words)
+        result.setdefault("assumptions", []).extend(labels)
+        result["conversation"]["user_text"] = text
+        return result
     # Existing matching rules retain alias ambiguity and exact name boundaries.
     initial = describe_cof(normalized, library)
     matches = initial["matches"]

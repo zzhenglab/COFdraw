@@ -18,6 +18,30 @@ SOURCE_ALIASES = {
     "f-cof-1-source-v1": ["FCOF-1", "FCOF1", "F COF 1"],
     "cof-300-projection-v1": ["COF-300"],
 }
+# Names with verified precursor pairs. These create qualified finite designs.
+NAMED_DESIGNS = {
+    "COF-LZU1": ("TFB + Pa imine", "10.1021/ja206846p"),
+    "Py-1P": ("TA + PyTTA imine", "10.1038/s41467-022-29086-x"),
+    "COF-42": ("TFB + DETH acylhydrazone", "10.1021/ja204728y"),
+    "COF-43": ("TFPB + DETH acylhydrazone", "10.1021/ja204728y"),
+}
+CORE_NAMES = {
+    "tapp": ["porphyrin tetraamine", "aminophenyl porphyrin", "porphyrin node"],
+    "por_cho": ["porphyrin tetraaldehyde", "formylphenyl porphyrin", "porphyrin node"],
+    "pytta": ["pyrene tetraamine", "aminophenyl pyrene", "pyrene node"],
+    "tfppy": ["pyrene tetraaldehyde", "formylphenyl pyrene", "pyrene node"],
+    "tfppy_13c": ["13C pyrene tetraaldehyde", "13C-labelled pyrene tetraaldehyde"],
+}
+def expand_material_names(text):
+    notes = []
+    for name, (building_blocks, doi) in NAMED_DESIGNS.items():
+        pattern = r"(?<![\w-])" + re.escape(name).replace(r"\-", r"[- ]?") + r"(?![\w-])"
+        text, count = re.subn(pattern, building_blocks, text, flags=re.I)
+        if count:
+            notes.append(f"{name} uses the published precursors ({building_blocks}). This is a proposed finite drawing. DOI {doi}.")
+    return text, notes
+
+
 LINKAGE_ALIASES = {
     "imine": ["imine", "C=N"],
     "beta_ketoenamine": ["beta ketoenamine", "beta-ketoenamine", "keto-enamine", "ketoenamine", "beta keto enamine"],
@@ -31,12 +55,14 @@ LINKAGE_ALIASES = {
     "urea_containing_cof": ["urea linkage", "urea-linked", "urea linked"],
 }
 STYLE_ALIASES = {
+    "gradient_stack": ["gradient layers", "fading layers", "stacked gradient"],
+    "sphere_cutaway": ["space filling cutaway", "space-filling cutaway", "spheres over skeletal"],
     "standard": ["standard", "standard chemical drawing", "black bonds", "plain chemical drawing"],
     "source": ["source style", "original colors", "original colours", "source colors", "source colours"],
     "mono_dashed": ["dashed edges", "dashed bonds"], "mono_wave": ["wavy edges", "wavy bonds"],
     "red_blue": ["colored building blocks", "coloured building blocks", "colored bonds", "coloured bonds", "red and blue", "red-blue"],
     "serif": ["serif", "serif labels"], "compact_labels": ["condensed labels", "condensed substituents"],
-    "hetero_colors": ["colored heteroatoms", "coloured heteroatoms", "heteroatom colors"],
+    "hetero_colors": ["colored heteroatoms", "coloured heteroatoms", "heteroatom colors", "color by element", "element colors", "element colours"],
     "node_highlight": ["highlights", "highlight", "highlighted building blocks", "building-block highlights", "building block highlights"],
     "ring_fill": ["filled aromatic rings", "ring fill"], "pore_fill": ["filled pore", "pore fill"],
     "pastel_blocks": ["pastel blocks", "pastel block regions", "soft block regions"],
@@ -49,7 +75,7 @@ STYLE_ALIASES = {
 }
 PALETTE_ALIASES = {"pastel": ["pastel", "soft palette", "soft colors", "soft colours"],
                    "ink": ["monochrome", "black and white"], "colorblind": ["colorblind", "colorblind friendly"]}
-GEOMETRIES = {"hexagonal": ["hexagonal", "hexagon", "hcb"], "square": ["square", "sql"],
+GEOMETRIES = {"hexagonal": ["hexagonal", "hexagon", "hcb", "honeycomb lattice", "honeycomb"], "square": ["square", "sql", "square lattice", "square grid"],
               "triangular": ["triangular", "hxl"], "chain": ["open chain", "chain"],
               "custom": ["custom six-unit ring", "custom ring"]}
 GEOMETRY_TEMPLATES = {"hexagonal": {"hcb_3_3", "hcb_3_2"}, "square": {"sql_4_2", "sql_4_4"},
@@ -104,7 +130,7 @@ def describe_catalog(library):
         identifier = row.get("id")
         if not identifier:
             continue
-        aliases = _aliases(row, ("id", "abbreviation", "full_name", "label"))
+        aliases = _aliases(row, ("id", "abbreviation", "full_name", "label")) + CORE_NAMES.get(identifier, []) + list(row.get("literature_names") or [])
         if "_" in identifier:
             aliases.extend([identifier.replace("_", "-"), identifier.replace("_", " ")])
         monomers.append({"id": identifier, "label": row.get("label", identifier),
@@ -118,6 +144,7 @@ def describe_catalog(library):
     for row in library.get("source_recipes", []):
         identifier = row["recipe_id"]
         aliases = _aliases(row, ("recipe_id", "label", "literature_name", "display_name")) + SOURCE_ALIASES.get(identifier, [])
+        aliases += [re.sub(r"(?<=[A-Za-z])-(?=\d)", sep, a) for a in list(aliases) for sep in (" ", "")]
         monomer_ids = []
         for precursor in row.get("monomers", []):
             ids = ([precursor["monomer_preset_id"]] if precursor.get("monomer_preset_id") in by_id else
@@ -156,6 +183,8 @@ def describe_catalog(library):
                  "aliases": _unique([value, value.replace("_", " "), value.replace("_", "-")] + PALETTE_ALIASES.get(value, []))}
                 for value in library.get("style_controls", {}).get("palettes", [])]
     demos = [
+        {"id": "named_py", "label": "Py-1P by name", "text": "Draw Py-1P with gradient layers", "expected_status": "ready"},
+        {"id": "porphyrin", "label": "Porphyrin node", "text": "Draw a porphyrin tetraamine with terephthalaldehyde in a square lattice", "expected_status": "ready"},
         {"id": "imine", "label": "Imine design", "text": "Draw TFB and TAPB in pastel colors", "expected_status": "ready"},
         {"id": "tppa", "label": "Catalog TpPa", "text": "Draw TpPa in standard style", "expected_status": "ready"},
         {"id": "pyurea", "label": "Pyurea highlights", "text": "Draw Pyurea with building-block highlights and a soft palette", "expected_status": "ready"},
@@ -167,6 +196,7 @@ def describe_catalog(library):
         {"id": "choose", "label": "Choose a material", "text": "Draw a COF", "expected_status": "needs_input"},
     ]
     return {"sources": sources, "monomers": monomers, "linkages": linkages, "templates": templates,
+            "named_designs": [{"name": name, "precursors": pair, "doi": doi} for name, (pair, doi) in NAMED_DESIGNS.items()],
             "styles": styles, "palettes": palettes, "demos": demos, "scope": SCOPE}
 
 
@@ -268,12 +298,12 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     if not isinstance(allow_unmatched_words, bool):
         raise ValueError("allow_unmatched_words must be a boolean")
     catalog = describe_catalog(library)
-    normalized = _normal(text)
+    normalized, name_notes = expand_material_names(_normal(text))
     supplied = {key: value for key, value in (selection or {}).items() if value is not None}
     result = {"status": "needs_input", "summary": "Choose a source drawing or two compatible catalog monomers.",
               "selection": {key: None for key in sorted(SELECTION_KEYS)}, "prepare_request": None,
               "source_recipe_id": None, "style_id": "standard", "style_options": {}, "matches": [],
-              "warnings": [], "unresolved": [], "alternatives": [], "assumptions": [], "scope": SCOPE}
+              "warnings": [], "unresolved": [], "alternatives": [], "assumptions": name_notes, "scope": SCOPE}
     unresolved, warnings, assumptions = result["unresolved"], result["warnings"], result["assumptions"]
     invalid = sorted(set(supplied) - SELECTION_KEYS)
     if invalid:
@@ -368,20 +398,30 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         unresolved.append("Several incompatible drawing geometries were requested; choose one template.")
     if template_id and geometries and template_id not in GEOMETRY_TEMPLATES[geometries[0]]:
         unresolved.append("Selected template conflicts with the explicitly requested geometry.")
-    monomer_ids = _choices(monomer_matches)
     runtime_monomers = {row["id"]: row for row in library["monomer_presets"]}
     # Distinct same-span aliases (notably BD) cannot be resolved by order.
     ambiguous_spans = {}
     for match in monomer_matches:
         ambiguous_spans.setdefault(tuple(match["span"]), set()).add(match["id"])
     selected_monomers = [supplied.get(k) for k in ("monomer_a_id", "monomer_b_id") if supplied.get(k)]
-    for span, ids in ambiguous_spans.items():
+    resolved_slots = []
+    for span, ids in sorted(ambiguous_spans.items()):
         if len(ids) > 1:
             chosen = ids.intersection(selected_monomers)
             if len(chosen) == 1:
-                monomer_ids = [identifier for identifier in monomer_ids if identifier not in ids or identifier in chosen]
+                resolved_slots.append(next(iter(chosen)))
             else:
                 unresolved.append("Ambiguous monomer alias '" + normalized[slice(*span)] + "': " + ", ".join(sorted(ids)) + ".")
+                if len(ambiguous_spans) <= 2:
+                    field = ("monomer_a_id", "monomer_b_id")[len(resolved_slots)]
+                    for identifier in sorted(ids):
+                        row = runtime_monomers[identifier]
+                        result["alternatives"].append({"kind": "monomer_choice", "field": field, "id": identifier,
+                                                       "label": row.get("full_name") or row["label"]})
+                resolved_slots.append(None)
+        else:
+            resolved_slots.append(next(iter(ids)))
+    monomer_ids = _unique(identifier for identifier in resolved_slots if identifier)
     if source_id:
         source = next(r for r in catalog["sources"] if r["id"] == source_id)
         if any(supplied.get(k) for k in ("monomer_a_id", "monomer_b_id")) or template_id or geometries or linkage:
@@ -402,7 +442,7 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         return _finish(result, catalog)
 
     if selected_monomers:
-        if monomer_ids and not set(monomer_ids).issubset(selected_monomers):
+        if len(selected_monomers) == 2 and not set(monomer_ids).issubset(selected_monomers):
             unresolved.append("Selected monomers conflict with one or more explicitly named monomers.")
         for identifier in selected_monomers:
             if identifier not in monomer_ids:
@@ -410,7 +450,8 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     if len(monomer_ids) != 2:
         unresolved.append("Choose exactly two unambiguous existing monomers for a new design, or one registered source drawing.")
         result["selection"].update(linkage=linkage, template_id=template_id)
-        for key, identifier in zip(("monomer_a_id", "monomer_b_id"), monomer_ids):
+        slots = resolved_slots if None in resolved_slots else monomer_ids
+        for key, identifier in zip(("monomer_a_id", "monomer_b_id"), slots):
             result["selection"][key] = identifier
         result["status"] = "unsupported" if unsupported else "needs_input"
         return _finish(result, catalog)
@@ -498,7 +539,8 @@ def _finish(result, catalog):
         result["prepare_request"] = None
         result["source_recipe_id"] = None
         result["summary"] = ("This request includes unsupported operations or chemistry." if result["status"] == "unsupported" else "Review the unresolved choices before creating a drawing.")
-        result["alternatives"] = [{"kind": "demo", **row} for row in catalog["demos"]]
+        if not result["alternatives"]:
+            result["alternatives"] = [{"kind": "demo", **row} for row in catalog["demos"]]
     return result
 
 

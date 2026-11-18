@@ -121,6 +121,8 @@ def test_builds_an_unbundled_current_cell_with_real_bonds_and_cif(tmp_path,a,b,l
 
 @pytest.mark.parametrize('a,b,linkage,template,method', [
     ('ta', 'pytta', 'imine', 'sql_4_2', 'phenyl_torsions'),
+    ('tfppy_13c', 'benzidine', 'imine', 'sql_4_2', 'phenyl_torsions'),
+    ('tfppy_13c', 'recovered_bd', 'imine', 'sql_4_2', 'restrained_mmff94'),
     ('tp', 'deth', 'keto_hydrazide', 'hcb_3_2', 'restrained_mmff94'),
 ])
 def test_crowded_cells_retain_each_translated_bond_after_cif_export(tmp_path, a, b, linkage, template, method):
@@ -139,7 +141,25 @@ def test_crowded_cells_retain_each_translated_bond_after_cif_export(tmp_path, a,
         result = response.json()
         assert result['available'] and result['structure']['provenance']['fragment_geometry'] == method
         cif = client.get(result['downloads']['cif']).text
-        network = inspect_periodic_network(import_cif(cif))
+        parsed = import_cif(cif)
+        if a == 'tfppy_13c':
+            from cof_vision.cofdraw_characterization import structure_summary
+            from cof_vision.cofdraw_science import structure_exports, patch_3d
+            labels = [site for site in parsed['atoms'] if site.get('isotope') == 13]
+            assert len(labels) == 4 and all(site['element'] == 'C' for site in labels)
+            natural = deepcopy(parsed)
+            for site in natural['atoms']:
+                site.pop('isotope', None)
+            mass_gain = structure_summary(parsed)['cell_molar_mass_g_mol'] - structure_summary(natural)['cell_molar_mass_g_mol']
+            assert mass_gain == pytest.approx(4 * (13.00335484 - 12.011), abs=.001)
+            patch = patch_3d(prepared.json()['recipe'], layers=1)
+            lines = patch['exports']['xyz'].splitlines()
+            assert ':isotope:I:1' in lines[1]
+            assert sum(row.split()[-1] == '13' for row in lines[2:]) == sum(s.get('isotope') == 13 for s in patch['viewer']['atoms']) > 0
+            copies = structure_exports(parsed, (2, 1, 1))
+            assert sum(s.get('isotope') == 13 for s in import_cif(copies['exports']['cif'])['atoms']) == 8
+            assert ':isotope:I:1' in copies['exports']['xyz'] and 'pdb' not in copies['exports']
+        network = inspect_periodic_network(parsed)
         assert network['dimensions'] == [2] and network['quotient_component_count'] == 1
         assert network['short_contact_count'] == 0 and not network['threshold_sensitivity']['classification_changed']
         def keys(edges):

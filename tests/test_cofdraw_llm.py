@@ -269,3 +269,20 @@ def test_prompt_omits_invalid_or_unbounded_reactive_site_counts(sites):
     library["monomers"][1]["compatible_roles"][0]["reactive_sites"] = sites
     compact, _ = llm._catalog(library)
     assert "reactive_sites" not in compact["monomers"][1]["compatible_roles"][0]
+
+
+def test_named_claude_uses_native_messages_and_validates_content(monkeypatch):
+    endpoint = "https://api.anthropic.com/v1/messages"
+    data = {"type": "message", "stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(PROPOSAL)}]}
+    calls = wire(monkeypatch, raw=json.dumps(data).encode(), endpoint=endpoint)
+    result = llm.select_with_llm("Draw Source One", LIBRARY, provider="anthropic", base_url=None,
+                                 model="claude-sonnet-4-6", api_key=KEY)
+    req = calls[0][0]
+    assert req.full_url == endpoint and req.get_header("X-api-key") == KEY
+    assert req.get_header("Anthropic-version") and KEY not in req.data.decode()
+    body = json.loads(req.data)
+    assert body["system"] and [m["role"] for m in body["messages"]] == ["user"] and body["max_tokens"] > 0
+    assert result["selection"] == PROPOSAL["selection"]
+    with pytest.raises(llm.LLMSelectionError):
+        llm.select_with_llm("Draw Source One", LIBRARY, provider="anthropic", base_url=URL, model="m", api_key=KEY)
+    assert len(calls) == 1

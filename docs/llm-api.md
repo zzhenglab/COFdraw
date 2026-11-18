@@ -25,7 +25,11 @@ For optional API interpretation, use `mode: "llm"`, leave `selection` null, and 
 
 ## Provider protocol
 
-The adapter sends one nonstreaming HTTP POST to `<base_url>/chat/completions`. A base URL already ending in `/chat/completions` is also accepted. OpenAI's base URL is `https://api.openai.com/v1`; local compatible servers often expose their own `/v1` prefix. Supply the exact prefix and a model accepted by that provider. The request contains `model`, `messages` and `stream: false`. It uses ordinary system/user text messages and does not assume support for strict JSON response modes, tool calling, temperature or model-specific generation parameters. The response must provide one text completion in `choices[0].message.content`. [Chat Completions reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create).
+Open **Describe a COF → Chat provider** and choose GPT or Claude. Enter a workspace API key and use an available model ID. The custom option accepts an OpenAI-compatible endpoint. These settings are held in memory and changing providers clears the key. For agent calls set `llm.provider` to `openai`, `anthropic` or `compatible`. Named services use fixed official endpoints.
+
+Claude uses the Anthropic Messages API with a top-level system instruction, bounded output and one user message. COFdraw validates a completed text block against the same local catalog as GPT. [Anthropic Messages](https://platform.claude.com/docs/en/api/messages/create)
+
+The GPT/compatible adapter sends one nonstreaming HTTP POST to `<base_url>/chat/completions`. A base URL already ending in `/chat/completions` is also accepted. OpenAI's base URL is `https://api.openai.com/v1`; local compatible servers often expose their own `/v1` prefix. Supply the exact prefix and a model accepted by that provider. The request contains `model`, `messages` and `stream: false`. It uses ordinary system/user text messages and does not assume support for strict JSON response modes, tool calling, temperature or model-specific generation parameters. The response must provide one text completion in `choices[0].message.content`. [Chat Completions reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create).
 
 The instructions request one JSON object:
 
@@ -43,7 +47,7 @@ Model/provider parameter support varies; a provider advertising compatibility mu
 
 ## Credential and data handling
 
-Nonempty keys travel only in the HTTP `Authorization: Bearer ...` header, as specified by the [API authentication reference](https://developers.openai.com/api/reference/overview#authentication). An empty key supports local providers without authentication. The adapter does not discover environment credentials, persist configuration, log requests or retry automatically. Keys containing whitespace/control characters are rejected; a key appearing in request content or a provider response also causes rejection.
+GPT and compatible providers receive the key in the HTTP `Authorization: Bearer ...` header. Claude receives it in the `x-api-key` header. An empty key supports local providers without authentication. The adapter does not discover environment credentials, persist configuration, log requests or retry automatically. Keys containing whitespace/control characters are rejected; a key appearing in request content or a provider response also causes rejection.
 
 Only the description and whitelisted catalog IDs, labels, aliases, role names/counts, finite-template choices and source qualifiers enter the prompt. Saved projects, prior reports, raw recipes, monomer SMILES, filesystem paths and credentials are not collected. The description itself is sent to the selected provider, whose policies and account usage apply. For first-time OpenAI account/API setup, use the [official quickstart](https://developers.openai.com/api/docs/quickstart); COFdraw takes explicitly supplied credentials rather than reading ambient environment settings.
 

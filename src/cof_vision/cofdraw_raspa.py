@@ -17,7 +17,7 @@ import sys
 import numpy as np
 from rdkit import Chem
 
-from .cofdraw_science import normalize_structure, _finite, _integer
+from .cofdraw_science import normalize_structure, site_mass, _finite, _integer
 from .cofdraw_network import inspect_periodic_network
 
 ENGINE_VERSION = "3.1.0"
@@ -140,7 +140,7 @@ def prepare_run(directory, structure, gases, mole_fractions, temperature_K, pres
     if len(gases) > 1:
         warnings.append("Physical fractions and fugacities are preserved here. Internal equal RASPA fractions are compensated by N*y*phi; upstream excess loadings and mixture EOS are not reported.")
     pt = Chem.GetPeriodicTable()
-    mass = sum(pt.GetAtomicWeight(a["element"]) for a in structure["atoms"]) * int(np.prod(repeats))
+    mass = sum(site_mass(a) for a in structure["atoms"]) * int(np.prod(repeats))
     manifest = {"schema": 1, "engine": "RASPA3", "engine_version": ENGINE_VERSION,
                 "profile_id": data["id"], "profile_sha256": status["profile_sha256"],
                 "mode": mode, "gases": gases, "mole_fractions": fractions,

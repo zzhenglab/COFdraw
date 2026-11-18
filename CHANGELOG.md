@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.6 - 2026-11-18
+
+- Build periodic isotope-labelled designs and organic sulfur, phosphorus, silicon and halogen fragments with checked geometry. Preserve isotope masses in crystal analysis, CIF and extended XYZ.
+- Open in the manual builder. Describe materials by name or molecular core and optionally review a proposal using an OpenAI, Anthropic or custom API key.
+- Vary element colors in randomized styles and view pore faces, layer profiles and mixed representations with verified periodic bonds.
+
 ## 0.8.5 - 2026-11-18
 
 - Recover crowded periodic starting cells using phenyl rotations and restrained fragment geometry. Report the remaining clashes and missing or unintended bonds if validation fails.

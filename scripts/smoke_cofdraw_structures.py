@@ -138,6 +138,24 @@ def main():
             assert page.locator('#science-dialog').evaluate('e=>e.scrollWidth<=e.clientWidth+1')
             page.screenshot(path=str(output/'structures-mobile.png'))
             checks.append('Structure controls, warnings and selectable views fit a 390px viewport')
+            page.set_viewport_size({'width':1600,'height':1100})
+            page.goto(base)
+            page.wait_for_function("document.getElementById('preset-a')?.querySelector('option[value=benzidine]')")
+            page.locator('#preset-a').select_option('benzidine')
+            page.wait_for_function("document.querySelector('#preset-b option[value=tfppy_13c]:enabled')")
+            page.locator('#preset-b').select_option('tfppy_13c')
+            page.wait_for_function("!document.getElementById('build').disabled")
+            build()
+            with page.expect_response('**/api/drawing/science/build-periodic') as labelled:
+                page.locator('#open-science').click()
+            assert labelled.value.json()['available'],labelled.value.text()
+            page.wait_for_function("window.COFdrawScience.origin==='current-periodic'")
+            assert page.evaluate("window.COFdrawScience.structure.atoms.filter(a=>a.isotope===13).length") == 4
+            for preset,mode in [('pore','spacefill'),('layers','ballstick'),('oblique','mixed')]:
+                page.locator('#viewer-preset').select_option(preset)
+                assert page.locator('#viewer-mode').input_value() == mode
+                page.locator('#structure-canvas').screenshot(path=str(output/f'bd-isotope-{preset}.png'))
+            checks.append('Manual BD followed by 13C-Tfppy opens its own labelled periodic cell in all three view presets')
             assert not errors,errors;browser.close()
     except Exception:
         failure=traceback.format_exc()

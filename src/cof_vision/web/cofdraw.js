@@ -265,14 +265,14 @@ function drawStyles(){
     check.className="style-check";check.textContent="✓";button.append(styleIcon(style),label,check);button.addEventListener("click",()=>chooseStyle(style.id));$("style-list").append(button);
   }
 }
-const styleOptionDefaults={palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit",highlight_width:1,glow_strength:.55,layer_spacing:.04,projection_tilt:35,sphere_scale:1};
+const styleOptionDefaults={element_scheme:"style_default",palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit",highlight_width:1,glow_strength:.55,layer_spacing:.04,projection_tilt:35,sphere_scale:1};
 function drawStyleControls(){
   const spec=state.library?.style_controls,root=$("style-control-fields");$("style-controls").hidden=!spec;if(!spec)return;root.replaceChildren();
   const current={...styleOptionDefaults,...state.resolvedStyleOptions,...state.styleOptions};
   const hasLayers=['stacked_eclipsed','stacked_slipped','gradient_stack'].includes(state.style);
   const hasSpheres=['molecular_spheres','sphere_cutaway'].includes(state.style);
-  const lists=[['palette','Color palette',spec.palettes||[]],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
-  const names={classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
+  const lists=[['palette','Color palette',spec.palettes||[]],['element_scheme','Atom colors',spec.element_schemes||['style_default']],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
+  const names={style_default:"Style default",conventional:"Conventional elements",deep_ink:"Deep ink",jewel:"Jewel tones",classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   function changed(key,value){state.styleOptions[key]=value;if(state.recipe)state.dirty=true;sync();}
   for(const[key,label,values]of lists){const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
   const swatches=document.createElement('div');swatches.className='palette-swatches';

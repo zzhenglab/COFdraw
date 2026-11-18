@@ -1,4 +1,4 @@
-"""Explicit, optional OpenAI-compatible parameter selection; no drawing execution.
+"""Explicit, optional GPT/Claude parameter selection; no drawing execution.
 
 No environment credentials, saved projects, filesystem reads, logging or retries.
 The deterministic planner remains responsible for chemistry and readiness.
@@ -215,9 +215,22 @@ def _read_response(response, deadline):
         raise LLMSelectionError("Provider response was not valid UTF-8 JSON.") from None
 
 
-def _parse_proposal(envelope, allowed, api_key):
+def _parse_proposal(envelope, allowed, api_key, provider="compatible"):
     if not isinstance(envelope, dict) or _contains_secret(envelope, api_key):
         raise LLMSelectionError("Provider returned an unusable response.")
+    if provider == "anthropic":
+        blocks = envelope.get("content")
+        if (envelope.get("type") != "message" or envelope.get("stop_reason") != "end_turn"
+                or not isinstance(blocks, list) or len(blocks) != 1 or not isinstance(blocks[0], dict)
+                or blocks[0].get("type") != "text"):
+            raise LLMSelectionError("Claude did not return a complete text selection.")
+        content = blocks[0].get("text")
+    else:
+        content = _completion_text(envelope)
+    return _validate_selection(content, allowed, api_key)
+
+
+def _completion_text(envelope):
     choices = envelope.get("choices")
     if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
         raise LLMSelectionError("Provider response must contain exactly one completion.")
@@ -227,7 +240,10 @@ def _parse_proposal(envelope, allowed, api_key):
     message = choice.get("message")
     if not isinstance(message, dict) or message.get("refusal") or message.get("tool_calls") or message.get("function_call"):
         raise LLMSelectionError("Provider did not return a plain-text selection.")
-    content = message.get("content")
+    return message.get("content")
+
+
+def _validate_selection(content, allowed, api_key):
     if not isinstance(content, str) or len(content.encode("utf-8")) > MAX_CONTENT_BYTES:
         raise LLMSelectionError("Provider selection was missing or exceeded the size limit.")
     proposal = _strict_json(content)
@@ -253,7 +269,7 @@ def _parse_proposal(envelope, allowed, api_key):
     return proposal
 
 
-def select_with_llm(text: str, library: dict, *, base_url: str, model: str, api_key: str) -> dict:
+def select_with_llm(text: str, library: dict, *, base_url: str | None, model: str, api_key: str, provider: str = "compatible") -> dict:
     """Make one explicit request and return IDs only; never apply the proposal.
 
     library is the minimal describe_catalog(raw_library) descriptor returned by
@@ -264,17 +280,32 @@ def select_with_llm(text: str, library: dict, *, base_url: str, model: str, api_
     """
     if not isinstance(text, str) or not text.strip() or len(text) > 4000:
         raise LLMSelectionError("Provide a description of 1–4000 characters.")
-    endpoint = _endpoint(base_url)
+    bases = {"openai": "https://api.openai.com/v1", "anthropic": "https://api.anthropic.com/v1"}
+    if provider not in (*bases, "compatible"):
+        raise LLMSelectionError("Unknown model provider.")
+    if provider in bases and base_url and base_url.rstrip("/") != bases[provider]:
+        raise LLMSelectionError("The named provider requires its official API URL.")
+    endpoint = ("https://api.anthropic.com/v1/messages" if provider == "anthropic" else
+                _endpoint(base_url or bases["openai"]))
+    if provider in bases and not api_key:
+        raise LLMSelectionError("Enter the API key for the selected provider.")
     if not isinstance(model, str) or not model.strip() or len(model) > 200 or any(ord(c) < 32 for c in model):
         raise LLMSelectionError("Provide a valid provider model name.")
     if not isinstance(api_key, str) or len(api_key) > 4096 or any(not 33 <= ord(c) <= 126 for c in api_key):
         raise LLMSelectionError("API credentials must not contain whitespace, control characters or non-ASCII text.")
     catalog, allowed = _catalog(library)
+    from .cofdraw_describe import expand_material_names
+    _, material_matches = expand_material_names(text)
+    if material_matches:
+        catalog["named_material_matches"] = material_matches
     user_input = {"description": text, "catalog": catalog}
     if _contains_secret([user_input, model, endpoint], api_key):
         raise LLMSelectionError("Keep API credentials separate from the description, model and endpoint.")
     payload = {"model": model, "messages": [{"role": "system", "content": _PROMPT},
         {"role": "user", "content": json.dumps(user_input, ensure_ascii=False)}], "stream": False}
+    if provider == "anthropic":
+        payload["messages"] = payload["messages"][1:]
+        payload.update(system=_PROMPT, max_tokens=1500)
     if _contains_secret(payload, api_key):
         raise LLMSelectionError("Keep API credentials separate from the request content.")
     try:
@@ -284,7 +315,9 @@ def select_with_llm(text: str, library: dict, *, base_url: str, model: str, api_
     if len(body) > MAX_REQUEST_BYTES:
         raise LLMSelectionError("The description catalog exceeds the request size limit.")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    if api_key:
+    if provider == "anthropic":
+        headers.update({"x-api-key": api_key, "anthropic-version": "2023-06-01"})
+    elif api_key:
         headers["Authorization"] = "Bearer " + api_key
     request = Request(endpoint, data=body, headers=headers, method="POST")
     try:
@@ -295,7 +328,7 @@ def select_with_llm(text: str, library: dict, *, base_url: str, model: str, api_
                 raise LLMSelectionError("Provider redirects are not permitted.")
             raw = _read_response(response, deadline)
         envelope = _strict_json(raw)
-        return _parse_proposal(envelope, allowed, api_key)
+        return _parse_proposal(envelope, allowed, api_key, provider)
     except LLMSelectionError:
         raise
     except HTTPError as exc:

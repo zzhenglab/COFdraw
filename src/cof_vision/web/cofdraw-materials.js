@@ -158,8 +158,8 @@
   $('viewer-hide-h').addEventListener('change',()=>{C.viewer.hideHydrogen=$('viewer-hide-h').checked;C.viewer.selected=[];$('viewer-distance').textContent='';C.viewer.draw();});
   $('show-atom-table').addEventListener('click',()=>{
     const root=$('atom-table-panel');root.hidden=!root.hidden;if(root.hidden)return;root.replaceChildren();
-    if(C.structure)table(root,['Site','Element','Fractional x','y','z'],C.structure.atoms.map((a,i)=>[i+1,a.element,...a.fractional.map(x=>number(x,5))]));
-    else table(root,['Atom','Element','x / Å','y / Å','z / Å'],C.viewer.atoms.map((a,i)=>[i+1,a.element,number(a.x,5),number(a.y,5),number(a.z,5)]));
+    if(C.structure)table(root,['Site','Element','Fractional x','y','z'],C.structure.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,...a.fractional.map(x=>number(x,5))]));
+    else table(root,['Atom','Element','x / Å','y / Å','z / Å'],C.viewer.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,number(a.x,5),number(a.y,5),number(a.z,5)]));
   });
   function clearAnalysis(){for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
   window.addEventListener('cofdraw:structure',()=>{clearAnalysis();syncModelState();});

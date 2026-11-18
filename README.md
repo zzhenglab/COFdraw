@@ -36,10 +36,10 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.8.5 |
+| Feature | Included in v0.8.6 |
 | --- | --- |
 | Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
-| Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |
+| Optional LLM API | GPT, Claude or a compatible API can propose catalog parameters for local chemistry checks |
 | Monomer library | 121 presets, structure cards, compatible partners, automatic chemistry, and offline solubility screening |
 | Precursor accessibility | Offline RDKit SA Score for finite monomers and declared precursor summaries; a heuristic, not ASKCOS or COF synthesis prediction |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
@@ -119,7 +119,7 @@ Choose **Describe a COF**, type a sentence or try a built-in example, then analy
 
 Review the matched building blocks, linkage, finite drawing layout and appearance before creating the drawing. Ambiguous names, unsupported chemistry and conflicting instructions require a choice instead of producing an invented structure. **Build manually** keeps the monomer editor and full construction controls available.
 
-Rules mode works offline and needs no API key. Optional **LLM API** mode sends your description and a compact catalog to your chosen compatible endpoint only when requested. Supply your own endpoint, model and key; the application does not save the key or include it in projects and reports. The LLM proposes existing catalog IDs, and the same local chemical checks still apply. See [API setup and data handling](docs/llm-api.md).
+Rules mode works offline and needs no API key. Under **Chat provider**, choose GPT, Claude or a custom compatible endpoint and enter your API key. A model request sends the description and a compact catalog to the selected provider. The key stays in memory. The LLM proposes existing catalog IDs, and the same local chemical checks still apply. See [API setup and data handling](docs/llm-api.md).
 
 ## Use with an AI agent
 

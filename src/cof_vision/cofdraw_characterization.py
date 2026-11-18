@@ -14,7 +14,7 @@ import math
 import numpy as np
 from rdkit import rdBase
 
-from .cofdraw_science import AVOGADRO, PT, _cell_parameters, _finite, normalize_structure
+from .cofdraw_science import AVOGADRO, PT, site_mass, _cell_parameters, _finite, normalize_structure
 from .cofdraw_xray_factors import DATA_SHA256, IT92, SOURCE_VERSION
 
 MAX_HKL_CANDIDATES = 600_000
@@ -46,7 +46,10 @@ def structure_summary(structure):
     """
     normalized = normalize_structure(structure)
     counts = Counter(atom["element"] for atom in normalized["atoms"])
-    mass = sum(PT.GetAtomicWeight(e) * n for e, n in counts.items())
+    masses = Counter()
+    for atom in normalized["atoms"]:
+        masses[atom["element"]] += site_mass(atom)
+    mass = sum(masses.values())
     count = sum(counts.values())
     volume = normalized["cell_volume_angstrom3"]
     lengths_angles = _cell_parameters(np.asarray(normalized["cell"]))
@@ -75,15 +78,16 @@ def structure_summary(structure):
     return {
         "kind": "periodic_structure_summary", "quality": "model_geometry",
         "formula": _formula(counts), "reduced_formula": _formula(counts, reduce(math.gcd, counts.values())),
+        "isotope_site_counts": dict(Counter(f"{a['isotope']}{a['element']}" for a in normalized["atoms"] if a.get("isotope"))),
         "cell_molar_mass_g_mol": float(mass), "cell_volume_angstrom3": volume,
         "density_g_cm3": float(mass / (AVOGADRO * volume * 1e-24)), "atom_count": count,
         "elements": [{"element": e, "count": counts[e], "atomic_fraction": counts[e] / count,
-                      "mass_fraction": PT.GetAtomicWeight(e) * counts[e] / mass,
+                      "mass_fraction": masses[e] / mass,
                       "site_density_mmol_g": 1000 * counts[e] / mass} for e in _hill_order(counts)],
         "cell_parameters": dict(zip(("a", "b", "c", "alpha", "beta", "gamma"), map(float, lengths_angles))),
         "units": {"cell_lengths": "angstrom", "cell_angles": "degree", "site_density": "mmol_of_element_atoms_per_g_of_supplied_structure"},
         "contact_checks": contacts, "structure_sha256": _structure_hash(normalized),
-        "method": {"atomic_weights": "RDKit standard periodic-table atomic weights; natural isotopic composition",
+        "method": {"atomic_weights": "RDKit isotope masses for labelled sites and standard atomic weights elsewhere",
                    "rdkit_version": rdBase.rdkitVersion, "occupancy": "fully occupied resolved sites only"},
         "warnings": warnings,
     }

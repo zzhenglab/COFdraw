@@ -129,6 +129,13 @@ def test_duplicate_bd_abbreviation_stays_ambiguous_until_selected(library):
     selected = describe_cof(text, library, {"monomer_a_id": "tfb", "monomer_b_id": "benzidine"})
     assert selected["status"] == "ready", selected["unresolved"]
     assert selected["selection"]["monomer_b_id"] == "benzidine"
+    labelled = describe_cof("BD + 13C-Tfppy", library)
+    assert labelled["selection"]["monomer_b_id"] == "tfppy_13c" and labelled["selection"]["monomer_a_id"] is None
+    assert {row["id"] for row in labelled["alternatives"]} == {"benzidine", "recovered_bd"}
+    for choice in labelled["alternatives"]:
+        confirmed = describe_cof("BD + 13C-Tfppy", library, {choice["field"]: choice["id"]})
+        assert confirmed["status"] == "ready"
+        assert {confirmed["selection"][key] for key in ("monomer_a_id", "monomer_b_id")} == {choice["id"], "tfppy_13c"}
 
 
 @pytest.mark.parametrize("text", [

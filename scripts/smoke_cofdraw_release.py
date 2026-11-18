@@ -57,13 +57,18 @@ def main():
         for a, b, linkage, template, method in (
             ("ta", "pytta", "imine", "sql_4_2", "phenyl_torsions"),
             ("tp", "deth", "keto_hydrazide", "hcb_3_2", "restrained_mmff94"),
+            ("tfppy_13c", "benzidine", "imine", "sql_4_2", "phenyl_torsions"),
+            ("tfppy_13c", "recovered_bd", "imine", "sql_4_2", "restrained_mmff94"),
         ):
             drawing = api("/api/drawing/prepare", {"monomer_a": smiles[a], "monomer_b": smiles[b],
                           "linkage": linkage, "template_id": template})
             built = api("/api/drawing/science/build-periodic", {"recipe": drawing["recipe"]})
             assert built["available"] and built["structure"]["provenance"]["fragment_geometry"] == method
             assert built["cell_validation"]["short_contacts"] == 0 and built["downloads"]["cif"]
-        report["recovered_periodic_cells"] = ["ta+pytta", "tp+deth"]
+            if a == "tfppy_13c":
+                assert sum(site.get("isotope") == 13 for site in built["structure"]["atoms"]) == 4
+                assert built["viewer"]["bonds"]
+        report["recovered_periodic_cells"] = ["ta+pytta", "tp+deth", "tfppy_13c+benzidine", "tfppy_13c+recovered_bd"]
         report["library"] = {key: len(library[key]) for key in ("styles", "monomer_presets", "templates", "topology_catalog", "linkages")}
         def download(path):
             with urlopen(base + path, timeout=30) as response:

@@ -12,7 +12,7 @@ import math
 import numpy as np
 from rdkit import rdBase
 
-from .cofdraw_science import (AVOGADRO, ELEMENTS, PT, _PeriodicDistances,
+from .cofdraw_science import (AVOGADRO, ELEMENTS, PT, site_mass, _PeriodicDistances,
                              _finite, _integer, normalize_structure)
 
 
@@ -260,7 +260,7 @@ def geometric_porosity(structure, *, probe_radius=1.82, grid_spacing=.6, surface
     radii = np.asarray([PT.GetRvdw(ELEMENTS[element]) for element in elements])
     if not np.isfinite(radii).all() or (radii <= 0).any():
         raise ValueError('Every element needs a positive van der Waals radius')
-    mass = float(sum(PT.GetAtomicWeight(ELEMENTS[element]) for element in elements))
+    mass = float(sum(site_mass(a) for a in atoms))
     volume = normalized['cell_volume_angstrom3']
     density = mass/AVOGADRO/(volume*1e-24)
     distance = _PeriodicDistances(np.asarray(normalized['cell']), np.asarray([atom['fractional'] for atom in atoms]), radii)

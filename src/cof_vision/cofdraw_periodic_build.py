@@ -16,7 +16,7 @@ from .framework_drawing import _ports
 
 SUPPORTED_TEMPLATES = ('hcb_3_3', 'hcb_3_2', 'sql_4_2', 'sql_4_4')
 MAX_CELL_SITES = 360
-ORGANIC_ELEMENTS = {1, 5, 6, 7, 8, 9}
+ORGANIC_ELEMENTS = {1, 5, 6, 7, 8, 9, 14, 15, 16, 17, 35, 53}
 
 
 def _net(template, counts):
@@ -124,10 +124,10 @@ def _block(component, general_tilt=0, cap_element=None):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     if mol is None or len(Chem.GetMolFrags(mol)) != 1:
         raise ValueError('Each reacted building block must be one connected molecule.')
-    if (any(a.GetAtomicNum() not in ORGANIC_ELEMENTS | {0} or a.GetIsotope()
+    if (any(a.GetAtomicNum() not in ORGANIC_ELEMENTS | {0}
             or a.GetNumRadicalElectrons() for a in mol.GetAtoms())
             or Chem.GetFormalCharge(mol)):
-        raise ValueError('Automatic cells require neutral organic fragments containing C, H, B, N, O or F, without isotope labels or radicals.')
+        raise ValueError('Automatic cells require neutral organic fragments containing H, B, C, N, O, F, Si, P, S, Cl, Br or I and no radicals.')
     if any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()) or any(
             b.GetStereo() not in (Chem.BondStereo.STEREONONE, Chem.BondStereo.STEREOANY) for b in mol.GetBonds()):
         raise ValueError('Building blocks with specified stereochemistry need explicit 3D coordinates.')
@@ -157,7 +157,7 @@ def _block(component, general_tilt=0, cap_element=None):
     bonds = [(index[a], index[b], bond.GetBondTypeAsDouble()) for bond in mol.GetBonds()
              if (a := bond.GetBeginAtomIdx()) in index and (b := bond.GetEndAtomIdx()) in index]
     return {'xyz': xyz, 'sites': np.array(sites), 'directions': np.array(directions),
-            'elements': [a.GetSymbol() for a in atoms], 'bonds': bonds,
+            'elements': [a.GetSymbol() for a in atoms], 'isotopes': [a.GetIsotope() for a in atoms], 'bonds': bonds,
             'charges': [a.GetFormalCharge() for a in atoms], 'tilted_rings': tilted_rings}
 
 
@@ -286,8 +286,9 @@ def _cell_atoms(blocks, edges, pose, spacing, order):
         fraction = xyz @ inverse
         wrap = np.floor(fraction + 1e-10).astype(int)
         wraps.append(wrap)
-        atoms.extend({'element': element, 'fractional': p.tolist()}
-                     for element, p in zip(block['elements'], fraction-wrap))
+        atoms.extend({'element': element, 'fractional': p.tolist(),
+                      **({'isotope': isotope} if isotope else {}), 'component': block['component']}
+                     for element, isotope, p in zip(block['elements'], block['isotopes'], fraction-wrap))
         charges = [{'atom': offsets[i]+j, 'formal_charge': charge}
                    for j, charge in enumerate(block['charges']) if charge]
         formal_charges.extend(charges)
@@ -307,7 +308,7 @@ def build_periodic_layer(design, *, spacing=None):
         raise ValueError('The chosen connectivity has no automatic periodic cell builder.')
     components = design['components']
     block_types, reference, positions, edges = _net(template, {k: c['connectivity'] for k, c in components.items()})
-    unique = {k: _block(c) for k, c in components.items()}
+    unique = {k: {**_block(c), 'component': k} for k, c in components.items()}
     blocks = [unique[k] for k in block_types]
     if sum(len(b['elements']) for b in blocks) > MAX_CELL_SITES:
         raise ValueError(f'Automatic cells are limited to {MAX_CELL_SITES} explicit sites.')
@@ -323,7 +324,9 @@ def build_periodic_layer(design, *, spacing=None):
         elements = {partner['elements'][i] for i in partner['sites']}
         cap_elements[key] = elements.pop() if len(elements) == 1 else None
     best = None
-    for method in ('rigid', 'phenyl_torsions', 'restrained_mmff94'):
+    long_bonds = any(e in {'Si', 'P', 'S', 'Cl', 'Br', 'I'} for block in blocks for e in block['elements'])
+    methods = ('restrained_mmff94',) if long_bonds else ('rigid', 'phenyl_torsions', 'restrained_mmff94')
+    for method in methods:
         if method != 'rigid':
             if method == 'restrained_mmff94' and not all(cap_elements.values()):
                 continue
@@ -335,7 +338,7 @@ def build_periodic_layer(design, *, spacing=None):
                 continue
             if all(np.allclose(adjusted[k]['xyz'], unique[k]['xyz']) for k in unique):
                 continue
-            blocks = [adjusted[k] for k in block_types]
+            blocks = [{**adjusted[k], 'component': k} for k in block_types]
         tilted_rings = sum(block['tilted_rings'] for block in blocks)
         z = np.concatenate([block['xyz'][:, 2] for block in blocks])
         if spacing is not None:
@@ -382,6 +385,6 @@ def build_periodic_layer(design, *, spacing=None):
                 'junction_length_range_angstrom': [float(lengths.min()), float(lengths.max())],
                 'maximum_port_direction_error_degrees': angle_error,
             }
-    detail = best[1] if best else 'The candidate coordinates exceeded the structural validation bounds.'
+    detail = best[1] if best else 'No converged fragment geometry passed the structural checks.'
     raise ValueError(f'The {template} cell failed geometric validation. Best fit: {detail} '
                      'Inspect the precursor geometry and template, or import a corresponding CIF.')

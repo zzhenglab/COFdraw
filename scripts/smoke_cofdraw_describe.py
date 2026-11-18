@@ -76,11 +76,13 @@ def main():
             page = browser.new_page(viewport={'width': 1280, 'height': 900}, bypass_csp=True)
             page.set_default_timeout(30000); page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(base)
+            assert page.locator('#mode-manual').get_attribute('aria-selected') == 'true'
+            page.locator('#mode-describe').click()
             page.wait_for_function('window.COFdrawDescribe?.state.catalog && window.COFdrawStudio.state.online && !window.COFdrawDescribe.state.busy')
             assert page.locator('#describe-panel').is_visible() and not page.locator('#manual-panel').is_visible()
             assert page.locator('#describe-create').is_disabled()
             page.screenshot(path=str(output/'describe-start-1280.png'))
-            checks.append('Describe is the primary accessible starting mode; no drawing before analysis')
+            checks.append('Manual builder starts selected and Describe opens without generating a drawing')
 
             def show_inputs():
                 if page.locator('#describe-edit-text').is_visible():
@@ -128,6 +130,7 @@ def main():
             show_inputs();page.locator('#describe-demos [data-demo="imine"]').click()
             page.locator('#describe-provider summary').click()
             page.locator('#describe-mode').select_option('llm')
+            page.locator('#describe-service').select_option('compatible')
             page.locator('#describe-base-url').fill(f'http://127.0.0.1:{provider.server_port}/v1')
             page.locator('#describe-model').fill('local-fixture')
             page.locator('#describe-api-key').fill(token)

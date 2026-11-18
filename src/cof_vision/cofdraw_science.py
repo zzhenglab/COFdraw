@@ -159,6 +159,17 @@ def cell_from_parameters(a, b, c, alpha=90, beta=90, gamma=90):
     return [[a, 0.0, 0.0], [b * cg, b * sg, 0.0], [c * cb, c * (ca - cb * cg) / sg, c * math.sqrt(z2)]]
 
 
+def site_mass(atom):
+    element, isotope = atom["element"], atom.get("isotope", 0)
+    if isotope:
+        isotope = _integer(isotope, "isotope mass number", 1, 300)
+        mass = PT.GetMassForIsotope(ELEMENTS[element], isotope)
+        if mass <= 0:
+            raise ValueError(f"No tabulated mass for isotope {isotope}{element}")
+        return mass
+    return PT.GetAtomicWeight(ELEMENTS[element])
+
+
 def normalize_structure(structure):
     """Validate explicitly supplied full-cell atoms. Occupancies must be exactly 1."""
     if not isinstance(structure, dict) or structure.get("periodic", True) is not True:
@@ -200,6 +211,15 @@ def normalize_structure(structure):
             raise ValueError("Coincident atomic sites remain after symmetry expansion; resolve the structure")
         seen.add(key)
         normalized_atom = {"element": element, "fractional": fractional.tolist(), "occupancy": 1.0}
+        if 'isotope' in atom:
+            isotope = _integer(atom['isotope'], 'isotope mass number', 0, 300)
+            if isotope:
+                normalized_atom['isotope'] = isotope
+                site_mass(normalized_atom)
+        if 'layer' in atom:
+            normalized_atom['layer'] = _integer(atom['layer'], 'layer index', 0, 12000)
+        if atom.get('component') in ('A', 'B'):
+            normalized_atom['component'] = atom['component']
         if 'network' in atom:
             normalized_atom['network'] = _integer(atom['network'], 'network group', 0, 15)
         if 'charge' in atom and atom['charge'] is not None:
@@ -351,10 +371,25 @@ def import_cif(text):
             if abs(occupancy - 1) > 1e-6:
                 raise ValueError("CIF contains partial occupancy; resolve disorder before geometric screening")
             raw = row.get("_atom_site_type_symbol", row.get("_atom_site_label", ""))
+            # Only explicit type symbols carry isotope information. A site
+            # label such as C13 conventionally numbers an ordinary carbon.
+            symbol_mass = 0
+            if "_atom_site_type_symbol" in row:
+                marked = re.fullmatch(r"(\d{1,3})([A-Z][a-z]?)", raw)
+                if marked:
+                    symbol_mass, raw = int(marked[1]), marked[2]
+                elif raw in ("D", "T"):
+                    symbol_mass, raw = (2 if raw == "D" else 3), "H"
             match = re.match(r"([A-Z][a-z]?)", raw)
             element = match.group(1) if match else ""
             if element not in ELEMENTS or (match and len(raw) > match.end() and raw[match.end()].isalpha()):
                 raise ValueError("Every CIF atom must have an unambiguous supported chemical element")
+            field = row.get("_atom_site_cofdraw_mass_number", ".")
+            if field not in (".", "?") and not re.fullmatch(r"[1-9]\d{0,2}", field):
+                raise ValueError("Invalid isotope mass number in CIF")
+            isotope = int(field) if field not in (".", "?") else symbol_mass
+            if symbol_mass and isotope != symbol_mass:
+                raise ValueError("CIF type symbol and site mass number disagree")
             try:
                 fractional = np.array([_cif_number(row["_atom_site_fract_" + axis]) for axis in "xyz"])
             except KeyError:
@@ -368,11 +403,13 @@ def import_cif(text):
                 if key in seen:
                     if seen[key][0] != element:
                         raise ValueError("Coincident different elements require resolved disorder")
+                    if seen[key][2] != isotope:
+                        raise ValueError("Coincident isotope sites require resolved disorder")
                     if seen[key][1] != charge:
                         raise ValueError('Coincident symmetry sites have inconsistent partial charges')
                     continue
-                seen[key] = (element, charge)
-                atoms.append({"element": element, "fractional": pos.tolist(), **({'charge': charge} if charge is not None else {})})
+                seen[key] = (element, charge, isotope)
+                atoms.append({"element": element, "fractional": pos.tolist(), **({"isotope": isotope} if isotope else {}), **({'charge': charge} if charge is not None else {})})
                 if len(atoms) > MAX_ATOMS:
                     raise ValueError(f"Expanded CIF exceeds {MAX_ATOMS} atoms per cell")
     if not atoms:
@@ -391,7 +428,7 @@ def _cell_parameters(cell):
     return [*map(float, lengths), *angles]
 
 
-def structure_exports(structure, repeats=(1, 1, 1)):
+def structure_exports(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
     normalized = normalize_structure(structure)
     if len(repeats) != 3:
         raise ValueError("Repeat counts need three integers")
@@ -405,11 +442,17 @@ def structure_exports(structure, repeats=(1, 1, 1)):
     cell = np.asarray(cell_from_parameters(*_cell_parameters(normalized["cell"])))
     supercell = cell * np.array(repeats)[:, None]
     atoms, fractions = [], []
+    layer_count = 1 + max((a.get('layer', 0) for a in normalized['atoms']), default=0)
     for shift in itertools.product(*(range(n) for n in repeats)):
         for source in normalized["atoms"]:
             fractional = (np.asarray(source["fractional"]) + shift) / repeats
             xyz = fractional @ supercell
             viewer_atom = {"element": source["element"], "x": float(xyz[0]), "y": float(xyz[1]), "z": float(xyz[2])}
+            for field in ('component', 'isotope'):
+                if field in source:
+                    viewer_atom[field] = source[field]
+            if 'layer' in source or normalized['provenance'].get('kind') == 'cofdraw_periodic_starting_model':
+                viewer_atom['layer'] = source.get('layer', 0) + shift[2]*layer_count
             if 'network' in source:
                 viewer_atom['network'] = source['network']
             if 'charge' in source:
@@ -424,12 +467,16 @@ def structure_exports(structure, repeats=(1, 1, 1)):
     has_charges = any('charge' in atom for atom in atoms)
     if has_charges:
         cif += '_atom_site_charge\n'
+    labelled = any('isotope' in atom for atom in atoms)
+    if labelled:
+        cif += '_atom_site_cofdraw_mass_number\n'
     for index, (atom, fractional) in enumerate(zip(atoms, fractions), 1):
         charge_column = (' ' + (f"{atom['charge']:.10f}" if 'charge' in atom else '.')) if has_charges else ''
-        cif += f"{atom['element']}{index} {atom['element']} " + " ".join(f"{x:.10f}" for x in fractional) + ' 1' + charge_column + '\n'
+        cif += f"{atom['element']}{index} {atom['element']} " + " ".join(f"{x:.10f}" for x in fractional) + ' 1' + charge_column + (f" {atom.get('isotope', '.')}" if labelled else '') + '\n'
     lattice = " ".join(f"{x:.9f}" for x in supercell.ravel())
-    xyz = f'{count}\nLattice="{lattice}" Properties=species:S:1:pos:R:3 pbc="T T T"\n'
-    xyz += "".join(f"{atom['element']} {atom['x']:.8f} {atom['y']:.8f} {atom['z']:.8f}\n" for atom in atoms)
+    isotope_property = ":isotope:I:1" if labelled else ""
+    xyz = f'{count}\nLattice="{lattice}" Properties=species:S:1:pos:R:3{isotope_property} pbc="T T T"\n'
+    xyz += "".join(f"{atom['element']} {atom['x']:.8f} {atom['y']:.8f} {atom['z']:.8f}" + (f" {atom.get('isotope', 0)}" if labelled else "") + "\n" for atom in atoms)
     a, b, c, alpha, beta, gamma = params
     pdb = "REMARK COFDRAW COORDINATES; BOND ORDERS AND FRAMEWORK IDENTITY NOT INFERRED\n"
     pdb += f"CRYST1{a:9.3f}{b:9.3f}{c:9.3f}{alpha:7.2f}{beta:7.2f}{gamma:7.2f} P 1           1\n"
@@ -441,11 +488,26 @@ def structure_exports(structure, repeats=(1, 1, 1)):
     warnings = ["Imported/proposed coordinates are not automatically relaxed or experimentally validated.",
                 "CIF/extended XYZ retain the lattice; plain XYZ readers may ignore the extended lattice header.",
                 "PDB is a coordinate interchange preview and does not encode framework bond orders."]
+    if labelled:
+        exports.pop("pdb")
+        warnings.append("Isotope masses are stored per site in the COFdraw CIF extension, extended XYZ and JSON. PDB export is omitted for labelled structures.")
     if np.min(positions) < -999.999 or np.max(positions) > 9999.999:
-        del exports["pdb"]
+        exports.pop("pdb", None)
         warnings.append("PDB omitted because Cartesian coordinates exceed its fixed-column field width; use CIF or extended XYZ.")
+    # Keep the verified image shift when connecting adjacent copies. A bond
+    # crossing the outside of the displayed supercell terminates at its edge.
+    viewer_bonds = []
+    if periodic_bonds:
+        n_sites = len(normalized["atoms"])
+        for image in itertools.product(*(range(n) for n in repeats)):
+            offset = ((image[0]*repeats[1] + image[1])*repeats[2] + image[2])*n_sites
+            for bond in periodic_bonds:
+                other = [i + t for i, t in zip(image, bond["translation"])]
+                if all(0 <= i < n for i, n in zip(other, repeats)):
+                    neighbor = ((other[0]*repeats[1] + other[1])*repeats[2] + other[2])*n_sites
+                    viewer_bonds.append([offset + bond["a"], neighbor + bond["b"]])
     return {"kind": "explicit_periodic_structure", "structure": normalized, "repeats": repeats,
-            "viewer": {"atoms": atoms, "bonds": [], "cell": supercell.tolist(), "periodic": True,
+            "viewer": {"atoms": atoms, "bonds": viewer_bonds, "cell": supercell.tolist(), "periodic": True,
                        "bounds": _bounds(positions), "units": "angstrom"}, "exports": exports, "warnings": warnings}
 
 
@@ -553,7 +615,7 @@ def pore_analysis(structure, *, probe_radius=1.82, samples=12000, surface_sample
     radii = np.array([PT.GetRvdw(ELEMENTS[e]) for e in elements])
     if not np.isfinite(radii).all() or (radii <= 0).any():
         raise ValueError("RDKit has no usable van der Waals radius for an element")
-    mass = float(sum(PT.GetAtomicWeight(ELEMENTS[e]) for e in elements))
+    mass = float(sum(site_mass(a) for a in atoms))
     volume = normalized["cell_volume_angstrom3"]
     density = mass / AVOGADRO / (volume * 1e-24)
     cell = np.asarray(normalized["cell"]); fractional = np.array([a["fractional"] for a in atoms])
@@ -694,14 +756,20 @@ def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, b
         rotation = np.array([[math.cos(angle), -math.sin(angle), 0], [math.sin(angle), math.cos(angle), 0], [0, 0, 1]])
         layer_transforms.append({'layer': layer, 'translation_angstrom': offset.tolist(), 'rotation_degrees': math.degrees(angle)})
         for atom, position, origin in zip(mol.GetAtoms(), base @ rotation.T + offset, audit['atom_origin']):
-            atoms.append({"element": atom.GetSymbol(), "x": float(position[0]), "y": float(position[1]), "z": float(position[2]),
+            atoms.append({"element": atom.GetSymbol(), **({"isotope": atom.GetIsotope()} if atom.GetIsotope() else {}), "x": float(position[0]), "y": float(position[1]), "z": float(position[2]),
                           "continuation_site": atom.GetAtomicNum() == 0, "layer": layer,
                           'instance': origin['instance'], 'component': origin.get('component', origin['instance'])})
         for bond in mol.GetBonds():
             bonds.append({"a": layer * mol.GetNumAtoms() + bond.GetBeginAtomIdx(), "b": layer * mol.GetNumAtoms() + bond.GetEndAtomIdx(),
                           "order": bond.GetBondTypeAsDouble()})
-    xyz = f"{len(atoms)}\nCOFdraw finite illustrative layers; angstrom; X denotes continuation placeholder; not periodic or relaxed\n"
-    xyz += "".join(f"{'X' if a['continuation_site'] else a['element']} {a['x']:.8f} {a['y']:.8f} {a['z']:.8f}\n" for a in atoms)
+    labelled = any(a.get('isotope') for a in atoms)
+    comment = 'COFdraw finite illustrative layers; angstrom; X denotes continuation placeholder; not periodic or relaxed'
+    if labelled:
+        comment = f'Properties=species:S:1:pos:R:3:isotope:I:1 pbc="F F F" comment="{comment}"'
+    xyz = f"{len(atoms)}\n{comment}\n"
+    for a in atoms:
+        isotope = f" {a.get('isotope', 0)}" if labelled else ''
+        xyz += f"{'X' if a['continuation_site'] else a['element']} {a['x']:.8f} {a['y']:.8f} {a['z']:.8f}{isotope}\n"
     positions = [[atom[k] for k in ("x", "y", "z")] for atom in atoms]
     return {"kind": "finite_illustrative_layer_stack", "periodic": False,
             "viewer": {"atoms": atoms, "bonds": bonds, "periodic": False, "bounds": _bounds(positions), "units": "angstrom"},
