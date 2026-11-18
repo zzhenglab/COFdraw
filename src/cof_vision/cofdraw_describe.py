@@ -22,6 +22,7 @@ LINKAGE_ALIASES = {
     "imine": ["imine", "C=N"],
     "beta_ketoenamine": ["beta ketoenamine", "beta-ketoenamine", "keto-enamine", "ketoenamine", "beta keto enamine"],
     "acylhydrazone": ["acylhydrazone", "acyl hydrazone"],
+    "nitrone": ["nitrone", "nitrone linkage"],
     "keto_hydrazide": ["keto hydrazide", "keto-enamine-hydrazide"],
     "azine": ["azine"], "secondary_amine": ["reduced imine", "reduced-imine", "secondary amine"],
     "boronate_ester": ["boronate", "boronate ester"],
@@ -58,7 +59,8 @@ FILLER.update("open load get retrieve display redraw sketch visualize visualise 
 FILLER.update("png svg mol sdf cdxml format file files output outputs".split())
 COUNT_WORDS = {"di": 2, "tri": 3, "tetra": 4, "hexa": 6, "two": 2, "three": 3, "four": 4, "six": 6,
                "eight": 8, "twelve": 12}
-ROLE_GROUPS = {"amine": "primary_arylamine", "aldehyde": "aryl_aldehyde", "hydrazide": "acylhydrazide"}
+ROLE_GROUPS = {"amine": "primary_arylamine", "aldehyde": "aryl_aldehyde", "hydrazide": "acylhydrazide",
+               "hydroxylamine": "aryl_hydroxylamine"}
 
 
 def _normal(text):
@@ -211,7 +213,7 @@ def _choices(matches):
 
 def _explicit_requirements(text):
     """Recognize functional counts, never point-group labels such as C3/C6."""
-    roles = r"(?P<role>amine|aldehyde|hydrazide)s?"
+    roles = r"(?P<role>amine|aldehyde|hydrazide|hydroxylamine)s?"
     modifier = r"(?:(?:aromatic|aryl|primary)\s+)*"
     patterns = [
         r"\b(?P<count>di|tri|tetra|hexa)[- ]?(?:topic|functional)\s+" + modifier + roles + r"\b",

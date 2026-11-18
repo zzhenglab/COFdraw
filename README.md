@@ -20,7 +20,7 @@ Describe a COF, review its building blocks, and draw. Explore 3D structures and 
   &nbsp; · &nbsp; <a href="https://github.com/zzhenglab/COFdraw/issues">Report an issue</a>
 </p>
 
-![Describe a COF, review the matched monomer structures, and create a finite chemical drawing](docs/assets/cofdraw-describe.png)
+![COFdraw workspace with a larger square drawing canvas and conversational controls](docs/assets/cofdraw-workspace-v080.png)
 
 ## Download and run
 
@@ -36,11 +36,11 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.7.0 |
+| Feature | Included in v0.8.0 |
 | --- | --- |
-| Describe a COF | Match sentences, monomer names, source names and style words to the local catalog; review before drawing |
+| Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
 | Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |
-| Monomer library | 81 presets, structure cards, A-dependent compatible B choices, and automatic linkage/template selection |
+| Monomer library | 118 presets, structure cards, stable A/B choices, compatible partners, and automatic linkage/template selection |
 | Precursor accessibility | Offline RDKit SA Score for finite monomers and declared precursor summaries; a heuristic, not ASKCOS or COF synthesis prediction |
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
 | Geometry editing | Bond-angle-aware rigid-block layout, direct atom drag, block editing, undo, and geometry warnings |
@@ -52,14 +52,18 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 | Local adsorption | RASPA3 CPU jobs for Widom Henry coefficients, GCMC pressure points and mixture selectivity; optional finite-difference zero-loading heat, with saved inputs/outputs |
 | BET | Fit supplied adsorption isotherms with consistency diagnostics |
 | Monomer properties | RDKit descriptors, Gasteiger charges, ETKDG conformers, MMFF/UFF optimization, XYZ/SDF |
-| COF quick checks | Formula, density, cell parameters, elemental site inventories, periodic connectivity and contact diagnostics |
-| Powder diffraction | Model PXRD, d spacings, Miller indices and CSV export |
+| COF quick checks | Check the displayed finite atoms without a CIF; periodic models additionally provide density, cell and network diagnostics |
+| Powder diffraction | Periodic PXRD with hkl; finite Debye scattering; compare chosen stacking arrangements and export CSV |
 | Candidate comparison | Up to eight CIFs under common screening settings; CSV/JSON reports |
 | Evidence and automation | Agent catalog queries, request schemas, saved-report retrieval and reusable agent skill |
 
 Choose A, then pick from compatible B structures. The current pair stays visible while detailed review evidence remains expandable.
 
-![Guided monomer picker showing compatible partners and finite-molecule SA scores](docs/assets/cofdraw-picker-v070.png)
+![Updated monomer picker showing compatible partners and finite-molecule SA scores](docs/assets/cofdraw-picker-v080.png)
+
+The [literature review](docs/yaghi-literature-review.md) adds 37 finite monomers checked against specific published structures, bringing the library to 118. Twenty additions have supported drawing roles; 17 remain reference-only. The searchable coverage ledger records 294 title-screened entries, 100 selected research/background entries, reviewed pages and unresolved structures. It is a qualified figure-based review, not an exhaustive main-paper/SI audit.
+
+Open **3D & properties** to check the current drawing immediately. For supported precursor pairs, **Find a periodic design for these monomers** offers a corresponding unrelaxed cell. The default TFB/TAPB design now has a matched model; other drawings retain finite checks and scattering unless a matching model or CIF is available. Stacking comparisons distinguish finite illustrations from explicit periodic cells.
 
 Source drawings retain their recorded coordinates and presentation. The restored Pyurea and UCOF layouts use source-informed block positions rather than forcing a rectangular or regular-hexagonal arrangement. These are qualified reconstructions, not exact image registrations. See the [recovered drawing catalog](docs/recovered-source-drawings.md).
 
@@ -91,7 +95,7 @@ For a materials-chemistry workflow, start with the [quick-check and screening gu
 
 Read the [geometric-property definitions](docs/geometric-properties.md), [SA Score scope](docs/synthetic-accessibility.md), and [RASPA assumptions](docs/raspa-methods.md) before comparing candidates. A coarse-grid zero may mean unresolved transport. Short adsorption runs exercise the workflow; they do not establish converged predictions or experimental agreement.
 
-The six implemented transforms cover imine, beta-ketoenamine, acylhydrazone, Tp keto-enamine–hydrazide, azine, and a selected reduced-imine secondary-amine product state. Broader linkage and topology catalogs also contain **reference-only entries**; those entries do not imply an available constructor.
+The seven implemented transforms cover imine, beta-ketoenamine, acylhydrazone, Tp keto-enamine–hydrazide, azine, a selected reduced-imine secondary-amine product state, and a [scoped nitrone reaction](docs/nitrone-methods.md). Broader linkage and topology catalogs also contain **reference-only entries**; those entries do not imply an available constructor.
 
 <details>
 <summary>Preview the monomer library</summary>
@@ -146,13 +150,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for tests and packaging. The Python impor
 
 ## Scientific scope
 
-COFdraw creates **finite molecular drawings with explicit continuation points**. A chosen template or a regular pore does not establish a unique periodic net, crystal structure, stacking arrangement, synthetic feasibility, or whole-material SMILES. Layered drawing styles and finite stacked patches are illustrations. The separate 3D laboratory imports explicit periodic structures and includes four unrelaxed model templates generated with pyCOFBuilder; these do not automatically identify the active 2D drawing as a crystal. Source identity is qualified by the supplied reference and is cleared when chemistry or connectivity changes.
+COFdraw creates **finite molecular drawings with explicit continuation points**. A chosen template or a regular pore does not establish a unique periodic net, crystal structure, stacking arrangement, synthetic feasibility, or whole-material SMILES. Layered drawing styles and finite stacked patches are illustrations. The 3D laboratory imports explicit periodic structures and includes five unrelaxed model templates generated with pyCOFBuilder. Exact precursor/linkage/template matching offers a separate periodic design, with fresh coordinates and no experimental identity claim. Source identity is qualified by the supplied reference and is cleared when chemistry or connectivity changes.
 
 **Geometric pore calculations and adsorption simulations are separate methods.** Grid bounds and surface estimates depend on the supplied structure, radii, probe and resolution. RASPA jobs use a rigid classical framework, explicit charge assumptions and a documented force field; they do not predict flexibility, chemisorption or synthesis. Zero-loading heat uses finite differences of independent Widom estimates, not a finite-loading heat curve. BET requires supplied isotherm data; geometric area is never labeled BET. Monomer SA Scores do not predict COF yield. xTB and quantum orbital energies are not bundled. Read the [scientific methods and limits](docs/scientific-methods.md).
 
 CDXML preserves the checked chemical graph and continuation points, but does not reproduce every presentation style. Compatibility was checked with **ChemDraw 23.1.2.7**. Keep ChemDraw-edited framework boundaries in CDXML: ChemDraw's MOL save omitted external connection points in the recorded tests. Keep original MOL/SDF and project JSON files as well.
 
-See [v0.5 validation](docs/v0.5-validation.json), [v0.4 validation](docs/v0.4-validation.json), the [catalog scope](docs/cofdraw-catalog-v3.md), [chemical export validation](docs/chemdraw-export-validation.md), [page-fit validation](docs/cofdraw-page-fit-validation.md), [original release validation](docs/cofdraw-release-validation.json), and [public-package verification](docs/publication-validation.json) for evidence and limitations.
+The [v0.8.0 validation record](docs/v0.8.0-validation.json) records 852 Python tests, 125 packaged workflow checks, all 17 source exports, and the porphyrin/nitrone export checks. The [exact-ZIP download validation](docs/v0.8.0-download-validation.json) covers normal-user Windows startup and native calculations with download marks retained on DLLs/configuration. These checks validate software behavior, not experimental material properties.
+
+See the [catalog scope](docs/cofdraw-catalog-v3.md), [chemical export validation](docs/chemdraw-export-validation.md), and [page-fit validation](docs/cofdraw-page-fit-validation.md) for method-specific limits. Earlier validation records remain in `docs` for release history.
 
 ## License and acknowledgments
 

@@ -28,7 +28,7 @@ def test_catalog_and_science_library_score_all_actual_monomers_with_same_support
     library = client.get("/api/drawing/library").json()
     report = client.get("/api/drawing/science/synthesis-library").json()
     rows = {r["id"]: r for r in report["monomers"]}
-    assert report["count"] == report["available_count"] == len(library["monomer_presets"]) == 81
+    assert report["count"] == report["available_count"] == len(library["monomer_presets"]) == 118
     for monomer in library["monomer_presets"]:
         score = monomer["synthetic_accessibility"]
         assert score == rows[monomer["id"]]["synthetic_accessibility"]

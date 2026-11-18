@@ -13,7 +13,7 @@ import re
 import unicodedata
 
 
-RECORD_TYPES = ("monomer", "linkage", "topology", "source", "crystal", "template", "style", "preset", "capability")
+RECORD_TYPES = ("monomer", "linkage", "topology", "source", "crystal", "template", "style", "preset", "capability", "literature")
 _STOP_WORDS = {"find", "show", "me", "please", "what", "which", "the", "a", "an", "about", "for", "with", "of", "and", "is", "are", "in", "do", "does", "can", "available"}
 _PLURALS = {k + "s": k for k in RECORD_TYPES}
 _PLURALS.update({"capabilities": "capability", "topologies": "topology"})
@@ -77,6 +77,17 @@ def capability_inventory():
     from . import drawing_api
     from .cofdraw_adsorption import AdsorptionRequest
     definitions = [
+        ("cof-conversation", "/api/drawing/describe/chat", "DescribeConversation", "Discuss and revise a catalog-grounded COF drawing plan",
+         "Local bounded follow-up intent and catalog IDs; explicit optional provider settings. Review before apply; never infer a periodic crystal or experimental identity from prose.",
+         {"text":"Use the blue and coral palette", "mode":"rules"}, ["json"]),
+        ("matching-periodic-design", "/api/drawing/science/periodic-options", "RenderDrawing", "Find periodic designs matching the current precursors and connectivity",
+         "Exact canonical precursors, linkage, product fragments and unchanged chosen connectivity template. Separate unrelaxed coordinates, never a conversion of a finite drawing into an assigned crystal.", None, ["json"]),
+        ("finite-inspection", "/api/drawing/science/finite-inspect", "FiniteInspection", "Check atoms and contacts in the displayed finite structure without a CIF",
+         "Displayed real atoms and supplied bonds only; continuation sites omitted, missing hydrogen not invented. No density, PLD or periodic dimensionality.", None, ["json"]),
+        ("finite-scattering", "/api/drawing/science/finite-powder", "FinitePowder", "Debye powder scattering from displayed finite atoms",
+         "All-pairs finite-cluster scattering with neutral-atom form factors, bounded atom/pair-point work. No periodic hkl or Bragg assignment; illustrative drawing coordinates are not relaxed crystals.", None, ["csv","json"]),
+        ("periodic-stacking", "/api/drawing/science/stacking", "PeriodicStacking", "Compare AA, AB, ABC and slipped periodic layer hypotheses",
+         "One connected near-planar periodic 2D layer with contact and network guards; explicit unrelaxed cells, preserved atom charges. General 3D networks, multilayer input and arbitrary twist are rejected.", None, ["cif","xyz","pdb","json"]),
         ("describe-cof", "/api/drawing/describe", "DescribeDrawing", "Describe a COF and review a catalog-grounded drawing plan",
          "Offline name and word matching by default; optional explicitly configured LLM selects catalog IDs. Chemistry is validated locally. Ambiguity and unsupported requests require review; prose does not determine a unique crystal or establish a source identity.",
          {"text": "Draw TFB and TAPB with an imine linkage in pastel colors", "mode": "rules"}, ["json"]),
@@ -155,7 +166,7 @@ def capability_inventory():
 
 
 def _catalog_records(data_root):
-    from .cofdraw_chemistry import TEMPLATES, library_linkages
+    from .cofdraw_chemistry import TEMPLATES, library_linkages, inspect_monomer
     from .cofdraw_styles import STYLES
 
     root = Path(data_root).resolve()
@@ -170,9 +181,22 @@ def _catalog_records(data_root):
         catalog = {}
         errors.append({"record_type": "catalog", "reason": str(exc)})
     catalog_provenance = {"kind": "bundled_catalog", "path": "framework-drawing/catalog/current.json", "sha256": catalog_info["sha256"]}
+    coverage_binding=catalog.get('literature_coverage')
+    if coverage_binding:
+        try:
+            coverage=json.loads(_bound_file(root/'framework-drawing',coverage_binding['path'],coverage_binding['sha256'],4_000_000).decode('utf-8'))
+            for paper in coverage['papers']:
+                records.append(_record('literature',paper['review_id'],paper['title'],paper,
+                    {'status':paper['review_status'],'ground_truth':False,'full_main_and_si_audit':False},
+                    {**catalog_provenance,'coverage_sha256':coverage_binding['sha256'],'source_dois':[paper['doi']] if paper.get('doi') else []},
+                    [coverage['scope'],paper.get('review_scope',''),*coverage['limitations']]))
+        except (ValueError,OSError,KeyError) as exc:
+            errors.append({'record_type':'literature','reason':str(exc)})
     for row in catalog.get("monomer_presets", []):
+        runtime=inspect_monomer(row['smiles'])
         records.append(_record("monomer", row["id"], row.get("full_name", row.get("label", row["id"])), row,
-            {"status": "catalogued_monomer", "automatic_prepare_supported": None,
+            {"status": "catalogued_monomer", "automatic_prepare_supported": any(r['reactive_sites']>=2 for r in runtime['compatible_roles']),
+             "runtime_compatible_roles":runtime['compatible_roles'],"runtime_reactive_groups":runtime['reactive_groups'],
              "scope": "Library presence does not establish a supported reaction, periodic net or synthesis feasibility."},
             {**catalog_provenance, "source_dois": row.get("source_dois", []), "source_evidence": row.get("source_evidence", [])}, _qualifications(row)))
     for identifier, runtime in library_linkages(catalog).items():

@@ -49,7 +49,9 @@ def main():
         library = api("/api/drawing/library")
         assert len(library["source_recipes"]) == 17 and not library["source_registry_errors"]
         assert len(library["styles"]) == 20
-        assert len(library["monomer_presets"]) == 81
+        expected_catalog=json.loads((args.data_template/'framework-drawing/catalog/current.json').read_text(encoding='utf-8'))
+        expected_monomers=len(expected_catalog['monomer_presets'])
+        assert {r['id'] for r in library['monomer_presets']}=={r['id'] for r in expected_catalog['monomer_presets']}
         assert len(library["templates"]) == 7
         report["library"] = {key: len(library[key]) for key in ("styles", "monomer_presets", "templates", "topology_catalog", "linkages")}
         def download(path):
@@ -87,7 +89,7 @@ def main():
                         "--output-dir", str(output / "browser")], check=True, timeout=600, creationflags=hidden)
         report["browser_report"] = json.loads((output / "browser/cofdraw-browser-report.json").read_text(encoding="utf-8"))
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_compatibility.py")), "--base-url", base,
-                        "--expected-monomers", "81", "--output-dir", str(output / "compatibility")], check=True, timeout=600, creationflags=hidden)
+                        "--expected-monomers", str(expected_monomers), "--output-dir", str(output / "compatibility")], check=True, timeout=600, creationflags=hidden)
         report["compatibility_report"] = json.loads((output / "compatibility/compatibility-report.json").read_text(encoding="utf-8"))
         assert report["compatibility_report"]["passed"]
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_identity.py")), "--base-url", base,
@@ -123,6 +125,10 @@ def main():
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_describe.py")), "--base-url", base,
                         "--output-dir", str(output / "describe")], check=True, timeout=600, creationflags=hidden)
         report["description_report"] = json.loads((output / "describe/describe-smoke-report.json").read_text(encoding="utf-8"))
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_chat.py")), "--base-url", base,
+                        "--output-dir", str(output / "chat")], check=True, timeout=600, creationflags=hidden)
+        report["chat_report"] = json.loads((output / "chat/chat-smoke-report.json").read_text(encoding="utf-8"))
+        assert report["chat_report"]["passed"] and not report["chat_report"]["javascript_errors"]
         native_status = output / "native-window.json"
         with subprocess.Popen([str(executable), "--smoke-window", "--data-dir", str(runtime), "--status-file", str(native_status)], creationflags=hidden) as native:
             try:

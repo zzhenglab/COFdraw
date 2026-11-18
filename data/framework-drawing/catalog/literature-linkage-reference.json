@@ -1,0 +1,277 @@
+{
+  "schema_version": "source-bound-linkage-references-1",
+  "review_date": "2026-11-17",
+  "ground_truth": false,
+  "count": 5,
+  "scope": "Searchable literature references, all explicitly non-executable. No reaction code, source publication images or periodic structures are included.",
+  "linkage_catalog": [
+    {
+      "id": "ester",
+      "label": "Ester (activated pyridyl-ester route)",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "candidate_transform": false,
+      "roles": [],
+      "conceptual_motif": "Phenol groups replace pyridin-2-yloxy leaving groups of activated aromatic carboxylate esters, forming aryl O-C(=O)-aryl connections.",
+      "primary_sources": [
+        {
+          "doi": "10.1021/jacs.0c07015",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/20EsterCOF.pdf",
+          "label": "Ester-Linked Crystalline Covalent Organic Frameworks",
+          "source_document_kind": "pdf",
+          "source_pdf_sha256": "faec02df6568ab8fedeaf44d285e3281b8dcf36ce2c53e54c5059035c0b9a6f8",
+          "reviewed_pages": [
+            {
+              "page": 2,
+              "figure": "Figure 2",
+              "page_image_sha256": "27aa37178284070ee70fa7cb80f65851bb75b3d134f9cf95e0921e7b0523f0b2"
+            },
+            {
+              "page": 3,
+              "figure": "Figure 4",
+              "page_image_sha256": "bcc7def76502be14f5d762ff106c1b84ec695c17febde86b0c68f123d6523936"
+            }
+          ],
+          "review_scope": "Only the enumerated primary figures and accompanying text were examined; full SI, mechanism proof and experimental reproduction are not claimed."
+        }
+      ],
+      "example_monomer_ids": [
+        "thpe",
+        "thpb",
+        "dpt",
+        "dpbp"
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Source-specific transesterification reference. Free carboxylic acids are not interchangeable with the activated 2-pyridyl esters. No automatic ester transformation or lattice assignment is implemented.",
+      "search_terms": [
+        "ester",
+        "transesterification",
+        "COF-119",
+        "COF-120",
+        "COF-121"
+      ],
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "evidence_level": "primary_figures_and_selected_text_reviewed"
+    },
+    {
+      "id": "borophosphonate",
+      "label": "Borophosphonate (B-O-P cubane and rod units)",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "candidate_transform": false,
+      "roles": [],
+      "conceptual_motif": "Bifunctional boronic-acid/phosphonic-acid linkers form B-O-P-containing inorganic-organic units. Source reports both cubane-based BP-COF-1 and constitutionally distinct rod-based BP-COF-6.",
+      "primary_sources": [
+        {
+          "doi": "10.1126/science.abd6406",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/20ScienceValency.pdf",
+          "label": "Design of Higher Valency in Covalent Organic Frameworks",
+          "source_document_kind": "pdf",
+          "source_pdf_sha256": "a0b565913b2f74f045f2365e2dde73aba029ef2f32346e4ea75fbadb13641b5b",
+          "reviewed_pages": [
+            {
+              "page": 3,
+              "figure": "Figure 1",
+              "page_image_sha256": "ff18d57e6ab32db0cebaa43ec1d1007ab99d7fcb9b9c793bd17c819882e7bdac"
+            },
+            {
+              "page": 6,
+              "figure": "Figure 5",
+              "page_image_sha256": "29b6017e2b7d2b72cf84a159b88ea22461565cf18fdba1df3b4a709f4e8ab71a"
+            },
+            {
+              "page": 7,
+              "figure": "Figure 6",
+              "page_image_sha256": "7f5a7963ef0a414b5817083d3aec128899179d0502c57fd99c54f5cdd9b56f78"
+            }
+          ],
+          "review_scope": "Only the enumerated primary figures and accompanying text were examined; full SI, mechanism proof and experimental reproduction are not claimed."
+        }
+      ],
+      "example_monomer_ids": [],
+      "topology_inference_allowed": false,
+      "qualification": "Reference only. Cubane versus rod constitution depends on the source system and conditions; a B-O-P motif does not identify either periodic structure. Figure 6 is a suggested rearrangement mechanism, not a universal executable rule.",
+      "search_terms": [
+        "borophosphonate",
+        "B-O-P",
+        "cubane",
+        "BP-COF-1",
+        "BP-COF-6",
+        "rod"
+      ],
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "evidence_level": "primary_figures_and_selected_text_reviewed"
+    },
+    {
+      "id": "vinylene_methyltriazine",
+      "label": "Vinylene from methyltriazine",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "candidate_transform": false,
+      "roles": [],
+      "conceptual_motif": "Condensation of the activated methyl groups of 2,4,6-trimethyl-1,3,5-triazine with aryl aldehydes forms triazine-CH=CH-aryl connections; the triazine ring is retained.",
+      "primary_sources": [
+        {
+          "doi": "10.1021/jacs.9b02848",
+          "url": "https://yaghi.berkeley.edu/pdfPublications/19-OlefinCOF.pdf",
+          "label": "Porous Crystalline Olefin-Linked Covalent Organic Frameworks",
+          "source_document_kind": "pdf",
+          "source_pdf_sha256": "f8994d18e4deb2655b9731589e694b332f99d24f4c26526c5701d84f829b2cb8",
+          "reviewed_pages": [
+            {
+              "page": 1,
+              "figure": "Scheme 1",
+              "page_image_sha256": "151b8f5e573ca1f9b6a7001ffff97121473b282d34897d7ec0f5dcc6046b49b6"
+            },
+            {
+              "page": 2,
+              "figure": "Figure 1 and accompanying text",
+              "page_image_sha256": "5410e8cf378affd32b17936dd00b197aea085e7a50415bc389cc0d568cb9300e"
+            }
+          ],
+          "review_scope": "Only the enumerated primary figures and accompanying text were examined; full SI, mechanism proof and experimental reproduction are not claimed."
+        }
+      ],
+      "example_monomer_ids": [
+        "recovered_tt",
+        "bpda_cho"
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Reference only for the reported COF-701 aldol route. Distinct from cyano-vinylene condensation and phosphonate olefination. No automatic bond transform, universal stereochemistry or topology inference is implemented.",
+      "search_terms": [
+        "vinylene",
+        "olefin",
+        "methyltriazine",
+        "TMT",
+        "COF-701",
+        "aldol"
+      ],
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "evidence_level": "primary_figures_and_selected_text_reviewed"
+    },
+    {
+      "id": "borosilicate",
+      "label": "Borosilicate",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "candidate_transform": false,
+      "roles": [],
+      "conceptual_motif": "B-O-Si cage connectivity from boronic acids and organosilanetriols, as reported for COF-202.",
+      "example_monomer_ids": [
+        "tbpm_boronic",
+        "tbusitriol"
+      ],
+      "topology_inference_allowed": false,
+      "qualification": "Reference-only family. Not interchangeable with boroxine or boronate ester; no executable cage transformation or crystal assignment is claimed.",
+      "search_terms": [
+        "borosilicate",
+        "Borosilicate",
+        "B-O-Si"
+      ],
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "evidence_level": "primary_figure_and_specified_SI_page_reviewed",
+      "bound_supplement_sha256": "c453f00f3b5bc28d88ed46af7c6c49ef0a53d10254688f7eed6da9ed822ca125",
+      "primary_sources": [
+        {
+          "doi": "10.1021/ja805064f",
+          "url": "https://doi.org/10.1021/ja805064f",
+          "title": "Reticular Synthesis of Covalent Organic Borosilicate Frameworks",
+          "author_pdf_url": "https://yaghi.berkeley.edu/pdfPublications/08ReticularSynthofCov-pub.pdf",
+          "pdf_sha256": "eb415c201a52745fbcc435ed7d7886959594b1ff7c4edcd68550c26262de59dd",
+          "reviewed_pages": [
+            {
+              "pdf_page": 1,
+              "visual_inspected": true,
+              "text_reviewed": true,
+              "page_image_sha256": "f0c3f68b164837492448ad59f505cac4bb5235207a71bd6ad3c65749c9274129",
+              "page_text_sha256": "c719d3b0a26d54b63980d539ea8f3dacb38acae4f8add24752197e30b594db40"
+            }
+          ],
+          "figure": "Figure 1",
+          "supporting_information": {
+            "url": "https://ndownloader.figshare.com/files/4613134",
+            "publisher_url": "https://acs.figshare.com/articles/journal_contribution/Reticular_Synthesis_of_Covalent_Organic_Borosilicate_Frameworks/2914837",
+            "sha256": "a2c95671a437da0173a0dfcf2f202b7c80d57e390556a3785322a7b28b9ef2cf",
+            "reviewed_pages": [
+              {
+                "pdf_page": 2,
+                "visual_inspected": true,
+                "text_reviewed": true,
+                "page_text_sha256": "41885c104a0da4212df479e5a55b94d9662c536ce2094edcf2eff21674251709",
+                "page_image_sha256": "0a0889b447ce12a268d330ae618805e7dc4f38d78ace451107f66c261d1fdfe9"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "borazine",
+      "label": "Borazine",
+      "runtime_status": "research_catalog_only",
+      "automatic_prepare_supported": false,
+      "candidate_transform": false,
+      "roles": [],
+      "conceptual_motif": "B3N3 borazine rings connecting organic units in borazine-linked polymers.",
+      "example_monomer_ids": [],
+      "topology_inference_allowed": false,
+      "qualification": "Review-supported linkage reference only. No new precursor graph, reaction transform, lattice or experimental reproduction is claimed. Original primary figures and SI remain unreviewed; no precursor graph is admitted from this reference.",
+      "search_terms": [
+        "borazine",
+        "Borazine",
+        "B3N3"
+      ],
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "evidence_level": "review_figure_and_text_with_primary_abstract_corroboration",
+      "bound_supplement_sha256": "c453f00f3b5bc28d88ed46af7c6c49ef0a53d10254688f7eed6da9ed822ca125",
+      "primary_sources": [
+        {
+          "label": "Borazine-linked polymer primary study; abstract only",
+          "url": "https://pubs.rsc.org/en/content/articlehtml/2012/cc/c2cc33583b",
+          "doi": "10.1039/C2CC33583B",
+          "review_scope": "Publisher abstract only; original figures and SI not acquired or reviewed. Direct fetch currently returns HTTP 403."
+        }
+      ],
+      "review_sources": [
+        {
+          "doi": "10.1021/jacs.5b10666",
+          "url": "https://doi.org/10.1021/jacs.5b10666",
+          "title": "Covalent Chemistry Beyond Molecules",
+          "author_pdf_url": "https://yaghi.berkeley.edu/pdfPublications/2016-jacs-jjyz.pdf",
+          "pdf_sha256": "3e2f1225baf7f2c08bc19b3db54dd8170898f0cd67af2b628d690a56f6db5638",
+          "reviewed_pages": [
+            {
+              "pdf_page": 2,
+              "visual_inspected": true,
+              "text_reviewed": true,
+              "page_image_sha256": "3e5224f66a7a86d24cdd6d2442b7d371b955bca65374ab33e084d18420adece0",
+              "page_text_sha256": "5a376657cd609b2597b0dbd6f0810e84660e3ff373ba48654b33acf2c8ba1995"
+            }
+          ],
+          "figure": "Figure 2"
+        },
+        {
+          "doi": "10.1021/acs.accounts.5b00369",
+          "url": "https://doi.org/10.1021/acs.accounts.5b00369",
+          "title": "Chemistry of Covalent Organic Frameworks",
+          "author_pdf_url": "https://yaghi.berkeley.edu/pdfPublications/15-chemcof.pdf",
+          "pdf_sha256": "946817fc7d8051b76d39a4de451964564738348ed4e00b67853923d977d2ae8d",
+          "reviewed_pages": [
+            {
+              "pdf_page": 5,
+              "visual_inspected": true,
+              "text_reviewed": true,
+              "page_image_sha256": "847be199965ac9dd50c536e51724fabf20c6786c919248681dc334a7babed4b0",
+              "page_text_sha256": "7223220db07ac025ff28b4bba4eb86a38e2bfaa7719a655ff755a57a1cb48af9"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

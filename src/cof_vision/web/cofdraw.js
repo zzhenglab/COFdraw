@@ -12,19 +12,21 @@ function templates(){const value=state.library?.templates;return Array.isArray(v
 function selectedTemplate(){return templates().find(t=>t.id===$("template").value);}
 function checkedMonomer(block){const value=state.monomers[block];return value?.input===$(`smiles-${block}`).value.trim()?value:null;}
 function checkedMonomers(){return {a:checkedMonomer("a"),b:checkedMonomer("b")};}
-function templateCheck(template=selectedTemplate()){return template?L.templateCompatibility(template,$("linkage").value,checkedMonomers(),state.library||{}):{compatible:true};}
+function engineOrder(){const pair=checkedMonomers(),match=sourceMode()?null:L.compatibleLinkages(state.library||{},pair.a,pair.b).find(row=>row.id===$("linkage").value);return match?.swapped?['b','a']:['a','b'];}
+function templateCheck(template=selectedTemplate()){if(!template)return {compatible:true};const order=engineOrder(),check=L.templateCompatibility(template,$("linkage").value,{a:checkedMonomer(order[0]),b:checkedMonomer(order[1])},state.library||{});if(order[0]==='b'&&check.reason)check.reason=check.reason.replace(/Block ([AB])/g,(_,block)=>`Block ${block==='A'?'B':'A'}`);return check;}
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
 function monomerChoice(item,block,other){
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
+  if(!state.autoChemistry&&block!=='editor'&&other){const pair=block==='a'?[item,other]:[other,item],match=L.compatibleLinkages(state.library||{},...pair).find(row=>row.id===$("linkage").value);if(match)return {compatible:true,reason:`Compatible with this partner for ${match.label}. Your A/B choices stay in place; construction assigns the reactive roles.`};}
   return state.autoChemistry?L.automaticChoice(state.library||{},item,block,other):L.monomerChoice(state.library||{},item,$("linkage").value,block,other);
 }
 function constructionCheck(){
   if(!checkedMonomer('a')||!checkedMonomer('b'))return {compatible:false,reason:'Choose both building blocks and wait for their structure checks before creating a drawing.'};
   const info=linkageInfo();
   if(info.supported!==true)return {compatible:false,reason:'This linkage is reference-only; no automatic construction is implemented.'};
-  for(const block of ['a','b']){
-    const evidence=L.roleEvidence(checkedMonomer(block),$("linkage").value,L.roleFor(state.library||{},$("linkage").value,block));
+  const order=engineOrder();for(const [index,block] of order.entries()){
+    const evidence=L.roleEvidence(checkedMonomer(block),$("linkage").value,L.roleFor(state.library||{},$("linkage").value,index===0?'a':'b'));
     if(evidence?.compatible!==true)return {compatible:false,reason:`Building block ${block.toUpperCase()} is incompatible with the selected linkage. Choose a compatible partner or change the linkage.`};
   }
   return templateCheck();
@@ -34,14 +36,9 @@ function autoMatchChemistry(){
   const pair=checkedMonomers();if(!pair.a||!pair.b){$("chemistry-match").textContent='Choose both building blocks and wait for their structure checks.';return;}
   const match=L.automaticPlan(state.library,pair.a,pair.b);
   if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
-  if(match.swapped){
-    for(const field of ['smiles','label']){const value=$(`${field}-a`).value;$(`${field}-a`).value=$(`${field}-b`).value;$(`${field}-b`).value=value;}
-    [state.monomers.a,state.monomers.b]=[state.monomers.b,state.monomers.a];
-    for(const block of ['a','b']){const item=state.monomers[block];if(previewURLs[block])URL.revokeObjectURL(previewURLs[block]);previewURLs[block]=URL.createObjectURL(new Blob([item.svg],{type:'image/svg+xml'}));$(`preview-${block}`).src=previewURLs[block];$(`formula-${block}`).textContent=item.formula;}
-  }
   populateLinkages(match.id);
   const template=templates().find(item=>item.id===match.template_id);
-  $("chemistry-match").textContent=`Auto: ${match.label} · ${template?.label||'compatible finite patch'}. ${match.swapped?'Roles arranged automatically. ':''}${match.choice_count>1?`${match.choice_count} product choices are supported. `:''}Choose Manual to change the result. This is a drawing proposal, not a synthesis prediction.`;
+  $("chemistry-match").textContent=`Auto: ${match.label} · ${template?.label||'compatible finite patch'}. ${match.swapped?'Your A/B choices stay in place; construction uses B for the first reactive role. ':''}${match.choice_count>1?`${match.choice_count} product choices are supported. `:''}Choose Manual to change the result. This is a drawing proposal, not a synthesis prediction.`;
   return match.template_id;
 }
 function populateLinkages(desired=$("linkage").value){
@@ -83,7 +80,7 @@ function refreshTemplates(desired=null){
 function refreshInspectors(){
   const source=sourceMode(),info=linkageInfo(),roles=info.roles||[];$("linkage-roles").textContent=source?(state.sourceId?"Source-associated precursors":"Recorded graph — associated precursors"):roles.length?`${roleLabel(roles[0],0)} + ${roleLabel(roles[1],1)}`:(info.description||info.conceptual_motif||"Select a linkage category.");
   for(const[block,index]of[["a",0],["b",1]]){
-    const value=checkedMonomer(block),evidence=source?null:L.roleEvidence(value,$("linkage").value,roles[index]);$(`role-${block}`).textContent=source?`${state.sourceId?'Source':'Associated'} precursor ${block.toUpperCase()}`:`Required: ${roleLabel(roles[index],index)}`;
+    const roleIndex=engineOrder().indexOf(block),value=checkedMonomer(block),evidence=source?null:L.roleEvidence(value,$("linkage").value,roles[roleIndex]);$(`role-${block}`).textContent=source?`${state.sourceId?'Source':'Associated'} precursor ${block.toUpperCase()}`:`Required: ${roleLabel(roles[roleIndex],roleIndex)}`;
     const named=state.library?.monomer_presets?.find(item=>item.smiles===$(`smiles-${block}`).value.trim()||value?.smiles&&item.smiles===value.smiles);$(`preset-${block}`).title=named?L.displayName(named):"Choose a compatible monomer, or paste a custom structure.";
     let fullName=$(`name-${block}`);if(!fullName){fullName=document.createElement("p");fullName.id=`name-${block}`;fullName.className="monomer-full-name";$(`inspector-${block}`).prepend(fullName);}fullName.textContent=named?L.displayName(named):"";fullName.hidden=!named;
     const chips=$(`groups-${block}`);chips.replaceChildren();for(const group of L.groupRows(value)){const chip=document.createElement("span");chip.className="group-chip";chip.textContent=`${group.count} × ${group.label||group.kind?.replaceAll("_"," ")||"reactive group"}`;chips.append(chip);}
@@ -220,7 +217,7 @@ async function render(){
 }
 $("build").addEventListener("click",async()=>{
   if(state.busy)return;state.busy=true;sync();
-  try{await Promise.all([validateMonomer("a",true),validateMonomer("b",true)]);const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const payload={linkage:$("linkage").value,monomer_a:$("smiles-a").value.trim(),monomer_b:$("smiles-b").value.trim(),label_a:$("label-a").value.trim(),label_b:$("label-b").value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
+  try{await Promise.all([validateMonomer("a",true),validateMonomer("b",true)]);const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
 });
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 function geometryReviewMessage(refinement){return refinement?.quality==='needs_review'?'Some linkage junctions still need geometry review. Inspect the connections and use Move / adjust or Clean bond geometry before saving.':'';}

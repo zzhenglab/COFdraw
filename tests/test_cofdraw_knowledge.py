@@ -46,7 +46,7 @@ def test_topology_templates_and_crystals_keep_distinct_scope():
     assert set(hcb["support"]["template_ids"]) == {"hcb_3_2", "hcb_3_3"}
     assert hcb["support"]["periodic_net_assignment"] is False
     crystals = query_catalog(DATA, "", ["crystal"])
-    assert crystals["matched_count"] == 4
+    assert crystals["matched_count"] == 5
     assert all(r["support"]["status"] == "unrelaxed_periodic_design" for r in crystals["records"])
     assert all(r["support"]["experimentally_validated"] is False for r in crystals["records"])
 

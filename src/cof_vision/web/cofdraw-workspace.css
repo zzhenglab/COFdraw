@@ -1,0 +1,29 @@
+/* Keep the chemical drawing square; details share one compact tray below it. */
+.identity-summary>summary{cursor:pointer;color:#355f51;font-size:12px;font-weight:600;padding:12px 0}
+.identity-summary:not([open]){padding-top:0;padding-bottom:0;margin-top:10px}
+.identity-summary[open]>summary{margin-bottom:12px}
+.identity-summary{padding:9px 12px;margin-top:10px}
+.identity-summary .identity-notation-label{margin:0 0 5px;font-size:10px}
+.identity-summary #identity-string{font:10px/1.5 Consolas,monospace;max-height:3em;overflow:auto;margin:0}
+.identity-more>summary{font-size:11px;cursor:pointer;color:#426d5a;margin:8px 0 0}
+.identity-more[open]>summary{margin-bottom:12px}
+.canvas-viewport{aspect-ratio:1;width:min(100%,660px);height:auto;min-height:0;margin:0 auto}
+.canvas-sheet{width:100%;height:100%}
+.workspace-tools{gap:5px;margin-bottom:10px}
+.workspace-tools .button{padding:7px 9px;min-height:33px;font-size:11px}
+.canvas-toolbar{margin-bottom:12px}
+.canvas-status{min-height:30px;padding:7px 2px;font-size:11px}
+.output-bar{padding:9px 12px;gap:8px}
+.output-bar>div:first-child span{display:none}
+.output-bar strong{margin:0;font-size:12px}
+.output-bar .button{padding:6px 9px;min-height:30px;font-size:11px}
+.appearance-options>summary{padding:12px 0}
+.layout-details{margin-top:10px;padding:10px 12px}
+.science-model-state{font-size:11px;line-height:1.65;padding:10px 12px;margin:0 0 13px;border:1px solid #d2e2db;border-radius:7px;background:#edf5ef;color:#416b59}
+.science-model-state .button{font-size:11px;padding:6px 9px;margin:7px 5px 0 0;min-height:30px}
+.diffraction-legend{display:flex;flex-wrap:wrap;gap:8px 15px;font-size:11px;margin:10px 0}
+.diffraction-legend span{border-left:4px solid;padding-left:7px}
+.diffraction-comparison-note{font-size:11px;line-height:1.65;color:#617b6d}
+#pxrd-plot,#pxrd-results{grid-column:1/-1;min-width:0}
+@media(min-width:760px){.canvas-panel{padding-top:18px;padding-bottom:12px}.canvas-viewport{width:min(100%,max(340px,calc(100dvh - 300px)));height:auto;min-height:0}.appearance-panel{padding-bottom:12px}.identity-summary{max-width:none}.canvas-toolbar h2{font-size:19px}}
+@media(max-width:759px){.canvas-viewport{width:100%;height:auto;min-height:0}.identity-summary{padding:0 12px}.output-bar{display:flex}.output-bar .export-buttons{width:auto;margin-top:0}.canvas-status{font-size:10px}}

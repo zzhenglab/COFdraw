@@ -249,6 +249,8 @@ def main():
             assert square_render.value.status==200,square_render.value.text()
             square_result=square_render.value.json()
             assert square_result["audit"]["building_block_instances"]==square["instances"]
+            if not page.locator('.identity-more').evaluate('element=>element.open'):
+              page.locator('.identity-more > summary').click()
             assert page.locator("#identity-key").inner_text()=="Unassigned design"
             page.locator("#framework-image").evaluate("i=>i.decode()")
             page.screenshot(path=str(out/"cofdraw-four-connected.png"),full_page=True)
@@ -282,6 +284,8 @@ def main():
         page.locator("#source-select").select_option("tfb-tab-pore-v1")
         with page.expect_response("**/api/drawing/render") as source:page.locator("#load-source").click()
         assert source.value.status==200,source.value.text();assert source.value.json()["audit"]["cofex_string"]
+        if not page.locator('.identity-more').evaluate('element=>element.open'):
+          page.locator('.identity-more > summary').click()
         assert "COFEXM-" in page.locator("#identity-key").inner_text()
         assert page.locator("#linkage").input_value()=="imine"
         assert "Tp plus" not in page.locator("#chemistry-note").inner_text()

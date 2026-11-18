@@ -1,0 +1,65 @@
+{
+  "schema_version": 3,
+  "version": "0.8.0",
+  "validated_utc": "2026-11-18T03:46:40.832563+00:00",
+  "passed": true,
+  "archive_sha256": "f1facbdd1e2cff1beb18a80e161ce263f6b440b1c4302e0e3a4db0d374cb0d6c",
+  "archive_bytes": 89177261,
+  "executable_sha256": "f31f0751d7ba4cd9635c3d76705c68c062adca5a81c20aff3419721c71e00d3a",
+  "manifest_sha256": "ca00f12c1ebda812bc3b3c7d5da4f32f08858847e08ea548513f739e5dc03094",
+  "runtime_config_sha256": "94cfe11aed6870ddb76a8ef105e41359fc1fc074638ec6c965c46bd31f49563a",
+  "launch": {
+    "method": "ordinary_explorer_reviewed_shell_link",
+    "native": {
+      "version": "0.8.0",
+      "status": "desktop_smoke_passed",
+      "title": "COFdraw \u2014 Chemical drawing studio",
+      "native_save_bridge": true
+    },
+    "integrity_rid": 8192,
+    "server_closed": true
+  },
+  "download_marks": {
+    "marked_file_count": 233,
+    "marked_pyd_count": 109,
+    "all_marked_file_hashes_unchanged": true,
+    "dll_config_marks_retained": true,
+    "executable_mark_before": true,
+    "executable_mark_after": false,
+    "scope": "Actual observed marking state. No blanket unblocking or machine policy changes; no cause is inferred if Windows removed the EXE mark during ordinary launch."
+  },
+  "normal_user_science": {
+    "passed": true,
+    "integrity_rid": 8192,
+    "sa_monomers_verified": 118,
+    "current_drawing_workflow": {
+      "finite_atoms": 108,
+      "omitted_continuations": 6,
+      "finite_scattering_kind": "finite_debye_powder_scattering",
+      "matched_model": "hcb-tfb-tapb-aa",
+      "matched_cell_atoms": 57,
+      "AB_cell_atoms": 114,
+      "periodic_peak_count": 3,
+      "preserves_drawing_coordinates": false,
+      "qualification": "Actual frozen API workflow; the matched model is an independent unrelaxed hypothesis, not a crystal assignment."
+    },
+    "raspa": {
+      "status": "complete",
+      "gases": [
+        "Ar"
+      ],
+      "cycles": 100,
+      "charge_mode": "zero",
+      "completed_stages": 4,
+      "calculate_heat": true,
+      "cpu_variant": "avx2",
+      "verified_zip_files": 37,
+      "qualification": "Native marked-extension workflow check; 100 cycles do not establish convergence or experimental accuracy"
+    },
+    "marked_file_hashes_unchanged": true,
+    "dll_config_marks_retained": true,
+    "manifest_files_verified_after": 1104,
+    "server_closed": true
+  },
+  "scope": "Exact final ZIP startup and calculation workflow on this Windows machine under a normal user token. This verifies software execution, not arbitrary-machine compatibility, chemical synthesis, crystal stability or adsorption convergence."
+}

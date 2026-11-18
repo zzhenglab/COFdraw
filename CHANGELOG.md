@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0 - 2026-11-17
+
+- Check the displayed finite atoms and calculate finite Debye scattering without a CIF. Keep periodic density, pore geometry and Bragg PXRD distinct.
+- Match exact precursors, product fragments and unchanged connectivity to validated unrelaxed periodic designs. Add the default TFB/TAPB cell, and reject stale results or explicit edited graphs that no longer match.
+- Compare AA/AB/ABC/slipped periodic PXRD hypotheses with contact and dimensionality checks; preserve skew cells and atom charges. Finite stacks additionally support illustrative twist.
+- Enlarge the square drawing canvas, keep full COFex notation visible, collapse secondary facts, and preserve the user's visible A/B order during automatic chemistry selection.
+- Add local conversational follow-ups, suggestions, review/apply actions and explicit current-drawing context; optional API mode remains catalog-bound and credential-safe.
+- Expand to 118 monomers with 37 finite graphs checked against published figures by two agents. Twenty additions have supported drawing roles; 17 remain references. Preserve the previous 81 entries and all source recipes.
+- Add a scoped nitrone constructor with retained N-O connectivity, explicit N+/O- charges and unassigned new E/Z stereochemistry.
+- Preserve internal porphyrin N-H atoms through aromaticity restoration, property-cache refresh and chemical export.
+- Add five reference linkage families and a searchable literature coverage ledger with viewed-page evidence, ambiguous cases and access limits. The review does not claim exhaustive main-paper/SI coverage.
+
 ## 0.7.0 - 2026-11-17
 
 - Add deterministic periodic pore geometry with PLD/LCD bounds, transport-accessible surface and probe-center volume, density, void fraction and resolution diagnostics.

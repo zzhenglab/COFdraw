@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.7.0"
+VERSION = "0.8.0"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -30,7 +30,7 @@ def create_desktop_app(data_root):
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
-        if request.url.path.rstrip('/') == '/api/drawing/describe':
+        if request.url.path.rstrip('/') in {'/api/drawing/describe', '/api/drawing/describe/chat'}:
             # Pydantic's default errors include rejected input values. This
             # endpoint may contain provider credentials even in malformed input.
             return JSONResponse({'detail': 'Invalid description request. Check the text, mode, catalog selections and API settings.'}, status_code=422)

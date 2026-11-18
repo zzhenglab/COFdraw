@@ -45,7 +45,14 @@ def test_selected_complete_graph_and_source_master_bindings(selection):
 
 def test_additive_history_and_unchanged_source_recipes():
     old = json.loads((DATA / "catalog/history" / (AUDIT["previous_catalog_sha256"] + ".json")).read_text("utf-8"))
-    assert len(old["monomer_presets"]) == 63 and len(ROWS) == 81
+    admitted_path=DATA / 'catalog/current.json'
+    if importer.digest(admitted_path)!=AUDIT['catalog_sha256']:
+        admitted_path=DATA / 'catalog/history' / (AUDIT['catalog_sha256']+'.json')
+    admitted=json.loads(admitted_path.read_text('utf-8'))
+    assert importer.digest(admitted_path)==AUDIT['catalog_sha256']
+    assert len(old["monomer_presets"]) == 63 and len(admitted['monomer_presets']) == 81
+    for row in admitted['monomer_presets']:
+        assert ROWS[row['id']]==row
     assert len(AUDIT["added_ids"]) == 18
     assert len(AUDIT["automatic_drawing_candidate_ids"]) == 15
     assert AUDIT["reference_only_ids"] == ["aph", "flt_boronic", "ash"]
@@ -54,7 +61,6 @@ def test_additive_history_and_unchanged_source_recipes():
     for key in ("recipe_bindings", "source_metadata", "source_registry_sha256"):
         assert CATALOG[key] == old[key]
     assert importer.digest(DATA / "registry.json") == AUDIT["registry_sha256"]
-    assert importer.digest(DATA / "catalog/current.json") == AUDIT["catalog_sha256"]
     current = json.loads((DATA / "catalog/current.audit.json").read_text("utf-8"))
     assert current["master_key_monomer_admission_sha256"] == importer.digest(DATA / "catalog/master-key-monomer-admission.audit.json")
 

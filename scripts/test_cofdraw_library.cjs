@@ -26,6 +26,12 @@ assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'b',null).compatible,
 assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'b',monomers.b).compatible,true,"Automatic chemistry accepts reversed roles");
 assert.equal(L.automaticChoice({...automaticLibrary,templates:[{allow_pairs:[[3,3]]}]},monomers.b,'b',monomers.a).compatible,false,"A matching role is insufficient when every explicit template rejects the pair");
 assert.equal(L.automaticChoice(automaticLibrary,{compatible_roles:[{linkage:'reference',role:'x',reactive_sites:3}]},'a',null).compatible,false,"Reference-only chemistry cannot authorize construction");
+const nitroneLibrary={linkages:{nitrone:{supported:true,roles:['aryl_aldehyde','aryl_hydroxylamine']}},templates:[{id:'chain_2_2',allow_pairs:[[2,2]]}]};
+const nitroneA={compatible_roles:[{linkage:'nitrone',role:'aryl_aldehyde',reactive_sites:2}]};
+const nitroneB={compatible_roles:[{linkage:'nitrone',role:'aryl_hydroxylamine',reactive_sites:2}]};
+assert.equal(L.automaticPlan(nitroneLibrary,nitroneA,nitroneB).id,'nitrone','The supported hydroxylamine pair has a real automatic construction');
+assert.equal(L.automaticPlan(nitroneLibrary,nitroneB,nitroneA).swapped,true,'Visible A/B order may remain stable while payload roles are mapped');
+assert.equal(L.automaticChoice(nitroneLibrary,monomers.b,'b',nitroneA).compatible,false,'An ordinary amine is not a hydroxylamine partner');
 const square = {id:"square",linkages:["imine"],required_functionalities:{a:[4],b:[2]}};
 assert.equal(L.templateCompatibility(square,"imine",monomers,library).compatible,true);
 assert.equal(L.templateCompatibility({...square,required_functionalities:{a:[3],b:[2]}},"imine",monomers,library).compatible,false);

@@ -106,7 +106,7 @@
       }
     }
     // Product-state reduction is never an automatic replacement for condensation.
-    const order=['beta_ketoenamine','keto_hydrazide','imine','acylhydrazone','azine','secondary_amine'];
+    const order=['beta_ketoenamine','keto_hydrazide','imine','acylhydrazone','azine','nitrone','secondary_amine'];
     return results.sort((a,b)=>(order.indexOf(a.id)<0?99:order.indexOf(a.id))-(order.indexOf(b.id)<0?99:order.indexOf(b.id)));
   }
   function automaticChoice(library,item,block,other) {

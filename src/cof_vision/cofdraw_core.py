@@ -382,6 +382,13 @@ def export_chemical_formats(directory, stem, *, source_mol=None):
                 serialized = Chem.MolToMolBlock(candidate).replace("\r\n", "\n")
                 if serialized.rstrip() != molblock.rstrip():
                     raise ValueError("supplied molecule does not serialize to the stored MOL")
+                if any(a.GetAtomicNum() == 7 and a.GetIsAromatic() and a.GetTotalNumHs() > 0
+                       for a in candidate.GetAtoms()):
+                    # Native CDXML writing of the direct Kekule copy can add
+                    # unknown-double marks inside a porphyrin ring system.
+                    # The established MOL parser retains the stored ring/stereo
+                    # state; keep full atom/H/bond/stereo validation afterward.
+                    raise ValueError("aromatic N-H graphs retain the scoped MOL parser")
                 if (candidate.GetStereoGroups()
                         or any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in candidate.GetAtoms())
                         or any(b.GetStereo() not in (Chem.BondStereo.STEREONONE, Chem.BondStereo.STEREOANY)

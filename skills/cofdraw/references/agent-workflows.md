@@ -6,6 +6,8 @@ The running API is authoritative. `GET /api/drawing/science/capabilities` return
 python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/contracts science capabilities
 ```
 
+Use `science query` with `record_types:["literature"]` to retrieve the bundled Yaghi review ledger by title or DOI. Each paper carries actually inspected pages, checked monomer IDs, unresolved candidates and review limits. There are 100 selected index records; this is not an exhaustive main-paper/SI audit. Monomer query support includes current runtime roles separately from the preserved source catalog record. A functional-group match does not validate a reported source reaction or periodic crystal.
+
 ## Describe a drawing before rendering
 
 `GET /api/drawing/describe/catalog` supplies built-in description examples and exact selectable source, monomer, linkage, template, style and palette IDs. The helper exposes it as `describe-catalog`:
@@ -27,6 +29,12 @@ The request goes to `POST /api/drawing/describe`. Its fields are `text` (1–400
 Optional LLM mode is for an explicitly requested provider call. It needs `llm: {"base_url":"https://provider.example/v1","model":"user-chosen-model","api_key":"..."}` and no manual `selection`. The provider sees the description and minimal catalog labels/IDs; it cannot submit SMILES, recipes, code or new chemistry. Its proposed IDs go through the deterministic planner, and any unresolved provider item prevents drawing readiness. HTTPS is required except for exact localhost HTTP hosts; redirects are blocked. Keep credentials in the desktop field or an in-memory request, never in a shared report or code sample. The helper does not copy a supplied request file or its credentials into output files and returns generic description HTTP errors to avoid credential echoes.
 
 The application stores no API configuration and discovers no environment keys. Do not turn a rules request into a paid/API request automatically, or retry provider failures silently. For compatibility and credential details, read `docs/llm-api.md` in the repository. No provider call is needed for built-in examples, explicit ID selections, rendering or scientific calculations.
+
+For conversational follow-ups, direct clients use `POST /api/drawing/describe/chat` with the new `text` (1–3000 characters), explicit mode and optional `context` returned as `conversation.context` by the previous turn. `operation` is `drawing`, `style_only`, `help` or `reset`. The existing helper `describe` command remains the single-turn endpoint; it does not implicitly start a conversation. Read [conversation contracts](../../../docs/conversation-methods.md) for a complete example.
+
+Carry only catalog IDs, bounded unresolved constraints, recognized site/instance requirements and the optional opaque local revision token. Do not send a whole recipe, custom SMILES or coordinates as context. A `drawing` plan can prepare/render only when ready. A `style_only` plan has no prepare request: confirm its `context_token` still matches the local active recipe and apply the returned style options to that same recipe. This preserves custom monomers and manual coordinates. A stale plan must be analyzed again. `help` opens allowlisted local tools; it supplies no calculation values. Reset is explicit and does not erase the drawing.
+
+History and credentials remain session-only. A provider receives the submitted text and catalog descriptors/selected IDs, not previous chat text, pending local notes, project files or local molecular data. Review the current card before applying and report success only after the actual renderer returns. Unsupported chemistry and property targets remain unresolved across follow-ups; changing color does not fulfill them.
 
 ## Retrieve actual local chemistry records
 
@@ -57,6 +65,26 @@ Answer from these records. Do not fill missing material properties with invented
 
 ## A periodic-structure inspection workflow
 
+If the user is viewing the current finite drawing, first use its actual atoms instead of asking for a CIF unnecessarily. Call `science patch` with the current recipe or registered source ID, then pass the returned `viewer` to `finite-inspect` or `finite-powder` as `model`. For example, after saving a real patch response:
+
+```python
+import json
+from pathlib import Path
+
+patch = json.loads(Path("outputs/patch/result.json").read_text(encoding="utf-8"))
+Path("finite-check.json").write_text(json.dumps({"model": patch["viewer"]}), encoding="utf-8")
+Path("finite-scattering.json").write_text(json.dumps({"model": patch["viewer"],
+    "wavelength": 1.5406, "two_theta_min": 2, "two_theta_max": 50,
+    "step": 0.1}), encoding="utf-8")
+```
+
+```shell
+python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/finite-check science finite-inspect --request finite-check.json
+python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/finite-scattering science finite-powder --request finite-scattering.json
+```
+
+These results describe displayed atoms and finite Debye scattering, with continuation sites omitted and missing H unfilled. They cannot supply density, PLD or hkl peaks. For a periodic model associated with a design, submit the unchanged `prepared.json` recipe to `periodic-options`; inspect the offered IDs and match qualifications. If one is chosen, send the same recipe in `model.recipe_match` so the service revalidates the precursor/linkage/template binding. The resulting cell has separate unrelaxed coordinates. Do not construct a box around a finite patch or substitute an unrelated template when no match exists.
+
 1. Query `crystal` records or import the user's explicit CIF through `science model`. Keep its original source/provenance. Built-in templates are separate unrelaxed reticular designs.
 2. Read the returned `structure` object from `result.json`. Submit that exact object to `/science/inspect`, optionally selecting `bond_scale` and `tolerance_angstrom`. Inspect formula, cell metrics, density, contact warnings, cutoff sensitivity and network dimensionality.
 3. For a calculated powder pattern, submit the same structure to `/science/pxrd` with explicit wavelength, angular range, step, Gaussian FWHM and isotropic B value. Keep CSV/JSON and label the profile as ideal calculated PXRD.
@@ -82,6 +110,8 @@ Path("pxrd.json").write_text(json.dumps({"structure": structure,
 python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/inspect science inspect --request inspect.json
 python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/pxrd science pxrd --request pxrd.json
 ```
+
+To compare periodic stacking, call `science stacking` separately for AA, AB, ABC and slipped using the same supplied single planar layer, spacing and slip convention. Then use each returned `structure` for PXRD with identical settings. The layer is screened for robust 2D contact connectivity and thickness; 3D or multilayer cells may correctly be rejected. Twisted finite-layer illustrations use `patch` plus `finite-powder`, not periodic stacking. UI comparison profiles normalize each curve independently; retain absolute/relative output fields and do not infer phase fractions from their peak heights.
 
 ## Compare supplied structures
 

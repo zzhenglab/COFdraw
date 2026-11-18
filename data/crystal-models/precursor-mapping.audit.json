@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "generator": "pyCOFBuilder 0.0.9.4",
+  "generator_library_files": [
+    {
+      "path": "framework.py",
+      "sha256": "7714b5ac5ea6506e52d5e853f332e667b03f1bda55ee945fb7071e4b7395e3eb"
+    },
+    {
+      "path": "tools.py",
+      "sha256": "9a8d9772541b25ec02839759ceda4beb527213a84a96b76a930afd4304a3031b"
+    },
+    {
+      "path": "data/topology.py",
+      "sha256": "289efc5f314baa596948ca82e8553c222ed4b880a6ad3a2bf56fd8df0f7e656c"
+    },
+    {
+      "path": "data/core/T3/BENZ.cjson",
+      "sha256": "98d4c9e065d22ff1fa3abe4751d15d81358ca8cee99158876de70816de0454cb"
+    },
+    {
+      "path": "data/core/T3/TPBZ.cjson",
+      "sha256": "bd7f0418022f6fbebb1b373c782a19a87d26096215a738c5a0601595e84dc897"
+    },
+    {
+      "path": "data/conector/CHO.cjson",
+      "sha256": "98e3f33d954c2b7487d71d2b4f8bb1bda56f7d9ada995bfbdccca8c5fbfc84ac"
+    },
+    {
+      "path": "data/conector/NH2.cjson",
+      "sha256": "9943ecbd1fb8aaadad755591e8d7f4139cc0aae3e59d91f3108ca86c61f03afe"
+    },
+    {
+      "path": "data/func_groups/H.cjson",
+      "sha256": "e4e7b8d74c905bb3bf678dd85458302e4345115b33282c07fd7e29515f55c9e4"
+    }
+  ],
+  "templates": [
+    {
+      "template_id": "hcb-imine-aa",
+      "cif_sha256": "f219b593fb469ca0902d8173e298c64189a503dff30d1501ffdd42251c192733",
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "pa"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(N)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "atom_count": 66,
+      "element_counts": {
+        "C": 36,
+        "H": 24,
+        "N": 6
+      },
+      "precursor_multiplicities": {
+        "aldehyde": 2,
+        "amine": 3
+      },
+      "water_eliminations": 6,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        2
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991997982962989,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N\u2013CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    },
+    {
+      "template_id": "hcb-imine-ab",
+      "cif_sha256": "ac1f141b9533baf0de11277f2adecfcb87e5f3806c94c201096ac3f99ecd202b",
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "pa"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(N)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "atom_count": 132,
+      "element_counts": {
+        "C": 72,
+        "H": 48,
+        "N": 12
+      },
+      "precursor_multiplicities": {
+        "aldehyde": 4,
+        "amine": 6
+      },
+      "water_eliminations": 12,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        2
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991997982962989,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N\u2013CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    },
+    {
+      "template_id": "hcb-expanded-aa",
+      "cif_sha256": "8afba9902c403759f2bb8cefb31fe76ec2382dceafb2a40848814e4355f215d5",
+      "precursor_match": {
+        "monomer_ids": [
+          "ta",
+          "tapb"
+        ],
+        "canonical_smiles": [
+          "O=Cc1ccc(C=O)cc1",
+          "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "atom_count": 126,
+      "element_counts": {
+        "C": 72,
+        "H": 48,
+        "N": 6
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 3
+      },
+      "water_eliminations": 6,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        2
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.099199623047004,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N\u2013CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    },
+    {
+      "template_id": "dia-imine",
+      "cif_sha256": "9c37d337f28a4bd24f754b4206a06d85e19ad4142e2554348aed9bb81ee8be9e",
+      "precursor_match": {
+        "monomer_ids": [
+          "ta",
+          "tapm"
+        ],
+        "canonical_smiles": [
+          "O=Cc1ccc(C=O)cc1",
+          "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [],
+        "generated_topology": "dia",
+        "requires_explicit_topology_choice": true,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "atom_count": 146,
+      "element_counts": {
+        "C": 82,
+        "H": 56,
+        "N": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991996886146806,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N\u2013CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    },
+    {
+      "template_id": "hcb-tfb-tapb-aa",
+      "cif_sha256": "d04a3b5047016b4df07b0b727f0a226cb4f276bdf5766b537a9c32e4d125e307",
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "tapb"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_3"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "atom_count": 57,
+      "element_counts": {
+        "C": 33,
+        "H": 21,
+        "N": 3
+      },
+      "precursor_multiplicities": {
+        "aldehyde": 1,
+        "amine": 1
+      },
+      "water_eliminations": 3,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        2
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991997850389967,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N\u2013CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  ],
+  "ground_truth": false,
+  "precursor_smiles_limit": "pyCOFBuilder 0.0.9.4 emits unresolved [R] placeholders and malformed leading connector SMILES; these strings are not treated as chemical identity. Identity is checked independently from all generated coordinate fragments against the catalog full precursor graphs.",
+  "excluded_beta_ketoenamine_candidate": {
+    "model_name": "T3_BENZ_CHO_OH-L2_BENZ_NH2_H-HCB_A-AA",
+    "reason": "The stock builder retains six O\u2013H bonds and no N\u2013H bonds in its 72-atom Tp/Pa cell. This is enol-imine, not the beta-ketoenamine product. No beta-ketoenamine match is provided."
+  }
+}

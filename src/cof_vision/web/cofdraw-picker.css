@@ -25,6 +25,7 @@
 #monomer-library-dialog .library-count{font-size:11px}
 #monomer-library-dialog .library-card-heading strong{font-size:13px}
 #monomer-library-dialog .library-thumbnail{height:145px}
+#monomer-library-dialog .library-thumbnail,#monomer-library-dialog .library-thumbnail img{transform:none;perspective:none}
 #monomer-library-dialog .library-card-name{font-size:11px;min-height:33px;margin:8px 0 5px;line-height:1.5}
 #monomer-library-dialog .library-card-status{font-size:10px;line-height:1.45;flex:none;margin:0 0 6px}
 #monomer-library-dialog .library-row[data-availability=reference] .library-card-status{color:#8f6336;font-weight:600}

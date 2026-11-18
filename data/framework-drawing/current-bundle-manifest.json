@@ -1,8 +1,8 @@
 {
   "schema_version": "cofdraw-current-portable-bundle-1",
-  "created_at_utc": "2026-11-18T02:19:45.442381+00:00",
+  "created_at_utc": "2026-11-18T03:22:07.389761+00:00",
   "catalog": "catalog/current.json",
-  "catalog_sha256": "05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0",
+  "catalog_sha256": "9e23b7e71f02adc0da75185666a218e717c51565641c0b5a557abab3272f5d1c",
   "registry": "registry.json",
   "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "files": [
@@ -13,11 +13,21 @@
     },
     {
       "path": "catalog/current.audit.json",
+      "sha256": "7623b1ffdaf82d6f0f86f751fe7a02c5f73d0124b18598c18333a8ab7dbbd13b",
+      "bytes": 918
+    },
+    {
+      "path": "catalog/current.json",
+      "sha256": "9e23b7e71f02adc0da75185666a218e717c51565641c0b5a557abab3272f5d1c",
+      "bytes": 699768
+    },
+    {
+      "path": "catalog/history/05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0.audit.json",
       "sha256": "5ff3144770f21f2c4d32fcfbc416bf2d73c5da03d26c2c0c23c99c4d6df976ee",
       "bytes": 807
     },
     {
-      "path": "catalog/current.json",
+      "path": "catalog/history/05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0.json",
       "sha256": "05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0",
       "bytes": 510992
     },
@@ -72,6 +82,21 @@
       "bytes": 397592
     },
     {
+      "path": "catalog/literature-linkage-reference.json",
+      "sha256": "02c82532bb4fc07951e726fc45f28eb52cd73f65b131c1ec24b263f44e4654be",
+      "bytes": 12549
+    },
+    {
+      "path": "catalog/literature-monomer-admission.audit.json",
+      "sha256": "37c08e76354b878f5bef82bf1dabde8a7936b9cf3616e1c7d62f39edd6798004",
+      "bytes": 2489
+    },
+    {
+      "path": "catalog/literature-monomer-selection.json",
+      "sha256": "6612b5d1a906493a62ea66b85450684a13bd98524aa512a31fb90a4fb7d5bf21",
+      "bytes": 175880
+    },
+    {
       "path": "catalog/manual-monomer-admission.audit.json",
       "sha256": "a4776490f70039c5978ea7a6d022857c9c635d80f53870d59aa4f836061707b0",
       "bytes": 1706
@@ -105,6 +130,11 @@
       "path": "catalog/source-layout-revisions.audit.json",
       "sha256": "f347f74d96471cf98a138c50ed3b795d691496c5beedfa992a7c8c0ed8f5abce",
       "bytes": 20783
+    },
+    {
+      "path": "catalog/yaghi-literature-coverage.json",
+      "sha256": "dfbc44f003878c9b9d79b6bfe5ab81c60429de84c4f09141fa89131096b837cc",
+      "bytes": 418269
     },
     {
       "path": "catalog-v3/catalog.json",

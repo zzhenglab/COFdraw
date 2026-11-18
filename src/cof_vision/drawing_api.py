@@ -61,6 +61,7 @@ class ModelDrawing(BaseModel):
     template_id: str | None = Field(default=None, max_length=80)
     cif_text: str | None = Field(default=None, max_length=2_000_000)
     repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
+    recipe_match: RenderDrawing | None = None
 
 
 class Patch3D(RenderDrawing):
@@ -144,6 +145,26 @@ class ScreenEntry(BaseModel):
     structure: dict
 
 
+class FiniteInspection(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    model: dict
+
+
+class FinitePowder(FiniteInspection):
+    wavelength: float = Field(default=1.5406, ge=.3, le=3)
+    two_theta_min: float = Field(default=2, ge=.5, le=100)
+    two_theta_max: float = Field(default=50, ge=1, le=150)
+    step: float = Field(default=.1, ge=.01, le=.2)
+
+
+class PeriodicStacking(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    structure: dict
+    stacking: Literal['AA', 'AB', 'ABC', 'slipped'] = 'AA'
+    spacing: float = Field(default=3.4, ge=2.5, le=12)
+    slip: list[Annotated[float, Field(ge=-20, le=20, allow_inf_nan=False)]] = Field(default=[1.5,0], min_length=2, max_length=2)
+
+
 class ScreenBatch(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     entries: list[ScreenEntry] = Field(min_length=1, max_length=8)
@@ -184,6 +205,20 @@ class DescribeDrawing(BaseModel):
     mode: Literal['rules', 'llm'] = 'rules'
     selection: DescriptionSelection | None = None
     llm: DescriptionLLM | None = None
+
+
+class ConversationContext(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    selection: DescriptionSelection = Field(default_factory=DescriptionSelection)
+    pending: list[Annotated[str, Field(min_length=1, max_length=700)]] = Field(default_factory=list, max_length=12)
+    requirements: list[Annotated[str, Field(min_length=1, max_length=80)]] = Field(default_factory=list, max_length=8)
+    origin: Literal['plan', 'current_drawing'] = 'plan'
+    token: str | None = Field(default=None, pattern=r'^[A-Za-z0-9_-]{1,80}$')
+
+
+class DescribeConversation(DescribeDrawing):
+    text: str = Field(min_length=1, max_length=3000)
+    context: ConversationContext | None = None
 
 
 def validate_recipe(recipe: dict) -> None:
@@ -383,6 +418,50 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         # bodies are not written to the scientific report store or project files.
         return result
 
+    @router.post('/describe/chat')
+    def describe_conversation(request: DescribeConversation):
+        from .cofdraw_conversation import checked_context, describe_turn, model_turn_text, _help
+        from .cofdraw_describe import describe_catalog
+        text = request.text.strip()
+        if not text:
+            raise HTTPException(422, 'Write a message or choose an example.')
+        if request.mode == 'rules' and request.llm is not None:
+            raise HTTPException(422, 'API settings are used only in API mode.')
+        if request.mode == 'llm' and (request.llm is None or request.selection is not None):
+            raise HTTPException(422, 'API mode needs API settings and no manual selection.')
+        current_library = library()
+        context = request.context.model_dump(exclude_none=True) if request.context else None
+        selection = request.selection.model_dump(exclude_none=True) if request.selection else None
+        proposal = None
+        try:
+            context = checked_context(context, current_library)
+            # Never echo a known credential through a user message, context,
+            # exception, or the transient conversation response.
+            secret = request.llm.api_key.get_secret_value() if request.llm else ''
+            if secret and secret in json.dumps({'text': text, 'context': context}, ensure_ascii=False):
+                raise ValueError('Keep API credentials in the password field, separate from chat messages.')
+            local_help = _help(text) is not None or bool(re.fullmatch(r'(?:start over|start again|new conversation|reset conversation)[.! ]*', text, re.I))
+            if request.mode == 'llm' and not local_help:
+                from .cofdraw_llm import select_with_llm
+                proposal = select_with_llm(model_turn_text(text, context, current_library), describe_catalog(current_library),
+                    base_url=request.llm.base_url, model=request.llm.model, api_key=secret)
+                selection = proposal['selection']
+            result = describe_turn(text, current_library, context=context, selection=selection,
+                allow_unmatched_words=bool(selection) and (request.mode == 'llm' or request.selection is not None))
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from None
+        result['interpretation'] = {'mode': 'rules' if local_help else request.mode}
+        if proposal is not None:
+            result['interpretation'].update(model=request.llm.model, explanation=proposal.get('explanation', ''))
+            if proposal.get('unresolved'):
+                result['unresolved'] = list(dict.fromkeys(result['unresolved'] + proposal['unresolved']))
+                result['status'] = 'needs_input' if result['status'] == 'ready' else result['status']
+                result['prepare_request'] = None; result['source_recipe_id'] = None
+                pending = result['conversation']['context']['pending']
+                result['conversation']['context']['pending'] = list(dict.fromkeys(pending + proposal['unresolved']))[:12]
+        # No conversation/session store; the browser retains this in memory only.
+        return result
+
     @router.get("/sources/{recipe_id}")
     def source(recipe_id: str):
         try:
@@ -538,6 +617,14 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         from .cofdraw_synthesis import catalog_scores
         return catalog_scores(read_catalog(root).get('monomer_presets', MONOMERS))
 
+    @router.post('/science/periodic-options')
+    def matched_periodic_options(request: RenderDrawing):
+        try:
+            from .cofdraw_periodic_options import periodic_options
+            manifest=json.loads((root/'crystal-models/manifest.json').read_text(encoding='utf-8'))
+            with lock:return periodic_options(selected_recipe(request),manifest)
+        except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
+
     @router.post('/science/model')
     def model(request: ModelDrawing):
         try:
@@ -551,7 +638,14 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 if not path.is_relative_to((root/'crystal-models').resolve()) or hashlib.sha256(path.read_bytes()).hexdigest()!=item['sha256']:raise ValueError('Crystal template integrity check failed')
                 structure=import_cif(path.read_text(encoding='utf-8'))
                 structure['provenance']={**structure.get('provenance',{}),'template':item['id'],'generator':manifest['generator'],'model_name':item['model_name'],'doi':manifest['citation_doi'],'qualification':item['description']}
-            else:structure=import_cif(request.cif_text)
+                if request.recipe_match:
+                    from .cofdraw_periodic_options import periodic_options
+                    options=periodic_options(selected_recipe(request.recipe_match),manifest)
+                    if not any(o['id']==item['id'] for o in options['options']):raise ValueError('This periodic model does not match the current precursor pair, linkage and unchanged connectivity template')
+                    structure['provenance']['drawing_match']={**item['precursor_match'],'scope':options['scope']}
+            else:
+                if request.recipe_match:raise ValueError('Recipe matching applies only to validated built-in periodic designs')
+                structure=import_cif(request.cif_text)
             with lock:result=structure_exports(structure,repeats=tuple(request.repeats))
             result['scope']='Periodic atomic model with an explicit cell. Built-in templates are unrelaxed reticular designs, not experimentally assigned crystals; imported CIFs retain supplied geometry.'
             return scientific_result(result, 'model', request.model_dump())
@@ -610,7 +704,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def measure(request: RenderDrawing):
         try:
             from .cofdraw_measure import measure_drawing
-            return measure_drawing(selected_recipe(request))
+            with lock:result=measure_drawing(selected_recipe(request))
+            return scientific_result(result,'measure',request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/bet')
@@ -628,6 +723,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         models={'model':ModelDrawing,'patch':Patch3D,'networks':NetworkHypothesis,'monomer':MonomerAnalysis,
                 'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
                 'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
+                'finite-inspect':FiniteInspection,'finite-powder':FinitePowder,'stacking':PeriodicStacking,'periodic-options':RenderDrawing,
                 'measure':RenderDrawing}
         return {'engine_version':__version__, 'schema_version':'cofdraw-capabilities-1',
                 'operations':{name:{'method':'POST','path':f'/api/drawing/science/{name}',
@@ -641,7 +737,10 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                               'scope':'Asynchronous local RASPA runs; save input/output bundle and inspect convergence.'},
                 'description':{'method':'POST','path':'/api/drawing/describe',
                                'catalog':'/api/drawing/describe/catalog',
-                               'request_schema':DescribeDrawing.model_json_schema()},
+                               'request_schema':DescribeDrawing.model_json_schema(),
+                               'conversation':{'method':'POST','path':'/api/drawing/describe/chat',
+                                               'request_schema':DescribeConversation.model_json_schema(),
+                                               'scope':'Transient catalog-ID context; reviewed drawing plans, bound local appearance intents and qualified tool guidance.'}},
                 'reports':{'list':'/api/drawing/science/reports','read':'/api/drawing/science/reports/{report_id}'},
                 'scope':'Local catalog evidence and bounded calculations. Read each report method, units, provenance and warnings.'}
 
@@ -688,6 +787,33 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 result={'kind':'periodic_structure_inspection','summary':structure_summary(request.structure),
                         'network':inspect_periodic_network(request.structure,bond_scale=request.bond_scale,tolerance_angstrom=request.tolerance_angstrom)}
             return scientific_result(result,'inspect',request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/finite-inspect')
+    def inspect_current_finite(request: FiniteInspection):
+        try:
+            if len(json.dumps(request.model))>2_000_000:raise ValueError('Finite model input limit is 2 MB')
+            from .cofdraw_current_model import inspect_finite
+            with lock:result=inspect_finite(request.model)
+            return scientific_result(result,'finite-inspect',request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/finite-powder')
+    def finite_diffraction(request: FinitePowder):
+        try:
+            if len(json.dumps(request.model))>2_000_000:raise ValueError('Finite model input limit is 2 MB')
+            from .cofdraw_current_model import finite_powder
+            with lock:result=finite_powder(**request.model_dump())
+            return scientific_result(result,'finite-powder',request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/stacking')
+    def stack_periodic_model(request: PeriodicStacking):
+        try:
+            if len(json.dumps(request.structure))>2_000_000:raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_stacking import periodic_stacking
+            with lock:result=periodic_stacking(**request.model_dump())
+            return scientific_result(result,'stacking',request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/pxrd')

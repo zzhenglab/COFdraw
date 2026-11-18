@@ -134,10 +134,10 @@ C4 C 0.5 0.5 0 1
             checks.append('A late real response cannot restore properties calculated with superseded settings')
             count=len(requests)
             page.locator('[data-science-tab="model"]').click();page.locator('#structure-source').select_option('drawing')
-            page.locator('[data-science-tab="porosity"]').click();page.locator('#calculate-pores').click()
-            page.wait_for_function('document.getElementById("science-status").classList.contains("error")')
+            page.locator('[data-science-tab="porosity"]').click()
+            assert page.locator('#calculate-pores').is_disabled()
             assert len(requests)==count
-            assert 'periodic' in page.locator('#science-status').inner_text()
+            assert 'periodic' in page.locator('#porosity-model-state').inner_text()
             checks.append('Finite drawing layers are rejected before periodic geometry requests')
             assert not errors,errors
             browser.close()

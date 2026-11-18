@@ -37,9 +37,41 @@ This one-atom example is a geometry test fixture, not a COF. Cell vectors are ro
 
 The bundled periodic examples were generated with **pyCOFBuilder 0.0.9.4**: HCB imine AA (66 atoms), its AB1 model (132), an extended HCB imine AA design (126), and a DIA imine network (146), including explicit hydrogens. Their manifest preserves generator identifiers, hashes, formula counts, and the metadata workaround used during generation. They are separate, unrelaxed reticular designs with chosen connectivity/stacking; selecting one does not transfer the active drawing's identity or turn that drawing into the same crystal. The generator is a development tool, not a runtime dependency. [pyCOFBuilder source](https://github.com/lipelopesoliveira/pyCOFBuilder), [method publication](https://doi.org/10.1021/acs.jcim.3c01918).
 
+### Matching a drawing to a separate periodic design
+
+`/science/periodic-options` compares an unchanged drawing-template signature, implemented linkage, and the two exact canonical isomeric precursor graphs with explicit match records in the bundled model manifest. It also reconstructs the expected product fragments and rejects edited chemistry that no longer follows those declarations. A match returns a bounded choice of separately generated models; it does not fit the finite drawing's coordinates to a cell. An empty result includes a reason and leaves finite-model checks available.
+
+Selecting a returned option through `/science/model` with `recipe_match` revalidates that binding and the model file's manifest hash. The resulting CIF has the periodic model's own unrelaxed coordinates and records the precursor match in provenance. It does not acquire the drawing's literature identity. A source drawing without a matching unchanged design signature, modified connectivity, a new precursor, or an unsupported linkage cannot be converted this way. There is no arbitrary finite-patch-to-CIF procedure. Agents can follow the [current-model workflow](../skills/cofdraw/references/agent-workflows.md#a-periodic-structure-inspection-workflow) without silently selecting an unrelated model.
+
 ## Finite layer illustrations
 
 `patch_3d(recipe, layers=3, layer_spacing=3.4, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15)` makes a separate **nonperiodic illustration** from an existing finite drawing. Its median real-atom bond length is scaled to the requested ångström value. AA aligns layers; AB uses alternating offsets `0, s, 0, s`; ABC uses `0, s, 2s, 0`; progressive slip uses `0, s, 2s, 3s`; twisted layers rotate successively around the drawing centroid by the chosen angle. Offset modes require an explicit slip vector in ångströms; pore shape does not infer it. These are chosen illustration transforms, not crystallographic stacking assignments such as AB1 or ABC1. Layer translations/rotations are recorded individually. Bond connectivity and internal distances are retained within each finite layer. No interlayer bonds, missing hydrogens, or optimized atomic geometry are invented. XYZ uses `X` for continuation placeholders. This output is not accepted as a periodic pore-analysis structure.
+
+### Checking the actual displayed finite atoms
+
+`/science/finite-inspect` accepts the patch result's `viewer` as `model`, with `periodic: false`, Cartesian coordinates in Å and supplied bonds. It reports real-atom inventory, extents, supplied real-atom bonds, finite graph components and bond-length range. `*`, `X` and `R` continuation placeholders are excluded from the physical inventory and counted separately. Missing hydrogens remain missing, so this inventory is not a complete molecular or COF formula. No cell density or periodic dimensionality is reported.
+
+Up to 12,000 displayed sites can be inspected; a pair-contact check is available for at most 2,000 real atoms. It reports minimum pair distance and contacts shorter than 0.65 times the sum of RDKit covalent radii, including supplied bonds; only the first 50 are listed, while the total count remains available. This catches obvious geometric collisions, not chemical valence, stability or synthetic feasibility. Each result is bound to the submitted model's SHA-256. The UI invalidates old checks when the current drawing or generated model changes.
+
+### Finite-cluster powder scattering
+
+`/science/finite-powder` takes the same finite viewer model and evaluates the independent-atom Debye equation directly over every real-atom pair:
+
+`I(Q) = Σᵢ fᵢ(Q)² + 2 Σᵢ<ⱼ fᵢ(Q) fⱼ(Q) sin(Qrᵢⱼ)/(Qrᵢⱼ)`, with `Q = 4π sin(θ)/λ`.
+
+The zero-distance limit is one. This is an orientational average of the supplied finite object and does not require periodicity; it contains no reciprocal-lattice indexing or hkl assignments. [IUCr discussion of the Debye equation](https://journals.iucr.org/a/issues/2016/06/00/me0628/).
+
+COFdraw uses its pinned neutral-atom IT92 form-factor table, coordinates in Å, wavelength in Å, and degrees 2θ. The response includes Q in Å⁻¹, intensity in electron-squared units, a profile normalized to a maximum of 100, CSV, model hash and coefficient hash. Default wavelength is 1.5406 Å, range 2–50°, step 0.1°. The work limit is 2,000 real atoms, 15,001 angular points and 300 million pair/angle products. A rejected calculation needs fewer layers, a narrower range or a larger step rather than a hidden approximation.
+
+No periodic images, missing hydrogens, thermal motion, polarization, absorption, anomalous/incoherent scattering or instrumental profile are added. Continuation placeholders scatter no intensity. An illustrative drawing's finite scattering is therefore a comparison of its supplied geometry, not a periodic crystal PXRD prediction or experimental fit. The five finite stacking comparisons use the same drawing and layer count. Each plotted curve is independently normalized; peak heights do not measure phase fractions or relative total scattering power.
+
+## Explicit periodic stacking comparisons
+
+`/science/stacking` constructs AA, AB, ABC or progressively slipped periodic hypotheses from a supplied single near-planar layer parallel to a,b. The unwrapped layer thickness must be at most 0.35 Å. A distance-inferred covalent graph must have robust rank-two components, no flagged short contacts and no covalent or borderline contacts between layers along c. Boundary-wrapped atoms are lifted into the same physical layer before these checks. Molecular, chain, 3D-network, multilayer or cutoff-sensitive inputs are rejected rather than flattened into a different structure.
+
+The two slip components are Å along the in-plane orthonormal frame formed by the a vector and layer normal. Internal Cartesian geometry is preserved, including the original oblique cell's in-plane c contribution. AA has one layer per cell; AB uses `0,s` with a two-layer repeat; ABC uses `0,s,2s` with a three-layer repeat; progressive slip uses one layer and an oblique c vector. Spacing is explicit, 2.5–12 Å. Arbitrary twist is not accepted because a valid commensurate periodic cell has not been supplied.
+
+The returned coordinates, unit cell and provenance support actual CIF/XYZ/PDB export and the existing periodic `pxrd` calculation. Compare every arrangement from the same original layer and use identical diffraction settings. These cells are unrelaxed assumptions; the input connectivity screen does not certify favorable interlayer packing or experimental stacking. Inspect resulting contacts before calculating or interpreting pores and adsorption. The [periodic characterization method](characterization-methods.md) describes the separate reciprocal-cell powder calculation.
 
 ## Interpenetration hypotheses
 

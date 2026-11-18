@@ -14,7 +14,29 @@
       "atoms": 66,
       "formula": "H24 C36 N6",
       "minimum_atom_distance_angstrom": 1.099199996722577,
-      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AA. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AA. Full-cell explicit-H reticular hypothesis from the stated precursor pair. Topology and stacking are chosen; no experimental assignment or geometry optimization.",
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "pa"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(N)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      }
     },
     {
       "id": "hcb-imine-ab",
@@ -25,7 +47,29 @@
       "atoms": 132,
       "formula": "H48 C72 N12",
       "minimum_atom_distance_angstrom": 1.0991999967225767,
-      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AB1. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+      "description": "T3_BENZ_CHO_H-L2_BENZ_NH2_H-HCB_A-AB1. Full-cell explicit-H reticular hypothesis from the stated precursor pair. Topology and stacking are chosen; no experimental assignment or geometry optimization.",
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "pa"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(N)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      }
     },
     {
       "id": "hcb-expanded-aa",
@@ -36,7 +80,29 @@
       "atoms": 126,
       "formula": "H48 C72 N6",
       "minimum_atom_distance_angstrom": 1.0991999025319648,
-      "description": "T3_TPBZ_NH2_H-L2_BENZ_CHO_H-HCB_A-AA. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+      "description": "T3_TPBZ_NH2_H-L2_BENZ_CHO_H-HCB_A-AA. Full-cell explicit-H reticular hypothesis from the stated precursor pair. Topology and stacking are chosen; no experimental assignment or geometry optimization.",
+      "precursor_match": {
+        "monomer_ids": [
+          "ta",
+          "tapb"
+        ],
+        "canonical_smiles": [
+          "O=Cc1ccc(C=O)cc1",
+          "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_2"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      }
     },
     {
       "id": "dia-imine",
@@ -47,7 +113,65 @@
       "atoms": 146,
       "formula": "H56 C82 N8",
       "minimum_atom_distance_angstrom": 1.0991999967225703,
-      "description": "D4_TTPM_NH2_H-L2_BENZ_CHO_H-DIA_A-1. Generated, unrelaxed reticular model with explicit cell and hydrogen atoms. Topology/stacking are chosen assumptions; not a match to the active drawing or an experimental crystal."
+      "description": "D4_TTPM_NH2_H-L2_BENZ_CHO_H-DIA_A-1. Full-cell explicit-H reticular hypothesis from the stated precursor pair. Topology and stacking are chosen; no experimental assignment or geometry optimization.",
+      "precursor_match": {
+        "monomer_ids": [
+          "ta",
+          "tapm"
+        ],
+        "canonical_smiles": [
+          "O=Cc1ccc(C=O)cc1",
+          "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [],
+        "generated_topology": "dia",
+        "requires_explicit_topology_choice": true,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      }
+    },
+    {
+      "id": "hcb-tfb-tapb-aa",
+      "label": "TFB + TAPB imine \u00b7 AA layers",
+      "model_name": "T3_BENZ_CHO_H-T3_TPBZ_NH2_H-HCB-AA",
+      "path": "hcb-tfb-tapb-aa.cif",
+      "sha256": "d04a3b5047016b4df07b0b727f0a226cb4f276bdf5766b537a9c32e4d125e307",
+      "atoms": 57,
+      "formula": "H21 C33 N3",
+      "minimum_atom_distance_angstrom": 1.0991999025319643,
+      "precursor_match": {
+        "monomer_ids": [
+          "tfb",
+          "tapb"
+        ],
+        "canonical_smiles": [
+          "O=Cc1cc(C=O)cc(C=O)c1",
+          "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1"
+        ],
+        "roles": [
+          "aryl_aldehyde",
+          "primary_arylamine"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "hcb_3_3"
+        ],
+        "generated_topology": "hcb",
+        "requires_explicit_topology_choice": false,
+        "preserves_drawing_coordinates": false,
+        "qualification": "Exact precursor pair and chosen imine chemistry; an independent unrelaxed periodic hypothesis, not conversion of finite drawing coordinates or proof of source/crystal identity."
+      },
+      "description": "T3_BENZ_CHO_H-T3_TPBZ_NH2_H-HCB-AA. Full-cell explicit-H reticular hypothesis from the stated precursor pair. Topology and stacking are chosen; no experimental assignment or geometry optimization."
     }
-  ]
+  ],
+  "precursor_mapping_audit": {
+    "path": "precursor-mapping.audit.json",
+    "sha256": "97b08fe051457ceedf26d7018f30d1f9a5eca52888f2e03e4dbd07989e4d95e1"
+  },
+  "matched_model_generator": "scripts/generate_matched_crystal_templates.py"
 }

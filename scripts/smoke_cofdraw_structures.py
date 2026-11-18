@@ -126,7 +126,7 @@ def main():
             page.wait_for_function("window.COFdrawScience.structure?.atoms.length===66")
             delayed[0][0].fulfill(response=delayed[0][1]);page.wait_for_timeout(150)
             assert page.locator('#porosity-results .metric-card').count()==0
-            page.unroute('**/api/drawing/science/porosity',delay_pores)
+            page.unroute('**/api/drawing/science/geometry',delay_pores)
             checks.append('Changing periodic model cancels pending analysis; late pore results cannot populate the new structure')
             with page.expect_response('**/api/drawing/science/networks') as contact_model:page.locator('#build-networks').click()
             assert contact_model.value.status==200

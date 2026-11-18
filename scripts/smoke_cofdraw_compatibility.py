@@ -239,10 +239,20 @@ def main():
             choose("tfb")
             page.locator("#monomer-library-dialog").wait_for(state="hidden")
             ready()
-            assert page.locator("#smiles-a").input_value() == monomers["tfb"]["smiles"]
-            assert page.locator("#smiles-b").input_value() == monomers["tapb"]["smiles"]
+            assert page.locator("#smiles-a").input_value() == monomers["tapb"]["smiles"]
+            assert page.locator("#smiles-b").input_value() == monomers["tfb"]["smiles"]
             assert page.locator("#template").input_value() != "sql_4_2"
-            checks.append("Changing A invalidates retained incompatible B; reversed amine/aldehyde selection safely arranges the construction roles")
+            with page.expect_response("**/api/drawing/render") as drawn:
+                with page.expect_response("**/api/drawing/prepare") as prepared:
+                    page.locator("#build").click()
+                assert prepared.value.status == 200
+                assert prepared.value.request.post_data_json['monomer_a'] == monomers['tfb']['smiles']
+                assert prepared.value.request.post_data_json['monomer_b'] == monomers['tapb']['smiles']
+            assert drawn.value.status == 200
+            page.wait_for_function("!window.COFdrawStudio.state.busy")
+            assert page.locator("#smiles-a").input_value() == monomers["tapb"]["smiles"]
+            assert page.locator("#smiles-b").input_value() == monomers["tfb"]["smiles"]
+            checks.append("Choosing aldehyde B preserves the user's amine A; real preparation maps reactive roles without moving the visible selections")
 
             # In-flight and unsupported custom A must not use stale previous metadata.
             page.locator("#smiles-a").fill("c1ccccc1")
@@ -263,12 +273,13 @@ def main():
             assert page.locator("#build").is_disabled()
             checks.append("Pending/unsupported custom A cannot reuse stale compatibility; an empty A permits full catalog browsing")
             close_library()
-            page.locator("#smiles-a").fill(monomers["tfb"]["smiles"])
+            page.locator("#smiles-a").fill(monomers["tapb"]["smiles"])
             inspected("a")
             ready()
             open_b()
             assert not page.locator("#library-show-all").is_checked()
-            assert "tfb" not in ids() and "tapb" in ids()
+            assert "tapb" not in ids() and "tfb" in ids()
+            assert page.locator('.library-thumbnail img').first.evaluate("element => getComputedStyle(element).transform") == 'none'
             checks.append("Restoring valid A refreshes B choices and resets the compatible-only default")
             close_library()
             quality["value"] = "needs_review"

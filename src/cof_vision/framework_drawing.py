@@ -21,6 +21,10 @@ from .depiction_rings import symmetric_depiction_rings
 
 VERSION = "cof-chemical-patch-1"
 TP = "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
+# Ordinary explicit H is removed by the SMILES reader. Retained isotope-labelled
+# hydrogen neighbours need a separate atom-balanced reaction rule, so exclude
+# them rather than silently deleting D/T during the condensation.
+ARYL_HYDROXYLAMINE_SMARTS = "[c]-[NX3;H1;+0;!$(*-[#1])]-[OX2;H1;+0;!$(*-[#1])]"
 LINKAGE_LIBRARY = {
     "imine": {
         "version": 1, "status": "implemented_scoped",
@@ -43,6 +47,14 @@ LINKAGE_LIBRARY = {
 # These are explicit product-graph construction rules, not claims that any
 # arbitrary pair will form a crystalline framework under a universal recipe.
 LINKAGE_LIBRARY.update({
+    "nitrone": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","aryl_hydroxylamine"],
+                "site_smarts":{"aryl_aldehyde":"[c][CH1](=[O])","aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS},
+                "join_bond_order":2,
+                "bond_changes":"Remove aldehyde O; connect aldehyde C to hydroxylamine N as Ar-CH=[N+]([O-])-Ar. Retain N-O; remove N-H and O-H from the patch.",
+                "limits":"Neutral directly aryl-bound N(H)-O(H) only; protected, charged and N-substituted hydroxylamines or reactive D/T need explicit recipes. New C=N E/Z, crystallization, topology and synthesis conditions are not assigned.",
+                "source_doi":"10.1002/anie.202307674",
+                "source_url":"https://yaghi.berkeley.edu/pdfPublications/23NitroneCOF.pdf",
+                "source_scope":"Scheme 1 supports the local product motif; this rule does not assign COF-115 identity or its kgm net."},
     "acylhydrazone": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","acylhydrazide"],"join_bond_order":2,
                       "bond_changes":"Remove aldehyde O; connect aldehyde C to terminal hydrazide N as C=N-NH-C(=O).",
                       "limits":"Terminal acylhydrazide NH2 only. Acyl NH is retained. E/Z and synthesis conditions require source evidence."},
@@ -83,6 +95,15 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
     sites, removed = [], []
     if role == "primary_arylamine":
         sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NH2]"))]
+    elif role == "aryl_hydroxylamine":
+        for _, nitrogen, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts(ARYL_HYDROXYLAMINE_SMARTS)):
+            sites.append(nitrogen)
+            n_atom, o_atom = rw.GetAtomWithIdx(nitrogen), rw.GetAtomWithIdx(oxygen)
+            n_atom.SetFormalCharge(1)
+            n_atom.SetChiralTag(Chem.ChiralType.CHI_UNSPECIFIED)
+            o_atom.SetFormalCharge(-1)
+            o_atom.SetNumExplicitHs(0)
+            o_atom.SetNoImplicit(True)
     elif role == "acylhydrazide":
         sites = [hit[0] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[NX3;H2]-[NX3;H1]-[CX3](=[OX1])"))]
     elif role == "hydrazine":
@@ -364,6 +385,7 @@ def build_patch(recipe: dict):
     # valence/kekulization and every other sanitizer, and do not assert a new
     # macrocyclic aromatic circuit across the intercomponent linkages.
     aromatic_atoms = [a.GetIdx() for a in mol.GetAtoms() if a.GetIsAromatic()]
+    aromatic_explicit_h = {i: mol.GetAtomWithIdx(i).GetNumExplicitHs() for i in aromatic_atoms}
     aromatic_bonds = [b.GetIdx() for b in mol.GetBonds() if b.GetIsAromatic()]
     for name in ("SANITIZE_CLEANUP", "SANITIZE_CLEANUP_ORGANOMETALLICS", "SANITIZE_PROPERTIES",
                  "SANITIZE_SYMMRINGS", "SANITIZE_KEKULIZE", "SANITIZE_FINDRADICALS",
@@ -375,9 +397,15 @@ def build_patch(recipe: dict):
             Chem.SanitizeMol(mol, sanitizeOps=getattr(Chem.SanitizeFlags, name))
     for idx in aromatic_atoms:
         mol.GetAtomWithIdx(idx).SetIsAromatic(True)
+        # ADJUSTHS sees the temporary Kekule representation and may turn [nH]
+        # into a cached implicit H. Restoring aromatic bonds alone then loses
+        # that H on the next property-cache refresh (e.g. a porphyrin core).
+        # These atoms retain their source-fragment bonding and hydrogen state.
+        mol.GetAtomWithIdx(idx).SetNumExplicitHs(aromatic_explicit_h[idx])
     for idx in aromatic_bonds:
         mol.GetBondWithIdx(idx).SetIsAromatic(True)
         mol.GetBondWithIdx(idx).SetBondType(Chem.BondType.AROMATIC)
+    mol.UpdatePropertyCache(strict=True)
     # Each SanitizeMol call clears ring information, including operations that
     # do not calculate rings. Cache the selected basis after the final one so
     # stereo direction setup and drawing do not trigger RDL recomputation.

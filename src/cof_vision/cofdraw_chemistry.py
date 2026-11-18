@@ -7,12 +7,14 @@ import json
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import rdDepictor
-from .framework_drawing import LINKAGE_LIBRARY, TP, canonical, linkage_fragment, _ports
+from .framework_drawing import ARYL_HYDROXYLAMINE_SMARTS, LINKAGE_LIBRARY, TP, canonical, linkage_fragment, _ports
 
 ROLE_LABELS = {"aryl_aldehyde":"Aromatic aldehyde", "primary_arylamine":"Primary aromatic amine",
-               "tp_trialdehyde":"Tp trialdehyde", "acylhydrazide":"Terminal acylhydrazide", "hydrazine":"Hydrazine"}
+               "tp_trialdehyde":"Tp trialdehyde", "acylhydrazide":"Terminal acylhydrazide", "hydrazine":"Hydrazine",
+               "aryl_hydroxylamine":"Aromatic hydroxylamine · Ar–NH–OH"}
 LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "acylhydrazone":"Acylhydrazone · C=N–NH–CO",
-                  "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH"}
+                  "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
+                  "nitrone":"Nitrone · C=N⁺(O⁻)"}
 TEMPLATES = [
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
@@ -30,6 +32,7 @@ def inspect_monomer(smiles):
     mol=Chem.MolFromSmiles(smiles)
     if mol is None: raise ValueError("Invalid monomer SMILES")
     patterns={"aryl_aldehyde":"[c][CH1](=[O])", "primary_arylamine":"[c][NH2]",
+              "aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS,
               "acylhydrazide":"[NX3;H2]-[NX3;H1]-[CX3](=[OX1])",
               "boronic_acid":"[B]([OH1])[OH1]", "nitrile":"[C]#[N]"}
     groups=[]

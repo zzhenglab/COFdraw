@@ -106,6 +106,7 @@ def main():
             page.wait_for_function("window.COFdrawStudio.state.result && !window.COFdrawStudio.state.dirty && !window.COFdrawStudio.state.busy")
             expected = page.evaluate("window.COFdrawStudio.state.recipe.design_cofex_notation")
             assert page.locator("#identity-string").inner_text() == expected and " COFex.sql.cat0;" in expected
+            page.locator('.identity-more > summary').click()
             assert "assumption" in page.locator("#identity-cat").inner_text()
             assert "unknown" in page.locator("#identity-cat").inner_text()
             page.locator("#identity-heading").scroll_into_view_if_needed()
