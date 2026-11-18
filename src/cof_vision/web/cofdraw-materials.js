@@ -47,21 +47,22 @@
     downloads(comparison,result);C.details(comparison,result);
     C.status(`Structure check complete: ${result.successful} of ${result.entries.length} models processed. Review inferred bonds and quality diagnostics.`);
   }
-  $('screen-current').addEventListener('click',()=>C.work(async()=>{
-    const result=await S.api('science/screen',{entries:[{name:$('viewer-title').textContent,structure:structure()}],include_porosity:$('screen-pores').checked});showComparison(result);
+  $('screen-current').addEventListener('click',()=>C.work(async api=>{
+    const model=structure(),result=await api('science/screen',{entries:[{name:$('viewer-title').textContent,structure:model}],include_porosity:$('screen-pores').checked});showComparison(result);
+    if(result.entries[0]?.network&&C.viewer.atoms.every(a=>a.network===undefined)){const groups=new Map();result.entries[0].network.components.forEach((group,index)=>group.atom_indices.forEach(i=>groups.set(i,index)));for(const atom of C.viewer.atoms)atom.inferred_component=groups.get(atom.index%model.atoms.length);C.viewer.draw();C.note($('inspection-results'),'Network coloring can show distance-inferred quotient-graph components; this does not establish an interpenetration degree.');}
   }));
   $('screen-files').addEventListener('click',()=>$('screen-cif-files').click());
   $('screen-cif-files').addEventListener('change',e=>{
     const files=[...e.target.files];e.target.value='';if(!files.length)return;
-    C.work(async()=>{
+    C.work(async api=>{
       if(files.length>8)throw new Error('Compare at most eight CIF files at once.');
       const entries=[],failures=[];
       for(const file of files){
-        try{if(file.size>2_000_000)throw new Error('CIF limit is 2 MB.');const result=await S.api('science/model',{cif_text:await file.text(),repeats:[1,1,1]});entries.push({name:file.name,structure:result.structure});}
+        try{if(file.size>2_000_000)throw new Error('CIF limit is 2 MB.');const result=await api('science/model',{cif_text:await file.text(),repeats:[1,1,1]});entries.push({name:file.name,structure:result.structure});}
         catch(error){failures.push(`${file.name}: ${error.message}`);}
       }
       if(!entries.length)throw new Error(failures.join('\n'));
-      const result=await S.api('science/screen',{entries,include_porosity:$('screen-pores').checked});showComparison(result);warnings($('comparison-results'),failures);
+      const result=await api('science/screen',{entries,include_porosity:$('screen-pores').checked});showComparison(result);warnings($('comparison-results'),failures);
     });
   });
   function drawPattern(profile){
@@ -77,36 +78,12 @@
     element('path',{d:xs.map((x,i)=>(i?'L':'M')+point(x,ys[i]).join(',')).join(' '),fill:'none',stroke:'#217d70','stroke-width':1.7,'stroke-linejoin':'round'});
     root.append(svg);
   }
-  $('calculate-pxrd').addEventListener('click',()=>C.work(async()=>{
-    const result=await S.api('science/pxrd',{structure:structure(),wavelength:Number($('xrd-wavelength').value),two_theta_min:Number($('xrd-min').value),two_theta_max:Number($('xrd-max').value),fwhm:Number($('xrd-fwhm').value),step:Math.min(.02,Number($('xrd-fwhm').value)/2)});
+  $('calculate-pxrd').addEventListener('click',()=>C.work(async api=>{
+    const result=await api('science/pxrd',{structure:structure(),wavelength:Number($('xrd-wavelength').value),two_theta_min:Number($('xrd-min').value),two_theta_max:Number($('xrd-max').value),fwhm:Number($('xrd-fwhm').value),step:Math.min(.02,Number($('xrd-fwhm').value)/2)});
     drawPattern(result.profile);const root=$('pxrd-results');root.replaceChildren();
     table(root,['2θ / °','d / Å','Relative I','h k l'],[...result.peaks].sort((a,b)=>b.intensity-a.intensity).slice(0,12).map(p=>[number(p.two_theta_degrees),number(p.d_spacing_angstrom),number(p.intensity,1),p.hkls.map(h=>Array.isArray(h)?h.join(' '):JSON.stringify(h)).join('; ')]));
     warnings(root,result.warnings);downloads(root,result);C.details(root,{method:result.method,parameters:result.parameters});
     C.status('Model PXRD calculated. Export the numeric CSV for comparison or publication plotting.');
-  }));
-  async function query(){
-    const type=$('knowledge-type').value,result=await S.api('science/query',{query:$('knowledge-query').value,record_types:type?[type]:null,limit:20});
-    const root=$('knowledge-results');root.replaceChildren(text('p',`${result.matched_count} matching records`,'small-note'));
-    const save=text('button','Save search results','button outline');save.addEventListener('click',()=>S.saveText('cofdraw-catalog-query.json',JSON.stringify(result,null,2)));root.append(save);
-    for(const record of result.records){
-      const card=text('article','','knowledge-card');card.append(text('strong',record.label),text('small',`${record.record_type} · ${record.id}`));
-      if(record.support?.status)card.append(text('p',`Availability: ${record.support.status.replaceAll('_',' ')}`));
-      const qualifiers=Array.isArray(record.qualifications)?record.qualifications:[record.qualifications];for(const qualifier of qualifiers.filter(Boolean))card.append(text('p',typeof qualifier==='string'?qualifier:JSON.stringify(qualifier)));
-      if(record.record_type==='source'){
-        const b=text('button','Open source drawing','button outline');b.addEventListener('click',async()=>{try{const r=await S.api(`sources/${encodeURIComponent(record.record_id)}`);S.acceptRecipe(r.recipe,record.record_id,r.metadata);S.showSourceMonomers(r.recipe,r.metadata);S.state.style=r.recipe.source_style?'source':'standard';S.state.styleOptions={};$('science-dialog').close();await S.render();}catch(error){C.status(error.message,true);}});card.append(b);
-      }else if(record.record_type==='crystal'){
-        const b=text('button','Open periodic model','button outline');b.addEventListener('click',()=>{$('crystal-template').value=record.record_id;$('crystal-template').dispatchEvent(new Event('change'));C.tab('model');$('build-crystal').click();});card.append(b);
-      }
-      C.details(card,record);root.append(card);
-    }
-    for(const error of result.errors||[])C.note(root,error,true);
-  }
-  $('query-knowledge').addEventListener('click',()=>C.work(query));
-  $('knowledge-query').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();C.work(query);}});
-  $('query-reports').addEventListener('click',()=>C.work(async()=>{
-    const result=await S.api('science/reports'),root=$('saved-reports');root.replaceChildren();
-    if(!result.reports.length)C.note(root,'No scientific reports have been saved in this data directory yet.');
-    for(const report of result.reports){const b=text('button',`${report.operation} · ${new Date(report.created_at_utc).toLocaleString()}`,'button outline');b.addEventListener('click',async()=>{try{const r=await S.api(`science/reports/${report.report_id}`);C.details(root,r);downloads(root,r);}catch(error){C.status(error.message,true);}});root.append(b);}
   }));
   $('viewer-axis').addEventListener('change',()=>{
     const axis=$('viewer-axis').value;if(axis==='free')return;const index={a:0,b:1,c:2}[axis],direction=C.viewer.model?.cell?.[index];
@@ -121,6 +98,6 @@
   });
   function clearAnalysis(){for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}
   window.addEventListener('cofdraw:structure',clearAnalysis);
-  for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max'])$(id).addEventListener('input',()=>{$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
-  $('screen-pores').addEventListener('change',()=>{$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
+  for(const id of ['xrd-wavelength','xrd-fwhm','xrd-min','xrd-max'])$(id).addEventListener('input',()=>{C.invalidate('',false);$('pxrd-results').replaceChildren();$('pxrd-plot').replaceChildren();});
+  $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
 })();

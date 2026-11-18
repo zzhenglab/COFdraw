@@ -9,6 +9,7 @@ import sys
 import time
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
+from smoke_cofdraw_geometry import check_geometry_examples
 
 def main():
     ap = argparse.ArgumentParser()
@@ -48,9 +49,13 @@ def main():
         library = api("/api/drawing/library")
         assert len(library["source_recipes"]) == 17 and not library["source_registry_errors"]
         assert len(library["styles"]) == 20
-        assert len(library["monomer_presets"]) >= 49
+        assert len(library["monomer_presets"]) == 81
         assert len(library["templates"]) == 7
         report["library"] = {key: len(library[key]) for key in ("styles", "monomer_presets", "templates", "topology_catalog", "linkages")}
+        def download(path):
+            with urlopen(base + path, timeout=30) as response:
+                return response.read()
+        report["geometry_checks"] = check_geometry_examples(api, download, output / "geometry")
         for source in library["source_recipes"]:
             start = time.monotonic()
             result = api("/api/drawing/render", {"source_recipe_id": source["recipe_id"], "style_id": "red_blue", "size": 800})
@@ -81,9 +86,37 @@ def main():
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_browser.py")), "--base-url", base,
                         "--output-dir", str(output / "browser")], check=True, timeout=600, creationflags=hidden)
         report["browser_report"] = json.loads((output / "browser/cofdraw-browser-report.json").read_text(encoding="utf-8"))
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_compatibility.py")), "--base-url", base,
+                        "--expected-monomers", "81", "--output-dir", str(output / "compatibility")], check=True, timeout=600, creationflags=hidden)
+        report["compatibility_report"] = json.loads((output / "compatibility/compatibility-report.json").read_text(encoding="utf-8"))
+        assert report["compatibility_report"]["passed"]
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_identity.py")), "--base-url", base,
+                        "--output-dir", str(output / "identity-auto")], check=True, timeout=600, creationflags=hidden)
+        report["identity_auto_report"] = json.loads((output / "identity-auto/identity-browser-report.json").read_text(encoding="utf-8"))
+        assert report["identity_auto_report"]["passed"]
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_synthesis.py")), "--base-url", base,
+                        "--output-dir", str(output / "synthesis")], check=True, timeout=600, creationflags=hidden)
+        report["synthesis_report"] = json.loads((output / "synthesis/synthesis-browser-report.json").read_text(encoding="utf-8"))
+        assert report["synthesis_report"]["passed"]
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_studio.py")), "--base-url", base,
                         "--output-dir", str(output / "studio")], check=True, timeout=600, creationflags=hidden)
         report["studio_report"] = json.loads((output / "studio/studio-smoke-report.json").read_text(encoding="utf-8"))
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_structures.py")), "--base-url", base,
+                        "--output-dir", str(output / "structures")], check=True, timeout=600, creationflags=hidden)
+        report["structures_report"] = json.loads((output / "structures/structures-smoke-report.json").read_text(encoding="utf-8"))
+        assert report["structures_report"]["passed"]
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_measure.py")), "--base-url", base,
+                        "--output-dir", str(output / "measure")], check=True, timeout=600, creationflags=hidden)
+        report["measure_report"] = json.loads((output / "measure/measure-smoke-report.json").read_text(encoding="utf-8"))
+        assert report["measure_report"]["failure"] is None and not report["measure_report"]["javascript_errors"]
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_porosity.py")), "--base-url", base,
+                        "--output-dir", str(output / "geometry")], check=True, timeout=600, creationflags=hidden)
+        report["geometry_report"] = json.loads((output / "geometry/geometry-smoke-report.json").read_text(encoding="utf-8"))
+        assert report["geometry_report"]["failure"] is None and not report["geometry_report"]["javascript_errors"]
+        subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_adsorption.py")), "--base-url", base,
+                        "--output-dir", str(output / "adsorption")], check=True, timeout=600, creationflags=hidden)
+        report["adsorption_report"] = json.loads((output / "adsorption/adsorption-smoke-report.json").read_text(encoding="utf-8"))
+        assert report["adsorption_report"]["failure"] is None and not report["adsorption_report"]["javascript_errors"]
         subprocess.run([sys.executable, str(Path(__file__).with_name("smoke_cofdraw_materials.py")), "--base-url", base,
                         "--output-dir", str(output / "materials")], check=True, timeout=600, creationflags=hidden)
         report["materials_report"] = json.loads((output / "materials/materials-smoke-report.json").read_text(encoding="utf-8"))

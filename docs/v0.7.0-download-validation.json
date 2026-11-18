@@ -1,0 +1,1070 @@
+{
+  "schema_version": 2,
+  "version": "0.7.0",
+  "validated_utc": "2026-11-18T02:34:09.734421+00:00",
+  "passed": true,
+  "archive_sha256": "e9d0675710e43b9c90d22c9529abc8a40cfbd9ec1666e8521125e7f950736f18",
+  "archive_bytes": 88657317,
+  "executable_sha256": "cdd5741044370a1e73cf9faa4c8b0059a4e8baa5250c86f5ca9cf0a56d7f01a9",
+  "runtime_config_sha256": "94cfe11aed6870ddb76a8ef105e41359fc1fc074638ec6c965c46bd31f49563a",
+  "launch": {
+    "method": "ordinary_explorer_reviewed_shell_link",
+    "passed": true,
+    "native": {
+      "version": "0.7.0",
+      "status": "desktop_smoke_passed",
+      "title": "COFdraw \u2014 Chemical drawing studio",
+      "native_save_bridge": true
+    },
+    "process": {
+      "integrity_rid": 8192,
+      "medium_integrity": true
+    },
+    "server_closed": true
+  },
+  "first_run_confirmation": {
+    "observed_by_test_agent": false,
+    "action_by_test_agent": null,
+    "security_settings_changed": false,
+    "agent_removed_download_marks": false,
+    "executable_mark_observation": "present_before_absent_after",
+    "qualification": "No confirmation dialog was visible when inspected. The executable download mark was present before launch and absent afterward; no cause is inferred."
+  },
+  "marked_file_count": 233,
+  "marked_pyd_count": 109,
+  "marked_files": [
+    {
+      "path": "_internal/_asyncio.pyd",
+      "sha256": "746bc8fa88282afe19dc60e426cc0a75bea3bd137cca06a0b57a30bd31459403"
+    },
+    {
+      "path": "_internal/_bz2.pyd",
+      "sha256": "00b8ca9a338d2b47285c9e56d6d893db2a999b47216756f18439997fb80a56e3"
+    },
+    {
+      "path": "_internal/_cffi_backend.cp311-win_amd64.pyd",
+      "sha256": "0b5c05bf3e9da14c33566d2c546fb7618ac7fc2b89365a66cfb1082ffe3d898d"
+    },
+    {
+      "path": "_internal/_ctypes.pyd",
+      "sha256": "c148292328f0aab7863af82f54f613961e7cb95b7215f7a81cafaf45bd4c42b7"
+    },
+    {
+      "path": "_internal/_decimal.pyd",
+      "sha256": "980a63f2b39cf16910f44384398e25f24482346a482addb00de42555b17d4278"
+    },
+    {
+      "path": "_internal/_elementtree.pyd",
+      "sha256": "02e30b6a2bee5be5336e40a9c89575603051bde86f9c9cdc78b7fa7d9b7bd1f0"
+    },
+    {
+      "path": "_internal/_hashlib.pyd",
+      "sha256": "87dd0c858620287454fd6d31d52b6a48eddbb2a08e09e8b2d9fdb0b92200d766"
+    },
+    {
+      "path": "_internal/_lzma.pyd",
+      "sha256": "f5e01b516c2c23035f7703e23569dec26c5616c05a929b2580ae474a5c6722c5"
+    },
+    {
+      "path": "_internal/_multiprocessing.pyd",
+      "sha256": "975c1947798e3c39898c86675ca1eb68249f77361f41f172f9800275227213b9"
+    },
+    {
+      "path": "_internal/_overlapped.pyd",
+      "sha256": "ca106e4dfdeafeabf9e98956d3d8d0cb73e109f1a96f1a7e35bc47dbd7c7e164"
+    },
+    {
+      "path": "_internal/_queue.pyd",
+      "sha256": "3f8e7e6aa13b417acc78b63434fb1144e6319a010a9fc376c54d6e69b638fe4c"
+    },
+    {
+      "path": "_internal/_socket.pyd",
+      "sha256": "a19e3c7c03ef1b5625790b1c9c42594909311ab6df540fbf43c6aa93300ab166"
+    },
+    {
+      "path": "_internal/_sqlite3.pyd",
+      "sha256": "ff6a2a2f38b21b7784f97d604c99961d8c07ef455f7908110a4e893835d42b76"
+    },
+    {
+      "path": "_internal/_ssl.pyd",
+      "sha256": "ba5388d6a6557d431e086734a3323621dc447f63ba299b0a815e5837cf869678"
+    },
+    {
+      "path": "_internal/_uuid.pyd",
+      "sha256": "e6aa7f1637e211251c9d6f467203b2b6d85e5bc2d901699f2a55af637fa89250"
+    },
+    {
+      "path": "_internal/_zoneinfo.pyd",
+      "sha256": "7e7b4157e401f8281fd85b68f2e21c828bf739c91416b2824dd22cb385eef819"
+    },
+    {
+      "path": "_internal/clr_loader/ffi/dlls/amd64/ClrLoader.dll",
+      "sha256": "07f62bcb1b70320f221ffb2cfc5ce6133815195f3e7cdb8d833222506188c2ac"
+    },
+    {
+      "path": "_internal/clr_loader/ffi/dlls/x86/ClrLoader.dll",
+      "sha256": "3128381d133f4ff746add70100cfef713ce2d78f2b12c02ec24ec453c5dfab0d"
+    },
+    {
+      "path": "_internal/libcrypto-3.dll",
+      "sha256": "05fe080eab7fc535c51e10c1bd76a2f3e6217f9c91a25034774588881c3f99de"
+    },
+    {
+      "path": "_internal/libffi-8.dll",
+      "sha256": "eff52743773eb550fcc6ce3efc37c85724502233b6b002a35496d828bd7b280a"
+    },
+    {
+      "path": "_internal/libssl-3.dll",
+      "sha256": "2e9fbcd8f7fdc13a5179533239811456554f2b3aa2fb10e1b17be0df81c79006"
+    },
+    {
+      "path": "_internal/numpy/_core/_multiarray_tests.cp311-win_amd64.pyd",
+      "sha256": "adf0e01de577f4ccc2a11099c817cb41c8a78b6174175356dd62e745075cfac8"
+    },
+    {
+      "path": "_internal/numpy/_core/_multiarray_umath.cp311-win_amd64.pyd",
+      "sha256": "4fb4c5d62a6bd766eea716350eaf5396580e33cf7dc159e305488d1b7d72dad2"
+    },
+    {
+      "path": "_internal/numpy/fft/_pocketfft_umath.cp311-win_amd64.pyd",
+      "sha256": "e22ee51c9761e8cb2e153efc321d09cb656c5573488e55167f69d6e070d22466"
+    },
+    {
+      "path": "_internal/numpy/linalg/_umath_linalg.cp311-win_amd64.pyd",
+      "sha256": "8742391ee3d6dfb4a6e41418626bb45048b102e05229d424279ddefb877d9cd6"
+    },
+    {
+      "path": "_internal/numpy/random/_bounded_integers.cp311-win_amd64.pyd",
+      "sha256": "418dc5293b11f83a70c63ef77c3c9ca0dc4b9f20c7fadb4625805480305ddcef"
+    },
+    {
+      "path": "_internal/numpy/random/_common.cp311-win_amd64.pyd",
+      "sha256": "f2cdbaa3d3d0dd8f5b74b7b4630470d609be4e4d31f8e37f8681e6c3c5aca895"
+    },
+    {
+      "path": "_internal/numpy/random/_generator.cp311-win_amd64.pyd",
+      "sha256": "91f53ff9a803213ea5fa38b73be057b448be1728b4a353586d10f08d4f2c021c"
+    },
+    {
+      "path": "_internal/numpy/random/_mt19937.cp311-win_amd64.pyd",
+      "sha256": "e66de88dbf0b9a2ae67576cf2f4e7c220e10729d445403787bc8b58f4e8a6750"
+    },
+    {
+      "path": "_internal/numpy/random/_pcg64.cp311-win_amd64.pyd",
+      "sha256": "16e4f9401783c502d82bce06263d98c985c841f3115d301741b22413bbbff851"
+    },
+    {
+      "path": "_internal/numpy/random/_philox.cp311-win_amd64.pyd",
+      "sha256": "56c44540e500dfb820e5a75004b5cf9945a648a87d0e40d64672325dd22fa3c1"
+    },
+    {
+      "path": "_internal/numpy/random/_sfc64.cp311-win_amd64.pyd",
+      "sha256": "23f03f25c5528ca51c11846bcbb5aaaee7c1c518897249865c47dca913c43863"
+    },
+    {
+      "path": "_internal/numpy/random/bit_generator.cp311-win_amd64.pyd",
+      "sha256": "eafa63966c1b3e34397bec8fef991dee5a7944b09058b38afd9f2de40acfd141"
+    },
+    {
+      "path": "_internal/numpy/random/mtrand.cp311-win_amd64.pyd",
+      "sha256": "6f8a3d3ce835c6cd4fea9e4425b757b268ad69b0cef201a225f6cbd1b453182a"
+    },
+    {
+      "path": "_internal/numpy.libs/libscipy_openblas64_-63c857e738469261263c764a36be9436.dll",
+      "sha256": "63c857e738469261263c764a36be9436ebdeaa272e340a828f42047a97131080"
+    },
+    {
+      "path": "_internal/numpy.libs/msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll",
+      "sha256": "a4c2229bdc2a2a630acdc095b4d86008e5c3e3bc7773174354f3da4f5beb9cde"
+    },
+    {
+      "path": "_internal/PIL/_avif.cp311-win_amd64.pyd",
+      "sha256": "93d18fd6e9170db341560cc3b3909e01346fcaad6ac26128bb8fafca65b4c546"
+    },
+    {
+      "path": "_internal/PIL/_imaging.cp311-win_amd64.pyd",
+      "sha256": "1ead5ef5fb2b0b40d5a92c4baa5e4e111b187e9f9f4e895a1ab8cea8e12318f2"
+    },
+    {
+      "path": "_internal/PIL/_imagingcms.cp311-win_amd64.pyd",
+      "sha256": "6b2b71a29b684727c100cbe2810a69cde03d32fd489150f90ef7ca155556a5fe"
+    },
+    {
+      "path": "_internal/PIL/_imagingft.cp311-win_amd64.pyd",
+      "sha256": "6661a925b55bc9c0465699a64327b3b7602d1b04391caf5ab88efa77e8569838"
+    },
+    {
+      "path": "_internal/PIL/_imagingtk.cp311-win_amd64.pyd",
+      "sha256": "d3a5ebaf8a550fe1e3a5baed6eac89e6e21a5ccd3c8f8f22ae577a57248173c7"
+    },
+    {
+      "path": "_internal/PIL/_webp.cp311-win_amd64.pyd",
+      "sha256": "2d5846f349212f73e613ab18076851d360d3deb0dd7b41db76357ed06e65f39d"
+    },
+    {
+      "path": "_internal/psutil/_psutil_windows.pyd",
+      "sha256": "0035450801bd7d938e9e146c5ec28e619cb5a5f4a18cdc53ac7e9734c7f94f78"
+    },
+    {
+      "path": "_internal/pydantic_core/_pydantic_core.cp311-win_amd64.pyd",
+      "sha256": "ebb4eb03447504f639a3cd1d143d4113b5adffef00d27a5fd195ebf8395a7962"
+    },
+    {
+      "path": "_internal/pyexpat.pyd",
+      "sha256": "c7c7564f7f874fb660a46384980a2cf28bc3e245ca83628a197ccf861eab5560"
+    },
+    {
+      "path": "_internal/python3.dll",
+      "sha256": "db84bc052cfb121fe4db36242ba5f1d2c031b600ef5d8d752cf25b7c02b6bac6"
+    },
+    {
+      "path": "_internal/python311.dll",
+      "sha256": "0817a2a657a24c0d5fbb60df56960f42fc66b3039d522ec952dab83e2d869364"
+    },
+    {
+      "path": "_internal/pythonnet/runtime/Python.Runtime.dll",
+      "sha256": "2ebd4492e28442ef1f1af587afe5b3a090c2ebfa220758ded4f1450f2a27f13a"
+    },
+    {
+      "path": "_internal/raspalib/bin/concrt140.dll",
+      "sha256": "1cccd0f5553d6c4eaf452c5524b4312db7edb206c5d06fdcb6052e9586f6c611"
+    },
+    {
+      "path": "_internal/raspalib/bin/libomp.dll",
+      "sha256": "0386146dfdc73f6df897bd4dee04206c88776cf445292e2a2c376f94bb790d31"
+    },
+    {
+      "path": "_internal/raspalib/bin/msvcp140.dll",
+      "sha256": "b99eb28a471311113f5c4109cb3c463f39cfd9bdb3b07f706204dedddb4516a1"
+    },
+    {
+      "path": "_internal/raspalib/bin/msvcp140_1.dll",
+      "sha256": "576d2ab235e32acc129eda78a3b9a3d3e78b0c97a01940d962cb8502acd030d1"
+    },
+    {
+      "path": "_internal/raspalib/bin/msvcp140_2.dll",
+      "sha256": "9c9e06d56add83e08f0c530de6f0a82c5bfbee2b6ffa8b71e7b0446ec08e8970"
+    },
+    {
+      "path": "_internal/raspalib/bin/msvcp140_atomic_wait.dll",
+      "sha256": "5ec85a18501af700e3ee748daed242b8e33040f090371a2759217cb71ff26469"
+    },
+    {
+      "path": "_internal/raspalib/bin/msvcp140_codecvt_ids.dll",
+      "sha256": "a12581d37f291121346e8ba2fdfec64a3d72c07aec6350ea0cd2f7aac2f750a4"
+    },
+    {
+      "path": "_internal/raspalib/bin/vcruntime140.dll",
+      "sha256": "052ad6a20d375957e82aa6a3c441ea548d89be0981516ca7eb306e063d5027f4"
+    },
+    {
+      "path": "_internal/raspalib/bin/vcruntime140_1.dll",
+      "sha256": "6a99bc0128e0c7d6cbbf615fcc26909565e17d4ca3451b97f8987f9c6acbc6c8"
+    },
+    {
+      "path": "_internal/raspalib/raspalib_avx.cp311-win_amd64.pyd",
+      "sha256": "2e8941c45cbd8319c0f10ea70c12759979882666b3daf03da31718bfc004c5fd"
+    },
+    {
+      "path": "_internal/raspalib/raspalib_avx2.cp311-win_amd64.pyd",
+      "sha256": "1e820cdd2f1b073012b725b5f05002cfd23c45f90025517a29734a2ca4e82f54"
+    },
+    {
+      "path": "_internal/raspalib/raspalib_avx512.cp311-win_amd64.pyd",
+      "sha256": "16d2c6ee773a854fd238dac5081d5810ed4d2bc7e8cfa5b99b55bbd7ab1c165c"
+    },
+    {
+      "path": "_internal/raspalib/raspalib_base.cp311-win_amd64.pyd",
+      "sha256": "84fcaa0fb2bfdd2d3637cd00a94a7898f4879e634ef4e51dd7edec296307f5a9"
+    },
+    {
+      "path": "_internal/rdkit/Avalon/pyAvalonTools.pyd",
+      "sha256": "0a23a8bd7aa661372dc4bf64fbb592552a2a3261c460c004f8f3050865b160b4"
+    },
+    {
+      "path": "_internal/rdkit/Chem/Draw/rdMolDraw2D.pyd",
+      "sha256": "b441900aea72a0243ce22ccee1139e50009c9052c9d9896136b7d2858aff6986"
+    },
+    {
+      "path": "_internal/rdkit/Chem/MolStandardize/rdMolStandardize.pyd",
+      "sha256": "220683c286c5a018f7ab71d23d8ae463608a07b9938085e4b2976a0a86b19c30"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdAbbreviations.pyd",
+      "sha256": "bd5e216558d2adbb5b2ada39c4bb335379aa161aab79c1a9b4551a470dce8660"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdchem.pyd",
+      "sha256": "148757cb447af5803d9c46b2465254f2f1e65cc050b987aabddebb986cc14569"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdChemDraw.pyd",
+      "sha256": "3d8e553963d3927062e10f27b93dfd76b07b8b2229158b8261889efeab59de11"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdChemicalFeatures.pyd",
+      "sha256": "6a157bcdfd7bfce44adbfb7a9e3c1f568d6d8b770411445b3c2bc350b225022a"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdChemReactions.pyd",
+      "sha256": "cb81c64f96c8cf01dd39de9d6514d2f3970c78bc6f48d4d59a1c607a303fbbc3"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdCIPLabeler.pyd",
+      "sha256": "e105419b2ae5adf42b0cc1f08e754c6e956026500e0fbd1e537dc028af1d621b"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdCoordGen.pyd",
+      "sha256": "c14de7ca9fa0a3e0eaddc7807465410e1065f3b96d9adca9e36184d0b6398845"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdDepictor.pyd",
+      "sha256": "74bd20857e9a95f715071d80f4df2100e267f96cbeff3ceb3b1ef35c3af8ff25"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdDeprotect.pyd",
+      "sha256": "eaaa9d8ddc1b0a968ba15e5124e8c64b1ea59031ef7211866a417e36042e440c"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdDetermineBonds.pyd",
+      "sha256": "72734ee41b6d989180d3df71bfc89debf961e4e631bfa623f681a88b93b896c4"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdDistGeom.pyd",
+      "sha256": "8acc5011148eacbaf16c9bcf14145304962f21df00f58f8c617faa4656829763"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdEHTTools.pyd",
+      "sha256": "b949cbb16d646479e5d3b7abf4450ef85225fd08d897e19d2b1f8f0845c7f5e2"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdEnumerateStereoisomers.pyd",
+      "sha256": "f91223052d264de032b1695f47fc8f2fa77e3aa53d6f36c65e305beda48c690b"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdfiltercatalog.pyd",
+      "sha256": "dac34c03eda49c4517c90b30d51651dd56d1005d236b0da6167cb61439d4ed2b"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdFingerprintGenerator.pyd",
+      "sha256": "a93355b854347a04ae3f3d6c27cff0c5d90ed2f1e04029a00ef14435cfd6b6ee"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdFMCS.pyd",
+      "sha256": "139a50223489c82e1c78dee1e075e971659950205e187fb0bf25d71b42ff8536"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdForceFieldHelpers.pyd",
+      "sha256": "0fe163a705683dd03563bc7377df7948b149275efd568ebbe17b9b63c3eafba8"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdfragcatalog.pyd",
+      "sha256": "5b226f71405ac460bb8fdb54c8999cd91289ab78f7eb26ba797a27e96b42c5ac"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdFreeSASA.pyd",
+      "sha256": "c644873a99b413c113d074623ffed60e1b64eb470f0d361ce4344f464ffe9f77"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdGaussianShape.pyd",
+      "sha256": "e45049e967c652d9a9ea7c368c5fa80570053a3d81d6fff589c47629e74416f3"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdGeneralizedSubstruct.pyd",
+      "sha256": "755c1aafa703a32a51fc0a711560769f2e287bcd847240a9e52b7671f0caf70d"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdinchi.pyd",
+      "sha256": "f290efaf944c3348c2d6f62590b347f0c8aea2bec49f2d9f52e879ae2375bab3"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMHFPFingerprint.pyd",
+      "sha256": "941b77c4726d4cc062d3b566c8a56608fb7892e4aa5830a09c63005360d2924c"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMIF.pyd",
+      "sha256": "3d6c6e4a30e38891b25c8003eca27e646b084b7b277f28e96262caeacdf5b9e2"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMMPA.pyd",
+      "sha256": "1da9fa063d90cf83486d39fda783a125e28822b248deaa0941a3f15b2551ed34"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolAlign.pyd",
+      "sha256": "c64394b86985d553a72a736ed925736ec4b3008b6e36282a3233cfba94417b3d"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolCatalog.pyd",
+      "sha256": "d0718fe74856e6f184535131238d973386494e6f12ebe6b32fe6fd898f819c99"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolChemicalFeatures.pyd",
+      "sha256": "f206130b264184114e492d70e49a7324463fcfa3f4d3ebad07620709ab250dae"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolDescriptors.pyd",
+      "sha256": "059620cd684797501cb60e11d7c3ea7f156120cffa9278ed4450c54d8b6b75e8"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolEnumerator.pyd",
+      "sha256": "3dbc3cd7937c9ea973230633e3b41b63032b45bafa2cce9bf326d6db2f71757d"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdmolfiles.pyd",
+      "sha256": "f157c41f0fb0e178d417489ceaa3d89f3cee516e9d8d616105c2010156066f67"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolHash.pyd",
+      "sha256": "f6dc67d66afba5fa868593872b25aabb6386f7232c3b87fa5ae0d5161ae24640"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolInterchange.pyd",
+      "sha256": "85b19711bc850075367adce539288d16f9245ae40bd2d082cc5f1c5b51bb518b"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdmolops.pyd",
+      "sha256": "1a4244c993cf43d7dca7e7be6e6aaff2e2636d1a902c64c3b106046e1f4adbc4"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolProcessing.pyd",
+      "sha256": "d66aa43886d524e72bd37897c60c8326a99b54d4052c184282e00ce84857c555"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdMolTransforms.pyd",
+      "sha256": "517f9dee3bf9eda1d45e9863bcb9985f424fa25177f76eb7481213c77aa0b9b1"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdPartialCharges.pyd",
+      "sha256": "f134540cbf309ef82ee033dbea0bf6d2a47b80ea8a9f709805efa13a275471aa"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdqueries.pyd",
+      "sha256": "a4c1eb1fe23415772d5d355ff4c5df01c694cdabfbb8511779493028c276be89"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdRascalMCES.pyd",
+      "sha256": "0065cd1d45f7f437afccf9a8d642fb66192fd7f5aa669204d6fbb48ed689efb0"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdReducedGraphs.pyd",
+      "sha256": "1fcdb203fe5278e2e59122c7d761d6bd0e37bfa292fd61c5136ec39f5dccc2e5"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdRGroupDecomposition.pyd",
+      "sha256": "5c77e027f64e662d3ca1eeb25af8710cfdc76e0172d50c9e7b45b7108e7ca164"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdShapeAlign.pyd",
+      "sha256": "c88d8b8974d09705c973982277e0a956e0e9aa820d3531131f1bac12eee986f2"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdShapeHelpers.pyd",
+      "sha256": "d8b50228fbaab71cf4cd2e7a11eb5f38db622cbb72eff81ddd7a75c51aefcf9c"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdSLNParse.pyd",
+      "sha256": "79c91f96c86194e666da878fbec744757d6715ca33c7901ae289c8b0ccfb70d2"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdSubstructLibrary.pyd",
+      "sha256": "7b6c33361487afa75ef35d712f74baa4dbcc5b3df4dbd96e539beecc1f3f6e01"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdSynthonSpaceSearch.pyd",
+      "sha256": "915fb5de79772191ba72bb50f295b05cd20a7c6b601a7b176169ac5dbcc828d8"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdTautomerQuery.pyd",
+      "sha256": "d8c21bbb5f1d33908efa43c15530ffbb9c345aee67e6b6950334243fe529171e"
+    },
+    {
+      "path": "_internal/rdkit/Chem/rdtrajectory.pyd",
+      "sha256": "11691726cce50ea99aca26f438d888d1a0643fde5cc7ad070646fb50a37c9e74"
+    },
+    {
+      "path": "_internal/rdkit/Chem/Scaffolds/rdScaffoldNetwork.pyd",
+      "sha256": "6916335ee01898e6fec3c636f7aca4a75ff4064c98aa451d3ed83eb99a489bcf"
+    },
+    {
+      "path": "_internal/rdkit/DataManip/Metric/rdMetricMatrixCalc.pyd",
+      "sha256": "662e9fc33ae1bf3d60ac42ffc14c0ff0e3d421804a58328674ab76ab763aec3e"
+    },
+    {
+      "path": "_internal/rdkit/DataStructs/cDataStructs.pyd",
+      "sha256": "d21b29206c030599e03fd660d5a7defba6ce652d54aeb515c15c261853a749a4"
+    },
+    {
+      "path": "_internal/rdkit/DistanceGeometry/DistGeom.pyd",
+      "sha256": "dd9aa46f14fc378804b16a21c6a2cc51ba2220e5702d48284a8b1442c1e94405"
+    },
+    {
+      "path": "_internal/rdkit/ForceField/rdForceField.pyd",
+      "sha256": "0f92a8d8ced8e20343212dcf2fcd211fab665834d004bd6bacc1631d182fe0b8"
+    },
+    {
+      "path": "_internal/rdkit/Geometry/rdGeometry.pyd",
+      "sha256": "56c76092fc9e88aa22e9b9e6ca1df39bd2892d8ddfffd0c588a1f25c88408601"
+    },
+    {
+      "path": "_internal/rdkit/ML/Cluster/Clustering.pyd",
+      "sha256": "9039a7a13cc5ac55da5c92ec99b53df7fe569f08003040b2a3252e4126c77c65"
+    },
+    {
+      "path": "_internal/rdkit/ML/Data/cQuantize.pyd",
+      "sha256": "7379888ff73fcecc275a97b08e05da0a4ae441c7b091db6f0101b4ef108b5446"
+    },
+    {
+      "path": "_internal/rdkit/ML/InfoTheory/rdInfoTheory.pyd",
+      "sha256": "8d4fad8c3a075c2cf0fc5145bd02a866321ea2c6a1e20a50dd4933490cefb6b0"
+    },
+    {
+      "path": "_internal/rdkit/Numerics/rdAlignment.pyd",
+      "sha256": "2e3c2341328e1cb9717ce48c01f72b85f284f47ba03476c1c85a5d2dc13708c5"
+    },
+    {
+      "path": "_internal/rdkit/rdBase.pyd",
+      "sha256": "a78fac8339239d0dd51eaed6833f2ddbaa578009e3d38ef9cd6c56210c61c9a8"
+    },
+    {
+      "path": "_internal/rdkit/SimDivFilters/rdSimDivPickers.pyd",
+      "sha256": "14e8446b636c1aa3ed7034009c6e823cd1231279e422b9a15b349b70ac336755"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_iostreams-cda58e5c4f7330c51680bab67d6885bf.dll",
+      "sha256": "bdbbd7f587f4c6352b0f9adfdec6906cd1e026779da76956a9deeaf9c4f23a30"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_numpy311-afc560a316bee0f94cb644e4daa45334.dll",
+      "sha256": "2a4e7bf4e56d0ed9aa2465fd54c27a6ee7653ec9822a9282e8e8575c4961b2be"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_python311-8480122feeff453efd769ac4c04b0edc.dll",
+      "sha256": "b0118a58815cd859efd6ad4df42be71214ae779274c2a022e1e62af45b7be614"
+    },
+    {
+      "path": "_internal/rdkit.libs/boost_serialization-bb5e81e423a7816a842536dc8ef0564a.dll",
+      "sha256": "70c46b3289eb9094db8d3379b8021468b8b7259d15cfc1359345f98bd1b74525"
+    },
+    {
+      "path": "_internal/rdkit.libs/brotlicommon-84c5df3ccb9ac25887ad77032b644681.dll",
+      "sha256": "84c5df3ccb9ac25887ad77032b6446812591192f26b86a12dd9ec081693ffc1b"
+    },
+    {
+      "path": "_internal/rdkit.libs/brotlidec-6ec09a6a7ad50d56afaa19ce27cc7ae9.dll",
+      "sha256": "62e4d7dc044581e59f8e9e0edbe16d2d6311a7aa4cf5b296a7dcdec4912e25f1"
+    },
+    {
+      "path": "_internal/rdkit.libs/bz2-9e9b61ce4d00ceb3ac8bcf8ee9e0d4c7.dll",
+      "sha256": "9e9b61ce4d00ceb3ac8bcf8ee9e0d4c792e54f3b7575fc154cdeebc6052467a1"
+    },
+    {
+      "path": "_internal/rdkit.libs/cairo-2-055de767cfb20439bee7e4a9811ac1d8.dll",
+      "sha256": "3c507ac04afb0d00685a299942c2f3d983f3b02e7b696e9d566e5f7c75e9652a"
+    },
+    {
+      "path": "_internal/rdkit.libs/fontconfig-1-8eeb50ff0699649a1c2d6f788345061a.dll",
+      "sha256": "9df303353251aa70bd4a6f17439950991dbe7960904519b58764d8629febc185"
+    },
+    {
+      "path": "_internal/rdkit.libs/freetype-4bbaea004e6272646e9e4321eff67735.dll",
+      "sha256": "a21ddc31180144e192b742beb754cea68fc40897c471ab45dafd3ba3f54759bc"
+    },
+    {
+      "path": "_internal/rdkit.libs/libexpat-7afc320316896ea83be6a624583d6d7b.dll",
+      "sha256": "7afc320316896ea83be6a624583d6d7be9d4da500274d852dddb695ab8ff1a6d"
+    },
+    {
+      "path": "_internal/rdkit.libs/libpng16-58fe6381b28412e52ec666e4d6ed3d2b.dll",
+      "sha256": "1b4b966ba6c4c281963b0240d8cf8c7667b3ecb199bd31838d3df6f17e7e3108"
+    },
+    {
+      "path": "_internal/rdkit.libs/msvcp140-0fa7eb792d3fbcf2233e4ea47e9144b9.dll",
+      "sha256": "0fa7eb792d3fbcf2233e4ea47e9144b9b1309ba8ed5d4731a72fffa8f4f556d6"
+    },
+    {
+      "path": "_internal/rdkit.libs/pixman-1-0-36171e49cbe1a56fa8e4e996e3952964.dll",
+      "sha256": "36171e49cbe1a56fa8e4e996e395296456a6349d99a2396f7244ede0a1e0540c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAbbreviations-efcc5526f1d1736eebfee5a9f87e50db.dll",
+      "sha256": "162e875f4fd9e0e1f6699c43206d9e7b28a0e7d0fc0dc2e05ab9fcd101d52369"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAlignment-adb1964a87f3f1c97dcf32ac623ca9dc.dll",
+      "sha256": "956c70d7e51220e6eff33e19c7dbd6900a50679c3acfa271111ea153606b6685"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitavalon_clib-7db6867463d473a4ba9258017689306b.dll",
+      "sha256": "7db6867463d473a4ba9258017689306b40913b5391c0b400fe8f712ee84fb8dc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitAvalonLib-a6e380fe21a9e88ed4417e4607ed161d.dll",
+      "sha256": "6a5d26b3925e653161c9f5125a88bbb1ffa67dab87972601efe5ad7aae262222"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitCatalogs-d43062a09d20a18b19ffe1e12f7779e7.dll",
+      "sha256": "9121cac773833209856b19ebe7a9cf3881e2e3faac52fece2ba7fcf8000ff717"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemDraw-333a78fc837defa3b1ca1eecdf4b359d.dll",
+      "sha256": "a5c4fabfb2e7bd5cf18e5c8d97e8b88eb0f1778ed717bc37a97408f1d63cd515"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemicalFeatures-4bb3380847bd71755bc4250ee4121758.dll",
+      "sha256": "dcea5c76f7dbbb8640db99c1b0e5c0f4932ef2dcbce1ebb646b279ae32c1c7fd"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemReactions-3de201bb59a51c64a4e75b0b1caa6f5d.dll",
+      "sha256": "8a03803a2bad30932fef883aa0114ccc749847c4c134a9790f2f7f2fa3cd6a6d"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitChemTransforms-7b2034ed205b810a198f9060876aee76.dll",
+      "sha256": "8c82ece3ae71fefcd0357013d2e9a81dd492dba91f630b7c6641274598d3fa6a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitCIPLabeler-38cd896c19416d5230c5d606f11e8953.dll",
+      "sha256": "c04a94de15fcc824a82f69e1647cb3070a03b782b2f35e7ce04d2c83adf75df4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitcoordgen-1bf45e94a9e08fe859ca215f1f6aeb8c.dll",
+      "sha256": "e9b34d88d02824415beb6c91311d4a91c96c9a064b495d568c2fd30373450cd6"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDataStructs-68f889bfe1077fb16cf028732d5df624.dll",
+      "sha256": "112701d840f9a31b63ad270f835fdd243398c007dba10816c34e2d7a02e08eb0"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDepictor-3fa9c879ad55fcafcaea8ed736a5bafa.dll",
+      "sha256": "5dbebf962a321b113d1ef89bb0f3ef58b313152678a87307902a48f20b19e5d1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDeprotect-0af9c315508f8f608131ca3d7574e245.dll",
+      "sha256": "c77e3f04ebd9d4c287a750dd0d5817f7b6ae876f42f09f432f1ccd5de2ca563c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDescriptors-32607e4b2b4f9e8054046bd213f88e0c.dll",
+      "sha256": "779d5d2af25d1ffaf64f59bd0919ef6e469adf0e647396395d3bf174ba353923"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDetermineBonds-a014d52f6e4ebe56c492b3bfcd9ca918.dll",
+      "sha256": "1994078c4a893d63e7169a7306330bb3b8e7a682e5e2e6043b59586298e39ef4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDistGeometry-bb1a790af9f4941ca113c92df6e13965.dll",
+      "sha256": "87d21ed532f90233f037a82a0e28e4f46fc74fa3226973101555fac5aeef49ef"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitDistGeomHelpers-b22ceaa212481fb3d64a4db8974af21c.dll",
+      "sha256": "384918d205b8961c16cd96b66ba866f57e91a099c5a06df128615af0392520a3"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEHTLib-4a2123f2c69c3a82c92e134a3222491c.dll",
+      "sha256": "d9c7c7c239dc412be7a0cd31c84308dd09ce8c2512b99fdcafb17c73470d2229"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEigenSolvers-b23a0a717c0c4b0ba8628439382a6479.dll",
+      "sha256": "95434c065b2b27e4c663357d8ce525eaa1bc61a5847f48f80da28e0ae1e28530"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitEnumerateStereoisomers-1929e992e4618f58576fa13fcecb1ef5.dll",
+      "sha256": "c7af95f1317867922c5b1c76033bc8fcc3575ab4b309ff264e7a6718a7764dfc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFileParsers-d365ca4bafb411d6bfcfc5c037970f24.dll",
+      "sha256": "91c35551221be4e707b711fb70ae5fcf4eb467103635d2d19613619f14fb34eb"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFilterCatalog-b1c7657b35bacf4c3d89a01c2758e6ea.dll",
+      "sha256": "0f50358f391208975595e28df430fc79d89b25baa91c79f50b21d0701f4fb131"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFingerprints-b9614f5f49ec3f3c8a280ea925094913.dll",
+      "sha256": "5a5c78ed91f6f5ce4813c3c05b0336d31fae9e22465421ac4381163c4113f5f1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFMCS-97ef8e20bfbc4fe7433f7999a9919f12.dll",
+      "sha256": "8d6d905596922096d1a79ddb187fbb52043c969b295c76508db9c4de55371600"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitForceField-b37e12e69da858c544c96d7f200c4b6d.dll",
+      "sha256": "43f596bdc5fe15d3ceb4f4112b8098a0f1e5e6d57aef5a198ded9726effb5f8a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitForceFieldHelpers-5952668a62d1c749544461a7420dc9f8.dll",
+      "sha256": "f8ec7a02a2672ef84b9f9e0bdbbaa4841c9add3d6577def0a1de410a76769d09"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFragCatalog-0c1c7e001a162b65ad4dcafa20726c14.dll",
+      "sha256": "51b9f24c59ada2a427f10b9247df71f3b38b7eb9b491722c909236b502f490eb"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitfreesasa_clib-9e501b02a80bd8f17a16d569490bccb1.dll",
+      "sha256": "9e501b02a80bd8f17a16d569490bccb1a74f312b97022e5ebb83f47e1727a629"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitFreeSASALib-ff4a8f95f6b5239f68dfcce87536313e.dll",
+      "sha256": "3ac3b1e75a676ca198ea264ebd0c2dc13984d2bfd084e78456659fd6df818a27"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitga-b56b0bd4ef2d337a8c32d52ad500633d.dll",
+      "sha256": "2bc714457264cb32cd7e8a5dd45cc8c6cdeee47b03ad6d55397f84d74bb00fe6"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGaussianShape-925fcfc648cef7d83126d01b925e7fe1.dll",
+      "sha256": "71e873c459a9f058805f645d8ef784a6e0df5087a1630eadf511622361d21461"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGeneralizedSubstruct-f78ee8105581c286310d711a64c8ea5a.dll",
+      "sha256": "9c2a4e88b7e612acdfd14dfea51bb142f3ed95a0c644c70df73051a73871112c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGenericGroups-0c7bf0a9cfe163bdbec20426ce5ba464.dll",
+      "sha256": "ca2ffa01326d58cfdd85e65725d2b22360fa668b8b853cccd36fffcfe8910846"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitGraphMol-f9d7e5fc2313be6df9889b9464503ab8.dll",
+      "sha256": "3fc804d26c4a200610dcc4be3b8a28d0003f9a7e07b8297062f31c653bf49bd1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKithc-c6394160fae592704a0247aec1fb4630.dll",
+      "sha256": "c6394160fae592704a0247aec1fb46300e21a319a63e393366a28278b9dd9be1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitInchi-3ee22e5decf003230526d9368c0e4442.dll",
+      "sha256": "3ee22e5decf003230526d9368c0e444265d4f6b09f92d6ffd53b2d5b73696356"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitInfoTheory-0341fae3ca67eaa2e623ad9445f2f122.dll",
+      "sha256": "bef5bc64b3ac598e241b8f5545e86a5b1b9683570b93900f6932258e2d16c5e8"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitmaeparser-b93682e4589beeaa61c31a640977c847.dll",
+      "sha256": "ab8ac26cca6639211446b0a4dc4df14c3259b1a83c25d2cba043b3fdcef64ac7"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMarvinParser-3fbd9df84dab088588efbc8a8bd95c78.dll",
+      "sha256": "a071f3e1bf0e9058279bd37fe92026e46c3bd2be6df16238415cd87d027494ab"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMMPA-e53d2178351cdbbd342c53cdcce2d4c5.dll",
+      "sha256": "e9e3a43314717019d704922f2677cccbdb89d62c4875feb6b42781959c7cc061"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolAlign-62ffc77bb9bd22f8dcd5dfd9885e5628.dll",
+      "sha256": "2c9f7fc072c0e138bd37fa07c4256264479d0902d9eb2e1726cd6ac3274c199a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolCatalog-ae549f850b4b5925a7243a4f03f33b8b.dll",
+      "sha256": "a0243ddd272e784254b3957d8d9410239d774bf1433698fbe570cbc3035072a8"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolChemicalFeatures-d6f4225304a638b7bf533956b0e580b3.dll",
+      "sha256": "ee0f0c261884eab7b17b0109e5b61aa8dccc789930dba9413cf8b455bca41030"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolDraw2D-991aceca6f18bf3ed2a40d6879ff53a8.dll",
+      "sha256": "5cb298c0dd5d03eea1b8ae4aa63128acfe580678363944a1ffc5c8148b47c5da"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolEnumerator-4ea54b60f262a215c901bf548792785d.dll",
+      "sha256": "912faae947563030abb247fa27c4d122b231bda7eda1fcc7c788a7381bb6a703"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolHash-d20fe37333df86d23af9cf862848bf02.dll",
+      "sha256": "7d47d18b537acc7314dd4116e3699f0986b3fb2eaac2ae28829a442e23f8d53c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolInteractionFields-e6a1fcfeb7061065847de049aed9d95a.dll",
+      "sha256": "051eaa06f0f5ded359fa6e991539cc8e3628ab1315dc2cc54dc40b2a32cc1663"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolInterchange-7e793647c1dbc091c0d5e6cdbc8baff4.dll",
+      "sha256": "b2c6d78830bb75ba908d7d8f256d6e1b9423773995ae188cdf4eb4df636eab4c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolProcessing-a550e9378fbe2b1c9278ca70cc0cab97.dll",
+      "sha256": "e98561a91a4254e6416cccbabe2deefb1074909ed401edbe941a76bc6f3940ea"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolStandardize-6b9e57d9b0f1bcbb86bb7e145eadb9f0.dll",
+      "sha256": "b599720149f58f17e39be60942c582de73e82fe47be9e8e2c1997694c1aecb97"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitMolTransforms-eb1483329269b63715337a599544554b.dll",
+      "sha256": "1ced3bb7b26d24d601c52fa065e94d2a94f26fa2563f231543fa236015845b99"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitO3AAlign-f8cd0f88cff544ce4cc98ad9314c9a9f.dll",
+      "sha256": "6c1ffa2e3034341f14d1926a271119366a0653ffc96cd1f94657b9dcab75bd05"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitPartialCharges-aa3590abc42156237c1d4b2f478cc46a.dll",
+      "sha256": "106be9b2b5e4fd2758b9be0f2001f0374c4513fed712af4a0eecf6fcf05ac584"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitpubchem_align3d-ce2667dc858c34c90d3064f90222586a.dll",
+      "sha256": "9d52f4860e0d82550d045498522513eab30f35e36e6a382615385d7adde2e24d"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitPubChemShape-62097e141fa54d3ca184e5ba4a4230c5.dll",
+      "sha256": "e78f493bd9eb38e4b2567ed05566b68a868a0c90b6aa79cb06ae21c5ec11b552"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRascalMCES-728bb49f38047d485a65676cfc43eef4.dll",
+      "sha256": "7d7c5555313ff46e155a6fd710647dbef1e517ddb6bb762fcb5558d0a7d4f9af"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDBoost-5e78419ff046f3b4ff3b3d851ea29956.dll",
+      "sha256": "3a125b9a91b491d38596be9ab01d1f9ea79e9274d8a3823872b3cd731fb869cc"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDChemDrawLib-bcb1a9f98721ec9a5ec2f394779d841d.dll",
+      "sha256": "21654cdc106184c2ec7180677b7ec8a71f00d11c39b4f553338e4b87cb39757f"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDChemDrawReactionLib-1fe6b766ca5bcd8433c5f33f2723fe17.dll",
+      "sha256": "b078114e937341e4e4419b6ac5591d8ce24df951a3459d408a79dd3346e4dba1"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDGeneral-1daf6cf8fe6bb3c9c00957113be3a3d5.dll",
+      "sha256": "63d07599bc9d8aee27cb6dbd192f09da1596256678139e756736c58103514317"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDGeometryLib-c6b96bd1d29aa1ec4330aed1f2365b4a.dll",
+      "sha256": "96e5cb1dec8cb380e2d283548bcfbc7c63c2f94ddf8e3131bfa45c27314678d3"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDInchiLib-be076cbea56e434bc5e7a5e5c00d5bad.dll",
+      "sha256": "4408518ccd4bfe40cf31193e65fc45199ab0869286499c0b6a513de190dd8783"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRDStreams-48a4e8ba21404b6c66e4f2c9473e683a.dll",
+      "sha256": "61c5e648449fc46fe7874fbbccfba604eb74dd7b1e4719ad40f89275041d69d4"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitReducedGraphs-60a61e5e235c43b91059451448d678c5.dll",
+      "sha256": "a7fe600fba9e77ea254727c1dfcbec6cdc06ad8ac0b3f04214faa4fa4ad4c527"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRGroupDecomposition-cbce5e5c613b08b35da13de1acb967ad.dll",
+      "sha256": "fe8187213aaa415ba8ec4b4023e6503202b375f5a25f9018b67e88ec85cb30ce"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitRingDecomposerLib-185d4d8bf5d8b76417e45ee669c13c1d.dll",
+      "sha256": "185d4d8bf5d8b76417e45ee669c13c1d3a01a5d0219964771ce05dea67a2ac09"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitScaffoldNetwork-01251827642a5c852d715af195734172.dll",
+      "sha256": "86b79ddf041e2c72df39af5666f31c4e982fb55934378f8f615a10e33de91789"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitShapeHelpers-4f2bd2604fbce72a5ca48c17e30513ca.dll",
+      "sha256": "7afd9d93ff6c664c627c7fca556420b4dc66a717c7aa114843aee1476f06a452"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSimDivPickers-a02aa585ad26e271c73355d0cd8337de.dll",
+      "sha256": "a9a01385df325a5567220a952e09dde61a499b18e20b4e3f900abf65070eb61b"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSLNParse-fea0bb0de6ce348d100f8901107bfabd.dll",
+      "sha256": "89495d56d28d6ec4e3746d8f2835de76ad2579ff109f39784fd6a1449e5f6042"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSmilesParse-5d9438c989a0c67efea5f9cde275dee9.dll",
+      "sha256": "1584a43c6702a2cd34391ebde647c00b223035d0b4a38fab8d8ba1fdcf8e8f2a"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubgraphs-8688fb5928f3b71891e2286b85ef1ee1.dll",
+      "sha256": "ccfd87903f1e7050f738f4db3393b56951a0d66d02bdc15fe5cf469c7790cc9c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubstructLibrary-6d40049cac5f6dd795db1841d3956025.dll",
+      "sha256": "36c66eee145cb33ef7b40a07233198e968ea0d3562362128a471cb4fd04192ba"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSubstructMatch-780705980ba339edcadde935ea32ce0e.dll",
+      "sha256": "b4a202f6ef0ed7cb1c9218b94110c85f3ba59c2b7f3539d797823bdfe74f0952"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitSynthonSpaceSearch-c97bcf7ffb1de23a282c0410ad82a9d7.dll",
+      "sha256": "a976983a2394c9022b7427498ee93249319c7e7d4995d37c00d33efc0c32ed9c"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitTautomerQuery-57a3e9ae3d7d6766cfa653e18f31e206.dll",
+      "sha256": "ec3d06694bd8abb370e3589298caa253d136c9468e72f415d6f68e7a9e8fee85"
+    },
+    {
+      "path": "_internal/rdkit.libs/RDKitTrajectory-1858b4c85f0c23ac11cd6ec74d3f6e2f.dll",
+      "sha256": "bc3a9d1abed98df3e240def72a9cabc78d8981ff867097a702f23fc484018e19"
+    },
+    {
+      "path": "_internal/rdkit.libs/z-6ac907abefeb2dcf651a1a8b85adb875.dll",
+      "sha256": "6ac907abefeb2dcf651a1a8b85adb875db0d92985d8d8daced1f62c56646cbd4"
+    },
+    {
+      "path": "_internal/resvg_py/resvg_py.pyd",
+      "sha256": "9bbd3bf155c211e9370db13610b004ad5ac45d2228388e7ea43e1b5587c095d9"
+    },
+    {
+      "path": "_internal/select.pyd",
+      "sha256": "bae0974390945520eb99ab32486c6a964691f8f4a028ac408d98fa8fb0db7d90"
+    },
+    {
+      "path": "_internal/sqlite3.dll",
+      "sha256": "314bba62f4a1628b986afc94c09dc29cdaf08210eae469440fbf46bcdb86d3fd"
+    },
+    {
+      "path": "_internal/unicodedata.pyd",
+      "sha256": "37c68617fa02a2cadced17ef724e2d450ef12a8a37215da789a4679fde1c5c02"
+    },
+    {
+      "path": "_internal/VCRUNTIME140.dll",
+      "sha256": "4d292623516f65c80482081e62d5dadb759dc16e851de5db24c3cbb57b87db83"
+    },
+    {
+      "path": "_internal/VCRUNTIME140_1.dll",
+      "sha256": "a113f192195f245f17389e6ecbed8005990bcb2476ddad33f7c4c6c86327afe5"
+    },
+    {
+      "path": "_internal/webview/lib/Microsoft.Web.WebView2.Core.dll",
+      "sha256": "8219a3135436c147f8eb02fb831e99596103eebc18b6d7b794ca93f4c67018a2"
+    },
+    {
+      "path": "_internal/webview/lib/Microsoft.Web.WebView2.WinForms.dll",
+      "sha256": "c48f8d729dc531288d2c53a6241effe7922ed1b947850b2442008a945c098c48"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-arm64/native/WebView2Loader.dll",
+      "sha256": "0937030efc718f3da77c5e0978fb5046e381d0bb7b01acaad31a535a1b588a33"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-x64/native/WebView2Loader.dll",
+      "sha256": "eb5335edeaa6f2122c044e82aab2351dc8c9b4e0fe5e578c71922fb61be285e7"
+    },
+    {
+      "path": "_internal/webview/lib/runtimes/win-x86/native/WebView2Loader.dll",
+      "sha256": "04814b2c59314c6452d61b821a4a3a5c5f8e8577b55b985f6a7a4b59f8907ec5"
+    },
+    {
+      "path": "_internal/webview/lib/WebBrowserInterop.x64.dll",
+      "sha256": "f6a646470f0e1058224a52e8e2e217501dca46939b30bfc9a5dd4dcdd43f088d"
+    },
+    {
+      "path": "_internal/webview/lib/WebBrowserInterop.x86.dll",
+      "sha256": "4e527297fbea7c5a0419f3a6af307c2681787beb0bf0ef3fea849a7fd85a08dc"
+    },
+    {
+      "path": "_internal/yaml/_yaml.cp311-win_amd64.pyd",
+      "sha256": "ee7df83fa5dca1467bfd841dc08189b10361f31700cf57a6aacddaf0c05706f4"
+    },
+    {
+      "path": "COFdraw.exe",
+      "sha256": "cdd5741044370a1e73cf9faa4c8b0059a4e8baa5250c86f5ca9cf0a56d7f01a9"
+    },
+    {
+      "path": "COFdraw.exe.config",
+      "sha256": "94cfe11aed6870ddb76a8ef105e41359fc1fc074638ec6c965c46bd31f49563a"
+    }
+  ],
+  "marked_file_hashes_unchanged": true,
+  "download_marks_retained": false,
+  "dll_config_download_marks_retained": true,
+  "native_pyd_download_marks_retained": true,
+  "executable_download_mark_before": true,
+  "executable_download_mark_after": false,
+  "normal_user_science": {
+    "passed": true,
+    "method": "ordinary_explorer_reviewed_shell_link",
+    "process": {
+      "integrity_rid": 8192,
+      "medium_integrity": true
+    },
+    "engine": "RASPA3",
+    "engine_version": "3.1.0",
+    "cpu_variant": "avx2",
+    "sa_monomers_verified": 81,
+    "template_id": "hcb-imine-aa",
+    "template_atom_count": 66,
+    "temperature_K": 298.15,
+    "pressures_Pa": [
+      100000.0
+    ],
+    "gases": [
+      "Ar"
+    ],
+    "cycles": 100,
+    "init_cycles": 100,
+    "widom_cycles": 100,
+    "calculate_heat": true,
+    "completed_stages": 4,
+    "charge_mode": "zero",
+    "widom": [
+      {
+        "gas": "Ar",
+        "mole_fraction": 1.0,
+        "fugacity_coefficient": 1.0,
+        "partial_fugacity_Pa": 100000.0,
+        "henry_mol_kg_Pa": 1.3805769187741605e-06,
+        "henry_confidence95_mol_kg_Pa": 5.957492128547652e-08,
+        "rosenbluth_weight": 1.9810682004918776,
+        "rosenbluth_confidence95": 0.08548743681029965
+      }
+    ],
+    "isotherm": [
+      {
+        "gas": "Ar",
+        "mole_fraction": 1.0,
+        "fugacity_coefficient": 1.0,
+        "partial_fugacity_Pa": 100000.0,
+        "loading_mol_kg": 0.15392095465343195,
+        "loading_confidence95_mol_kg": 0.034136021904276656,
+        "molecules_per_simulation_cell": 2.33,
+        "molecules_confidence95": 0.5167388106190595
+      }
+    ],
+    "zero_loading_heat": {
+      "components": [
+        {
+          "gas": "Ar",
+          "qst0_kJ_mol": 5.23145414173343,
+          "input_interval_envelope_kJ_mol": [
+            1.0520810645032397,
+            9.456863788695024
+          ],
+          "reason": null
+        }
+      ],
+      "temperature_low_K": 293.15,
+      "temperature_high_K": 303.15,
+      "method": "R d ln(K_H,p)/d(1/T), central finite difference of independent zero-loading Widom runs",
+      "scope": "Zero-loading isosteric heat estimate for this rigid classical model; not a finite-loading heat curve. Interval envelope uses the two input 95% intervals; it is not a joint 95% confidence interval and omits finite-difference bias."
+    },
+    "artifacts": [
+      {
+        "file": "structure.json",
+        "bytes": 40738,
+        "sha256": "b5fa9cdf512d0e36b5012be6e40d4f7addfb39dda3048fe81a93bb5a154b5515"
+      },
+      {
+        "file": "structure.csv",
+        "bytes": 114,
+        "sha256": "b165b09b8f0e0d375ff5f8c3ee858d40800b9d522b813760d9be70a2d786c417"
+      },
+      {
+        "file": "structure.zip",
+        "bytes": 51404,
+        "sha256": "8d902dcfc58cb45d328736a5c5669398b9b63dff966f1864e7e3cc97289d31a4"
+      }
+    ],
+    "verified_export_zip_files": 37,
+    "manifest_files_verified_before": 1087,
+    "manifest_files_verified_after": 1087,
+    "marked_file_hashes_unchanged": true,
+    "dll_config_download_marks_retained": true,
+    "native_pyd_download_marks_retained": true,
+    "owned_headless_process_stopped_after_terminal_job": true,
+    "server_closed": true,
+    "qualification": "Native marked-extension workflow check; 100 cycles do not establish convergence or experimental accuracy"
+  },
+  "scope": "Exact final ZIP, fresh NTFS extraction with ZoneId=3 on EXE/config/all DLLs/all PYDs, ordinary Explorer launch at medium integrity. Native window, bridge and shutdown passed; real native RASPA three-temperature Widom plus one-pressure GCMC, heat calculation and hashed exports passed. This is a packaging/workflow check, not experimental validation or a convergence claim."
+}

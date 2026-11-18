@@ -1,0 +1,436 @@
+{
+  "version": "0.7.0",
+  "date": "2026-11-17",
+  "python_tests": {
+    "passed": 646
+  },
+  "javascript_library_tests": "passed",
+  "agent_skill_validation": "passed",
+  "frozen_executable": {
+    "sha256": "cdd5741044370a1e73cf9faa4c8b0059a4e8baa5250c86f5ca9cf0a56d7f01a9",
+    "native_window": {
+      "version": "0.7.0",
+      "status": "desktop_smoke_passed",
+      "title": "COFdraw \u2014 Chemical drawing studio",
+      "native_save_bridge": true
+    },
+    "source_export_checks": [
+      {
+        "source": "tfb-tab-pore-v1",
+        "atoms": 108,
+        "elapsed_seconds": 0.2,
+        "downloads_sha256": {
+          "svg": "81501d4bfcfe87fad45d42636d48c26b913564c1eea9f18e7557a070f904a858",
+          "png": "62227dd6d3078f26f5015b49945f28c0a16da2d328cb84df8fb96a9f5af7f122",
+          "mol": "fb8eb79ffa2b8d98f70a903f2f0e0c4778ee2308f65a68ea27d46ac17ea316c7",
+          "json": "279de006b2f61511b724bfba85f231b83a84f956ae20aca0ad25eb083168d6b0",
+          "sdf": "7e0abcd299037ed965c50177be92625b6ccb86c7367d58374f8edda556b4de64",
+          "cdxml": "3934fd19dc63ad7df7deea482e551b65b501130c0fab2b3f445516c9b1b3d23f"
+        }
+      },
+      {
+        "source": "tppa-pore-v1",
+        "atoms": 126,
+        "elapsed_seconds": 0.3,
+        "downloads_sha256": {
+          "svg": "a36305d6c35e154666ead82e51aadec0077913099fab8d8cf40027ee3bce44a3",
+          "png": "96f6e67c2c5f0d2d67472db72b833aa4ccefc59383c9454c31d2036a52129a0c",
+          "mol": "8843c3a746ee52484f580e30e76a263cd17864f244c04d92249a5aed9d2a053b",
+          "json": "51a3eda8c5a36c80620aa1f1b2ff7082f1a1668abcc949b4e3714caac01e910b",
+          "sdf": "e7255f2246353fd002a456f9effee0abfd65ad4700e8ca8199774965ffa706af",
+          "cdxml": "756e51d01d2ea4238bf9d886be2ea44219130e19a04b7f3fcc4ef5a7140d7c89"
+        }
+      },
+      {
+        "source": "tpb-dmtp-cof-pore-v1",
+        "atoms": 234,
+        "elapsed_seconds": 0.3,
+        "downloads_sha256": {
+          "svg": "c77ef3ab06c71ae2ef91b24ee1ccc13b028dc55a877349404340ca601b50fbfa",
+          "png": "7bc1e22a054657640d4bc508f3ea8e40ae5c30d1ea56aefae3b1667cc2240093",
+          "mol": "869c94d6fb1f975fb2e89f69ef72b0c760c11a889a66db5b26f7ac3a4a9277a4",
+          "json": "7a6584cbd68a53fe0f4a6a99119278fb10f0762a3de3243dfce522d8b6ae5550",
+          "sdf": "d516738e68efa3128d4a83bed40b5e19f02fbc66021e82a07b160def94542a19",
+          "cdxml": "1d7b32e7853e54ff76b9f17a92f6dd9723a0b5e9321ce3a555b1f2d5b3de0604"
+        }
+      },
+      {
+        "source": "wiley-r198-tppa-so3h-pore-0002",
+        "atoms": 156,
+        "elapsed_seconds": 0.38,
+        "downloads_sha256": {
+          "svg": "1ef633dd238f4b70b6a850b0545a9b4a9a5c375f22a8573a5646b95c55fb66f1",
+          "png": "2b17c03cae13c8ad6c829ca287a10bde0ca34cff87246eb4184330ab39ae7419",
+          "mol": "364adfdf539324471557c4ebfd7bf5be2945747db368c32efebe3cb3ce705afc",
+          "json": "61ae8b7e9e43d1b631e439b362517d740ddae125ce4282673cd4b5621aa908ea",
+          "sdf": "94e9079d2441212d132238092310d90b3ea88a032f5a0b72207fcac9c1794d9b",
+          "cdxml": "413244b71ea73680b5a5254c43c6f7a15f6df9cd32599cd83ef5aa1b8a093762"
+        }
+      },
+      {
+        "source": "f-cof-1-source-v1",
+        "atoms": 90,
+        "elapsed_seconds": 0.27,
+        "downloads_sha256": {
+          "svg": "0dd758d52faa546b7586cc787a6b56f94aee185bc34d428e8a06db28781b8e47",
+          "png": "958acfe5fb9201fc4b307b8482d19a73010343f95d5ed80c1e8b3901d4c61bdb",
+          "mol": "3953c60b4246aa7dd748ba34713f40cbe016707bce0b69f0aa2fbad7173d0c9a",
+          "json": "ff800d92ab8b06f1b275b8019f18a6f0709af608d99fcbf62c5a0c3bee50abb4",
+          "sdf": "7e4b9b002d63cbbd1b1e06f8ab218e573ad36a74a4c42185621bd6fb479839e5",
+          "cdxml": "64749c6d327446c77a775919e58e9df192fa744c3f9eec8cfd4316c3275e0002"
+        }
+      },
+      {
+        "source": "cof-300-projection-v1",
+        "atoms": 402,
+        "elapsed_seconds": 0.67,
+        "downloads_sha256": {
+          "svg": "26505b0c260eda07ff20de69ef08866381dfe7aa40895f991062b725aba47359",
+          "png": "63e4af983289515404f5837b0e6d2e559c5db9511c8f85652e6e932333dee5b6",
+          "mol": "8567cbec7ebb5c4f62dfa42d857855dc43af3117b5f0b65a36ada26fdd8ad90f",
+          "json": "dbdccbfe2e3bd4de52893260fd20acc7b70eec8a6bfb37de732ffbbb91bd1f1d",
+          "sdf": "79469485e79f85f8ac185e0e65117286ffd92fd4f5be420c02cec87c8911e27f",
+          "cdxml": "c85a1033ae6840b5c9a3e750caa694882fefc3c1497b215521c6e39a5c064a39"
+        }
+      },
+      {
+        "source": "bta-cof-1-local-v1",
+        "atoms": 59,
+        "elapsed_seconds": 0.17,
+        "downloads_sha256": {
+          "svg": "33224e5ab32ae435026484204303ae5adeb808385168746274d7e251a1e52d5d",
+          "png": "496fffb73ab940ed17cb570661383a190cbfca79d18b6f0dbe87c9b6126f180e",
+          "mol": "2b33ae9b41b8d4abe125468adbd48f99f964f50d2cdc553478b7e76fa2ef61fb",
+          "json": "dde158c0168c3a590c669fa86a9fd7c5f7eab4f31d72e476b4da2866ff9fc699",
+          "sdf": "1c1b45ae91534a41fa2cc192fe1e8e69c8bded080ad427626460f8377fc6af85",
+          "cdxml": "6c73b7933f21f1865d6a4258f913df2fb903568e4b8b341ac3c7241859fadeb7"
+        }
+      },
+      {
+        "source": "bta-cof-2-local-v1",
+        "atoms": 53,
+        "elapsed_seconds": 0.22,
+        "downloads_sha256": {
+          "svg": "50ac79d4a9bbacde8bca8fb9b055133243202c1efa122acedf0b06f6bfadaf6c",
+          "png": "0faad630db1b922f7a6b72bad7b518116f14318a238120df2b23ff04e8151f3e",
+          "mol": "e76c9518e4fb80cd899dc452a4c837dce42ff3581a61b4b759f29cbb069c8b75",
+          "json": "ae9d156e0ed7ac6fb6f31b361bb9befbc8e03c1f60265a47bab295b1c1fc0382",
+          "sdf": "076d3a61693e1fcdb1772fa4f7d0a33d377ace419d5af76cfaebda0414b61309",
+          "cdxml": "7a194c2bb22000471f230599bfb6f6dd44015aae933189719438c7a9c6d63069"
+        }
+      },
+      {
+        "source": "bta-cof-3-local-v1",
+        "atoms": 55,
+        "elapsed_seconds": 0.22,
+        "downloads_sha256": {
+          "svg": "6bb6b94b11dbc8ef8da21a66c17b9495b9bec89c0863a0e17818c1dcd806c6a9",
+          "png": "554af93675fb34e6b1f5af13b6ea4d3cda828a4536e87372100848f66ece2a00",
+          "mol": "c0069395fd8bd921590a39a3cc880704ac4e606e5beb1cce828aa985b34aa435",
+          "json": "56d618d1a52f6de6d3bc2c9b9d548b53d7b8049a8b7dea8f514cf7befa67d476",
+          "sdf": "de058c369e7fc7b35d7421a5094c827d1f97a6af85d8f5a09685d7b9a92a5a8f",
+          "cdxml": "c69ebac2e7c1aa5400eec150f235707b9e9e1077a04a95cf30a325a1861b60b8"
+        }
+      },
+      {
+        "source": "bta-cof-4-pore-v1",
+        "atoms": 120,
+        "elapsed_seconds": 0.33,
+        "downloads_sha256": {
+          "svg": "a0063b3e1d0d55279f08332e99469da76531771acf03650f45ddab9672a6d665",
+          "png": "f33f6e37809abf005149c798e879a6c70b5d709174d71d988e3bee7aa09fb54f",
+          "mol": "81eba305f8994c34f3992baabf9782cf5b67cbf33cc5dc19ad4e1859f4c0893f",
+          "json": "d4fb709a65755dc0540a751f839341f97596eedd681977e42f64505d2f586c62",
+          "sdf": "8ebceb99c4cfa42feecd3596411e7f82bd3fe8d70c4596cc10ef444a1c627986",
+          "cdxml": "1290e828e95f22f97b01c2d37a47c507f6f906ae10758771ac3e4480255186ce"
+        }
+      },
+      {
+        "source": "brick-wall-pore-v1",
+        "atoms": 240,
+        "elapsed_seconds": 25.61,
+        "downloads_sha256": {
+          "svg": "8d27a54a04cb1dd308fdef8fc02a81ade758ea8432e8f392195197f7e4d997e1",
+          "png": "24e40a1bdb208b48a6671e6543424749ab2cbdaeb142a405b87d162badecc7dd",
+          "mol": "785e2bba09e3251f0bf36fa27d1953b46ae0f08d858e9c5c455567e4d711c11e",
+          "json": "9a991b5a5b1429c4f39c01b1e8f7ee2a429ffda63664c0b52ef232c100c5c2d1",
+          "sdf": "76baef5c835d8d67374ec7de3784548c4b1282f3480c6896c5cee6e4a0030776",
+          "cdxml": "a3090af6aff39ca6eebd46a0f11dc1d2cfe16c64ee3f0b5e4e384d9dcdea2398"
+        }
+      },
+      {
+        "source": "herringbone-proposal-v1",
+        "atoms": 240,
+        "elapsed_seconds": 22.88,
+        "downloads_sha256": {
+          "svg": "d21f33336c6ca4d9c3e21bed924aac0d31b849507946f146af31277e5a0b6afe",
+          "png": "d873e7ee008bce353ebbbdeb5f72d2adb60f08f69b1f788a79c3a02f350e269a",
+          "mol": "3dcdfe930ccd491cd32066c0876fcf6fb71c423537b36681ce2d5055bc7c9788",
+          "json": "ea365e4aa4f5c858fad673216fff4933eb840b1026ef8ee01825dee43a0234c4",
+          "sdf": "7a3e7ad7e1c187dbddc346b90f6b86f8b89ba90f7fc8cb8c1e300c3a44ea155b",
+          "cdxml": "10f3acccab18feabf4a5ba415603be5d42ce7d3ebe73d24c6910485bada1c94f"
+        }
+      },
+      {
+        "source": "cof-bp-network-v1",
+        "atoms": 630,
+        "elapsed_seconds": 0.75,
+        "downloads_sha256": {
+          "svg": "85c8d6d517d9b1e59b79ab2402d6fecf2daeebaf5853c9d8405c126a05103fb9",
+          "png": "5d3d38fe34612f879f383742890620c630e5473a443feacc6339568eaac82803",
+          "mol": "45f451c5ece09d4b08bc3fb44fb98193396c76e27614f0b62801e355ed2782ed",
+          "json": "95454fabbdb78d459e7871080e96fc507ff01cab7931e5cff860fec639e327a6",
+          "sdf": "0e4e58ae9e7e2fa566214f40a264b8095571d75ff2980eb23a0a8c4e8dd640af",
+          "cdxml": "92d8784c86a7387cf936ece593dd50830a8298bb3a025ce6ae26d95c1fe8fc52"
+        }
+      },
+      {
+        "source": "cof-bp-ni1-network-v1",
+        "atoms": 666,
+        "elapsed_seconds": 5.12,
+        "downloads_sha256": {
+          "svg": "cc6da38fdefa32997e6b032c9bde2865871119b2256ec857ac9a120a3956d856",
+          "png": "912adc7d123d8d879c64f8869c89fe15b7bada4456b58dfb37c01be271e11925",
+          "mol": "12f898daa43dc7d172bdb363c0478ceaeaa3c172aaab5c6372e7c602a375986a",
+          "json": "d929521b5adbf2a0807149ff3fc4b5c5876669bebeb63b62d7a151678caf6e93",
+          "sdf": "10650a5b4107df49f43c732e1836926a6299289f1a84c4b18b0dca5a9ada7e0a",
+          "cdxml": "883971d25c73c599336eccdf772a75c1b12ccb88257d26ac4dcd675ab954ccaf"
+        }
+      },
+      {
+        "source": "cof-bp-ni2-network-v1",
+        "atoms": 694,
+        "elapsed_seconds": 5.03,
+        "downloads_sha256": {
+          "svg": "57e05b8fd3c039aa8ff076e5d0b09b88c6556fa539f0d00472d0b22fbed16ee8",
+          "png": "a5b1a5713302958533fd4bcc9d6c3f04b69cf3a81636e8ae82f03500041ed716",
+          "mol": "8e25e688a223158d20522fdac99b5d7621154ab522856e4618a1e24afc9d2018",
+          "json": "eb191e08b60e8928bc35b3a69b7eb4e176dd295e62a78b7b00fc971cb64026b4",
+          "sdf": "a9878478fd121dba579eb473926a7c49fa89ae4325358a8c4412e1124c4c39b8",
+          "cdxml": "3f42d7569277a1fdcd3446f770ef7b241ec56ac425caa0c4af1fc094f97f6fa0"
+        }
+      },
+      {
+        "source": "pyurea-source-layout-v1",
+        "atoms": 232,
+        "elapsed_seconds": 0.31,
+        "downloads_sha256": {
+          "svg": "3fc8f78d0508db40b1a0762e3545edf93cf1eb29121a68af6ef542b7fcf8e537",
+          "png": "ab8e3d1d212a4f8ab68af367e484774f68ddbf0f6fd14f2cfcbebd8cdda8e15f",
+          "mol": "287fd2003a8f037db6661238e79bf2c1e02b5c7b27f34469c295817ea1ce179c",
+          "json": "bf2b6d60ce211ef7e2f8908dcbf1d58c5b7da9a8256e91b3e79e4abc9a336565",
+          "sdf": "f2cc3be4eff70aba8bb4862d9f19ffa08bf1a529b6a8a17b147423f6e99e77f7",
+          "cdxml": "d2a679205fd9a8385a2170a841810ef31c50fb6435406608b3a7d37776780039"
+        }
+      },
+      {
+        "source": "ucof-source-layout-v1",
+        "atoms": 144,
+        "elapsed_seconds": 0.19,
+        "downloads_sha256": {
+          "svg": "20f95d9d091a7ee6d71c3f99ff7bd9edd2053ceebc1f49b7f71e20e141abd24b",
+          "png": "fab0cca01d364ec83589cacfe5795dcc628eaf2e3713d2aaf4dfe9507e1cd83c",
+          "mol": "a79deff85255894a7efc580655ec7c233f2f9be0054c828b8d85b23af482d104",
+          "json": "92575fe17dc44500c598bbdd5c836b69cb7e732b2aacd7c3eb3620cbf02d852e",
+          "sdf": "817d24b0865ff27d3497830d5317f198ce7a539e58cde1aab08e82cf0f0d77a5",
+          "cdxml": "9e1a2a432442cbd0683bc4671efbc10895dadf943e806def8882aa9459fabac6"
+        }
+      }
+    ],
+    "browser_checks": {
+      "browser_report": [
+        "Real SVG card grid: lazy off-screen loading, cached filter reuse, scrolling, and 1/2/3/5/6 responsive columns",
+        "Broad library4c filter, visible disabled partner reasons, and single-monomer MOL export without changing A",
+        "Choose A then B: incompatible partner actions remain visible and disabled",
+        "3D topology references remain browsable and explicitly nonconstructing",
+        "Local catalog loaded and real RDKit monomer SVG displayed",
+        "Monomers prepared and six-block imine patch rendered",
+        "PNG/SVG/MOL/SDF/CDXML/JSON downloads saved",
+        "Actual colored drawing style rendered",
+        "Actual palette/font/continuation/transparency overrides applied",
+        "Random style returns reproducible seed",
+        "Project saves and reopens as an editable design without inheriting source identity",
+        "Interactive benzene ring drawing validates and replaces one monomer",
+        "Stereo graph retained; unsupported stereo connectivity edit is blocked explicitly",
+        "Actual twelve-block Tp ketoenamine patch",
+        "Expanded catalog shows full monomer names, reactive groups and chosen template",
+        "Unsupported linkage is searchable and explicitly prevents generation",
+        "Actual four-connected catalog monomers render their explicitly chosen template",
+        "Actual acylhydrazone monomer pair rendered",
+        "Actual layered presentation rendered with explicit scope notice",
+        "Actual schematic presentation rendered with explicit scope notice",
+        "Source recipe displays qualified COFex ID and full notation",
+        "Source coordinate edits strip active reference identity before re-render",
+        "390 px layout has no horizontal overflow",
+        "Explicit fixture: omitted CDXML reason visible; unsupported download absent"
+      ],
+      "compatibility_report": [
+        "Current A/B pair and dynamic catalog count are visible; keyboard selection moves between the guided steps",
+        "Selecting TFB as A defaults to real complementary partners in both the grid and B dropdown",
+        "Reference-only entries keep disabled construction, working inspection/editor access, and expandable qualified source evidence",
+        "Master-key evidence displays actual record IDs and hashes with its non-ground-truth qualification",
+        "Show-all preserves inspection with disabled reasons; choosing hydrazide updates actual linkage and 3+2 template",
+        "At 390px the pair steps, filters and compatibility control fit; a real preview/SA card selects a complementary partner",
+        "Selected compatible pair completes real prepare and chemical rendering",
+        "Explicit audit-quality fixture shows linkage-review guidance and clears it after a regular result",
+        "Fixed linkage invalidates prior hydrazide B; tetrahedral A invalidates the planar template without assigning a false net",
+        "Changing A invalidates retained incompatible B; reversed amine/aldehyde selection safely arranges the construction roles",
+        "Pending/unsupported custom A cannot reuse stale compatibility; an empty A permits full catalog browsing",
+        "Restoring valid A refreshes B choices and resets the compatible-only default",
+        "Preserved source drawing does not acquire an automatic-design alignment warning"
+      ],
+      "identity_auto_report": [
+        "Auto is the real initial mode; resolved choices are disabled and notation is not hidden in details",
+        "Auto reacts to real B and A graph changes: 3+3 to 3+2 to 4+2; incompatible connectivity remains disabled",
+        "A reference-only manual linkage stays inspectable but cannot be constructed",
+        "Manual linkage and connectivity survive monomer revalidation",
+        "Returning to Auto replaces the previous reduced-product/custom-template choices",
+        "Real prepare/render uses Auto choices and displays complete design SMILES/net/cat with explicit assumptions",
+        "Copy full record includes exact notation, current linkage/template and catenation qualification",
+        "Source record displays its exact full notation, unknown net and unverified catenation without constructor rematching",
+        "Unassigned source identity stays unknown in both the visible card and copied JSON",
+        "Edited inputs clear active source identity and disable copying a stale structure record"
+      ],
+      "synthesis_report": [
+        "Checked finite monomers have SA Score; no drawing aggregate appears before rendering",
+        "All81 catalog cards show their actual API scores with a heuristic scope note",
+        "Fresh drawing shows distinct declared precursors and matching mean/max, preserved in its exported JSON",
+        "Changing a precursor clears stale aggregate and stale monomer score immediately; revalidation alone does not resurrect the old drawing score",
+        "Rebuilding recomputes scores from the changed finite precursor graphs",
+        "Unapplied recipe JSON clears the old aggregate instead of displaying a stale assessment",
+        "Explicit source drawings retain a qualified finite-precursor summary"
+      ],
+      "studio_report": [
+        "Default drawing rendered with real backend",
+        "Bounded 2D pore opening measurement displayed",
+        "Monomer edit automatically changed linkage and connectivity",
+        "Recovered source alignment and halo style rendered",
+        "Direct atom drag preserves graph and clears source identity",
+        "Undo restores source identity; projected styles disable atom handles",
+        "Real periodic DIA model generated and shown with CIF/XYZ/PDB exports",
+        "Periodic geometric pore/volume/surface analysis completed",
+        "Changing a periodic model clears previous pore results",
+        "BET fit on synthetic known-capacity fixture recovers expected area",
+        "RDKit descriptors and actual optimized monomer conformer displayed",
+        "390px viewport has no horizontal page overflow"
+      ],
+      "structures_report": [
+        "Current drawing opens by default; delayed A response cannot replace the freshly generated B drawing or its provenance",
+        "Five actual stacking calculations are selectable; four rendering styles and element/block/layer coloring use supplied groups",
+        "Changing layer parameters clears stale comparison, view and exports until regeneration",
+        "Periodic source remains separate; translated-copy comparison retains groups and warnings, with no inferred intercopy bonds",
+        "Changing periodic model cancels pending analysis; late pore results cannot populate the new structure",
+        "Short intercopy contact warning remains visible while routine model notes are collapsed",
+        "Structure controls, warnings and selectable views fit a 390px viewport"
+      ],
+      "measure_report": [
+        "Visible double-ended arrow matches exact backend diameter and nm label",
+        "Overlay preserves the image viewport at 1024 px and phone widths",
+        "Annotated SVG preserves exact arrow endpoints plus method and scope metadata",
+        "Annotated PNG contains the measured arrow at the exported canvas size",
+        "Annotation leaves ordinary figure and chemical exports unchanged",
+        "Projected style clears the arrow and explains why a flat style is required",
+        "Pending JSON geometry edits remove annotation and annotated-save actions",
+        "A real measurement response arriving after an edit cannot restore stale output"
+      ],
+      "geometry_report": [
+        "Default Level 1 uses deterministic geometry endpoint and displays bounds, accessibility, density and effective grid",
+        "Saved geometry JSON and report readback retain exact inputs, structure hash and method",
+        "Probe/refinement edits clear old results and the finer-grid comparison is shown",
+        "An actual unresolved diagonal channel is labeled Unresolved, not falsely closed or zero-accessible",
+        "A late real response cannot restore properties calculated with superseded settings",
+        "Finite drawing layers are rejected before periodic geometry requests"
+      ],
+      "adsorption_report": [
+        "Real RASPA3 Ar Widom plus two 100-cycle GCMC pressure points show the plot, tables, temperature, composition, force field and uncharged/ideal-reservoir assumptions",
+        "Actual JSON/CSV/ZIP downloads retain settings, engine manifests, full stage inputs and verified archive checksums",
+        "A real CO2/N2 mixture retains physical composition/fugacity and visibly shows the temperature, 15/85 composition, supplied coefficients, uncharged approximation and qualified selectivity",
+        "The actual adsorption result fits a 390px viewport without page or dialog horizontal overflow",
+        "Cancel during the pending start request is retained and sent once the job identifier arrives",
+        "Changing the periodic structure cancels pending work and prevents a late result from attaching to the new model"
+      ],
+      "materials_report": [
+        "Lattice-axis view, hydrogen visibility and fractional atom table",
+        "Periodic composition,2D network and geometric pore screening displayed",
+        "Comparison CSV downloads through actual UI",
+        "Multiple CIF upload compares two actual structures under common settings",
+        "Physical model PXRD preview, peak table and numeric CSV export",
+        "Narrow PXRD width automatically uses adequate profile sampling",
+        "Information panel removed; catalog query API still returns qualified source records",
+        "Agents discover schemas and retrieve saved reports with input hashes through the API",
+        "Materials tools fit390px viewport without horizontal overflow"
+      ],
+      "description_report": [
+        "Describe is the primary accessible starting mode; no drawing before analysis",
+        "Local prose resolves exact monomers/template and renders real editable chemistry",
+        "Edited text invalidates readiness; ambiguous and unsupported requests cannot draw",
+        "Named source description preserves registered graph identity and source style",
+        "Local model fixture verifies real browser/backend/provider transport, ID validation, rendering and free local selection review",
+        "Ephemeral API key is absent from project exports and browser storage",
+        "Provider errors clear the ready plan and show a credential-safe failure",
+        "Manual builder remains accessible; starting modes support keyboard navigation",
+        "Describe, canvas and accessible settings fit1280/1024/390px without horizontal overflow"
+      ]
+    },
+    "geometry_checks": [
+      {
+        "example": "tp-tapb",
+        "atoms": 123,
+        "method": "bond_angle_pose_v2",
+        "max_junction_angle_error_degrees": 0.0021665059597637537,
+        "maximum_bond_fraction_error": 9.697958125443051e-08,
+        "nonbonded_overlaps": 0,
+        "nonincident_crossings": 0,
+        "graph_preserved": true,
+        "real_intrablock_distances_preserved": true,
+        "downloads_sha256": {
+          "png": "0cffc354158ba3ec789fd2d581cb95aa1c2e747ee06be9504eaefd9eda981d49",
+          "svg": "f9dfa8a60f3545f60afd4cae1fb5ae93ab4e11a8adea2a1347aae38ddf1c3ca8",
+          "mol": "9c3ec6682cc6dc1f4557d231902fa4ae8a9b914852e88647cbb02b295ccad92d",
+          "json": "493a3cc1358a450470bb300af0cc3444d8b5b633ed5c07cedd5328c2616d6a68"
+        }
+      },
+      {
+        "example": "bpda-tapb",
+        "atoms": 252,
+        "method": "bond_angle_pose_v2",
+        "max_junction_angle_error_degrees": 0.0032376914655856126,
+        "maximum_bond_fraction_error": 3.2068330967804926e-05,
+        "nonbonded_overlaps": 0,
+        "nonincident_crossings": 0,
+        "graph_preserved": true,
+        "real_intrablock_distances_preserved": true,
+        "downloads_sha256": {
+          "png": "f43e3e17497dc4b249cdb402dabe3edc65d40f6600407baae4a47678bd01da28",
+          "svg": "5c010e52aa892b8ccff91a0688075cc4843635cb293e8d7df5b790e3608f58d5",
+          "mol": "8166e25df67fe290246d28f9916fc746cf38327ef730667f507da82437cbfb57",
+          "json": "b01aa5523c73aebefc1aed134d96f37381fa3deba7d236bb148c866475521f5a"
+        },
+        "long_edges_checked": 6,
+        "max_phenyl_axis_error_degrees": 0.00011703240644987513,
+        "equivalent_edge_offset_spread": 5.662137425588298e-15
+      },
+      {
+        "example": "tfb-tab-source-anchors",
+        "preserved_atom_coordinates": 108,
+        "styles_checked": [
+          "standard",
+          "source",
+          "pastel_blocks"
+        ]
+      }
+    ],
+    "javascript_errors": []
+  },
+  "catalog": {
+    "source_drawings": 17,
+    "monomers": 81,
+    "added_monomers": 32,
+    "added_buildable_monomers": 25,
+    "added_reference_only_monomers": 7,
+    "styles": 20,
+    "palettes": 13,
+    "periodic_templates": 4
+  },
+  "scope": "Finite drawing geometry, unchanged molecular graphs, source preservation, compatible monomer selection and application behavior. Geometric grid bounds and qualified RASPA model simulations are separate from synthesis feasibility, E/Z prediction or stable crystal claims. API-provider transport uses a localhost fixture, not a paid model. Exact final ZIP download startup is separately recorded in v0.7.0-download-validation.json."
+}

@@ -62,7 +62,7 @@ def mark_downloads(application):
     for required in (executable, config, managed, core, forms, loader):
         if not required.is_file():
             raise ValueError("Release is missing a required Windows desktop file: " + required.name)
-    paths = sorted({executable, config, *application.rglob("*.dll")})
+    paths = sorted({executable, config, *application.rglob("*.dll"), *application.rglob("*.pyd")})
     records = []
     zone = b"[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=https://github.com/zzhenglab/COFdraw/releases\r\n"
     for path in paths:

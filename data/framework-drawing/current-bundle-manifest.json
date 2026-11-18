@@ -1,10 +1,10 @@
 {
   "schema_version": "cofdraw-current-portable-bundle-1",
-  "created_at_utc": "2026-11-17T21:11:16.856301+00:00",
+  "created_at_utc": "2026-11-18T02:19:45.442381+00:00",
   "catalog": "catalog/current.json",
-  "catalog_sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+  "catalog_sha256": "05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0",
   "registry": "registry.json",
-  "registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+  "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "files": [
     {
       "path": "bundle-manifest.json",
@@ -13,13 +13,23 @@
     },
     {
       "path": "catalog/current.audit.json",
-      "sha256": "70ec7c4d7c012281eedca60ae0b033f0af2ebe9c0037b9e0f6bf96b454796cdb",
-      "bytes": 486
+      "sha256": "5ff3144770f21f2c4d32fcfbc416bf2d73c5da03d26c2c0c23c99c4d6df976ee",
+      "bytes": 807
     },
     {
       "path": "catalog/current.json",
-      "sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
-      "bytes": 331786
+      "sha256": "05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0",
+      "bytes": 510992
+    },
+    {
+      "path": "catalog/history/1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097.audit.json",
+      "sha256": "b412ad4e4a3f4c197f680e2ebd9afa13697516580b0eff8a5997427847a7fe48",
+      "bytes": 592
+    },
+    {
+      "path": "catalog/history/1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097.json",
+      "sha256": "1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097",
+      "bytes": 394305
     },
     {
       "path": "catalog/history/342c3613b02216080a9b44d031febe6df8d01b21f36b4ad5316b65c28cd8da61.audit.json",
@@ -32,6 +42,16 @@
       "bytes": 260427
     },
     {
+      "path": "catalog/history/3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73.audit.json",
+      "sha256": "70ec7c4d7c012281eedca60ae0b033f0af2ebe9c0037b9e0f6bf96b454796cdb",
+      "bytes": 486
+    },
+    {
+      "path": "catalog/history/3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73.json",
+      "sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+      "bytes": 331786
+    },
+    {
       "path": "catalog/history/c6a6751240dad4bc1f1f15e9e9a2a2527bccbd0cd2e798e10f84c3c730b5bb89.audit.json",
       "sha256": "2bc1ca8a255279b98e80e314730ba794bc5a1f8a03ccb9b8e800abc24a24d2a3",
       "bytes": 3852
@@ -42,9 +62,49 @@
       "bytes": 249186
     },
     {
+      "path": "catalog/history/e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574.audit.json",
+      "sha256": "48bdbe3ebc26d4af5ac9af59950971934419162a807f591f937c7abcb249c466",
+      "bytes": 697
+    },
+    {
+      "path": "catalog/history/e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574.json",
+      "sha256": "e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574",
+      "bytes": 397592
+    },
+    {
+      "path": "catalog/manual-monomer-admission.audit.json",
+      "sha256": "a4776490f70039c5978ea7a6d022857c9c635d80f53870d59aa4f836061707b0",
+      "bytes": 1706
+    },
+    {
+      "path": "catalog/manual-monomer-selection.json",
+      "sha256": "721dda9ac33d6c0a89ad9951f50c79e771e999fed004b0dde45aed58099a7435",
+      "bytes": 13179
+    },
+    {
+      "path": "catalog/master-key-ground-truth-review.audit.json",
+      "sha256": "308187df6ecccd8f36566cf2ed5c6ef00cc5b02262391766ee4b56c989d34702",
+      "bytes": 27286
+    },
+    {
+      "path": "catalog/master-key-monomer-admission.audit.json",
+      "sha256": "38352f3aa2a965d8d923ffa7edf158cb21ff277cf831491f9f8153e4ca516da7",
+      "bytes": 2501
+    },
+    {
+      "path": "catalog/master-key-monomer-selection.json",
+      "sha256": "9613ebe10bedaf411cafbcddb4eee3c8533eaf62d529d80b1d60d7d57cfa49aa",
+      "bytes": 22396
+    },
+    {
       "path": "catalog/recovered-drawings.audit.json",
       "sha256": "faf9b09e8aeb4276c4dc1a77ad2c781a4825937a05b9f5ba34bc8536bef0b74b",
       "bytes": 9998
+    },
+    {
+      "path": "catalog/source-layout-revisions.audit.json",
+      "sha256": "f347f74d96471cf98a138c50ed3b795d691496c5beedfa992a7c8c0ed8f5abce",
+      "bytes": 20783
     },
     {
       "path": "catalog-v3/catalog.json",
@@ -55,6 +115,21 @@
       "path": "catalog-v3/validation.json",
       "sha256": "a2d1e7cf7b0d7feaf7d64a97caf3d2883ef766bc71d3f4c3ff5fd35ab76a60c6",
       "bytes": 12594
+    },
+    {
+      "path": "history/recipes/0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7.recipe.json",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "bytes": 12005
+    },
+    {
+      "path": "history/recipes/2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3.recipe.json",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "bytes": 19487
+    },
+    {
+      "path": "history/registries/6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259.json",
+      "sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+      "bytes": 7911
     },
     {
       "path": "recovered/brick-wall-pore-v1.recipe.json",
@@ -123,8 +198,8 @@
     },
     {
       "path": "registry.json",
-      "sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
-      "bytes": 7911
+      "sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
+      "bytes": 8097
     },
     {
       "path": "tfb-tab-pore-v1.recipe.json",
@@ -133,13 +208,13 @@
     },
     {
       "path": "tpb-dmtp-cof-pore-v1.recipe.json",
-      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
-      "bytes": 19487
+      "sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
+      "bytes": 61992
     },
     {
       "path": "tppa-pore-v1.recipe.json",
-      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
-      "bytes": 12005
+      "sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
+      "bytes": 35412
     },
     {
       "path": "wiley-r198-tppa-so3h-drawing-0002.json",

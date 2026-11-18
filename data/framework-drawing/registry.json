@@ -16,16 +16,20 @@
       "cofex_id": "COFEXM-HTM4SO6D3NX6MNYL2K",
       "label": "TpPa",
       "path": "tppa-pore-v1.recipe.json",
-      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
-      "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+      "sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
+      "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore"
     },
     {
       "recipe_id": "tpb-dmtp-cof-pore-v1",
       "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
       "label": "TPB-DMTP-COF",
       "path": "tpb-dmtp-cof-pore-v1.recipe.json",
-      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
-      "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+      "sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
+      "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore"
     },
     {
       "recipe_id": "wiley-r198-tppa-so3h-pore-0002",

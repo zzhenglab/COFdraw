@@ -1,10 +1,10 @@
 {
-  "catalog_version": "cofdraw-reviewed-drawings-5",
+  "catalog_version": "cofdraw-master-reviewed-monomers-7",
   "created_at_utc": "2026-11-17T16:45:06.666156+00:00",
   "ground_truth": false,
   "reviewer_type": "agent",
   "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-  "source_registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+  "source_registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "research_library_sha256": "bace16062326740c8ea6822085c83eb0289613958698f4630e035436b2c81f03",
   "monomer_presets": [
     {
@@ -3011,6 +3011,3728 @@
       "review_status": "agent_reviewed_source_monomer",
       "ground_truth": false,
       "qualification": "Source-derived finite monomer; not an automatic linkage support claim."
+    },
+    {
+      "id": "ppcn",
+      "abbreviation": "PPCN",
+      "full_name": "pyrazino[2′,3′:9,10]phenanthro[4,5-fgh]quinoxaline-5,6,12,13-tetracarbonitrile",
+      "label": "PPCN · pyrazino[2′,3′:9,10]phenanthro[4,5-fgh]quinoxaline-5,6,12,13-tetracarbonitrile",
+      "smiles": "N#Cc1nc2c3cccc4c5nc(C#N)c(C#N)nc5c5cccc(c2nc1C#N)c5c34",
+      "canonical_smiles": "N#Cc1nc2c3cccc4c5nc(C#N)c(C#N)nc5c5cccc(c2nc1C#N)c5c34",
+      "formula": "C24H6N8",
+      "isotopic_formula": "C24H6N8",
+      "isotope_counts": [],
+      "literature_names": [
+        "PPCN",
+        "pyrazino[2′,3′:9,10]phenanthro[4,5-fgh]quinoxaline-5,6,12,13-tetracarbonitrile"
+      ],
+      "source_dois": [
+        "10.1002/anie.202203250"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-anie202203250-m01",
+          "annotation_file_sha256": "301846d40fcc8195992b1688c2e1b10c57e52c3d990ebb8ca996522b198db811",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "d5be11524d772941fe5fb44f9ed19fd206be0d0e6c92e3c40fc2aaa90631788d",
+          "source_doi": "10.1002/anie.202203250",
+          "source_pdf_sha256": "43a0b11305f44f4177f1b4d52e58d5b54b7f2a71e0afca3b92d9b67abde8b489",
+          "source_page": 2,
+          "source_bbox": [
+            0.07771420020215314,
+            0.1943802811724561,
+            0.21158773072170553,
+            0.24901995123473142
+          ],
+          "source_crop_sha256": "1ebeab0c154086c4e52302a4b3718ecc036de29b3a58a995f5b83c3e8abc49d1",
+          "source_label": "PPCN",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "3e95a384c3bdc4b4218e5a4be0f36793a8ef3f43d857398989dcbb63f8097b9c"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "ab929d7b2ba240eea8d9ccccf6a931d32e4d563c21b5e2a13a64710b14e88a67"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "c3dc85c05b8ee2f84f3a6fc61f81356d5188bcdf488646e51452fad49eba5def"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "nitrile",
+          "label": "Nitrile",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": null,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Nitrile-containing source precursor; no automatic construction rule for its reported network chemistry.",
+      "limitations": [
+        "Nitrile-containing source precursor; no automatic construction rule for its reported network chemistry."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfppy_ome",
+      "abbreviation": "OMe-Tfppy",
+      "full_name": "1,3,6,8-Tetrakis(4-formyl-3-methoxyphenyl)pyrene",
+      "label": "OMe-Tfppy · 1,3,6,8-Tetrakis(4-formyl-3-methoxyphenyl)pyrene",
+      "smiles": "COc1cc(-c2cc(-c3ccc(C=O)c(OC)c3)c3ccc4c(-c5ccc(C=O)c(OC)c5)cc(-c5ccc(C=O)c(OC)c5)c5ccc2c3c54)ccc1C=O",
+      "canonical_smiles": "COc1cc(-c2cc(-c3ccc(C=O)c(OC)c3)c3ccc4c(-c5ccc(C=O)c(OC)c5)cc(-c5ccc(C=O)c(OC)c5)c5ccc2c3c54)ccc1C=O",
+      "formula": "C48H34O8",
+      "isotopic_formula": "C48H34O8",
+      "isotope_counts": [],
+      "literature_names": [
+        "OMe-Tfppy",
+        "1,3,6,8-Tetrakis(4-formyl-3-methoxyphenyl)pyrene"
+      ],
+      "source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-anie202208833-m003",
+          "annotation_file_sha256": "7c2b41fdd1736df29b7b221929072c181c9a0be1b0830d8eeb448f8d595b8ff6",
+          "annotation_line": 3,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "fef9ae6e19e651e987fa9e8f55c67e9e0b6de2da4e3fb3029017641a6d5868b3",
+          "source_doi": "10.1002/anie.202208833",
+          "source_pdf_sha256": "11d04742c2181685ec8f07205946af4414bdadc46d93735b6c985bb87a2dd001",
+          "source_page": 5,
+          "source_bbox": [
+            0.59127863278463,
+            0.10808628117538205,
+            0.8012497381768993,
+            0.24824211830389944
+          ],
+          "source_crop_sha256": "655a68864e9109b27cbf8ec25e73568f859808aeeaafcf69ace9ab2b52f9ba7f",
+          "source_label": "9a",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "1c88beecd8a406024da21803212372f11dc9dee6f134341fe22f9473a81a1f70"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "59154fd6300e14fdf7858cdd4eae2723be53fcd469d774ed8cf7e8a5db62cbe3"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "25f5a79853d37bc9167210450996ab007f450ad2ea9e20d1d5bc11d4882bfa4e"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "25f5a79853d37bc9167210450996ab007f450ad2ea9e20d1d5bc11d4882bfa4e"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Source compound 9a. Source reaction sequence is not implied by a generic functional-group drawing transform.",
+      "limitations": [
+        "Source compound 9a. Source reaction sequence is not implied by a generic functional-group drawing transform."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfppy_f",
+      "abbreviation": "F-Tfppy",
+      "full_name": "1,3,6,8-Tetrakis(3-fluoro-4-formylphenyl)pyrene",
+      "label": "F-Tfppy · 1,3,6,8-Tetrakis(3-fluoro-4-formylphenyl)pyrene",
+      "smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)c(F)c3)c3ccc4c(-c5ccc(C=O)c(F)c5)cc(-c5ccc(C=O)c(F)c5)c5ccc2c3c54)cc1F",
+      "canonical_smiles": "O=Cc1ccc(-c2cc(-c3ccc(C=O)c(F)c3)c3ccc4c(-c5ccc(C=O)c(F)c5)cc(-c5ccc(C=O)c(F)c5)c5ccc2c3c54)cc1F",
+      "formula": "C44H22F4O4",
+      "isotopic_formula": "C44H22F4O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "F-Tfppy",
+        "1,3,6,8-Tetrakis(3-fluoro-4-formylphenyl)pyrene"
+      ],
+      "source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-anie202208833-m006",
+          "annotation_file_sha256": "7c2b41fdd1736df29b7b221929072c181c9a0be1b0830d8eeb448f8d595b8ff6",
+          "annotation_line": 6,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "88bb476060cb231441a3f7c6fb5f39118849ae0734ab3ecea31ab8f5a1fa392d",
+          "source_doi": "10.1002/anie.202208833",
+          "source_pdf_sha256": "11d04742c2181685ec8f07205946af4414bdadc46d93735b6c985bb87a2dd001",
+          "source_page": 5,
+          "source_bbox": [
+            0.59127863278463,
+            0.709687395629569,
+            0.8029295070200374,
+            0.8635024880714588
+          ],
+          "source_crop_sha256": "8fd04d377e7cba178db532213f99d720afbf018908e737d29402e59b45229817",
+          "source_label": "9b",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "1c88beecd8a406024da21803212372f11dc9dee6f134341fe22f9473a81a1f70"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "8a703733353fdd1eb78c7535f8dcd0487661eb8678b976a44c9f5b586403080f"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "566bc95ce0c09b92cb17494b93dacb9d058571a00c5c347be53b4a8720dd9488"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "566bc95ce0c09b92cb17494b93dacb9d058571a00c5c347be53b4a8720dd9488"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Source compound 9b. Fluorine positions retained; source caption/context does not constitute training permission.",
+      "limitations": [
+        "Source compound 9b. Fluorine positions retained; source caption/context does not constitute training permission."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfppy_13c",
+      "abbreviation": "13C-Tfppy",
+      "full_name": "1,3,6,8-Tetrakis(4-formylphenyl)pyrene, four formyl-carbon-13 labels",
+      "label": "13C-Tfppy · 1,3,6,8-Tetrakis(4-formylphenyl)pyrene, four formyl-carbon-13 labels",
+      "smiles": "O=[13CH]c1ccc(-c2cc(-c3ccc([13CH]=O)cc3)c3ccc4c(-c5ccc([13CH]=O)cc5)cc(-c5ccc([13CH]=O)cc5)c5ccc2c3c54)cc1",
+      "canonical_smiles": "O=[13CH]c1ccc(-c2cc(-c3ccc([13CH]=O)cc3)c3ccc4c(-c5ccc([13CH]=O)cc5)cc(-c5ccc([13CH]=O)cc5)c5ccc2c3c54)cc1",
+      "formula": "C44H26O4",
+      "isotopic_formula": "C40[13C]4H26O4",
+      "isotope_counts": [
+        {
+          "element": "C",
+          "isotope": 13,
+          "count": 4
+        }
+      ],
+      "literature_names": [
+        "13C-Tfppy",
+        "1,3,6,8-Tetrakis(4-formylphenyl)pyrene, four formyl-carbon-13 labels",
+        "formyl-carbon-13 labeled Tfppy"
+      ],
+      "source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-anie202208833-m022",
+          "annotation_file_sha256": "7c2b41fdd1736df29b7b221929072c181c9a0be1b0830d8eeb448f8d595b8ff6",
+          "annotation_line": 21,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "eb5b74f4e8f0569021b6255b99c078889d791d0342e66b6c52c001d3b31d3a6f",
+          "source_doi": "10.1002/anie.202208833",
+          "source_pdf_sha256": "11d04742c2181685ec8f07205946af4414bdadc46d93735b6c985bb87a2dd001",
+          "source_page": 9,
+          "source_bbox": [
+            0.5946381704709064,
+            0.20073166503999523,
+            0.852482687892613,
+            0.3373242181737198
+          ],
+          "source_crop_sha256": "a638b60e6527fcef090496933804f9b818f1eeccfe88b76d9179b2007a950e29",
+          "source_label": "9c",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "1c88beecd8a406024da21803212372f11dc9dee6f134341fe22f9473a81a1f70"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "198db8312dfa0465f21f2bfeab0daa8a73bb827e4644af0a00425a6e229e3041"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "a8540b50de84b577a4f61e6304a620b77b7c3998510581b7aa83592abb15c9e4"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "a8540b50de84b577a4f61e6304a620b77b7c3998510581b7aa83592abb15c9e4"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Source compound 9c. All four aldehyde carbon atoms retain isotope 13; not deduplicated with unlabeled Tfppy.",
+      "limitations": [
+        "Source compound 9c. All four aldehyde carbon atoms retain isotope 13; not deduplicated with unlabeled Tfppy."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tbpm_boronic",
+      "abbreviation": "r058-1",
+      "full_name": "(Methanetetrayltetra-4,1-phenylene)tetrakisboronic acid",
+      "label": "r058-1 · (Methanetetrayltetra-4,1-phenylene)tetrakisboronic acid",
+      "smiles": "OB(O)c1ccc(C(c2ccc(B(O)O)cc2)(c2ccc(B(O)O)cc2)c2ccc(B(O)O)cc2)cc1",
+      "canonical_smiles": "OB(O)c1ccc(C(c2ccc(B(O)O)cc2)(c2ccc(B(O)O)cc2)c2ccc(B(O)O)cc2)cc1",
+      "formula": "C25H24B4O8",
+      "isotopic_formula": "C25H24B4O8",
+      "isotope_counts": [],
+      "literature_names": [
+        "r058-1",
+        "(Methanetetrayltetra-4,1-phenylene)tetrakisboronic acid"
+      ],
+      "source_dois": [
+        "10.1039/c3cc40358k"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-context-r058-m01",
+          "annotation_file_sha256": "e7420f163f5f134aa03a39b6581d05fd6fc93a342a7e7477810199e17748b991",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "ef86598a4475c5f2c21f5086781bbfc8a93884d31948ffccdbea3a0b99dbaec6",
+          "source_doi": "10.1039/c3cc40358k",
+          "source_pdf_sha256": "47805e757108aefb171dd28eec46d5fa744b930c080e38b3fde55dd3300a3fed",
+          "source_page": 2,
+          "source_bbox": [
+            0.08567454410447163,
+            0.06157572154938068,
+            0.24022470209685182,
+            0.13854537348610652
+          ],
+          "source_crop_sha256": "300248342480dc1e3f019faa928bb79abc2ab4a0f8f20084a754a345fb14bd5a",
+          "source_label": "1",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed_paper_scope",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "e8ea87939145e1104a3dfd54c8c8bdcd1d83be0c657acad8c2f42575329bb837"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "ef404fb583a50f48211c0328e332f0b6f0a731bdcc1b99eaf5724be0ace406aa"
+            },
+            {
+              "role": "reference_graph_binding",
+              "sha256": "3be8e133fd7aaf0580e6b0467c712740f7c3a62eb43fc0568613a95b1907f2bf"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "boronic_acid",
+          "label": "Boronic Acid",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": null,
+      "geometry_hint": "tetrahedral",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Four boronic acids on a tetrahedral carbon-centered node. No automatic boronic-acid construction or 3D net is inferred.",
+      "limitations": [
+        "Four boronic acids on a tetrahedral carbon-centered node. No automatic boronic-acid construction or 3D net is inferred."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "allyl_tbpa",
+      "abbreviation": "r058-2",
+      "full_name": "Allyl-functionalized tris(boronic acid)",
+      "label": "r058-2 · Allyl-functionalized tris(boronic acid)",
+      "smiles": "C=CCC(c1ccc(B(O)O)cc1)(c1ccc(B(O)O)cc1)c1ccc(B(O)O)cc1",
+      "canonical_smiles": "C=CCC(c1ccc(B(O)O)cc1)(c1ccc(B(O)O)cc1)c1ccc(B(O)O)cc1",
+      "formula": "C22H23B3O6",
+      "isotopic_formula": "C22H23B3O6",
+      "isotope_counts": [],
+      "literature_names": [
+        "r058-2",
+        "Allyl-functionalized tris(boronic acid)"
+      ],
+      "source_dois": [
+        "10.1039/c3cc40358k"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-context-r058-m02",
+          "annotation_file_sha256": "e7420f163f5f134aa03a39b6581d05fd6fc93a342a7e7477810199e17748b991",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "eb912a62eba99ff78777c1d63bc3397b631a302b09f1c6fdcc7890d740f2b199",
+          "source_doi": "10.1039/c3cc40358k",
+          "source_pdf_sha256": "47805e757108aefb171dd28eec46d5fa744b930c080e38b3fde55dd3300a3fed",
+          "source_page": 2,
+          "source_bbox": [
+            0.08567454410447163,
+            0.15137364880889417,
+            0.24022470209685182,
+            0.21294937035827485
+          ],
+          "source_crop_sha256": "66b0230dc9f6932bb9c24ae63577e4702d20aad129c2ab61629b1eb2e346b93d",
+          "source_label": "2",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed_paper_scope",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "e8ea87939145e1104a3dfd54c8c8bdcd1d83be0c657acad8c2f42575329bb837"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "85b837a2a9755784945ea0c7ece1412f2ca6cdef73f91fdca9644c5a9530d09a"
+            },
+            {
+              "role": "reference_graph_binding",
+              "sha256": "3be8e133fd7aaf0580e6b0467c712740f7c3a62eb43fc0568613a95b1907f2bf"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "boronic_acid",
+          "label": "Boronic Acid",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": null,
+      "geometry_hint": "tetrahedral",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Three boronic acids and an allyl substituent around a tetrahedral carbon center. Source compound 2; no automatic framework or postsynthetic reaction transform.",
+      "limitations": [
+        "Three boronic acids and an allyl substituent around a tetrahedral carbon center. Source compound 2; no automatic framework or postsynthetic reaction transform."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "dabd",
+      "abbreviation": "DABD",
+      "full_name": "2,5-Diaminobenzene-1,4-diol, neutral drawn form",
+      "label": "DABD · 2,5-Diaminobenzene-1,4-diol, neutral drawn form",
+      "smiles": "Nc1cc(O)c(N)cc1O",
+      "canonical_smiles": "Nc1cc(O)c(N)cc1O",
+      "formula": "C6H8N2O2",
+      "isotopic_formula": "C6H8N2O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "DABD",
+        "2,5-Diaminobenzene-1,4-diol, neutral drawn form",
+        "2,5-diamino-1,4-benzenediol (neutral drawing; dihydrochloride used experimentally)"
+      ],
+      "source_dois": [
+        "10.1021/acsmacrolett.6b00486"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-molecule-r676-DABD-scheme1",
+          "annotation_file_sha256": "e076f2fe54631ce67562eabc7533f93449bf53a152e71352b5158e68c0d35c97",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "1983498f213aff5fbf8f084389c3eaca351517fb0f090bfb3d8922859e460590",
+          "source_doi": "10.1021/acsmacrolett.6b00486",
+          "source_pdf_sha256": "3e11eb73df72b8ea376235c157f5022da1b46315c20e3e2b770b291d0494803b",
+          "source_page": 3,
+          "source_bbox": [
+            0.5392156862745098,
+            0.3673094582185491,
+            0.5830362448009506,
+            0.4023186409550046
+          ],
+          "source_crop_sha256": "53dd82aaa6a58c242c79ed8352dccb3d6f2052a58558c59c103abd9142d05593",
+          "source_label": "DABD",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "fa4dbb82a739403fd4e96f3fe288e858869131426c51e45af3462e84143d5288"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "dbafea7463cfe8a263cf7a353cfd418481888e1e636763641ab9bfe0d6146799"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "aa292e8961fbbef0af24b4607e03714ee33f08dac6717b92a506ad8e79813bae"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "aa292e8961fbbef0af24b4607e03714ee33f08dac6717b92a506ad8e79813bae"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Neutral molecule is depicted; the source uses its dihydrochloride experimentally. The reported benzobisoxazole synthesis is not an implemented automatic transform.",
+      "limitations": [
+        "Neutral molecule is depicted; the source uses its dihydrochloride experimentally. The reported benzobisoxazole synthesis is not an implemented automatic transform."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "thz",
+      "abbreviation": "Thz",
+      "full_name": "Terephthalic dihydrazide",
+      "label": "Thz · Terephthalic dihydrazide",
+      "smiles": "NNC(=O)c1ccc(C(=O)NN)cc1",
+      "canonical_smiles": "NNC(=O)c1ccc(C(=O)NN)cc1",
+      "formula": "C8H10N4O2",
+      "isotopic_formula": "C8H10N4O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "Thz",
+        "Terephthalic dihydrazide",
+        "terephthalic dihydrazide"
+      ],
+      "source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r049-Thz",
+          "annotation_file_sha256": "4fbcc4daa5d0387204ee2a64d4d6338ee67c015789059ad6b242e4ada8beb3f9",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "bdd3f0e6b62c5c9243cf1c71d0f4e8a96088c8f8ef5a345412d8830de58ff7db",
+          "source_doi": "10.1039/d1qm00231g",
+          "source_pdf_sha256": "11468a4c0ae3e3e61cb4abe4fb8558bb9535df4ac65960bbb4e999ae5e395f8a",
+          "source_page": 3,
+          "source_bbox": [
+            0.3471778911423033,
+            0.07354877851731581,
+            0.44181186469560857,
+            0.12058578803420383
+          ],
+          "source_crop_sha256": "6f9953498a864f2596f88234154a90f83f80cf74071d89b895e3d17a8bb32d6c",
+          "source_label": "Thz",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_labels_pending_inventory",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "b235c8740c1c023edeafdc9add8bba4a6ea57c8b66ad2c4b9dc0ebf9aee987e3"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "2718b303e414213586ae536062c8ff8bcf63fa919a0cac53eb6c3a71ca9a19c9"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "795f8ebd62160501420c205dd737fe55c7652dd0636a7c0e58b8f315481fdc43"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "795f8ebd62160501420c205dd737fe55c7652dd0636a7c0e58b8f315481fdc43"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Two terminal acylhydrazide groups. Paper-scoped abbreviation Thz; no thiazole identity is implied.",
+      "limitations": [
+        "Two terminal acylhydrazide groups. Paper-scoped abbreviation Thz; no thiazole identity is implied."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tmc",
+      "abbreviation": "TMC",
+      "full_name": "Trimesoyl chloride",
+      "label": "TMC · Trimesoyl chloride",
+      "smiles": "O=C(Cl)c1cc(C(=O)Cl)cc(C(=O)Cl)c1",
+      "canonical_smiles": "O=C(Cl)c1cc(C(=O)Cl)cc(C(=O)Cl)c1",
+      "formula": "C9H3Cl3O3",
+      "isotopic_formula": "C9H3Cl3O3",
+      "isotope_counts": [],
+      "literature_names": [
+        "TMC",
+        "Trimesoyl chloride"
+      ],
+      "source_dois": [
+        "10.1002/aoc.5172"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "wiley-r259-m01",
+          "annotation_file_sha256": "c7cfa4dfd54850a9b9e4efc6d9ad2607e463d5f7eba241b64b5f24e58adafdd7",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "9182485311a87695d0b17eacba413d76e25edb4b75389003b134438b79b30a7c",
+          "source_doi": "10.1002/aoc.5172",
+          "source_pdf_sha256": "f2a261b68b3afeb72ac0e09428b021f409a3b354336430dec7727c7434c51b35",
+          "source_page": 2,
+          "source_bbox": [
+            0.18982791144716263,
+            0.6467594289035006,
+            0.3107802090064167,
+            0.7234502702754572
+          ],
+          "source_crop_sha256": "93ed9371be90479c8e460e5431a3e0bf00c61f1dd82a6b40e6b2f175fe19f1e0",
+          "source_label": "TMC",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_labels_pending_inventory",
+          "review_artifacts": [
+            {
+              "role": "source_review/main",
+              "sha256": "b01be2a06ca4e950e32a8430e49b1b8731348333ee0bd1d3e655a3b6ac51b5b6"
+            },
+            {
+              "role": "source_review/si",
+              "sha256": "aecb740ba6fe71e77b5fe9c9052445f3c748467e9085a4e48ec3b9b431946ed2"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acyl_chloride",
+          "label": "Acyl chloride (reference-only)",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": null,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Three acyl chloride groups; the reported amide-network reaction has no automatic construction rule in this version.",
+      "limitations": [
+        "Three acyl chloride groups; the reported amide-network reaction has no automatic construction rule in this version."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tape",
+      "abbreviation": "TAPE",
+      "full_name": "1,1,2,2-Tetrakis(4-aminophenyl)ethylene",
+      "label": "TAPE · 1,1,2,2-Tetrakis(4-aminophenyl)ethylene",
+      "smiles": "Nc1ccc(C(=C(c2ccc(N)cc2)c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(C(=C(c2ccc(N)cc2)c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+      "formula": "C26H24N4",
+      "isotopic_formula": "C26H24N4",
+      "isotope_counts": [],
+      "literature_names": [
+        "TAPE",
+        "1,1,2,2-Tetrakis(4-aminophenyl)ethylene",
+        "1,1,2,2-tetrakis(4-aminophenyl)ethylene"
+      ],
+      "source_dois": [
+        "10.1021/acs.chemmater.1c04051"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-molecule-r684-TAPE",
+          "annotation_file_sha256": "db86995d83b8843d584632edd649165b5c99089a1a7a352e66d2f0eb1215ec9b",
+          "annotation_line": 3,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "b2b9008ccfa26984e898b9d93fc96baafdd0f23d4654c450aa8fe372b88b9283",
+          "source_doi": "10.1021/acs.chemmater.1c04051",
+          "source_pdf_sha256": "20d842602d79d232b19a3d9897e087c1e3fd5851b2a78bd6853ca5a2c68dad70",
+          "source_page": 2,
+          "source_bbox": [
+            0.10701208719290523,
+            0.47276300463438176,
+            0.21477251065988667,
+            0.5420032045928387
+          ],
+          "source_crop_sha256": "e36fcd27be484621aa7e75945edd413e4db23fa5febdedf014245556780ed20a",
+          "source_label": "TAPE",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "7060494bc8c2d759041396a16f094a8de39d9ee48702d1c386c76dd09422a41a"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "61a138efbd5a2919b1df0f469f552936aadb68021cc5bc0c9d8470c046dceb37"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "b8e543150cc0e9cf105898339785d6d0b69e94c9042b7de351cd177266fddfa3"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review.",
+          "source_graph_sha256": "b8e543150cc0e9cf105898339785d6d0b69e94c9042b7de351cd177266fddfa3"
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Four para arylamine groups and the central C=C are retained. No E/Z label applies to two identical aryl substituents on each alkene carbon. Source polyimide formation is not an implemented automatic transform.",
+      "limitations": [
+        "Four para arylamine groups and the central C=C are retained. No E/Z label applies to two identical aryl substituents on each alkene carbon. Source polyimide formation is not an implemented automatic transform."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "odh",
+      "abbreviation": "ODH",
+      "full_name": "Oxalyldihydrazide",
+      "label": "ODH · Oxalyldihydrazide",
+      "smiles": "NNC(=O)C(=O)NN",
+      "canonical_smiles": "NNC(=O)C(=O)NN",
+      "formula": "C2H6N4O2",
+      "isotopic_formula": "C2H6N4O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "ODH",
+        "Oxalyldihydrazide"
+      ],
+      "source_dois": [
+        "10.1021/acsami.8b18502"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r698-m002",
+          "annotation_file_sha256": "f3e882aded83d0a14dee0b052a4cc81147a8d50e50be8a329c0a891130d24823",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "68f1d70022bb8a8beb4f069732f9bc041690e5c4aac90aba8b79544eecbc35cf",
+          "source_doi": "10.1021/acsami.8b18502",
+          "source_pdf_sha256": "c2f68b9852a8f5bc997011055ad3fab12f725298545e03fa0428c689aff490f8",
+          "source_page": 2,
+          "source_bbox": [
+            0.2462282413742055,
+            0.19551249947512847,
+            0.3272383987094419,
+            0.22321010356743834
+          ],
+          "source_crop_sha256": "081196302a4a3fb18c016ec69a31caa5d3ffcf2bf9e2f976155cac680f4fa8a4",
+          "source_label": "ODH",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "reviewed_native_crop_replacement_sealed_provisional",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "83adec7efd59da2d031dbda1400c0008fc2f9a9a1c6195bfa28ec02ff9300a7a"
+            },
+            {
+              "role": "context_review",
+              "sha256": "5419d65e1cc273390358519a868b5fd8f03a193dcfbd4956fefa2333f9cc9368"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "efaaa8e1fa700b72148f31d67aa904a396ac236896d286de94f8cf29af49b6c8"
+            },
+            {
+              "role": "final_crop_review",
+              "sha256": "46e592918f055f50b738b161f9c8b64aed6dd05d18bb7966a6cd59fc557c8eb1"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Two adjacent carbonyl groups and two terminal acylhydrazide groups; finite neutral precursor, not a whole-framework SMILES.",
+      "limitations": [
+        "Two adjacent carbonyl groups and two terminal acylhydrazide groups; finite neutral precursor, not a whole-framework SMILES."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfb_oh",
+      "abbreviation": "TFB-OH",
+      "full_name": "2-Hydroxybenzene-1,3,5-tricarbaldehyde",
+      "label": "TFB-OH · 2-Hydroxybenzene-1,3,5-tricarbaldehyde",
+      "smiles": "O=Cc1cc(C=O)c(O)c(C=O)c1",
+      "canonical_smiles": "O=Cc1cc(C=O)c(O)c(C=O)c1",
+      "formula": "C9H6O4",
+      "isotopic_formula": "C9H6O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "TFB-OH",
+        "2-Hydroxybenzene-1,3,5-tricarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acsami.5c01437"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r089-002",
+          "annotation_file_sha256": "0deb3659d33d9029e7aae8be77e87019893b2c057efbd103e0da441325cc8738",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "14dea43aeeae9c0830055db596b155117dc29b628ff8c4075155cd2212d2f0b1",
+          "source_doi": "10.1021/acsami.5c01437",
+          "source_pdf_sha256": "1e632860f5f11c282d144a0918d1b073df98f77e42869aed4a021d3ebb8022c8",
+          "source_page": 2,
+          "source_bbox": [
+            0.17498884136290196,
+            0.19286463908099724,
+            0.23149098542853289,
+            0.23780622275576602
+          ],
+          "source_crop_sha256": "6d11817371edfbc96c5c42ab60dfb777590973ffc7e8f0cadc3fffcec53afc34",
+          "source_label": "2-Hydroxybenzene-1,3,5-tricarbaldehyde",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "a752e6c1ce4ae1cf6bff75d516dafdf8b8e0e81875746e3a906a6871cc9363bb"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "3d8d8bc5fb9fe630d0b5ab2443830d3eb95526efc4bc89b311b0c1be8cab06c8"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "One phenolic hydroxyl group. The source thiazole synthesis is reference-only; a generic imine drawing is a separate design.",
+      "limitations": [
+        "One phenolic hydroxyl group. The source thiazole synthesis is reference-only; a generic imine drawing is a separate design."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfb_oh2",
+      "abbreviation": "TFB-(OH)2",
+      "full_name": "2,4-Dihydroxybenzene-1,3,5-tricarbaldehyde",
+      "label": "TFB-(OH)2 · 2,4-Dihydroxybenzene-1,3,5-tricarbaldehyde",
+      "smiles": "O=Cc1cc(C=O)c(O)c(C=O)c1O",
+      "canonical_smiles": "O=Cc1cc(C=O)c(O)c(C=O)c1O",
+      "formula": "C9H6O5",
+      "isotopic_formula": "C9H6O5",
+      "isotope_counts": [],
+      "literature_names": [
+        "TFB-(OH)2",
+        "2,4-Dihydroxybenzene-1,3,5-tricarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acsami.5c01437"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r089-003",
+          "annotation_file_sha256": "0deb3659d33d9029e7aae8be77e87019893b2c057efbd103e0da441325cc8738",
+          "annotation_line": 3,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "52c67a574dea3d6ce398183ceff73b7282c9082caf226dd5740e687a639ea3af",
+          "source_doi": "10.1021/acsami.5c01437",
+          "source_pdf_sha256": "1e632860f5f11c282d144a0918d1b073df98f77e42869aed4a021d3ebb8022c8",
+          "source_page": 2,
+          "source_bbox": [
+            0.4468313246996436,
+            0.19286463908099724,
+            0.4993822698795661,
+            0.23780622275576602
+          ],
+          "source_crop_sha256": "d617cb72dad1bcaa006d80a9c38baeb39a56ffa4e79a0beede62bec4735ac89f",
+          "source_label": "2,4-Dihydroxybenzene-1,3,5-tricarbaldehyde",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "a752e6c1ce4ae1cf6bff75d516dafdf8b8e0e81875746e3a906a6871cc9363bb"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "12e0aff73b99a85845334502c4cbd311afd5a2a50774528f769aec363e8e9119"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Two phenolic hydroxyl groups. The source thiazole synthesis is reference-only; a generic imine drawing is a separate design.",
+      "limitations": [
+        "Two phenolic hydroxyl groups. The source thiazole synthesis is reference-only; a generic imine drawing is a separate design."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "daaq",
+      "abbreviation": "DAAQ",
+      "full_name": "2,6-Diaminoanthracene-9,10-dione",
+      "label": "DAAQ · 2,6-Diaminoanthracene-9,10-dione",
+      "smiles": "Nc1ccc2c(c1)C(=O)c1ccc(N)cc1C2=O",
+      "canonical_smiles": "Nc1ccc2c(c1)C(=O)c1ccc(N)cc1C2=O",
+      "formula": "C14H10N2O2",
+      "isotopic_formula": "C14H10N2O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "DAAQ",
+        "2,6-Diaminoanthracene-9,10-dione"
+      ],
+      "source_dois": [
+        "10.1039/d4sc00241e"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r043-01",
+          "annotation_file_sha256": "8b307d3df32fd021281c578eed25180044e644ed775bab0a490cfcf21314c27e",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+          "annotation_row_sha256": "89b32151e490047e6382a994953e91ce1b143fdaaeb612fffcf87fd0552740eb",
+          "source_doi": "10.1039/d4sc00241e",
+          "source_pdf_sha256": "1214740848b6eba34b1cd969198e0d1ece1b1bb65b22276f85a9fd12a021d5fa",
+          "source_page": 3,
+          "source_bbox": [
+            0.11563680479798343,
+            0.19672608798897565,
+            0.26188369208202855,
+            0.25807817933324084
+          ],
+          "source_crop_sha256": "edb05d7021208bceb1ddba38b8616f7a2e80fa8bf95e116c38e9d4e642b3ade0",
+          "source_label": "DAAQ (2,6-diaminoanthraquinone)",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "fb59d1204df9dffaa44c21612ea96763e499fa8d7964edfb3ed0eb8236c289af"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "adcc9341c21f4e0651ad33779216e604a34a3a45b14cbb8a83b04fc3edd057c9"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source crop or source/graph pair inspected for core connectivity, substituent positions, boundary completeness, and any isotope labels; not a second full-paper review."
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "2,6-diaminoanthraquinone; retain both quinone carbonyls. Reactive-site compatibility does not establish experimental framework identity.",
+      "limitations": [
+        "2,6-diaminoanthraquinone; retain both quinone carbonyls. Reactive-site compatibility does not establish experimental framework identity."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "tfpc",
+      "abbreviation": "TFPC",
+      "full_name": "2,4,6-Tris(4-formylphenoxy)-1,3,5-triazine",
+      "label": "TFPC · 2,4,6-Tris(4-formylphenoxy)-1,3,5-triazine",
+      "smiles": "O=Cc1ccc(Oc2nc(Oc3ccc(C=O)cc3)nc(Oc3ccc(C=O)cc3)n2)cc1",
+      "canonical_smiles": "O=Cc1ccc(Oc2nc(Oc3ccc(C=O)cc3)nc(Oc3ccc(C=O)cc3)n2)cc1",
+      "formula": "C24H15N3O6",
+      "isotopic_formula": "C24H15N3O6",
+      "isotope_counts": [],
+      "literature_names": [
+        "TFPC",
+        "2,4,6-Tris(4-formylphenoxy)-1,3,5-triazine"
+      ],
+      "source_dois": [
+        "10.1039/c8ta05070h"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r036-01",
+          "annotation_file_sha256": "e08253c9545557bf65f3e41c77eae3b553f6dd7e2275beb7050aa05507f60c3f",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "f150bbb4cafc0ff2947230029ba8e107bf37acb1c1711eccf52b86a868c650f8",
+          "source_doi": "10.1039/c8ta05070h",
+          "source_pdf_sha256": "f3c8fab301724535fae7929171f8e6a3f5ea74b262c25cd097cb71c8e212ed47",
+          "source_page": 3,
+          "source_bbox": [
+            0.6309919841871828,
+            0.06394910836384479,
+            0.7402409981308112,
+            0.12797770254850127
+          ],
+          "source_crop_sha256": "5157364e28cedf8885a50af70ca98d5bdbc7cb4a7a3a5a38b0c6d844757689b0",
+          "source_label": "TFPC",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "830f71befc59fb4ccd12bd805a44978a94b6c8caae551d50b93ec65148653d90"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "8803d8d8b350b8214cfaad260c951abec03c477291d5291e0bb42fb45fb525f5"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Three para-aldehyde phenoxy arms and the alternating N/C triazine ring agree with the source.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          5144,
+          5145
+        ],
+        "component_ids": [
+          "48"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "aminal_a1",
+      "abbreviation": "A1 (Aminal-COF)",
+      "full_name": "Tetraphenylethene biphenyl tetraaldehyde A1",
+      "label": "A1 (Aminal-COF) · Tetraphenylethene biphenyl tetraaldehyde A1",
+      "smiles": "O=Cc1ccc(-c2ccc(C(=C(c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(C(=C(c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "formula": "C54H36O4",
+      "isotopic_formula": "C54H36O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "A1 (Aminal-COF)",
+        "Tetraphenylethene biphenyl tetraaldehyde A1"
+      ],
+      "source_dois": [
+        "10.1021/jacs.9b08017"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r533-main-a1",
+          "annotation_file_sha256": "821016e2f14dc449120a6d12f58d31d8799305bdb596f0d454456c0a420a8eea",
+          "annotation_line": 4,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "c12682483f715eabe58049d773cdb5b362e846faffd8e1a3302bb63da8214565",
+          "source_doi": "10.1021/jacs.9b08017",
+          "source_pdf_sha256": "cf6add62c3e0d34748b09e8a159964de0fb2dc778681e29c87001e68fc4afa9b",
+          "source_page": 2,
+          "source_bbox": [
+            0.09753196573913334,
+            0.20895398381404356,
+            0.16948177653029728,
+            0.27493945238689943
+          ],
+          "source_crop_sha256": "a11f6fe7e6fa12b9e3a0ca06e1931608fe3c7876cdbc1cc9dfafdd6617bd7d72",
+          "source_label": "A1",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "d2bf55c12a481a791fdc2e2187b134eb57da11ceddff77dc161afbf3aed5c54a"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "7e2f3efb105a5dc80a798e0d6eec5e8c2f39111e773dc37f774dfea685f288a1"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "15a358b2abecd07f215ba7ccc2dbaa05d535d8e19bee696c08f97d75f391d234"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source A1 has a central ethene and four biphenyl arms, each ending in para-CHO; the corrected complete graph is retained.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3798
+        ],
+        "component_ids": [
+          "2336",
+          "261"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "aph",
+      "abbreviation": "APH",
+      "full_name": "4-Aminobenzohydrazide",
+      "label": "APH · 4-Aminobenzohydrazide",
+      "smiles": "NNC(=O)c1ccc(N)cc1",
+      "canonical_smiles": "NNC(=O)c1ccc(N)cc1",
+      "formula": "C7H9N3O",
+      "isotopic_formula": "C7H9N3O",
+      "isotope_counts": [],
+      "literature_names": [
+        "APH",
+        "4-Aminobenzohydrazide"
+      ],
+      "source_dois": [
+        "10.1021/jacs.7b00925"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r664-002",
+          "annotation_file_sha256": "fd68c8d118e09d92bea26bdd34867945d7e5bbdec52a6d78191c3781ae7621c7",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "7a4c81cd805172e9a6999e561bd012a1cc5baa1efd31b028f1d737de64aa829b",
+          "source_doi": "10.1021/jacs.7b00925",
+          "source_pdf_sha256": "e7fd01f3ad7a2a7c1d051e58f0add355df8b87568219ce1506c9df654ea7ddf3",
+          "source_page": 2,
+          "source_bbox": [
+            0.11467840509300983,
+            0.21605108754499072,
+            0.16601699341953166,
+            0.27821673065935126
+          ],
+          "source_crop_sha256": "49f4ffa81bbbeee56c4695916c5dc996edf68c19aad2390262a82ba7667f2759",
+          "source_label": "4-aminobenzohydrazide",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "focal_source_review_sealed_provisional_agent_labels",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "c3ae6643c2d3a2e39a7f24f5742f476c65f9e00dcb496966cfea66388a251527"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "3e902fdde839cf6c013ba7cb455da021509482c081085e8c5933c187a892d1b7"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "One para aryl amine and one acylhydrazide are separate groups on the complete source precursor.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 1
+        },
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 1
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 1,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states.",
+      "limitations": [
+        "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          4693
+        ],
+        "component_ids": [
+          "586"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "tabpb",
+      "abbreviation": "TABPB",
+      "full_name": "1,3,5-Tris(4-aminobiphenyl-4-yl)benzene",
+      "label": "TABPB · 1,3,5-Tris(4-aminobiphenyl-4-yl)benzene",
+      "smiles": "Nc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(N)cc5)cc4)cc(-c4ccc(-c5ccc(N)cc5)cc4)c3)cc2)cc1",
+      "canonical_smiles": "Nc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(N)cc5)cc4)cc(-c4ccc(-c5ccc(N)cc5)cc4)c3)cc2)cc1",
+      "formula": "C42H33N3",
+      "isotopic_formula": "C42H33N3",
+      "isotope_counts": [],
+      "literature_names": [
+        "TABPB",
+        "1,3,5-Tris(4-aminobiphenyl-4-yl)benzene"
+      ],
+      "source_dois": [
+        "10.1021/jacs.4c12973"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r520-s2-tabpb",
+          "annotation_file_sha256": "a3b79f3091dceeb686593acd0e04b83518f24911f2be44bbbacdc95be9e0fe31",
+          "annotation_line": 5,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "dde4fa0f32dd5220f9e697db766614627c2795a0c8451a5409fb098466a55965",
+          "source_doi": "10.1021/jacs.4c12973",
+          "source_pdf_sha256": "029a1af635d8e47137a66da54fd512b45d4e1845f7b2527a988ec32a60a3613d",
+          "source_page": 8,
+          "source_bbox": [
+            0.1444601205098812,
+            0.30525466222058445,
+            0.30403816060800576,
+            0.39552452342200245
+          ],
+          "source_crop_sha256": "ab6c1cd6171a012b4a57d55a89c24d809ef5ec5560d2a9f9072edcc745d6b3f5",
+          "source_label": "TABPB",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "32e3cc440cf9f360c4a926972cb4de5bd6483198a298e96d4b3a7b3733dd6eee"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "5395fb46f0748873ce8233b93cfaed60b7585a7bf5eaec5dbd75e58c969f1ca7"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "007af6d86e7306e43d83cc1378dc5f0d096698faae97d0b5993ad6bbb8339456"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Three biphenyl arms terminate in primary amines around the 1,3,5-substituted benzene core.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3464
+        ],
+        "component_ids": [
+          "119"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "flt_boronic",
+      "abbreviation": "FLT-BA2",
+      "full_name": "Fluoranthene bis(phenylboronic acid)",
+      "label": "FLT-BA2 · Fluoranthene bis(phenylboronic acid)",
+      "smiles": "OB(O)c1ccc(-c2ccc(-c3ccc(B(O)O)cc3)c3c2-c2cccc4cccc-3c24)cc1",
+      "canonical_smiles": "OB(O)c1ccc(-c2ccc(-c3ccc(B(O)O)cc3)c3c2-c2cccc4cccc-3c24)cc1",
+      "formula": "C28H20B2O4",
+      "isotopic_formula": "C28H20B2O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "FLT-BA2",
+        "Fluoranthene bis(phenylboronic acid)"
+      ],
+      "source_dois": [
+        "10.1021/jacs.7b05555"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r594-008",
+          "annotation_file_sha256": "ca87bdeb840ea3961be34976fb4e5f1ca2fcd15360b6c7459885e63818730b7e",
+          "annotation_line": 8,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "6ea73011686ba7c83ff6ff6a2cee50097e0b542390da17ffaf5589c20a96c24f",
+          "source_doi": "10.1021/jacs.7b05555",
+          "source_pdf_sha256": "da2c372d379962f600a694bd49f937617ea2f5be47129fbff82b54bdb1b91b5c",
+          "source_page": 2,
+          "source_bbox": [
+            0.20989635165840953,
+            0.7714465172041213,
+            0.3491806380841864,
+            0.8163050063982904
+          ],
+          "source_crop_sha256": "824327fd19f472dac9064258c2e8490fcc5086a0dff0ac6877e519f1b2546e03",
+          "source_label": "4",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "5d6974f9bbde6234f10b3e0f3a46084c4e09c58f147ddb1067b46a9bb9ac2631"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "98e9ec3d70f2cc92fbf15074e4b82d5eebb0177948a2a4bc0cc5abe71da15a13"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The connected fluoranthene fused core and two para-phenylboronic-acid arms agree with the corrected source graph.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "boronic_acid",
+          "label": "Boronic Acid",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [],
+      "connection_count": null,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Reference-only corrected source precursor. The current drawing engine does not implement boronic-acid framework chemistry.",
+      "limitations": [
+        "Reference-only corrected source precursor. The current drawing engine does not implement boronic-acid framework chemistry."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3420
+        ],
+        "component_ids": [
+          "2098"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "17b17c62a3a98f4d92dc6fe0962be20d735ad5ddf085aafaff74732d23740690"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "dba12_cho",
+      "abbreviation": "DBA[12]-CHO",
+      "full_name": "Triformyl dehydrobenzo[12]annulene",
+      "label": "DBA[12]-CHO · Triformyl dehydrobenzo[12]annulene",
+      "smiles": "O=Cc1ccc2c(c1)C#Cc1ccc(C=O)cc1C#Cc1ccc(C=O)cc1C#C2",
+      "canonical_smiles": "O=Cc1ccc2c(c1)C#Cc1ccc(C=O)cc1C#Cc1ccc(C=O)cc1C#C2",
+      "formula": "C27H12O3",
+      "isotopic_formula": "C27H12O3",
+      "isotope_counts": [],
+      "literature_names": [
+        "DBA[12]-CHO",
+        "Triformyl dehydrobenzo[12]annulene"
+      ],
+      "source_dois": [
+        "10.1021/jacs.0c01026"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r580-main-aldehyde",
+          "annotation_file_sha256": "1b5ae1de2f879b2f7b62b10eed881d1069c417efabc0023a8ee51c97f85f8249",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "24d9a6b32df9095f50915cb9a403613bc7fca16db74d58ee9b4c688c9ea11bf2",
+          "source_doi": "10.1021/jacs.0c01026",
+          "source_pdf_sha256": "dbef21465fdc1094d69f347394da4357d06867a813e61c9b178871924f0667b7",
+          "source_page": 2,
+          "source_bbox": [
+            0.10552638916037377,
+            0.14907828084978547,
+            0.1758773152672896,
+            0.19673445259684802
+          ],
+          "source_crop_sha256": "c0c7c25cd45f27c5b936552f802ff5630bd121b0e224fc1080f0197ba38361b7",
+          "source_label": "DBA12_CHO",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "29aa93053619151fadbcfd5ea942dbd01d168dbee72c415ff435e4ba58a52f63"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "ca4412ea854c2cd81920bca0b06e0c3941743d0a0ce4d2f72c04f98449e0c9e6"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The source shows three phenylene units joined by three ethynyl edges, with three formyl substituents; no fused-ring surrogate.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          4669
+        ],
+        "component_ids": [
+          "2974"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "e7da8978621a4e68d9da8fbc15e852939f416383a4366f5a9e418002d74e04c0"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "bfbapy",
+      "abbreviation": "BFBAPy",
+      "full_name": "1,6-Bis(4-formylphenyl)-3,8-bis(4-aminophenyl)pyrene",
+      "label": "BFBAPy · 1,6-Bis(4-formylphenyl)-3,8-bis(4-aminophenyl)pyrene",
+      "smiles": "Nc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c45)cc1",
+      "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c45)cc1",
+      "formula": "C42H28N2O2",
+      "isotopic_formula": "C42H28N2O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "BFBAPy",
+        "1,6-Bis(4-formylphenyl)-3,8-bis(4-aminophenyl)pyrene"
+      ],
+      "source_dois": [
+        "10.1021/jacs.9b03463"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r587-main-BFBAPy",
+          "annotation_file_sha256": "f8d5e44be598a30f35e139ac5e71d4ac00497d394c8792666af1f48773bf29ef",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "0e5c273dde797ae14287068bf759e17f2ef92d004c885a7da75549bf7314b236",
+          "source_doi": "10.1021/jacs.9b03463",
+          "source_pdf_sha256": "3b3b347afc9e0475061caef6508d5dfef9abde4b13d6166bb1ac7908e8fd3627",
+          "source_page": 2,
+          "source_bbox": [
+            0.17267954589879345,
+            0.49244710805297987,
+            0.31338139811262516,
+            0.5938692171557027
+          ],
+          "source_crop_sha256": "6b8e9c8f959451b7545b7a44e6b7de08e1c66976ac391cceb89b34e580503875",
+          "source_label": "BFBAPy",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "388f2ed696a790d575284f267b385e1d9787824fddc0fa5fddce66f12db0a8f9"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "afd5f5f1acdc627ee29781d5db347399bd0196fda685e4f8d8d5cf9317fc392a"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The pyrene graph retains two aldehyde and two amine phenyl arms in the source substitution pattern.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 2
+        },
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both aldehyde and amine groups are retained; selecting one reaction role does not reproduce the source self-condensation.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both aldehyde and amine groups are retained; selecting one reaction role does not reproduce the source self-condensation."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3294,
+          3295,
+          3296,
+          3297,
+          3298,
+          3299,
+          3300,
+          3301,
+          3302,
+          3303,
+          3304
+        ],
+        "component_ids": [
+          "133"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "nda15",
+      "abbreviation": "NDA (1,5)",
+      "full_name": "1,5-Diaminonaphthalene",
+      "label": "NDA (1,5) · 1,5-Diaminonaphthalene",
+      "smiles": "Nc1cccc2c(N)cccc12",
+      "canonical_smiles": "Nc1cccc2c(N)cccc12",
+      "formula": "C10H10N2",
+      "isotopic_formula": "C10H10N2",
+      "isotope_counts": [],
+      "literature_names": [
+        "NDA (1,5)",
+        "1,5-Diaminonaphthalene"
+      ],
+      "source_dois": [
+        "10.1039/c8ta05070h"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r036-02",
+          "annotation_file_sha256": "e08253c9545557bf65f3e41c77eae3b553f6dd7e2275beb7050aa05507f60c3f",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "12713fe2fe6690261a6a26171cdece46e6ab779ab8f5912c1d2d1fa1c74eb10a",
+          "source_doi": "10.1039/c8ta05070h",
+          "source_pdf_sha256": "f3c8fab301724535fae7929171f8e6a3f5ea74b262c25cd097cb71c8e212ed47",
+          "source_page": 3,
+          "source_bbox": [
+            0.7438691941658395,
+            0.06856655505985368,
+            0.780554287408903,
+            0.10581395840765866
+          ],
+          "source_crop_sha256": "26e399deb87de5ee6f29c70fa248e9fe2c2ab4577a52cd404989f7b756983035",
+          "source_label": "NDA (1,5-diaminonaphthalene)",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "830f71befc59fb4ccd12bd805a44978a94b6c8caae551d50b93ec65148653d90"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "476ec0c84accbba2bf7dfd6df3feb17f8891dd1d4e6056541d445be827fd6663"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Amines occupy the 1,5 positions of naphthalene, not the 2,6 isomer.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          5144,
+          5145
+        ],
+        "component_ids": [
+          "245"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "tbt",
+      "abbreviation": "TBT",
+      "full_name": "2,5,8-Triaminobenzotris(thiazole)",
+      "label": "TBT · 2,5,8-Triaminobenzotris(thiazole)",
+      "smiles": "Nc1nc2c(s1)c1nc(N)sc1c1nc(N)sc21",
+      "canonical_smiles": "Nc1nc2c(s1)c1nc(N)sc1c1nc(N)sc21",
+      "formula": "C9H6N6S3",
+      "isotopic_formula": "C9H6N6S3",
+      "isotope_counts": [],
+      "literature_names": [
+        "TBT",
+        "2,5,8-Triaminobenzotris(thiazole)"
+      ],
+      "source_dois": [
+        "10.1021/acsmaterialslett.2c00669"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r510-m10-main2-tbt",
+          "annotation_file_sha256": "2f209dd0430de272112e58a8deaaf8de5a4bbfbe9c90330b93214e5d8a36a5a4",
+          "annotation_line": 10,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "49418609fb4b23a9c590b01f2a40b082d84a3a0985b85f18e82c5b0727e65912",
+          "source_doi": "10.1021/acsmaterialslett.2c00669",
+          "source_pdf_sha256": "b816f8e371f4fbef1678d09695487b67d1a02b1a65c6ff207080b8f01ab1284e",
+          "source_page": 2,
+          "source_bbox": [
+            0.7787187268037564,
+            0.4320134443309621,
+            0.9087795712382105,
+            0.514420633133978
+          ],
+          "source_crop_sha256": "9d9cb1d49afd241f4d397f0702e85411c223892366825a442f16eccad27cf5a2",
+          "source_label": "TBT",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "08c8482436827e609ecac3958125d5be3f2eca4af63ceeecfa03b55da6a305f7"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "f84d75ec84eb17217b0cb2144f44d0c338a78fae71fb08db8ddbee1eed8b031d"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "8aa41624e5a99542748428d9224b721bfb9ef9e4678a576877e4fafdf410e22b"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The three fused thiazole rings retain source N/S ordering and three exocyclic primary amines.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          5766
+        ],
+        "component_ids": [
+          "1427"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "aminal_a2",
+      "abbreviation": "A2 (Aminal-COF)",
+      "full_name": "Tetrakis(formylbiphenyl)benzene tetraaldehyde A2",
+      "label": "A2 (Aminal-COF) · Tetrakis(formylbiphenyl)benzene tetraaldehyde A2",
+      "smiles": "O=Cc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(C=O)cc5)cc4)c(-c4ccc(-c5ccc(C=O)cc5)cc4)cc3-c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(C=O)cc5)cc4)c(-c4ccc(-c5ccc(C=O)cc5)cc4)cc3-c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "formula": "C58H38O4",
+      "isotopic_formula": "C58H38O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "A2 (Aminal-COF)",
+        "Tetrakis(formylbiphenyl)benzene tetraaldehyde A2"
+      ],
+      "source_dois": [
+        "10.1021/jacs.9b08017"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r533-main-a2",
+          "annotation_file_sha256": "821016e2f14dc449120a6d12f58d31d8799305bdb596f0d454456c0a420a8eea",
+          "annotation_line": 6,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "32213d5c84f17c61364602683a52ae567fd3a5c2b3437f36ec3c9af1d73b8413",
+          "source_doi": "10.1021/jacs.9b08017",
+          "source_pdf_sha256": "cf6add62c3e0d34748b09e8a159964de0fb2dc778681e29c87001e68fc4afa9b",
+          "source_page": 2,
+          "source_bbox": [
+            0.5068464449066438,
+            0.20895398381404356,
+            0.5787962556978077,
+            0.2834931242389363
+          ],
+          "source_crop_sha256": "fa9e1b0cae5aae4d378a7d816fdd42cad0c10841d60b2a971be8420babca3304",
+          "source_label": "A2",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "d2bf55c12a481a791fdc2e2187b134eb57da11ceddff77dc161afbf3aed5c54a"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "451c4d5d0e1e27cbe699af9257b3aee23c9fd11a288b417bed193fcde48a13c9"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "15a358b2abecd07f215ba7ccc2dbaa05d535d8e19bee696c08f97d75f391d234"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The central 1,2,4,5-substituted benzene and four biphenyl aldehyde arms agree with source A2.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3799
+        ],
+        "component_ids": [
+          "2337"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "bpp",
+      "abbreviation": "BPP",
+      "full_name": "2,9-Bis(4-formylphenyl)-1,10-phenanthroline",
+      "label": "BPP · 2,9-Bis(4-formylphenyl)-1,10-phenanthroline",
+      "smiles": "O=Cc1ccc(-c2ccc3ccc4ccc(-c5ccc(C=O)cc5)nc4c3n2)cc1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc3ccc4ccc(-c5ccc(C=O)cc5)nc4c3n2)cc1",
+      "formula": "C26H16N2O2",
+      "isotopic_formula": "C26H16N2O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "BPP",
+        "2,9-Bis(4-formylphenyl)-1,10-phenanthroline"
+      ],
+      "source_dois": [
+        "10.1021/jacs.4c12973"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r520-main-bpp",
+          "annotation_file_sha256": "a3b79f3091dceeb686593acd0e04b83518f24911f2be44bbbacdc95be9e0fe31",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "28f9a67c07e26d65f07289d1e4193ee4b243ebf65937bcb269036ca77a1677ff",
+          "source_doi": "10.1021/jacs.4c12973",
+          "source_pdf_sha256": "0698ea57beaea71c17555b1792ec849837ae2d28e489057d517e471a757511d8",
+          "source_page": 3,
+          "source_bbox": [
+            0.31609724216981233,
+            0.0786614074937879,
+            0.398414232318201,
+            0.11861640812555317
+          ],
+          "source_crop_sha256": "0b24518be371433bf1886d2ddf43fcc1f761842a46bc3fd514c3e337a1d84e53",
+          "source_label": "BPP",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "32e3cc440cf9f360c4a926972cb4de5bd6483198a298e96d4b3a7b3733dd6eee"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "4a3b65dadca1586ae4a833c2d7cb29c8d26ba8e9b9aff2052760c8215bf797f0"
+            },
+            {
+              "role": "independent_graph_review",
+              "sha256": "007af6d86e7306e43d83cc1378dc5f0d096698faae97d0b5993ad6bbb8339456"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The phenanthroline N positions and two para-formylphenyl arms are retained.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          3463,
+          3464
+        ],
+        "component_ids": [
+          "823"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "ash",
+      "abbreviation": "ASH",
+      "full_name": "4-Amino-2-hydroxybenzohydrazide",
+      "label": "ASH · 4-Amino-2-hydroxybenzohydrazide",
+      "smiles": "NNC(=O)c1ccc(N)cc1O",
+      "canonical_smiles": "NNC(=O)c1ccc(N)cc1O",
+      "formula": "C7H9N3O2",
+      "isotopic_formula": "C7H9N3O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "ASH",
+        "4-Amino-2-hydroxybenzohydrazide"
+      ],
+      "source_dois": [
+        "10.1021/jacs.7b00925"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "acs-context-r664-004",
+          "annotation_file_sha256": "fd68c8d118e09d92bea26bdd34867945d7e5bbdec52a6d78191c3781ae7621c7",
+          "annotation_line": 4,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "bdfe2fc88b77fd16004db823c689723b23c69341afb9e1f749ed9bed216263e9",
+          "source_doi": "10.1021/jacs.7b00925",
+          "source_pdf_sha256": "e7fd01f3ad7a2a7c1d051e58f0add355df8b87568219ce1506c9df654ea7ddf3",
+          "source_page": 2,
+          "source_bbox": [
+            0.11467840509300983,
+            0.3678983141685927,
+            0.1806851615128236,
+            0.4310830661864673
+          ],
+          "source_crop_sha256": "09d5ea7a19a1277cee832ec6a80fd6d3d8c35edb43e77810d5534ee625171162",
+          "source_label": "4-aminosalicylhydrazide",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "focal_source_review_sealed_provisional_agent_labels",
+          "review_artifacts": [
+            {
+              "role": "context_review",
+              "sha256": "c3ae6643c2d3a2e39a7f24f5742f476c65f9e00dcb496966cfea66388a251527"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "0a82d42f690a212454d6b1e14159ae9aba5bc94315874cb3b38ce275e43c2f8f"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source ASH has para NH2 and ortho OH relative to its acylhydrazide; it is a precursor, not a grafted PSM product.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 1
+        },
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 1
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 1,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 1,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "reference_only",
+      "automatic_prepare_supported": false,
+      "qualification": "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states.",
+      "limitations": [
+        "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          4694
+        ],
+        "component_ids": [
+          "1782"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "dhzdpr",
+      "abbreviation": "DHzDPr",
+      "full_name": "2,5-Dipropoxyterephthalohydrazide",
+      "label": "DHzDPr · 2,5-Dipropoxyterephthalohydrazide",
+      "smiles": "CCCOc1cc(C(=O)NN)c(OCCC)cc1C(=O)NN",
+      "canonical_smiles": "CCCOc1cc(C(=O)NN)c(OCCC)cc1C(=O)NN",
+      "formula": "C14H22N4O4",
+      "isotopic_formula": "C14H22N4O4",
+      "isotope_counts": [],
+      "literature_names": [
+        "DHzDPr",
+        "2,5-Dipropoxyterephthalohydrazide"
+      ],
+      "source_dois": [
+        "10.1039/c7cc05779b"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-molecule-r045-05",
+          "annotation_file_sha256": "d6fff0b86432280f19a4d3a4dcad563bde55b16eb0b476a7d27f19a08552f9b6",
+          "annotation_line": 5,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "4bd5affd4b19d49ec0cd2134ebf72e38b16a4db962ec5de107d56aabc769ee1a",
+          "source_doi": "10.1039/c7cc05779b",
+          "source_pdf_sha256": "6476236b276660d2c62ffa7aea45a88af97eb76c0cc9895e668a2b44685c2be9",
+          "source_page": 5,
+          "source_bbox": [
+            0.2753988245172124,
+            0.47743467933491684,
+            0.4248530646515533,
+            0.5374109263657957
+          ],
+          "source_crop_sha256": "83e61f0cd770fbf44ecdbb298394c9a388c6c6a1e94a9a872296dc31e077d9d9",
+          "source_label": "Pr",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "agent_reviewed_occurrence",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "a69ff61d906c1573d7969d205c86139ee7023a09b3fe58cfb233fefe5411bbcd"
+            },
+            {
+              "role": "paired_audit",
+              "sha256": "d49e2d9e94c1ebdce16798763bd75310d87fdfda05a63d45e2dbc32fa6bf6d62"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Both para acylhydrazides and two opposite n-propoxy substituents match the source.",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          1539,
+          1540
+        ],
+        "component_ids": [
+          "256"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "bpf",
+      "abbreviation": "BPF",
+      "full_name": "3,3-prime-Bipyridine-6,6-prime-dicarbaldehyde",
+      "label": "BPF · 3,3-prime-Bipyridine-6,6-prime-dicarbaldehyde",
+      "smiles": "O=Cc1ccc(-c2ccc(C=O)nc2)cn1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(C=O)nc2)cn1",
+      "formula": "C12H8N2O2",
+      "isotopic_formula": "C12H8N2O2",
+      "isotope_counts": [],
+      "literature_names": [
+        "BPF",
+        "3,3-prime-Bipyridine-6,6-prime-dicarbaldehyde",
+        "3,3prime-bipyridine-6,6prime-dicarbaldehyde"
+      ],
+      "source_dois": [
+        "10.1038/s44160-022-00071-y"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "nature-00071-m015",
+          "annotation_file_sha256": "82a824ec4329eb139bbb0b45ed328fe4d91c417df8af11c1d983ed60f215daaf",
+          "annotation_line": 15,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "465c7b46c6761ccd9c61eb191540df656245a99ee75a7f6768bda1e1ffe0f04d",
+          "source_doi": "10.1038/s44160-022-00071-y",
+          "source_pdf_sha256": "024033d530148d03679bffccc95c4b1089ed33a253b3f82e48fb4318d37ab138",
+          "source_page": 3,
+          "source_bbox": [
+            0.5459652320382996,
+            0.07069350426184345,
+            0.5833810311570082,
+            0.13678905702698166
+          ],
+          "source_crop_sha256": "fc15c22cfcf77e62460c53e293440b1984ee8462dcffc8daeee2ccf471adb67e",
+          "source_label": "BPF",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "bb1805326a6ae678f2556b94b2126cf4f35b312ac8c0c55cdbe97ca38ccf4dca"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "c07dcf82f545533eeb49941b9708ad6df30d4790f7e9fd45987e7a5ca2a099b2"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "754a91740a353c0589e5604d9850a297d419ad017223952246eab4c820d09111"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "8bcc4538634b314106c874b585863705a7665f0ef2d2e711a0365d7077a9344b"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "e105cb5266416c73e0ac93dd59476c4deb5a4c580d5dd4cf5f770a48f2e8db72"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "3ebaf0fac472977c7c6d2ffd3d54b1460076cab12cd46639f6d84b8127783245"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "d9ea74670704a824b85de892bb33d8a8e38fc6c78812970d45208dfb7c830dfa"
+            },
+            {
+              "role": "current_reference_evidence",
+              "sha256": "f8bee66b51a642dee4af6af9033a0a2d022478f3c5dcd25474b54c094843c4f7"
+            },
+            {
+              "role": "component_reference_qualification",
+              "sha256": "245f511220eb02b6d0ee17a03a6e2a5ece257ad038f56b2ee879f62bca5a2709"
+            },
+            {
+              "role": "admission_authorization",
+              "sha256": "7ac93984c60ab20fe1377fc75f04dcbf77004aa8825fa56cf94277cd1bfa82c2"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The two pyridine N atoms and 6,6-prime aldehydes match the complete source graph and MOL file.",
+          "source_graph_sha256": "c07dcf82f545533eeb49941b9708ad6df30d4790f7e9fd45987e7a5ca2a099b2",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          827,
+          829
+        ],
+        "component_ids": [
+          "548"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "btbba",
+      "abbreviation": "BTBBA",
+      "full_name": "Benzothiadiazole acetal diamine BTBBA",
+      "label": "BTBBA · Benzothiadiazole acetal diamine BTBBA",
+      "smiles": "CC1(C)COC(c2cc(-c3ccc(N)cc3)cc(-c3ccc(-c4cc(-c5ccc(N)cc5)cc(C5OCC(C)(C)CO5)c4)c4nsnc34)c2)OC1",
+      "canonical_smiles": "CC1(C)COC(c2cc(-c3ccc(N)cc3)cc(-c3ccc(-c4cc(-c5ccc(N)cc5)cc(C5OCC(C)(C)CO5)c4)c4nsnc34)c2)OC1",
+      "formula": "C42H42N4O4S",
+      "isotopic_formula": "C42H42N4O4S",
+      "isotope_counts": [],
+      "literature_names": [
+        "BTBBA",
+        "Benzothiadiazole acetal diamine BTBBA",
+        "5',5'''-(benzo[c][1,2,5]thiadiazole-4,7-diyl)bis(3'-(5,5-dimethyl-1,3-dioxan-2-yl)-[1,1'-biphenyl]-4-amine)"
+      ],
+      "source_dois": [
+        "10.1039/d4tc02995j"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-d4tc02995j-M010",
+          "annotation_file_sha256": "c3aa5d3f8839196a4fbfaca7d7cf303f475844f08fc2cb9e47f751d54c7ecda9",
+          "annotation_line": 10,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "ac49530f342080252afcd57d8f57932be44f54150c579e22ab9e1862a2796a2e",
+          "source_doi": "10.1039/d4tc02995j",
+          "source_pdf_sha256": "2317c3afdff169b5ef6eecc0e39a9a838768ad24ceab7e2fe76b6a7d6b77e46c",
+          "source_page": 6,
+          "source_bbox": [
+            0.636241610738255,
+            0.4653371320037986,
+            0.8523489932885906,
+            0.6400759734093068
+          ],
+          "source_crop_sha256": "11ee21869263b99790d981278bb076642139e19d1fe47da41904e88b65a0394a",
+          "source_label": "BTBBA",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "cd760148a35009436fe13aedca697ed2d7d6d7bfdddae838116862c33d3b11a5"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "529d8724eed653844e2ec93e8b4509028fc1ee0857318cbcc8673a6f7c18488f"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "b8abcc3abbe050ab2a50e4f539b083a267ce03a6944333df57de6997b1110f78"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "22fca1a650a300772cbd94e06306e1c138da7b262716cfb2fa106efbe5d51c1e"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "75010ef509d29735293b96fe201a7e34c4b525a34e906db73d081233f9b8d68d"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "46cbeb930ae2fb008b26987b6c3dd92aac9c347898879fb8b7ade198bb0f06a9"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "446ce5eab4d93958ba9ebd04f476e43422a7b2e8a5fb6fdeabd25e63b0f5e6c0"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "f5b83f03c7ff2a7e07b24817c8f80d20c89cd4a5c804dfa96651c04315be3e79"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "5ac08f3c697baa9c3b553d35779aed645a1dd6047dea79100f35bcbbae69b050"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "5ec03eee4e330ee577fad7fdcfd74629972cd2c109af98e99d5dbe9cb982f9a0"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "32e41bd10f2bf2f008d4f0148ab662790dae6b3b5ef6b6391d1f26d5f6abd86b"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "7bf740c458dd35d267eecca915641f3be8113fbbb99b231abbd44f5922c5cdd1"
+            },
+            {
+              "role": "qualified_source_references",
+              "sha256": "8a5404582246b3fc432d1bb36c7a88549e90cf7b858d594f04f541b922f264d1"
+            },
+            {
+              "role": "admission_authorization",
+              "sha256": "e8c404d567131822a108f066d235bc80ab58a59e12bfa81927f4f544a62931ff"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The central benzothiadiazole, meta-connected acetal-bearing rings and terminal para amines match the source and MOL graph.",
+          "source_graph_sha256": "529d8724eed653844e2ec93e8b4509028fc1ee0857318cbcc8673a6f7c18488f",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          4918
+        ],
+        "component_ids": [
+          "1800"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "btbbav",
+      "abbreviation": "BTBBAv",
+      "full_name": "Benzothiadiazole acetal diamine BTBBAv",
+      "label": "BTBBAv · Benzothiadiazole acetal diamine BTBBAv",
+      "smiles": "CC1(C)COC(c2ccc(-c3cc(N)cc(-c4ccc(-c5cc(N)cc(-c6ccc(C7OCC(C)(C)CO7)cc6)c5)c5nsnc45)c3)cc2)OC1",
+      "canonical_smiles": "CC1(C)COC(c2ccc(-c3cc(N)cc(-c4ccc(-c5cc(N)cc(-c6ccc(C7OCC(C)(C)CO7)cc6)c5)c5nsnc45)c3)cc2)OC1",
+      "formula": "C42H42N4O4S",
+      "isotopic_formula": "C42H42N4O4S",
+      "isotope_counts": [],
+      "literature_names": [
+        "BTBBAv",
+        "Benzothiadiazole acetal diamine BTBBAv",
+        "5,5''-(benzo[c][1,2,5]thiadiazole-4,7-diyl)bis(4'-(5,5-dimethyl-1,3-dioxan-2-yl)-[1,1'-biphenyl]-3-amine)"
+      ],
+      "source_dois": [
+        "10.1039/d4tc02995j"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "rsc-d4tc02995j-M020",
+          "annotation_file_sha256": "c3aa5d3f8839196a4fbfaca7d7cf303f475844f08fc2cb9e47f751d54c7ecda9",
+          "annotation_line": 20,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "98e12c74dbd881448adedbb2c08945a427e860933a578a699fd667630733db31",
+          "source_doi": "10.1039/d4tc02995j",
+          "source_pdf_sha256": "2317c3afdff169b5ef6eecc0e39a9a838768ad24ceab7e2fe76b6a7d6b77e46c",
+          "source_page": 9,
+          "source_bbox": [
+            0.6040268456375839,
+            0.0892687559354226,
+            0.861744966442953,
+            0.2830009496676163
+          ],
+          "source_crop_sha256": "b551fd764ecb57ab4a0f8a78814cf89973e7ea11291b601cff480b72c54bfb87",
+          "source_label": "BTBBAv",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "cd760148a35009436fe13aedca697ed2d7d6d7bfdddae838116862c33d3b11a5"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "171243ba93fff4a227eb680bc57cea30cee2562692177fe8d33099afb207c82d"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "b8abcc3abbe050ab2a50e4f539b083a267ce03a6944333df57de6997b1110f78"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "22fca1a650a300772cbd94e06306e1c138da7b262716cfb2fa106efbe5d51c1e"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "75010ef509d29735293b96fe201a7e34c4b525a34e906db73d081233f9b8d68d"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "46cbeb930ae2fb008b26987b6c3dd92aac9c347898879fb8b7ade198bb0f06a9"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "446ce5eab4d93958ba9ebd04f476e43422a7b2e8a5fb6fdeabd25e63b0f5e6c0"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "f5b83f03c7ff2a7e07b24817c8f80d20c89cd4a5c804dfa96651c04315be3e79"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "5ac08f3c697baa9c3b553d35779aed645a1dd6047dea79100f35bcbbae69b050"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "5ec03eee4e330ee577fad7fdcfd74629972cd2c109af98e99d5dbe9cb982f9a0"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "32e41bd10f2bf2f008d4f0148ab662790dae6b3b5ef6b6391d1f26d5f6abd86b"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "7bf740c458dd35d267eecca915641f3be8113fbbb99b231abbd44f5922c5cdd1"
+            },
+            {
+              "role": "qualified_source_references",
+              "sha256": "8a5404582246b3fc432d1bb36c7a88549e90cf7b858d594f04f541b922f264d1"
+            },
+            {
+              "role": "admission_authorization",
+              "sha256": "e8c404d567131822a108f066d235bc80ab58a59e12bfa81927f4f544a62931ff"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "The positional isomer preserves amines on the inner phenyl rings and acetals on the terminal para-substituted rings.",
+          "source_graph_sha256": "171243ba93fff4a227eb680bc57cea30cee2562692177fe8d33099afb207c82d",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "primary_arylamine",
+          "label": "Primary aromatic amine",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "beta_ketoenamine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "primary_arylamine",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          4919
+        ],
+        "component_ids": [
+          "1843"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "hth_s",
+      "abbreviation": "Hth (S,S)",
+      "full_name": "(S,S)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "label": "Hth (S,S) · (S,S)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "smiles": "C[C@H](O)COc1cc(C(=O)NN)c(OC[C@H](C)O)cc1C(=O)NN",
+      "canonical_smiles": "C[C@H](O)COc1cc(C(=O)NN)c(OC[C@H](C)O)cc1C(=O)NN",
+      "formula": "C14H22N4O6",
+      "isotopic_formula": "C14H22N4O6",
+      "isotope_counts": [],
+      "literature_names": [
+        "Hth (S,S)",
+        "(S,S)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+        "(S)-2,5-bis(2-hydroxypropoxy)terephthalohydrazide"
+      ],
+      "source_dois": [
+        "10.1016/j.cclet.2020.11.063"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "cclet-2020-11-063-M001",
+          "annotation_file_sha256": "e7c80c7eba8fe75b788b13652eb4e937039e4d93c4107cefca12c3bae2e9cd51",
+          "annotation_line": 1,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "5ba0107078e7681ff786df86bad7fad0c7690e3b56ab85b7de8f149521f802be",
+          "source_doi": "10.1016/j.cclet.2020.11.063",
+          "source_pdf_sha256": "2d1399c1ac5249e067a00296d0e6c619436d7c5a3ae815f154306331fecea3dc",
+          "source_page": 2,
+          "source_bbox": [
+            0.15302013422818792,
+            0.14803625377643503,
+            0.23624161073825503,
+            0.20443101711983888
+          ],
+          "source_crop_sha256": "b1c469d8fad89a301cbe2fb5035d2486a1f8c0d42fe9c4f710cc82d541fe9c6e",
+          "source_label": "Hth_SS",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "576972031055fdb19173ed29e0903660ec2001cb519ea4ce3c50e6908023546d"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "1aedf7f081509f0c3c439ff29fe13656942793c8d86eb6c81716ef5fb9dc79cc"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "e095da4206d50a8b859dc52ac016a216fdad24770d0596493ae7c7623bcb8858"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "ce29767df908ca7301cec9e1f4ffc156d19509402e6973b0ecee441b85c1b11c"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "b3eb20c784e296999bc65a68663424733d92f604127addfa6ea9c93867d71643"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "2e4df05fcbee7b74ad3363f0007dc88e9fd04436a9da3d55c8e51d3859f7f014"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "c6f72c89336f4ba753b83689adcd1a9bb0e45727cd3067809c5182fdd5450e5b"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "2938cb0a221fc840877467d5285854cb885ba0db732bc1cbd25a10ef6dcabe09"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "255ec025c90e970c04906a0fcdd6b807394daf9a66b2e83efc9d63cb356b3116"
+            },
+            {
+              "role": "reference_resolution",
+              "sha256": "74b9792aa5a8caa1c66e2be9c52e67f59fadde444603561e58fdf9a7b612571e"
+            },
+            {
+              "role": "qualified_source_references",
+              "sha256": "ffedc12f56d4b72fa6daf9325a17ce5d76d04ff0b8cdc5d87005b33047f053f8"
+            },
+            {
+              "role": "admission_authorization",
+              "sha256": "ed0de55d5b25dd930704e565af37b4d3aa4975f8e8d6b6772359579a100dd8e1"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source solid OH wedges encode two S centers; hydrazide connectivity and both chiral ether side chains match the MOL graph.",
+          "source_graph_sha256": "1aedf7f081509f0c3c439ff29fe13656942793c8d86eb6c81716ef5fb9dc79cc",
+          "upstream_image_hold_reasons": []
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          322
+        ],
+        "component_ids": [
+          "1143"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "d2d99e7c10eb3e477964e66ce56c22bc8632f475daa291e1e5df9f45641f4c0f"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
+    },
+    {
+      "id": "hth_r",
+      "abbreviation": "Hth (R,R)",
+      "full_name": "(R,R)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "label": "Hth (R,R) · (R,R)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "smiles": "C[C@@H](O)COc1cc(C(=O)NN)c(OC[C@@H](C)O)cc1C(=O)NN",
+      "canonical_smiles": "C[C@@H](O)COc1cc(C(=O)NN)c(OC[C@@H](C)O)cc1C(=O)NN",
+      "formula": "C14H22N4O6",
+      "isotopic_formula": "C14H22N4O6",
+      "isotope_counts": [],
+      "literature_names": [
+        "Hth (R,R)",
+        "(R,R)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+        "(R)-2,5-bis(2-hydroxypropoxy)terephthalohydrazide"
+      ],
+      "source_dois": [
+        "10.1016/j.cclet.2020.11.063"
+      ],
+      "source_evidence": [
+        {
+          "annotation_id": "cclet-2020-11-063-M002",
+          "annotation_file_sha256": "e7c80c7eba8fe75b788b13652eb4e937039e4d93c4107cefca12c3bae2e9cd51",
+          "annotation_line": 2,
+          "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+          "annotation_row_sha256": "b8264250272820feea6aaef9c3a64af01c1147b517c4f12c2129180b9824135d",
+          "source_doi": "10.1016/j.cclet.2020.11.063",
+          "source_pdf_sha256": "2d1399c1ac5249e067a00296d0e6c619436d7c5a3ae815f154306331fecea3dc",
+          "source_page": 2,
+          "source_bbox": [
+            0.1476510067114094,
+            0.3011077542799597,
+            0.23087248322147652,
+            0.3564954682779456
+          ],
+          "source_crop_sha256": "544c8e4b2516902440f41d84750792292d6013ce192796c802a518fdbb952e1c",
+          "source_label": "Hth_RR",
+          "review_status": "agent_reviewed",
+          "upstream_admission_status": "sealed_provisional_agent_reviewed",
+          "review_artifacts": [
+            {
+              "role": "source_review",
+              "sha256": "576972031055fdb19173ed29e0903660ec2001cb519ea4ce3c50e6908023546d"
+            },
+            {
+              "role": "graph_ref",
+              "sha256": "eddcd5a7263e23f4cb8f1a0b7d5701ca4b9e35369ae1f762896ffb93b28f99a2"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "e095da4206d50a8b859dc52ac016a216fdad24770d0596493ae7c7623bcb8858"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "ce29767df908ca7301cec9e1f4ffc156d19509402e6973b0ecee441b85c1b11c"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "b3eb20c784e296999bc65a68663424733d92f604127addfa6ea9c93867d71643"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "2e4df05fcbee7b74ad3363f0007dc88e9fd04436a9da3d55c8e51d3859f7f014"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "c6f72c89336f4ba753b83689adcd1a9bb0e45727cd3067809c5182fdd5450e5b"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "2938cb0a221fc840877467d5285854cb885ba0db732bc1cbd25a10ef6dcabe09"
+            },
+            {
+              "role": "independent_peers",
+              "sha256": "255ec025c90e970c04906a0fcdd6b807394daf9a66b2e83efc9d63cb356b3116"
+            },
+            {
+              "role": "reference_resolution",
+              "sha256": "74b9792aa5a8caa1c66e2be9c52e67f59fadde444603561e58fdf9a7b612571e"
+            },
+            {
+              "role": "qualified_source_references",
+              "sha256": "ffedc12f56d4b72fa6daf9325a17ce5d76d04ff0b8cdc5d87005b33047f053f8"
+            },
+            {
+              "role": "admission_authorization",
+              "sha256": "ed0de55d5b25dd930704e565af37b4d3aa4975f8e8d6b6772359579a100dd8e1"
+            }
+          ],
+          "ground_truth": false,
+          "visual_review": "Source dashed OH wedges encode two R centers. A neighboring reaction-arrow crop hold concerns image training, not this complete finite graph.",
+          "source_graph_sha256": "eddcd5a7263e23f4cb8f1a0b7d5701ca4b9e35369ae1f762896ffb93b28f99a2",
+          "upstream_image_hold_reasons": [
+            "unmasked_neighbor_reaction_arrow_context"
+          ]
+        }
+      ],
+      "review_status": "agent_reviewed_source_monomer",
+      "reviewer_type": "agent",
+      "ground_truth": false,
+      "reactive_groups": [
+        {
+          "kind": "acylhydrazide",
+          "label": "Terminal acylhydrazide",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "acylhydrazone",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "keto_hydrazide",
+          "role": "acylhydrazide",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "geometry_hint": "unspecified",
+      "node_symmetry": null,
+      "node_symmetry_qualification": "Not assigned from functional-group counts or a 2D depiction.",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality.",
+      "limitations": [
+        "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality."
+      ],
+      "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
+      "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped.",
+      "master_binding": {
+        "status": "source_doi_and_finite_precursor_graph_match",
+        "record_ids": [
+          323
+        ],
+        "component_ids": [
+          "1129"
+        ],
+        "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+        "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+        "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+        "installation_receipt_sha256": [
+          "d2d99e7c10eb3e477964e66ce56c22bc8632f475daa291e1e5df9f45641f4c0f"
+        ],
+        "ground_truth": false,
+        "qualification": "Source-reviewed finite precursor graph agrees with the installed master at the stated DOI. Master component IDs and record IDs are reference identifiers, not independent human verification, a verified material identity, topology, or crystal structure."
+      }
     }
   ],
   "cof_presets": [
@@ -3455,7 +7177,8 @@
         "Full COFex notation identifies the matched precursor set and recorded metadata; it is not a whole-framework SMILES.",
         "unk means no supported net code in this matched record. A displayed pore does not establish a unique topology.",
         "cat0 is retained from the installed reference convention; this catalog does not independently establish noninterpenetration.",
-        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures."
+        "Changing monomers, attachment incidence or linkage clears the source identity; designed variants are not literature structures.",
+        "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
       ],
       "source_dois": [
         "10.1021/acscatal.3c03857"
@@ -3465,7 +7188,7 @@
       ],
       "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
       "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-      "source_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "source_recipe_sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
       "source_pdf_sha256": "d82cb3f198dfa314e5db569f7cca8e0a7053636d9322ca3a895c3c1fb2107274",
       "source_page": 2,
       "source_bbox": [
@@ -3479,7 +7202,20 @@
       "catenation_evidence": "reference_convention_unverified_by_this_catalog",
       "ground_truth": false,
       "reviewer_type": "agent",
-      "upstream_source_recipe_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+      "upstream_source_recipe_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df",
+      "source_registered": false,
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore",
+      "coordinate_provenance": {
+        "method": "reviewed_source_informed_rigid_block_layout_v062",
+        "source_registered": false,
+        "original_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+        "review_crop_file_sha256": "64a5b68ed92a5e6bd9548566a7f1f75fa3663dc2b880345e7450cde9b8b12829",
+        "selection": "TpPa source-matching connection-side pattern0",
+        "global_display_alignment": "One proper rotation and centering chosen from six approximate source ring-center landmarks; no local warp or shape shearing.",
+        "scope": "Chemical graph and real intrablock geometry preserved. Visually compared with original source. Not exact atomwise registration, E/Z assignment, experimental topology, crystal geometry or human gold.",
+        "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
+      }
     },
     "tpb-dmtp-cof-pore-v1": {
       "cofex_notation": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
@@ -3541,7 +7277,8 @@
         "Source precursor labels are TAPB and DMTA; the material is called TPB-DMTP-COF.",
         "Three same-DOI records share this precursor notation; record IDs are retained, not silently selected.",
         "The source compares conventional pore depiction with a revised dual-pore/AA-prime model; this recipe is the depicted local pore, not a crystal reconstruction.",
-        "This compact key has inconsistent records elsewhere in the table; only these DOI/name/graph-verified records are associated here."
+        "This compact key has inconsistent records elsewhere in the table; only these DOI/name/graph-verified records are associated here.",
+        "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
       ],
       "source_dois": [
         "10.1021/jacs.4c14535"
@@ -3553,7 +7290,7 @@
       ],
       "reference_match": "same_doi_and_literature_name_and_exact_canonical_precursor_set",
       "reference_index_sha256": "2e7487235a7102a2ab2c8caa6ffb9e62b13b98f7b66a009db574dad72ceeb563",
-      "source_recipe_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "source_recipe_sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
       "source_pdf_sha256": "7cde5d8ab7bf96cce05ef2b2bce2b6890c4c34dd29070dc28f89de34f329f06a",
       "source_page": 2,
       "source_bbox": [
@@ -3567,7 +7304,20 @@
       "catenation_evidence": "reference_convention_unverified_by_this_catalog",
       "ground_truth": false,
       "reviewer_type": "agent",
-      "upstream_source_recipe_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+      "upstream_source_recipe_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b",
+      "source_registered": false,
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore",
+      "coordinate_provenance": {
+        "method": "reviewed_source_informed_rigid_block_layout_v062",
+        "source_registered": false,
+        "original_recipe_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+        "review_crop_file_sha256": "10f897f4ac672f86ac1db5e44f0552541566c6bd70cd848dfd1e0465b92119c7",
+        "selection": "TPB-DMTP source-matching angle-aware fit",
+        "global_display_alignment": "One proper rotation and centering chosen from six approximate source ring-center landmarks; no local warp or shape shearing.",
+        "scope": "Chemical graph and real intrablock geometry preserved. Visually compared with original source. Not exact atomwise registration, E/Z assignment, experimental topology, crystal geometry or human gold.",
+        "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
+      }
     },
     "wiley-r198-tppa-so3h-pore-0002": {
       "cofex_notation": "Nc1ccc(N)c(S(=O)(=O)O)c1.O=Cc1c(O)c(C=O)c(O)c(C=O)c1O COFex.unk.cat0;SCOF",
@@ -4332,16 +8082,16 @@
     {
       "recipe_id": "tppa-pore-v1",
       "filename": "tppa-pore-v1.recipe.json",
-      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
       "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df",
-      "portable_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7"
+      "portable_sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1"
     },
     {
       "recipe_id": "tpb-dmtp-cof-pore-v1",
       "filename": "tpb-dmtp-cof-pore-v1.recipe.json",
-      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
       "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b",
-      "portable_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3"
+      "portable_sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150"
     },
     {
       "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
@@ -7117,5 +10867,64 @@
     "runtime": "Only the seven listed finite drawing templates are implemented. No crystal, 3D geometry or pore-property prediction is implied."
   },
   "current_release_policy": "Stable current.json path; prior catalog/evidence bytes retained under hash-addressed history. No sealed source annotation is mutated.",
-  "recovered_drawing_scope": "Reviewed explicit graph drawings with retained coordinate-revision and source-style qualifications; no source pixels distributed."
+  "recovered_drawing_scope": "Reviewed explicit graph drawings with retained coordinate-revision and source-style qualifications; no source pixels distributed.",
+  "manual_monomer_update": {
+    "selection_sha256": "721dda9ac33d6c0a89ad9951f50c79e771e999fed004b0dde45aed58099a7435",
+    "previous_catalog_sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+    "added_ids": [
+      "ppcn",
+      "tfppy_ome",
+      "tfppy_f",
+      "tfppy_13c",
+      "tbpm_boronic",
+      "allyl_tbpa",
+      "dabd",
+      "thz",
+      "tmc",
+      "tape",
+      "odh",
+      "tfb_oh",
+      "tfb_oh2",
+      "daaq"
+    ],
+    "reviewer_type": "agent",
+    "ground_truth": false,
+    "source_drawings_unchanged": true,
+    "source_images_distributed": false
+  },
+  "source_layout_revision": {
+    "previous_catalog_sha256": "1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097",
+    "recipe_ids": [
+      "tppa-pore-v1",
+      "tpb-dmtp-cof-pore-v1"
+    ],
+    "source_registered": false
+  },
+  "master_key_monomer_update": {
+    "selection_sha256": "9613ebe10bedaf411cafbcddb4eee3c8533eaf62d529d80b1d60d7d57cfa49aa",
+    "previous_catalog_sha256": "e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574",
+    "added_ids": [
+      "tfpc",
+      "aminal_a1",
+      "aph",
+      "tabpb",
+      "flt_boronic",
+      "dba12_cho",
+      "bfbapy",
+      "nda15",
+      "tbt",
+      "aminal_a2",
+      "bpp",
+      "ash",
+      "dhzdpr",
+      "bpf",
+      "btbba",
+      "btbbav",
+      "hth_s",
+      "hth_r"
+    ],
+    "reviewer_type": "agent",
+    "ground_truth": false,
+    "source_drawings_unchanged": true
+  }
 }

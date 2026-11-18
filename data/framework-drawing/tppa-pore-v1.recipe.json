@@ -353,7 +353,7 @@
   "topology_basis": "unknown; explicit source-visible local pore connectivity only",
   "depiction_scope": "One chemical pore and the exact outward cut boundary; no crystal stacking coordinates.",
   "source_notes": "Figure1 lower left: six Tp triketone units and six para-phenylenediamine units; twelve ketoenamine links; six outer cuts after exocyclicCH. Full source supports keto tautomer.",
-  "review_status": "agent_draft_pending_redraw_comparison",
+  "review_status": "agent_reviewed_source_informed_layout",
   "ground_truth": false,
   "model_prediction": false,
   "cofex_source_records": [
@@ -457,6 +457,1165 @@
   "stereochemistry_scope": "Connectivity and linkage bond orders audited; depiction conformation is not exact E/Z or stacking supervision.",
   "portable_provenance": {
     "upstream_recipe_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df",
-    "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged."
-  }
+    "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged.",
+    "subsequent_revisions": [
+      {
+        "kind": "source_informed_coordinate_revision",
+        "previous_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+        "chemistry_unchanged": true,
+        "source_registered": false,
+        "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
+      }
+    ]
+  },
+  "atom_coordinates": [
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        2.62530143332159,
+        10.493510521248076
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        2.629189170261501,
+        11.993505483073443
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        3.930166781220894,
+        12.740136085032933
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        5.227256655240376,
+        11.986771725167054
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        3.9340545181608055,
+        14.2401310468583
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        5.235032129120198,
+        14.98676164881779
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        2.636964644141324,
+        14.993495406724177
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        2.640852381081236,
+        16.493490368549548
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        3.9418299920406294,
+        17.24012097050904
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        1.335987033181931,
+        14.24686480476469
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        0.03889715916245001,
+        15.000229164630568
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        1.3320992962420188,
+        12.746869842939322
+      ]
+    },
+    {
+      "instance": "n1",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        0.031121685282625197,
+        12.000239240979834
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        -3.8641742672099206,
+        12.76030577000307
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        -5.165155505416952,
+        12.013681488430803
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        -5.169050529596579,
+        10.51368654551045
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        -6.470031767803611,
+        9.767062263938186
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        -3.8719643155691768,
+        9.76031588416236
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        -2.5709830773621456,
+        10.506940165734623
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        -2.5670880531825175,
+        12.00693510865498
+      ]
+    },
+    {
+      "instance": "n2",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        -1.266106814975486,
+        12.753559390227243
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        -7.77499596961932,
+        7.5203329944722315
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        -9.0720858436388,
+        8.27369735433811
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        -9.06819810669889,
+        9.773692316163476
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        -7.767220495739498,
+        10.520322918122966
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        -10.365287980718373,
+        10.527056676029355
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        -10.361400243778462,
+        12.027051637854726
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        -11.666265591677767,
+        9.780426074069865
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        -12.963355465697246,
+        10.533790433935744
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        -12.959467728757337,
+        12.033785395761111
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        -11.670153328617676,
+        8.280431112244498
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        -12.97113093957707,
+        7.533800510285008
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        -10.373063454598194,
+        7.527066752378619
+      ]
+    },
+    {
+      "instance": "n3",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        -10.376951191538108,
+        6.027071790553251
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        -12.982836090484767,
+        3.033679804947621
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        -12.986731114664392,
+        1.5336848620272647
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        -11.689644900636994,
+        0.7803142006791749
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        -11.69353992481662,
+        -0.7196807422411811
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        -10.38866366242996,
+        1.5269384822514398
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        -10.384768638250334,
+        3.026933425171795
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        -11.681854852277732,
+        3.780304086519886
+      ]
+    },
+    {
+      "instance": "n4",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        -11.677959828098107,
+        5.2802990294402425
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        -10.400297402940907,
+        -2.9731775267758445
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        -11.701275013900299,
+        -3.7198081287353344
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        -12.998364887919783,
+        -2.9664437688694574
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        -12.99447715097987,
+        -1.4664488070440884
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        -14.299342498879174,
+        -3.713074370828947
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        -15.596432372898654,
+        -2.9597100109630685
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        -14.303230235819086,
+        -5.213069332654315
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        -15.604207846778475,
+        -5.959699934613805
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        -16.90129772079796,
+        -5.206335574747924
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        -13.006140361799602,
+        -5.966433692520192
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        -13.010028098739516,
+        -7.4664286543455605
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        -11.705162750840211,
+        -5.219803090560703
+      ]
+    },
+    {
+      "instance": "n5",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        -10.40807287682073,
+        -5.973167450426582
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        -9.11866182327484,
+        -9.726625965055451
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        -7.821575609247438,
+        -10.47999662640354
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        -6.520594371040407,
+        -9.733372344831276
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        -5.223508157013005,
+        -10.486743006179365
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        -6.516699346860779,
+        -8.23337740191092
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        -7.8137855608881805,
+        -7.48000674056283
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        -9.114766799095213,
+        -8.226631022135097
+      ]
+    },
+    {
+      "instance": "n6",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        -10.411853013122615,
+        -7.4732603607870045
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        -2.625301433321583,
+        -10.493510521248078
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        -2.629189170261494,
+        -11.993505483073445
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        -3.930166781220887,
+        -12.740136085032935
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        -5.227256655240368,
+        -11.986771725167056
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        -3.9340545181607984,
+        -14.240131046858302
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        -5.2350321291201904,
+        -14.986761648817788
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        -2.636964644141317,
+        -14.993495406724179
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        -2.640852381081228,
+        -16.493490368549544
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        -3.941829992040622,
+        -17.240120970509036
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        -1.3359870331819241,
+        -14.246864804764693
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        -0.03889715916244262,
+        -15.000229164630573
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        -1.3320992962420117,
+        -12.746869842939324
+      ]
+    },
+    {
+      "instance": "n7",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        -0.03112168528261787,
+        -12.000239240979836
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        3.864174267209926,
+        -12.76030577000307
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        5.165155505416957,
+        -12.013681488430805
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        5.1690505295965865,
+        -10.513686545510451
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        6.470031767803617,
+        -9.767062263938184
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        3.871964315569184,
+        -9.76031588416236
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        2.5709830773621523,
+        -10.506940165734626
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        2.5670880531825233,
+        -12.006935108654979
+      ]
+    },
+    {
+      "instance": "n8",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        1.2661068149754926,
+        -12.753559390227245
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        7.774995969619324,
+        -7.520332994472233
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        9.072085843638805,
+        -8.273697354338111
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        9.068198106698892,
+        -9.773692316163478
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        7.7672204957395,
+        -10.52032291812297
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        10.365287980718374,
+        -10.52705667602936
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        10.361400243778462,
+        -12.027051637854727
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        11.66626559167777,
+        -9.78042607406987
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        12.963355465697251,
+        -10.533790433935748
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        12.959467728757337,
+        -12.033785395761116
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        11.67015332861768,
+        -8.280431112244502
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        12.971130939577076,
+        -7.533800510285011
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        10.373063454598201,
+        -7.527066752378621
+      ]
+    },
+    {
+      "instance": "n9",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        10.376951191538113,
+        -6.027071790553253
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        12.982836090484772,
+        -3.033679804947623
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        12.9867311146644,
+        -1.5336848620272676
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        11.689644900637,
+        -0.7803142006791767
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        11.693539924816626,
+        0.7196807422411786
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        10.388663662429966,
+        -1.5269384822514411
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        10.384768638250339,
+        -3.0269334251717965
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        11.681854852277738,
+        -3.7803040865198883
+      ]
+    },
+    {
+      "instance": "n10",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        11.67795982809811,
+        -5.280299029440245
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 0,
+      "xy": [
+        10.400297402940913,
+        2.9731775267758436
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 1,
+      "xy": [
+        11.701275013900304,
+        3.7198081287353326
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 2,
+      "xy": [
+        12.998364887919786,
+        2.9664437688694547
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 3,
+      "xy": [
+        12.994477150979874,
+        1.4664488070440866
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 5,
+      "xy": [
+        14.299342498879179,
+        3.713074370828944
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 6,
+      "xy": [
+        15.59643237289866,
+        2.9597100109630663
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 7,
+      "xy": [
+        14.303230235819091,
+        5.213069332654312
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 8,
+      "xy": [
+        15.604207846778484,
+        5.9596999346138
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 9,
+      "xy": [
+        16.901297720797963,
+        5.206335574747921
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 10,
+      "xy": [
+        13.006140361799607,
+        5.966433692520191
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 11,
+      "xy": [
+        13.010028098739522,
+        7.46642865434556
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 12,
+      "xy": [
+        11.705162750840216,
+        5.219803090560703
+      ]
+    },
+    {
+      "instance": "n11",
+      "component": "Tp",
+      "fragment_atom_index": 13,
+      "xy": [
+        10.408072876820734,
+        5.9731674504265815
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 0,
+      "xy": [
+        9.118661823274847,
+        9.72662596505545
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 1,
+      "xy": [
+        7.8215756092474455,
+        10.479996626403537
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 2,
+      "xy": [
+        6.5205943710404135,
+        9.733372344831272
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 3,
+      "xy": [
+        5.223508157013011,
+        10.486743006179362
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 5,
+      "xy": [
+        6.5166993468607854,
+        8.233377401910916
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 6,
+      "xy": [
+        7.813785560888188,
+        7.480006740562826
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 7,
+      "xy": [
+        9.114766799095218,
+        8.226631022135091
+      ]
+    },
+    {
+      "instance": "n12",
+      "component": "Pa",
+      "fragment_atom_index": 8,
+      "xy": [
+        10.411853013122622,
+        7.473260360787
+      ]
+    }
+  ],
+  "layout_refinement": "manual",
+  "coordinate_provenance": {
+    "method": "reviewed_source_informed_rigid_block_layout_v062",
+    "source_registered": false,
+    "original_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+    "review_crop_file_sha256": "64a5b68ed92a5e6bd9548566a7f1f75fa3663dc2b880345e7450cde9b8b12829",
+    "selection": "TpPa source-matching connection-side pattern0",
+    "global_display_alignment": "One proper rotation and centering chosen from six approximate source ring-center landmarks; no local warp or shape shearing.",
+    "scope": "Chemical graph and real intrablock geometry preserved. Visually compared with original source. Not exact atomwise registration, E/Z assignment, experimental topology, crystal geometry or human gold.",
+    "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth."
+  },
+  "source_registered": false,
+  "representation_kind": "source_informed_pore",
+  "preferred_style_id": "source"
 }

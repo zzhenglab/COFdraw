@@ -1,4 +1,7 @@
+> Historical catalog documentation. The current v0.7.0 release contains 81 monomers and 17 source-associated drawings. See the [manual master-record review](manual-master-crosscheck.md) and [current drawing catalog](recovered-source-drawings.md).
+
 The desktop app loads `framework-drawing/catalog/current.json`. The readable current file is backed by hash-addressed catalog history and `current.audit.json`; old source evidence and catalogs remain unchanged. Production and portable copies bind different recipe hashes because the portable recipes have private paths removed. Both copies verify their own registry, four recipe identities, exact precursor graphs and full SMILES-based COFex strings.
+
 
 The catalog contains 41 source-reviewed monomers and 12 starting-pair presets. `connection_count` and `reactive_groups` describe reactive sites. `node_symmetry` is separate and remains unassigned where it has not been independently established. A C2 symmetry label must never be interpreted as two reactive sites. One primary example explicitly uses four-connected D2h and two-connected C2 building blocks. [Primary source](https://pubs.rsc.org/en/content/articlelanding/2023/cc/d3cc04502a)
 

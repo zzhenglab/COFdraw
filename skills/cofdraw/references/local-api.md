@@ -75,6 +75,14 @@ For an edited recipe, prepare a full render request containing `{"recipe": {...}
 
 ## Output and checks
 
+### Geometry review
+
+New `/prepare` designs use `bond_angle_pose_v2`: proper rotations and translations of rigid monomer fragments, with alternative planar connection-side choices only where stereochemistry is unspecified. Ring shapes and internal atom distances remain fixed. Explicitly stereospecified fragments use the conservative spacing path and request review. This is a depiction operation; a small angle error does not establish a physically stable or synthesizable COF.
+
+Read `audit.layout_refinement.quality`, `final_max_junction_angle_deviation_degrees`, and `max_join_length_fraction_error`. The `regular` result requires junction deviation at most 15 degrees, join-length error at most 12%, and no detected atom overlaps or proper nonincident bond crossings. `audit.layout_diagnostics` contains the individual angle measurements, bond ratios, overlap pairs and crossing pairs. These diagnostics do not cover every possible label collision or all forms of segment overlap. Report a `needs_review` result, inspect the image, and use manual adjustment or a different construction where appropriate.
+
+When comparing a reconstruction with a supplied original, bind the original crop and graph identities first. Use corresponding atoms or monomer landmarks and a global proper rotation, uniform scale and translation; do not deform individual rings to improve pixel overlap. Inspect both the overlay and chemistry. Image ink-distance scores can help rank candidates but also measure labels and unrelated marks, so they are not proof of atomwise registration. Retain explicit selected coordinates and qualify source-informed layouts separately from exact source registration. The bundled TpPa and TPB-DMTP revisions follow this approach; unchanged source requests use those coordinates directly.
+
 Each helper invocation requires a new output directory. `library.json` preserves catalog selection context. A render creates `result.json`, `drawing.svg`, `drawing.png`, `drawing.mol`, and any returned optional formats, including the JSON recipe/audit bundle. `artifacts.json` records file sizes and SHA-256 hashes. `server-output.log` and `runtime-data/cofdraw.log` are local diagnostics.
 
 The response `audit` records the graph scope, drawing status, monomers, template, style, and chemical export diagnostics. Check this before describing an output. CDXML export may be unavailable; only advertise formats present in `downloads`. A successful API response is a software check, not independent verification of the chemistry.

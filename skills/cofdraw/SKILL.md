@@ -1,11 +1,11 @@
 ---
 name: cofdraw
-description: Use COFdraw to query its local chemistry catalog, draw source-informed or designed COF patches, preserve manual layouts, export editable chemistry, inspect periodic CIFs and contact networks, calculate ideal PXRD and geometric screening, and retrieve saved machine-readable reports. Use when asked to use COFdraw or its GitHub link for information, structures, or qualified calculations.
+description: Use COFdraw or its GitHub link to query local chemistry, draw and export finite COF patches, preserve source layouts, inspect periodic models, screen monomer accessibility, calculate geometric properties or run qualified local adsorption jobs, and return actual reports.
 ---
 
 # COFdraw
 
-Create actual PNG/SVG and editable MOL/SDF/CDXML drawings with the local COFdraw application. Preserve the accompanying JSON and its provenance. Its separate scientific tools query local evidence and handle molecular conformers, periodic models, contact networks, ideal diffraction, geometric screening and supplied adsorption data. A finite drawing does not establish a crystal structure.
+Create actual PNG/SVG and editable MOL/SDF/CDXML drawings with the local COFdraw application. Preserve the accompanying JSON and its provenance. Its separate scientific tools query local evidence and handle molecular conformers, periodic models, contact networks, ideal diffraction, geometric screening, classical adsorption jobs and supplied adsorption data. A finite drawing does not establish a crystal structure.
 
 ## Start from a GitHub link
 
@@ -23,6 +23,8 @@ For a prose request, use the local description workflow in [agent-workflows.md](
 2. For a named catalog drawing, use `source` with its exact recipe ID and preferred style (`source` is the helper default). Preserve admitted coordinates, including a compact, tilted or irregular source arrangement. Do not automatically replace it with a regular polygon or run cleanup. For a new design, choose explicit finite monomer SMILES, supported linkage, and an appropriate template, then use `design` with the JSON prepare request. For an edited recipe or advanced style controls, use `render` with the full render request.
 3. Inspect the returned `audit`, including continuation ports, source/design status, selected template, export diagnostics, and any style limits. Visually inspect the generated PNG/SVG when an image tool is available. Preserve isotope, charge, stereo, and attachment information when editing.
 4. Return links to the files actually produced. Keep the JSON alongside chemical exports. Say when CDXML was omitted and use the reason in `chemical_exports`; never claim a successful format without a returned file.
+
+For new designs, check the A/B pair together: an individually supported monomer may have no supported reaction with its partner. Inspect `audit.layout_refinement.quality` and `layout_diagnostics`; `needs_review` means the fit needs inspection or adjustment. The angle-aware fit preserves rigid molecular blocks, but is not an energy minimization or E/Z prediction. Keep source-coordinate revisions fixed rather than rerunning a generic fit. See [geometry review](references/local-api.md#geometry-review) for the relevant fields and source-overlay procedure.
 
 From a checkout, with its Python environment active:
 
@@ -58,7 +60,13 @@ Query `science library` for the actual periodic model IDs. Use `science monomer`
 
 Use `science inspect` for cell composition/density and distance-inferred periodic contacts, `science pxrd` for an ideal powder pattern, and `science screen` for a bounded comparison of supplied structures. Contact cutoff changes can change inferred dimensionality; it is not automatic RCSR identification. PXRD is a calculation from the supplied structure, not phase identification or refinement of an experimental pattern. Element counts per gram are not accessible catalytic-site densities.
 
-`science porosity` requires an explicit periodic structure. It estimates hard-sphere geometry, not adsorption or BET area. `science bet` requires the user's adsorption data and a chosen fit interval. Do not invent an isotherm to supply a requested material property. No bundled calculation runs DFT or xTB, establishes a band gap, or proves a stable crystal. Report units, parameters, convergence/sampling limits and failed checks from the actual result.
+Use `science synthesis-library` for offline RDKit SA Scores of eligible finite monomers (1 easier–10 harder). Drawing audits summarize declared precursors only. These are heuristic scores, not ASKCOS, retrosynthesis, COF reaction feasibility or yield.
+
+`science geometry` requires an explicit periodic structure and reports hard-sphere PLD/LCD and volume bounds plus a sampled transport-connected surface. Read `connectivity.status`: a coarse-grid zero can mean unresolved rather than closed. The older `science porosity` is a separate sampling method. Neither calculates adsorption or BET area.
+
+For physical adsorption, first check `science adsorption-engine`, then read the asynchronous workflow in [science-api.md](references/science-api.md#local-adsorption-jobs). Use `science adsorption --request ...` only with an explicit periodic model and reviewed gas, charge, force-field and reservoir assumptions. Keep the service alive until its job finishes; the helper polls and cancels its own job on interruption. Retain JSON/CSV and the actual input/output ZIP. Short runs are not convergence evidence; zero-loading heat is a finite-difference Widom estimate, not a finite-loading heat curve.
+
+`science bet` requires the user's supplied adsorption data and a chosen fit interval. Do not invent an isotherm or relabel simulated/geometric results as an experiment. No bundled calculation runs DFT or xTB, establishes a band gap, or proves a stable crystal. Report units, parameters, convergence/sampling limits and failed checks from the actual result.
 
 Return the saved JSON report and any actual CSV/structure/image files, plus concise findings grounded in their values. Preserve `report_id`, `operation`, engine version, input/structure hashes, units, method and limitations where returned. A persistent local service can list and reread its previous reports; the helper's isolated runs also keep their complete result files on disk.
 

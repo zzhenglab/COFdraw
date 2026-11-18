@@ -78,9 +78,11 @@
     const rule=library.linkages?.[linkage]||{},role=roleFor(library,linkage,block),label=rule.role_labels?.[block==="a"?0:1]||role?.replaceAll("_"," ")||"supported reactive group";
     if(rule.supported===false||!role)return {compatible:false,reason:"This linkage is reference-only. Open the monomer in the editor to inspect or save it."};
     const evidence=roleEvidence(item,linkage,role);
+    if(!evidence)return {compatible:false,reason:"Inspect this monomer before using it in a construction."};
     if(evidence?.compatible===false)return {compatible:false,reason:evidence.reactive_sites===undefined?`Requires ${label}; this monomer has no supported ${label.toLowerCase()} role.`:evidence.reason};
     const raw=library.templates,templates=Array.isArray(raw)?raw:raw?Object.entries(raw).map(([id,t])=>({id,...t})):[];
     const otherRole=roleFor(library,linkage,block==="a"?"b":"a");
+    if(block==='b'&&other&&roleEvidence(other,linkage,otherRole)?.compatible!==true)return {compatible:false,reason:"Building block A does not supply the selected linkage role. Change A or enable automatic chemistry matching."};
     if(other&&roleEvidence(other,linkage,otherRole)?.compatible===true&&templates.length){
       const pair=block==="a"?{a:item,b:other}:{a:other,b:item};
       const eligible=templates.filter(t=>templateCompatibility(t,linkage,pair,library).compatible);
@@ -111,8 +113,19 @@
     if(block==='editor') return {compatible:true,reason:'Open, inspect, or edit this monomer.'};
     const pair=block==='a'?[item,other]:[other,item], choices=compatibleLinkages(library,...pair);
     if(choices.length) return {compatible:true,reason:`Compatible with this partner: ${choices.map(c=>c.label).join(', ')}. Chemistry and connectivity update when selected.`};
-    const supported=list(item.compatible_roles).some(r=>r.compatible!==false&&(r.reactive_sites??r.count)>=2);
+    if(block==='b'&&other)return {compatible:false,reason:'No implemented linkage and connectivity template connects this monomer with building block A. Choose a different partner or inspect it in the single-monomer editor.'};
+    const supported=list(item.compatible_roles).some(r=>library.linkages?.[r.linkage]?.supported===true&&r.compatible!==false&&(r.reactive_sites??r.count)>=2);
     return {compatible:supported,reason:supported?'Choose this monomer, then a compatible partner. Available chemistry will update automatically.':'No implemented transform for this monomer yet; use the single-monomer editor or import a reviewed source drawing.'};
+  }
+  function automaticPlan(library,a,b) {
+    const choices=compatibleLinkages(library,a,b);
+    // A reduced product state always requires an explicit manual choice.
+    const chosen=choices.find(choice=>choice.id!=='secondary_amine');
+    if(!chosen)return null;
+    const raw=library.templates,templates=Array.isArray(raw)?raw:Object.values(raw||{});
+    const eligible=templates.filter(template=>chosen.templates.includes(template.id));
+    const template=eligible.find(item=>Array.isArray(item.allow_pairs)&&item.allow_pairs.length)||eligible[0];
+    return {...chosen,template_id:template?.id||null,choice_count:choices.length};
   }
   // Share in-flight work as well as completed previews. Only the caller decides
   // which visible cards to request; a long catalog never starts all at once.
@@ -132,7 +145,7 @@
     }
     return {request};
   }
-  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,createPreviewCache};
+  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,createPreviewCache};
   scope.COFdrawLibrary = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);

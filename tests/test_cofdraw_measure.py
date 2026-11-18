@@ -56,6 +56,42 @@ def test_inscribed_circle_cannot_escape_between_long_projected_bonds():
     assert result["projected_ring_area_angstrom2"] == pytest.approx(90)
 
 
+def test_annotation_endpoints_bind_exact_reported_diameter_to_drawing_coordinates():
+    points = regular_points() * 7.5 + [71.3, -48.2]
+    recipe = explicit_ring(points)
+    before = json.dumps(recipe, sort_keys=True)
+    result = measure_drawing(recipe)
+    annotation = result['annotation']
+    endpoints = np.asarray(annotation['endpoints'])
+    scale = annotation['angstrom_per_drawing_unit']
+    assert annotation['coordinate_system'] == 'drawing_xy_cartesian_y_up'
+    assert endpoints.mean(axis=0) == pytest.approx(annotation['center'])
+    assert np.asarray(annotation['center']) * scale == pytest.approx(result['center_angstrom'])
+    assert np.linalg.norm(endpoints[1] - endpoints[0]) * scale == pytest.approx(result['diameter_angstrom'])
+    assert result['diameter_nm'] * 10 == pytest.approx(result['diameter_angstrom'])
+    assert endpoints[0, 1] == endpoints[1, 1]
+    assert 'inscribed circle' in annotation['meaning']
+    assert annotation['label_qualification'] == '2D drawing estimate'
+    for anchor in annotation['coordinate_anchors']:
+        assert anchor['xy'] == pytest.approx(points[anchor['atom_index']])
+    # Every point on the diameter stays clear of explicit-atom exclusion disks.
+    samples = np.linspace(endpoints[0], endpoints[1], 101) * scale
+    clearance = np.linalg.norm(samples[:, None] - points[None] * scale, axis=2) - Chem.GetPeriodicTable().GetRvdw(6)
+    assert clearance.min() >= -1e-8
+    assert json.dumps(recipe, sort_keys=True) == before
+
+
+def test_measure_api_retains_annotation_units_and_scope(tmp_path):
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        response = client.post('/api/drawing/science/measure', json={'recipe': explicit_ring(regular_points())})
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert len(result['annotation']['endpoints']) == 2
+    assert result['diameter_nm'] == pytest.approx(result['diameter_angstrom'] / 10)
+    assert result['sampling_lower_bound'] is True
+    assert 'not a physical pore diameter' in result['scope']
+
+
 def test_explicit_hydrogen_is_an_obstacle_in_the_supplied_projection():
     points = regular_points()
     empty = measure_drawing(explicit_ring(points))

@@ -1,6 +1,6 @@
 # Molecular and periodic structure calculations
 
-COFdraw separates molecular conformers, explicitly periodic structures, finite drawing illustrations, hard-sphere geometry, and adsorption-data fitting. The result records the method, parameters, units, and limitations. A finite drawing never becomes a validated crystal merely by adding a cell around it.
+COFdraw separates molecular conformers, explicitly periodic structures, finite drawing illustrations, hard-sphere geometry, classical adsorption simulations, and adsorption-data fitting. The result records the method, parameters, units, and limitations. A finite drawing never becomes a validated crystal merely by adding a cell around it.
 
 ## Monomer properties and conformers
 
@@ -11,6 +11,10 @@ Explicit hydrogens are added before seeded, single-threaded ETKDGv3 conformer ge
 XYZ and SDF contain actual three-dimensional Cartesian coordinates in ångströms. SDF retains the molecular graph, stereochemistry, charge, and isotope information; XYZ is a coordinate format. Force-field energies are in kcal/mol and should only compare conformers of the same molecular graph under the same force field. They are not heats of formation, binding energies, orbital energies, or framework stability. The bundled calculation does **not** run xTB or DFT. XYZ is suitable as an initial geometry for separately installed quantum-chemistry programs after inspection.
 
 The monomer response also provides empirical Gasteiger partial charges for all explicit atoms, including hydrogens, using 12 iterations. Missing parameters cause explicit omission instead of zero-valued stand-ins. These graph-based charges are not quantum electron density, oxidation states, HOMO/LUMO energies, or a band gap. [RDKit partial-charge implementation](https://www.rdkit.org/docs/source/rdkit.Chem.rdPartialCharges.html).
+
+## Finite-precursor SA Score
+
+The offline RDKit Contrib SA Score reports a molecular heuristic from 1 (easier) to 10 (harder) for eligible complete finite monomers. It is the published scorer, not ASKCOS or an ASKCOS-distilled model. Drawing audits give an unweighted mean/maximum of distinct declared precursor graphs only; an unsupported or missing precursor prevents a numeric aggregate. They do not score a product patch, polymerization, crystallization or infinite COF. Reference-only catalog entries retain their reaction-support restrictions. See [synthetic-accessibility inputs, resources and limitations](synthetic-accessibility.md).
 
 ## Explicit periodic structure import and export
 
@@ -35,7 +39,13 @@ The bundled periodic examples were generated with **pyCOFBuilder 0.0.9.4**: HCB 
 
 ## Finite layer illustrations
 
-`patch_3d(recipe, layers=3, layer_spacing=3.4, stacking="AA", slip=None, bond_length=1.4)` makes a separate **nonperiodic illustration** from an existing finite drawing. Its median real-atom bond length is scaled to the requested ångström value, and layers are translated with explicit spacing and optional slip. AB illustration requires a user-supplied slip; pore shape is not used to infer it. Bond connectivity is retained within each finite layer. No interlayer bonds, missing hydrogens, or optimized atomic geometry are invented. XYZ uses `X` for continuation placeholders. This output is not accepted as a periodic pore-analysis structure.
+`patch_3d(recipe, layers=3, layer_spacing=3.4, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15)` makes a separate **nonperiodic illustration** from an existing finite drawing. Its median real-atom bond length is scaled to the requested ångström value. AA aligns layers; AB uses alternating offsets `0, s, 0, s`; ABC uses `0, s, 2s, 0`; progressive slip uses `0, s, 2s, 3s`; twisted layers rotate successively around the drawing centroid by the chosen angle. Offset modes require an explicit slip vector in ångströms; pore shape does not infer it. These are chosen illustration transforms, not crystallographic stacking assignments such as AB1 or ABC1. Layer translations/rotations are recorded individually. Bond connectivity and internal distances are retained within each finite layer. No interlayer bonds, missing hydrogens, or optimized atomic geometry are invented. XYZ uses `X` for continuation placeholders. This output is not accepted as a periodic pore-analysis structure.
+
+## Interpenetration hypotheses
+
+`network_hypothesis(structure, offsets, repeats=(1,1,1))` creates one to four explicitly translated copies of a supplied periodic geometry. Fractional offsets are chosen by the user and reduced modulo the cell; coincident offsets and intercopy atom separations below 0.8 Å are rejected. Intercopy minimum distance uses the same metric-aware periodic distance engine as pore analysis. Contacts below 2 Å produce a review warning. These thresholds catch obvious collisions; they do not certify chemically sensible packing.
+
+The JSON and viewer retain copy-group labels, offsets, input hash and parent provenance. CIF/XYZ/PDB contain the actual generated coordinates; retain JSON for group assignments. The viewer does not invent bonds between explicitly labeled copies. Parent geometry may itself contain more than one infinite net: a chosen copy count is therefore not a measured interpenetration degree. Neither copying a geometry nor counting quotient-graph components determines entanglement, COFex `cat`, or a stable crystal. Inspect contacts and supplied connectivity with an appropriate topology tool before assigning them. The distinction between independent nets and their interpenetration is discussed in the [RCSR methods paper](https://yaghi.berkeley.edu/pdfPublications/08resource.pdf); the broader reticular construction approach is documented by [pyCOFBuilder](https://lipelopesoliveira.github.io/pyCOFBuilder/).
 
 ## Periodic hard-sphere geometry
 
@@ -62,6 +72,22 @@ A separate periodic voxel graph estimates connectivity. Free voxel centres conne
 The density calculation is `M_cell / (N_A × V_cell × 10⁻²⁴)` in g/cm³, using standard atomic weights. Area conversion is `A_Å² × 10⁻²⁰ × N_A / M_cell` in m²/g. Missing hydrogens, solvent, defects, disorder, and incorrect cell content change mass-normalized results. Input structures are not independently chemically validated.
 
 Volume and surface fractions include 95% Wilson sampling intervals. These intervals omit radius-model, structural, and voxel-discretization uncertainty. Random seeds make a run repeatable with the same numerical/software versions. Requested work is capped by atom count and periodic-image search complexity; the effective volume/surface sample counts and grid size are reported. No network service, trained model, SciPy, or external executable is needed for these calculations.
+
+## Deterministic transport geometry
+
+`geometric_porosity(structure, probe_radius=1.82, grid_spacing=0.6, surface_samples=64, refinement=False)` is the separate deterministic `/science/geometry` endpoint. It uses the same periodic hard-sphere clearance, with continuous-path lower bounds and enclosing-voxel upper bounds for pore-limiting diameter, largest-cavity diameter and transport-connected probe-center volume. The bounds cover grid discretization within that supplied model, not structural or atomic-radius uncertainty. The sampled inflated-sphere surface counts only points with collision-free connections to certified winding channels; unresolved attachments are excluded, and quadrature has no statistical confidence interval.
+
+Check `connectivity.status`: `unresolved_at_this_resolution` means the lower graph found no channel while the enclosing upper graph still can wind. A zero lower volume or surface is then not proof of an inaccessible pore. Refinement compares grids and does not establish convergence. Effective grid/sample counts can be capped. The [geometric-properties method](geometric-properties.md) gives definitions, bound reasoning, API examples and analytical tests. The older `pore_analysis` above remains a distinct sampling calculation and does not acquire these transport certificates.
+
+## Local classical adsorption
+
+The asynchronous `/science/adsorption/jobs` service runs a pinned RASPA3 CPU worker in an isolated process. It requires an explicit full periodic structure and a documented rigid-framework force field, gas composition, temperature, pressure and charge model. Force-field support is checked; missing charges are rejected in CIF-charge mode. Explicit zero-framework-charge mode is an approximation, not inferred neutrality or validated host–guest electrostatics. Reservoir fugacity coefficients default to one (ideal gas), rather than an inferred mixture equation of state. Read the [RASPA model, resources and validation limits](raspa-methods.md).
+
+A separate zero-loading Widom run provides Henry coefficients; GCMC stages provide loadings at each requested pressure. Mixture selectivity uses `(q_i/q_j)/(y_i/y_j)`; Henry selectivity uses the coefficient ratio. Missing or nonpositive estimates produce no ratio. Short default runs and five-block error estimates are not proof of equilibration, convergence or agreement with experimental adsorption. No flexibility, chemisorption or framework synthesis is modeled.
+
+Optional zero-loading heat uses two extra independent Widom runs at `T ± min(5 K, 0.025T)`, evaluating `Qst0 = R Δln(K_H,p)/Δ(1/T)` with `R = 0.00831446261815324 kJ mol⁻¹ K⁻¹`. This finite difference has temperature-step bias and sampling noise. Its input-interval envelope is not a joint 95% confidence interval, and it does not supply a finite-loading heat curve.
+
+Retain the actual JSON/CSV and ZIP of inputs, outputs and hashes. Jobs are queued/running until a terminal result is recorded; cancellation waits for worker shutdown and preserves completed stages. Failed or cancelled jobs may contain partial results. The [agent API workflow](../skills/cofdraw/references/science-api.md#local-adsorption-jobs) documents polling, cancellation and the helper. Geometric surfaces and simulated isotherms must remain distinct from experimental BET analysis.
 
 ## BET fitting requires adsorption data
 

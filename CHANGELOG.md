@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0 - 2026-11-17
+
+- Add deterministic periodic pore geometry with PLD/LCD bounds, transport-accessible surface and probe-center volume, density, void fraction and resolution diagnostics.
+- Integrate a local RASPA3 CPU worker for five gases, gas mixtures, pressure-series GCMC and separate zero-loading Widom calculations. Save force fields, charges, reservoir settings, seeds, block errors and actual run files.
+- Estimate zero-loading isosteric heat from temperature-dependent Henry coefficients; distinguish this estimate from finite-loading heats and experimental adsorption.
+- Add offline RDKit SA Score for every catalog monomer and declared finite precursors in new drawings; scores are molecular heuristics, not synthesis routes or whole-COF feasibility predictions.
+
+- Correct distorted linkage angles and inconsistent aromatic-edge alignment in new designs with a rigid-block depiction fit; preserve each monomer's internal geometry and the molecular graph.
+- Compare TpPa and TPB-DMTP reconstructions against their original figures and retain the selected source-informed coordinates. Existing exact source coordinates remain unchanged.
+- Filter monomer B by the selected A, refresh linkage/layout choices after edits, and prevent incompatible pairs from creating a drawing.
+- Expand the reviewed monomer catalog from 49 to 81: 25 additional buildable monomers and seven reference-only entries, with source and installed-master evidence. Keep provisional agent review distinct from completed human ground truth.
+- Show geometry review notices when cleanup cannot satisfy the drawing checks. Retain manual adjustment, source qualifiers, and the downloaded-Windows startup fix.
+- Refresh 3D views from the active drawing, expose full COFex notation, and make automatic linkage/connectivity selection explicit with manual overrides.
+- Draw pore-size arrows on the figure; add more 3D representations, layer coloring and AA/AB/ABC/slipped/twisted comparison options.
+- Add explicit translated-network hypotheses with collision diagnostics and group coloring. Copy counts do not assign interpenetration or COFex cat values.
+- Remove the Find information panel from the desktop; catalog querying remains available through the agent API.
+
 ## 0.6.1 - 2026-11-17
 
 - Fix downloaded Windows releases failing at `Python.Runtime.Loader.Initialize`: include the process-scoped .NET loading configuration beside the executable.

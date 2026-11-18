@@ -19,6 +19,13 @@ assert.equal(L.compatibleLinkages(automaticLibrary,monomers.b,monomers.a)[0].swa
 assert.deepEqual(L.compatibleLinkages(automaticLibrary,monomers.a,{compatible_roles:[]}),[]);
 assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'a',monomers.b).compatible,true);
 assert.equal(L.automaticChoice(automaticLibrary,{compatible_roles:[]},'a',monomers.b).compatible,false);
+assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'b',monomers.a).compatible,false,"An individually supported aldehyde is not an aldehyde partner");
+assert.equal(L.automaticChoice(automaticLibrary,monomers.b,'b',monomers.b).compatible,false,"Two amines do not become compatible through the fallback");
+assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'a',monomers.a).compatible,true,"A can be replaced without a partner-selection deadlock");
+assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'b',null).compatible,true,"A missing first choice keeps single-role browsing available");
+assert.equal(L.automaticChoice(automaticLibrary,monomers.a,'b',monomers.b).compatible,true,"Automatic chemistry accepts reversed roles");
+assert.equal(L.automaticChoice({...automaticLibrary,templates:[{allow_pairs:[[3,3]]}]},monomers.b,'b',monomers.a).compatible,false,"A matching role is insufficient when every explicit template rejects the pair");
+assert.equal(L.automaticChoice(automaticLibrary,{compatible_roles:[{linkage:'reference',role:'x',reactive_sites:3}]},'a',null).compatible,false,"Reference-only chemistry cannot authorize construction");
 const square = {id:"square",linkages:["imine"],required_functionalities:{a:[4],b:[2]}};
 assert.equal(L.templateCompatibility(square,"imine",monomers,library).compatible,true);
 assert.equal(L.templateCompatibility({...square,required_functionalities:{a:[3],b:[2]}},"imine",monomers,library).compatible,false);
@@ -38,6 +45,8 @@ assert.equal(L.monomerChoice(library,library.monomer_presets[0],"imine","b").com
 assert.match(L.monomerChoice(library,library.monomer_presets[0],"imine","b").reason,/Requires amine/);
 assert.equal(L.monomerChoice(library,library.monomer_presets[0],"imine","editor").compatible,true);
 assert.equal(L.monomerChoice({...library,templates:[square]},library.monomer_presets[0],"imine","a",{compatible_roles:[]}).compatible,true); // replacing one side must not deadlock after a linkage switch
+assert.equal(L.monomerChoice(library,monomers.b,"imine","b",monomers.b).compatible,false,"Fixed chemistry requires A to supply its specified role");
+assert.equal(L.monomerChoice(library,{},"imine","b",monomers.a).compatible,false,"Unknown metadata cannot authorize a partner");
 async function checkPreviewQueue(){
   const releases=new Map(),calls=[],cache=L.createPreviewCache(key=>{
     calls.push(key);return new Promise(resolve=>releases.set(key,resolve));

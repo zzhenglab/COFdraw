@@ -89,6 +89,12 @@ python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/pxrd s
 
 Inspect per-entry errors and warnings before ranking anything. Formula, listed-atom density, distance-inferred contact dimensionality and optional geometric porosity do not alone establish adsorption performance, catalytic activity, stability, selectivity or synthesis feasibility. Missing hydrogens, solvent, disorder or incomplete cell content change mass-normalized results. BET requires separately supplied adsorption data, not this screening table.
 
+## Molecular accessibility and adsorption
+
+For precursor complexity screening, `science synthesis-library` returns the actual finite-monomer RDKit SA Scores and qualifications. Rendered drawings carry `audit.precursor_synthetic_accessibility` for their declared precursors. Compare the stated 1–10 heuristic only; do not interpret it as a synthesis probability or framework feasibility score.
+
+For transport geometry, use `science geometry --request geometry.json` with an explicit periodic structure and common probe/grid settings. Retain PLD/LCD bounds and `connectivity.status`; an unresolved zero cannot rank a structure as nonporous. For physical adsorption, use the separate [asynchronous RASPA workflow](science-api.md#local-adsorption-jobs), with actual model/charge/force-field choices and convergence checks. The helper saves the returned ZIP of simulation inputs and output as well as JSON/CSV; a terminated partial job must be labeled accordingly.
+
 ## Query saved calculations back
 
 Scientific reports that provide `report_id` are stored under the service's local runtime data directory. They include operation, creation time, engine version, input parameters and input SHA-256; individual methods add their structure hash, units and qualifications. Use:

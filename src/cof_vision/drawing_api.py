@@ -66,8 +66,16 @@ class ModelDrawing(BaseModel):
 class Patch3D(RenderDrawing):
     layers: int = Field(default=3, ge=1, le=6)
     layer_spacing: float = Field(default=3.4, ge=2.5, le=12, allow_inf_nan=False)
-    stacking: Literal['AA','AB'] = 'AA'
+    stacking: Literal['AA','AB','ABC','slipped','twisted'] = 'AA'
     slip: list[Annotated[float, Field(ge=-20,le=20,allow_inf_nan=False)]] | None = Field(default=None,min_length=2,max_length=2)
+    twist_degrees: float = Field(default=15, ge=-180, le=180, allow_inf_nan=False)
+
+
+class NetworkHypothesis(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    structure: dict
+    offsets: list[list[Annotated[float, Field(ge=-1, le=1, allow_inf_nan=False)]]] = Field(min_length=1, max_length=4)
+    repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
 
 
 class MonomerAnalysis(BaseModel):
@@ -81,6 +89,26 @@ class PoreAnalysis(BaseModel):
     structure: dict
     probe_radius: float = Field(default=1.82, ge=0, le=3)
     samples: int = Field(default=12000, ge=1000, le=30000)
+
+
+class GeometryAnalysis(BaseModel):
+    model_config = ConfigDict(extra='forbid', allow_inf_nan=False, strict=True)
+    structure: dict
+    probe_radius: float = Field(default=1.82, ge=0, le=5)
+    grid_spacing: float = Field(default=.6, ge=.1, le=3)
+    surface_samples: int = Field(default=64, ge=16, le=256)
+    refinement: bool = False
+
+    @model_validator(mode='before')
+    @classmethod
+    def finite_controls(cls, value):
+        # JSON parsers may accept nonstandard Infinity/NaN. Do not let them
+        # enter FastAPI's validation-error JSON, which cannot serialize them.
+        if isinstance(value, dict):
+            for key in ('probe_radius', 'grid_spacing', 'surface_samples', 'refinement'):
+                if isinstance(value.get(key), float) and not math.isfinite(value[key]):
+                    raise HTTPException(422, f'{key} must be finite')
+        return value
 
 
 class BETAnalysis(BaseModel):
@@ -236,6 +264,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     registry = root / "framework-drawing" / "registry.json"
     outputs = root / "framework-drawing" / "exports"
     lock = threading.Lock()
+    from .cofdraw_adsorption import create_adsorption_router
+    router.include_router(create_adsorption_router(outputs))
 
     def source_records():
         if not registry.is_file():
@@ -291,12 +321,15 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                                 "cofex_id": value.get("cofex_id"), "sha256": digest, **metadata})
             except (ValueError, KeyError, OSError) as exc:
                 errors.append(str(exc))
+        from .cofdraw_synthesis import synthetic_accessibility
+        monomers = decorated_monomers(catalog.get('monomer_presets', MONOMERS))
+        monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
                 "style_controls": {"palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
-                "styles": STYLES, "monomer_presets": decorated_monomers(catalog.get("monomer_presets", MONOMERS)),
+                "styles": STYLES, "monomer_presets": monomers,
                 "cof_presets": catalog.get("cof_presets", PRESETS), "catalog_version": catalog.get("catalog_version", "builtin-1"),
                 "style_evidence": catalog.get("style_evidence", catalog.get("source_styles", [])),
                 "source_registry_errors": errors, "max_atoms": 1000,
@@ -362,7 +395,10 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     @router.post("/monomer")
     def monomer(request: MonomerDrawing):
         try:
-            return normalize_monomer(**request.model_dump())
+            from .cofdraw_synthesis import synthetic_accessibility
+            result = normalize_monomer(**request.model_dump())
+            result['synthetic_accessibility'] = synthetic_accessibility(result['smiles'])
+            return result
         except (ValueError, KeyError, TypeError, RuntimeError, IndexError, OverflowError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
@@ -372,7 +408,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             prepared = prepare_template(**request.model_dump())
             recipe = {"schema_version": VERSION, "recipe_id": "designed-pore", **prepared,
                       "topology": None, "topology_basis": "explicit_user_chosen_template_not_experimental",
-                      "layout_refinement": "rigid_block_translation_v1",
+                      "layout_refinement": "bond_angle_pose_v2",
                       "cofex_id": None, "cofex_notation": None, "cofex_string": None, "designed_variant": True, "ground_truth": False, "review_status": "user_design",
                       "design_note": "Reactive ports were chosen by their 2D angular fit to the selected template. Inspect incidence; a template does not establish experimental topology or synthesis feasibility."}
             recipe["design_template_signature"] = design_signature(recipe)
@@ -419,6 +455,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 audit["chemical_exports"] = json.loads(export_report.read_text(encoding="utf-8"))
             audit["graph_scope"] = "finite_source_pore_patch_with_continuation_ports" if source_hash else "finite_designed_pore_patch_with_continuation_ports"
             audit.update(drawing_status=status, registered_recipe_sha256=source_hash, original_recipe_id=original_id)
+            from .cofdraw_synthesis import precursor_scores
+            audit['precursor_synthetic_accessibility'] = precursor_scores(recipe)
             audit.update(design_cofex_notation=recipe.get("design_cofex_notation"), design_topology=recipe.get("design_topology"),
                          design_identity_qualification=recipe.get("design_identity_qualification"), selected_template=recipe.get("selected_template"))
             audit.update(cofex_string=metadata.get("cofex_notation"), cofex_notation=metadata.get("cofex_notation"),
@@ -432,7 +470,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             raise HTTPException(422, str(exc)) from exc
 
     @router.get("/exports/{drawing_id}/{extension}")
-    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml", "cif", "xyz", "pdb", "csv"]):
+    def artifact(drawing_id: str, extension: Literal["svg", "png", "mol", "json", "sdf", "cdxml", "cif", "xyz", "pdb", "csv", "zip"]):
         if not re.fullmatch(r"[0-9a-f]{32}", drawing_id):
             raise HTTPException(404, "Drawing not found")
         path = (outputs / drawing_id / f"{drawing_id}.{extension}").resolve()
@@ -440,6 +478,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             raise HTTPException(404, "Drawing not found")
         types = {"svg": "image/svg+xml", "png": "image/png", "mol": "chemical/x-mdl-molfile", "json": "application/json", "sdf": "chemical/x-mdl-sdfile", "cdxml": "chemical/x-cdxml", "cif":"chemical/x-cif", "xyz":"chemical/x-xyz", "pdb":"chemical/x-pdb"}
         types['csv'] = 'text/csv; charset=utf-8'
+        types['zip'] = 'application/zip'
         return FileResponse(path, media_type=types[extension], filename=f"cofdraw-{drawing_id[:8]}.{extension}")
 
     def selected_recipe(request):
@@ -494,6 +533,11 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         data=json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
         return {'templates':data['templates'],'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
 
+    @router.get('/science/synthesis-library')
+    def synthesis_library():
+        from .cofdraw_synthesis import catalog_scores
+        return catalog_scores(read_catalog(root).get('monomer_presets', MONOMERS))
+
     @router.post('/science/model')
     def model(request: ModelDrawing):
         try:
@@ -517,9 +561,18 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def patch_model(request: Patch3D):
         try:
             from .cofdraw_science import patch_3d
-            with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip)
+            with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip,twist_degrees=request.twist_degrees)
             result['scope']='Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.'
             return scientific_result(result, 'patch', request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/networks')
+    def network_model(request: NetworkHypothesis):
+        try:
+            if len(json.dumps(request.structure)) > 2_000_000:raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_arrangements import network_hypothesis
+            with lock:result=network_hypothesis(request.structure,request.offsets,repeats=tuple(request.repeats))
+            return scientific_result(result, 'networks', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/monomer')
@@ -527,6 +580,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         try:
             from .cofdraw_science import monomer_analysis
             with lock:result=monomer_analysis(request.smiles,conformers=request.conformers)
+            from .cofdraw_synthesis import synthetic_accessibility
+            result['synthetic_accessibility'] = synthetic_accessibility(request.smiles)
             return scientific_result(result, 'monomer', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
@@ -538,6 +593,18 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             with lock:result=pore_analysis(request.structure,probe_radius=request.probe_radius,samples=request.samples)
             return scientific_result(result, 'porosity', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
+
+    @router.post('/science/geometry')
+    def analyze_geometry(request: GeometryAnalysis):
+        try:
+            if len(json.dumps(request.structure)) > 2_000_000:
+                raise ValueError('Structure input limit is 2 MB')
+            from .cofdraw_porosity import geometric_porosity
+            with lock:
+                result = geometric_porosity(**request.model_dump())
+            return scientific_result(result, 'geometry', request.model_dump())
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @router.post('/science/measure')
     def measure(request: RenderDrawing):
@@ -557,14 +624,21 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def scientific_capabilities():
         from . import __version__
         from .cofdraw_knowledge import capability_inventory
-        models={'model':ModelDrawing,'patch':Patch3D,'monomer':MonomerAnalysis,
-                'porosity':PoreAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
+        from .cofdraw_adsorption import AdsorptionRequest
+        models={'model':ModelDrawing,'patch':Patch3D,'networks':NetworkHypothesis,'monomer':MonomerAnalysis,
+                'porosity':PoreAnalysis,'geometry':GeometryAnalysis,'bet':BETAnalysis,'inspect':StructureInspection,
                 'pxrd':PowderDrawing,'screen':ScreenBatch,'query':KnowledgeQuery,
                 'measure':RenderDrawing}
         return {'engine_version':__version__, 'schema_version':'cofdraw-capabilities-1',
                 'operations':{name:{'method':'POST','path':f'/api/drawing/science/{name}',
                                     'request_schema':model.model_json_schema()} for name,model in models.items()},
                 'workflows':capability_inventory(),
+                'synthesis_library':{'method':'GET','path':'/api/drawing/science/synthesis-library'},
+                'adsorption':{'engine':'/api/drawing/science/adsorption/engine',
+                              'start':{'method':'POST','path':'/api/drawing/science/adsorption/jobs','request_schema':AdsorptionRequest.model_json_schema()},
+                              'poll':'/api/drawing/science/adsorption/jobs/{job_id}',
+                              'cancel':{'method':'POST','path':'/api/drawing/science/adsorption/jobs/{job_id}/cancel'},
+                              'scope':'Asynchronous local RASPA runs; save input/output bundle and inspect convergence.'},
                 'description':{'method':'POST','path':'/api/drawing/describe',
                                'catalog':'/api/drawing/describe/catalog',
                                'request_schema':DescribeDrawing.model_json_schema()},

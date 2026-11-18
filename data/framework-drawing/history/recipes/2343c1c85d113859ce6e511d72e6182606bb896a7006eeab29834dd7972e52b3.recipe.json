@@ -1,0 +1,614 @@
+{
+  "schema_version": "cof-chemical-patch-1",
+  "recipe_id": "tpb-dmtp-cof-pore-v1",
+  "name": "TPB-DMTP-COF",
+  "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+  "cofex_match_status": "exact_name_and_monomers_same_paper",
+  "reference": {
+    "master_sha256": "38d0c1cd0f646665ab119c76e2c8a8791abf3b171c6f985df7edd7805aa87a8f",
+    "mapped_sha256": "e2dcf9cc2e99d8d2e171e4f7283e7fdca71f6f6eb2bf09b9979e0d2115fd93d3",
+    "components": 2221,
+    "building_blocks": 1805,
+    "invalid_component_smiles": 1,
+    "missing_component_smiles": 818,
+    "records": 5869,
+    "complete_monomer_records": 5136,
+    "records_with_invalid_monomers": 5,
+    "unique_monomer_sets": 1841,
+    "unique_smiles_keys": 1938,
+    "distinct_dois": 2292,
+    "reference_status": "weak_labels_not_independently_verified"
+  },
+  "source": {
+    "file_sha256": "7cde5d8ab7bf96cce05ef2b2bce2b6890c4c34dd29070dc28f89de34f329f06a",
+    "filename": "10.1021_jacs.4c14535.pdf",
+    "kind": "pdf",
+    "page": 2,
+    "page_count": 11,
+    "bbox": [
+      0.13486842105263158,
+      0.1064891846921797,
+      0.5032894736842105,
+      0.35524126455906824
+    ],
+    "dpi": 360,
+    "width": 1120,
+    "height": 997,
+    "doi": "10.1021/jacs.4c14535",
+    "document_role": "main",
+    "crop_sha256": "210f3ed14b4f8f9fc5dcbcab395083ec9375e5638e07cc7cacbcf610ed09754a"
+  },
+  "source_crop_pixels_at_1_5x": [
+    280,
+    130,
+    454,
+    283
+  ],
+  "components": {
+    "TAPB": {
+      "monomer_smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1",
+      "fragment_smiles": "c1cc(-c2cc(-c3ccc(N=[*:2])cc3)cc(-c3ccc([*:3])cc3)c2)ccc1N=[*:1]",
+      "linkage": "imine",
+      "role": "primary_arylamine",
+      "reactive_sites": [
+        {
+          "port": 1,
+          "monomer_atom_index": 0,
+          "join_bond_order": 2
+        },
+        {
+          "port": 2,
+          "monomer_atom_index": 12,
+          "join_bond_order": 2
+        },
+        {
+          "port": 3,
+          "monomer_atom_index": 21,
+          "join_bond_order": 2
+        }
+      ],
+      "connectivity": 3,
+      "library_version": "cof-chemical-patch-1",
+      "reaction_fragment_before_source_crop": "c1cc(-c2cc(-c3ccc(N=[*:2])cc3)cc(-c3ccc(N=[*:3])cc3)c2)ccc1N=[*:1]",
+      "source_boundary_edit": {
+        "port": 3,
+        "removed": "terminal reactive atom at outward arm; cut at source aromatic continuation stub"
+      }
+    },
+    "DMTP": {
+      "monomer_smiles": "COc1cc(C=O)c(OC)cc1C=O",
+      "fragment_smiles": "COc1cc(C=[*:2])c(OC)cc1C=[*:1]",
+      "linkage": "imine",
+      "role": "aryl_aldehyde",
+      "reactive_sites": [
+        {
+          "port": 1,
+          "monomer_atom_index": 1,
+          "join_bond_order": 2
+        },
+        {
+          "port": 2,
+          "monomer_atom_index": 8,
+          "join_bond_order": 2
+        }
+      ],
+      "connectivity": 2,
+      "library_version": "cof-chemical-patch-1"
+    }
+  },
+  "instances": [
+    {
+      "id": "n1",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        6.123233995736766e-17,
+        1.0
+      ]
+    },
+    {
+      "id": "n2",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.4330127018922192,
+        0.7500000000000002
+      ]
+    },
+    {
+      "id": "n3",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.8660254037844385,
+        0.5000000000000003
+      ]
+    },
+    {
+      "id": "n4",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.8660254037844388,
+        4.996003610813204e-16
+      ]
+    },
+    {
+      "id": "n5",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.8660254037844388,
+        -0.4999999999999997
+      ]
+    },
+    {
+      "id": "n6",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -0.4330127018922195,
+        -0.7499999999999999
+      ]
+    },
+    {
+      "id": "n7",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        -1.8369701987210297e-16,
+        -1.0
+      ]
+    },
+    {
+      "id": "n8",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.4330127018922191,
+        -0.7500000000000002
+      ]
+    },
+    {
+      "id": "n9",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.8660254037844384,
+        -0.5000000000000004
+      ]
+    },
+    {
+      "id": "n10",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.8660254037844387,
+        -5.828670879282072e-16
+      ]
+    },
+    {
+      "id": "n11",
+      "component": "TAPB",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.8660254037844386,
+        0.5
+      ]
+    },
+    {
+      "id": "n12",
+      "component": "DMTP",
+      "incoming_port": 1,
+      "outgoing_port": 2,
+      "layout_position": [
+        0.43301270189221946,
+        0.75
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "a": {
+        "instance": "n1",
+        "port": 2
+      },
+      "b": {
+        "instance": "n2",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n2",
+        "port": 2
+      },
+      "b": {
+        "instance": "n3",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n3",
+        "port": 2
+      },
+      "b": {
+        "instance": "n4",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n4",
+        "port": 2
+      },
+      "b": {
+        "instance": "n5",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n5",
+        "port": 2
+      },
+      "b": {
+        "instance": "n6",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n6",
+        "port": 2
+      },
+      "b": {
+        "instance": "n7",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n7",
+        "port": 2
+      },
+      "b": {
+        "instance": "n8",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n8",
+        "port": 2
+      },
+      "b": {
+        "instance": "n9",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n9",
+        "port": 2
+      },
+      "b": {
+        "instance": "n10",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n10",
+        "port": 2
+      },
+      "b": {
+        "instance": "n11",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n11",
+        "port": 2
+      },
+      "b": {
+        "instance": "n12",
+        "port": 1
+      },
+      "bond_order": 2
+    },
+    {
+      "a": {
+        "instance": "n12",
+        "port": 2
+      },
+      "b": {
+        "instance": "n1",
+        "port": 1
+      },
+      "bond_order": 2
+    }
+  ],
+  "linkage": "imine",
+  "topology": null,
+  "topology_evidence": null,
+  "topology_basis": "unknown; explicit source-visible local pore connectivity only",
+  "depiction_scope": "One chemical pore and the exact outward cut boundary; no crystal stacking coordinates.",
+  "source_notes": "Scheme1 chemical single-pore schematic: six TAPB and six DMTP units, twelve imines, six outward aromatic cut ports. Source later favors dual-pore AA-prime stacking; this diagram is not a reconstruction of its crystal structure.",
+  "review_status": "agent_draft_pending_redraw_comparison",
+  "ground_truth": false,
+  "model_prediction": false,
+  "cofex_source_records": [
+    {
+      "source_row": 4195,
+      "record_id": 4194,
+      "name": "TPB-DMTP-COF",
+      "exact_monomer_set": true,
+      "exact_name": true,
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "cofex_smiles": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "topology_reported": "",
+      "topology": null,
+      "cofex_full_key": "COFEXF-3K7OHCIE7U6AVRFJUF",
+      "cofex_synth_key": "COFEXY-GJB4SJ3UHNKE6QJQ22",
+      "cofex_full": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=eclipsed|chi=achiral|metal=mf|cellG7VLAAGE;TPB-DMTP-COF",
+      "cofex_synth": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=eclipsed|chi=achiral|metal=mf|cellG7VLAAGE|method=solvothermal|temp=60.0|time=1-h-to-7-days-(isolated|solv=anisole|mod=aniline-acetic-acid-(glacial);TPB-DMTP-COF",
+      "sample_label": "single-crystal microrods (Schlenk protocol)",
+      "rxn": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1>CC(=O)O.COc1ccccc1.Nc1ccccc1>COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "rxn_key": "RXN-IS6Q4DFWSOHUFH64AD",
+      "conditions_from_reference_only": {
+        "modulator_1_name": "aniline",
+        "modulator_1_smiles": "Nc1ccccc1",
+        "modulator_1_abbr": "",
+        "modulator_1_type": "organocatalyst",
+        "modulator_1_amount_text": "54 uL (10 equiv.)",
+        "modulator_1_amount_mmol": "0.593",
+        "modulator_1_amount_mg": "",
+        "modulator_1_amount_ml": "0.054",
+        "modulator_1_mol_equiv": "10.0",
+        "modulator_2_name": "acetic acid",
+        "modulator_2_smiles": "CC(=O)O",
+        "modulator_2_abbr": "AcOH",
+        "modulator_2_type": "acid",
+        "modulator_2_amount_text": "200 uL",
+        "modulator_2_amount_mmol": "3.49",
+        "modulator_2_amount_mg": "",
+        "modulator_2_amount_ml": "0.2",
+        "modulator_2_mol_equiv": "",
+        "solvent_1_name": "anisole",
+        "solvent_1_smiles": "COc1ccccc1",
+        "solvent_1_volume_text": "1.0 mL total",
+        "solvent_1_volume_ml": "1.0",
+        "solvent_1_volume_mmol": "",
+        "solvent_1_fraction_v_v": "",
+        "solvent_2_name": "",
+        "solvent_2_smiles": "",
+        "solvent_2_volume_text": "",
+        "solvent_2_volume_ml": "",
+        "solvent_2_volume_mmol": "",
+        "solvent_2_fraction_v_v": "",
+        "solvent_3_name": "",
+        "solvent_3_smiles": "",
+        "solvent_3_volume_text": "",
+        "solvent_3_volume_ml": "",
+        "solvent_3_volume_mmol": "",
+        "solvent_3_fraction_v_v": "",
+        "solvent_total_volume_mL": "1.0",
+        "synthesis_method": "solvothermal",
+        "temperature_text": "60 °C",
+        "temp_C": "60.0",
+        "reactiomtime_text": "1 h to 7 days (isolated single crystals typically after ~3 days)",
+        "time_h": "",
+        "solvent_stability_24h_water": "",
+        "solvent_stability_24h_acid": "",
+        "solvent_stability_24h_base": ""
+      },
+      "reference_status": "weak_table_record; source_condition_confirmation_separate"
+    },
+    {
+      "source_row": 4196,
+      "record_id": 4195,
+      "name": "TPB-DMTP-COF",
+      "exact_monomer_set": true,
+      "exact_name": true,
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "cofex_smiles": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "topology_reported": "",
+      "topology": null,
+      "cofex_full_key": "COFEXF-N3X7XCT6X7JOKRV3FC",
+      "cofex_synth_key": "COFEXY-3CAWESPZ4YH5YW2UWZ",
+      "cofex_full": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=unk|chi=achiral|metal=mf|cell0;TPB-DMTP-COF",
+      "cofex_synth": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=unk|chi=achiral|metal=mf|cell0|method=solvothermal|temp=60.0|time=72.0|solv=anisole|mod=aniline-acetic-acid-(glacial);TPB-DMTP-COF",
+      "sample_label": "nanorods (ampule protocol, anisole)",
+      "rxn": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1>CC(=O)O.COc1ccccc1.Nc1ccccc1>COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "rxn_key": "RXN-IS6Q4DFWSOHUFH64AD",
+      "conditions_from_reference_only": {
+        "modulator_1_name": "aniline",
+        "modulator_1_smiles": "Nc1ccccc1",
+        "modulator_1_abbr": "",
+        "modulator_1_type": "organocatalyst",
+        "modulator_1_amount_text": "54 uL (10 equiv.)",
+        "modulator_1_amount_mmol": "0.593",
+        "modulator_1_amount_mg": "",
+        "modulator_1_amount_ml": "0.054",
+        "modulator_1_mol_equiv": "10.0",
+        "modulator_2_name": "acetic acid",
+        "modulator_2_smiles": "CC(=O)O",
+        "modulator_2_abbr": "AcOH",
+        "modulator_2_type": "acid",
+        "modulator_2_amount_text": "200 uL",
+        "modulator_2_amount_mmol": "3.49",
+        "modulator_2_amount_mg": "",
+        "modulator_2_amount_ml": "0.2",
+        "modulator_2_mol_equiv": "",
+        "solvent_1_name": "anisole",
+        "solvent_1_smiles": "COc1ccccc1",
+        "solvent_1_volume_text": "1.0 mL",
+        "solvent_1_volume_ml": "1.0",
+        "solvent_1_volume_mmol": "",
+        "solvent_1_fraction_v_v": "",
+        "solvent_2_name": "",
+        "solvent_2_smiles": "",
+        "solvent_2_volume_text": "",
+        "solvent_2_volume_ml": "",
+        "solvent_2_volume_mmol": "",
+        "solvent_2_fraction_v_v": "",
+        "solvent_3_name": "",
+        "solvent_3_smiles": "",
+        "solvent_3_volume_text": "",
+        "solvent_3_volume_ml": "",
+        "solvent_3_volume_mmol": "",
+        "solvent_3_fraction_v_v": "",
+        "solvent_total_volume_mL": "1.0",
+        "synthesis_method": "solvothermal",
+        "temperature_text": "60 °C",
+        "temp_C": "60.0",
+        "reactiomtime_text": "",
+        "time_h": "72.0",
+        "solvent_stability_24h_water": "",
+        "solvent_stability_24h_acid": "",
+        "solvent_stability_24h_base": ""
+      },
+      "reference_status": "weak_table_record; source_condition_confirmation_separate"
+    },
+    {
+      "source_row": 4197,
+      "record_id": 4196,
+      "name": "TPB-DMTP-COF",
+      "exact_monomer_set": true,
+      "exact_name": true,
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "cofex_smiles": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "topology_reported": "",
+      "topology": null,
+      "cofex_full_key": "COFEXF-N3X7XCT6X7JOKRV3FC",
+      "cofex_synth_key": "COFEXY-KDKVAZ5UWO7WDTDGKL",
+      "cofex_full": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=unk|chi=achiral|metal=mf|cell0;TPB-DMTP-COF",
+      "cofex_synth": "COFex|bb=node:smi[Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1];linker:smi[COc1cc(C=O)c(OC)cc1C=O]|rxn=imine|link=imine|dim=2d|top=unk|cat=cat0|stk=unk|chi=achiral|metal=mf|cell0|method=solvothermal|temp=120.0|time=72.0|solv=o-dichlorobenzene-n-butanol|mod=acetic-acid-(6-m-aq.);TPB-DMTP-COF",
+      "sample_label": "typical polycrystals (heterogeneous solvothermal)",
+      "rxn": "COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1>CC(=O)O.CCCCO.Clc1ccccc1Cl>COc1cc(C=O)c(OC)cc1C=O.Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1 COFex.unk.cat0;TPB-DMTP-COF",
+      "rxn_key": "RXN-GZAZE3DL6VCUXCVJP2",
+      "conditions_from_reference_only": {
+        "modulator_1_name": "acetic acid",
+        "modulator_1_smiles": "CC(=O)O",
+        "modulator_1_abbr": "AcOH",
+        "modulator_1_type": "acid",
+        "modulator_1_amount_text": "0.1 mL of 6 M",
+        "modulator_1_amount_mmol": "0.6",
+        "modulator_1_amount_mg": "",
+        "modulator_1_amount_ml": "0.1",
+        "modulator_1_mol_equiv": "",
+        "modulator_2_name": "",
+        "modulator_2_smiles": "",
+        "modulator_2_abbr": "",
+        "modulator_2_type": "",
+        "modulator_2_amount_text": "",
+        "modulator_2_amount_mmol": "",
+        "modulator_2_amount_mg": "",
+        "modulator_2_amount_ml": "",
+        "modulator_2_mol_equiv": "",
+        "solvent_1_name": "o-dichlorobenzene",
+        "solvent_1_smiles": "Clc1ccccc1Cl",
+        "solvent_1_volume_text": "0.5 mL",
+        "solvent_1_volume_ml": "0.5",
+        "solvent_1_volume_mmol": "",
+        "solvent_1_fraction_v_v": "0.5",
+        "solvent_2_name": "n-butanol",
+        "solvent_2_smiles": "CCCCO",
+        "solvent_2_volume_text": "0.5 mL",
+        "solvent_2_volume_ml": "0.5",
+        "solvent_2_volume_mmol": "",
+        "solvent_2_fraction_v_v": "0.5",
+        "solvent_3_name": "",
+        "solvent_3_smiles": "",
+        "solvent_3_volume_text": "",
+        "solvent_3_volume_ml": "",
+        "solvent_3_volume_mmol": "",
+        "solvent_3_fraction_v_v": "",
+        "solvent_total_volume_mL": "1.0",
+        "synthesis_method": "solvothermal",
+        "temperature_text": "120 °C",
+        "temp_C": "120.0",
+        "reactiomtime_text": "",
+        "time_h": "72.0",
+        "solvent_stability_24h_water": "",
+        "solvent_stability_24h_acid": "",
+        "solvent_stability_24h_base": ""
+      },
+      "reference_status": "weak_table_record; source_condition_confirmation_separate"
+    }
+  ],
+  "source_confirmed_conditions": {
+    "source_role": "main",
+    "pages": [
+      2,
+      3
+    ],
+    "source_sha256": "7cde5d8ab7bf96cce05ef2b2bce2b6890c4c34dd29070dc28f89de34f329f06a",
+    "protocols": [
+      {
+        "name": "single-crystal Schlenk protocol",
+        "page": 3,
+        "temperature_C": 60,
+        "solvent": "anisole",
+        "agents": [
+          "aniline",
+          "acetic acid"
+        ],
+        "preheat_min_at_least": 15,
+        "degassing_seconds": 10,
+        "reaction_time_h": null,
+        "time_note": "Variable duration described; do not replace with72h from another protocol.",
+        "workup": "THF Soxhlet; supercriticalCO2 activation"
+      },
+      {
+        "name": "typical polycrystalline protocol",
+        "page": 2,
+        "temperature_C": 120,
+        "time_h": 72,
+        "TAPB_mg": 28.1,
+        "DMTA_mg": 23.3,
+        "solvents_mL": {
+          "o-dichlorobenzene": 0.5,
+          "n-butanol": 0.5
+        },
+        "aqueous_acetic_acid": {
+          "M": 6,
+          "mL": 0.1
+        },
+        "degassing": "three freeze-pump-thaw cycles",
+        "workup": "THF Soxhlet; vacuum drying"
+      }
+    ],
+    "source_note": "Scheme1 schematic pore does not resolve revised AA-prime-1 stacking or cis/trans local geometry."
+  },
+  "reference_snapshot_status": "tp-0001 staged correction; original master not yet overwritten",
+  "stereochemistry_scope": "Connectivity and linkage bond orders audited; depiction conformation is not exact E/Z or stacking supervision.",
+  "portable_provenance": {
+    "upstream_recipe_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b",
+    "transformation": "Local filesystem locators and full page/region text removed; chemistry and layout unchanged."
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "application_version": "0.7.0",
+  "engine": "RASPA3",
+  "distribution": "raspalib",
+  "engine_version": "3.1.0",
+  "windows_wheel_sha256": "6b34a401305dc41a41536aef0fb5c4ce94546937ff239d21a0dee991b8f32ddd",
+  "native_module_sha256": {
+    "raspalib_avx.cp311-win_amd64.pyd": "2e8941c45cbd8319c0f10ea70c12759979882666b3daf03da31718bfc004c5fd",
+    "raspalib_avx2.cp311-win_amd64.pyd": "1e820cdd2f1b073012b725b5f05002cfd23c45f90025517a29734a2ca4e82f54",
+    "raspalib_avx512.cp311-win_amd64.pyd": "16d2c6ee773a854fd238dac5081d5810ed4d2bc7e8cfa5b99b55bbd7ab1c165c",
+    "raspalib_base.cp311-win_amd64.pyd": "84fcaa0fb2bfdd2d3637cd00a94a7898f4879e634ef4e51dd7edec296307f5a9"
+  },
+  "profile_sha256": "02af8c3ce9e3ccc8b8754e0ad78eb952bbb0bdb014db0a4322b1f7dea1b43eb7",
+  "passed": true,
+  "focused_tests": {
+    "command": "python -m pytest tests/test_cofdraw_raspa.py -q",
+    "passed": 24,
+    "elapsed_seconds": 15.13
+  },
+  "ideal_gas": {
+    "method": "Independent native zero-Lennard-Jones single-species and 20/80 binary GCMC; comparison with N_i=y_i*P*V/(kB*T)",
+    "temperature_K": 300,
+    "pressure_Pa": 1000000,
+    "box_lengths_angstrom": [
+      30,
+      30,
+      30
+    ],
+    "production_cycles": 30000,
+    "initialization_cycles": 2000,
+    "seed": 20261117,
+    "tested_cpu_variants": [
+      "base",
+      "avx2"
+    ],
+    "all_analytic_expectations_inside_native_95_percent_intervals": true,
+    "baseline_cpu_results": [
+      [
+        {
+          "physical_fraction": 1.0,
+          "mean_molecules": 6.509966666666667,
+          "confidence95": 0.043978748301323194,
+          "ideal_gas_PV_kT": 6.5186734644359285
+        }
+      ],
+      [
+        {
+          "physical_fraction": 0.2,
+          "mean_molecules": 1.3091666666666668,
+          "confidence95": 0.018567868801298088,
+          "ideal_gas_PV_kT": 1.3037346928871856
+        },
+        {
+          "physical_fraction": 0.8,
+          "mean_molecules": 5.1969,
+          "confidence95": 0.06249470749275048,
+          "ideal_gas_PV_kT": 5.214938771548742
+        }
+      ]
+    ]
+  },
+  "actual_engine_smoke": {
+    "scope": "Execution, units, identity and finite-statistics tests only; short runs do not establish converged adsorption accuracy.",
+    "five_gas_zero_loading_widom": [
+      "CO2",
+      "N2",
+      "CH4",
+      "H2",
+      "Ar"
+    ],
+    "gcmc_mixtures": [
+      {
+        "gases": [
+          "CO2",
+          "N2"
+        ],
+        "mole_fractions": [
+          0.15,
+          0.85
+        ]
+      },
+      {
+        "gases": [
+          "CO2",
+          "CH4"
+        ],
+        "mole_fractions": [
+          0.5,
+          0.5
+        ]
+      }
+    ],
+    "nonzero_neutral_cif_charges": true,
+    "charge_change_alters_actual_co2_statistics": true,
+    "fixed_seed_widom_reproducible": true,
+    "native_cell_volume_and_mass_match_inputs": true,
+    "reference_probe_modes": [
+      "widom",
+      "gcmc",
+      "gcmc",
+      "widom"
+    ],
+    "reference_probe_return_count": 4
+  },
+  "rejected_engine": {
+    "version": "3.0.24",
+    "kind": "upstream Windows AVX2 CLI",
+    "reason": "DSYEV errors, incorrect CO2/N2 inertia and nonfinite sampling results; not bundled"
+  },
+  "limitations": [
+    "Five-block confidence intervals do not prove equilibration or convergence.",
+    "Generic rigid DREIDING/UFF framework model with explicitly selected zero or supplied neutral CIF charges.",
+    "H2 classical spherical Buch model has no nuclear quantum correction.",
+    "Default reservoir fugacity coefficients equal one; no implicit mixture EOS claim.",
+    "Finite-loading mixture enthalpy is not reported.",
+    "AVX512 module is preserved and hash-bound but cannot be executed on this test host."
+  ]
+}

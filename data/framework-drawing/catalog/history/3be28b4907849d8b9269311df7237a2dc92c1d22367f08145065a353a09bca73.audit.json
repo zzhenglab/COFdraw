@@ -1,0 +1,11 @@
+{
+  "schema_version": "cofdraw-current-catalog-audit-2",
+  "catalog_sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+  "registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+  "source_count": 17,
+  "monomer_count": 49,
+  "recovered_drawing_audit_sha256": "faf9b09e8aeb4276c4dc1a77ad2c781a4825937a05b9f5ba34bc8536bef0b74b",
+  "reviewer_type": "agent",
+  "ground_truth": false,
+  "source_pixels_distributed": false
+}

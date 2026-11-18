@@ -26,7 +26,7 @@ def main():
    browser=p.chromium.launch(executable_path=str(exe),headless=True);page=browser.new_page(viewport={'width':1600,'height':1100},bypass_csp=True);page.set_default_timeout(30000)
    page.on('pageerror',lambda e:errors.append(str(e)))
    page.goto(base);page.wait_for_function('window.COFdrawScience && window.COFdrawStudio.state.online')
-   page.locator('#open-science').click();page.locator('#crystal-template').select_option('hcb-imine-aa');page.locator('#build-crystal').click()
+   page.locator('#open-science').click();page.locator('#structure-source').select_option('periodic');page.locator('#crystal-template').select_option('hcb-imine-aa');page.locator('#build-crystal').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model generated')")
    page.locator('#viewer-axis').select_option('c');page.locator('#viewer-hide-h').check();page.locator('#show-atom-table').click()
    assert page.locator('#atom-table-panel tr').count()==67
@@ -57,19 +57,15 @@ def main():
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Model PXRD calculated')")
    assert page.locator('#pxrd-plot svg').count()==1
    checks.append('Narrow PXRD width automatically uses adequate profile sampling')
-   page.locator('[data-science-tab="knowledge"]').click();page.locator('#knowledge-query').fill('Pyurea');page.locator('#knowledge-type').select_option('source');page.locator('#query-knowledge').click()
-   page.wait_for_function("document.querySelectorAll('#knowledge-results .knowledge-card').length>0")
-   assert 'source:pyurea-source-layout-v1' in page.locator('#knowledge-results').inner_text()
-   page.screenshot(path=str(out/'cofdraw-knowledge.png'));checks.append('Source-information query returns exact record, qualification and evidence')
-   page.locator('#query-reports').click();page.wait_for_function("document.querySelectorAll('#saved-reports > button').length>=3")
-   page.locator('#saved-reports > button').first.click();page.wait_for_function("document.querySelectorAll('#saved-reports pre').length>0")
-   report=json.loads(page.locator('#saved-reports pre').first.text_content());assert report['report_id'] and report['input_sha256'] and report['inputs']
-   retrieved=page.request.get(base+'/api/drawing/science/reports/'+report['report_id']).json();assert retrieved==report
+   assert page.locator('[data-science-tab="knowledge"]').count()==0
+   queried=page.request.post(base+'/api/drawing/science/query',data={'query':'Pyurea','record_types':['source'],'limit':20}).json()
+   assert any(r['id']=='source:pyurea-source-layout-v1' for r in queried['records'])
+   checks.append('Information panel removed; catalog query API still returns qualified source records')
+   reports=page.request.get(base+'/api/drawing/science/reports').json()['reports'];assert len(reports)>=3
+   report=page.request.get(base+'/api/drawing/science/reports/'+reports[0]['report_id']).json();assert report['report_id'] and report['input_sha256'] and report['inputs']
    caps=page.request.get(base+'/api/drawing/science/capabilities').json();assert 'pxrd' in caps['operations'] and caps['workflows']
-   checks.append('Agents discover schemas and retrieve identical saved reports with input hashes')
-   page.locator('#knowledge-results button').filter(has_text='Open source drawing').click();page.wait_for_function("window.COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && !window.COFdrawStudio.state.busy")
-   assert not page.locator('#science-dialog').is_visible();checks.append('Information result opens its actual saved source drawing')
-   page.set_viewport_size({'width':390,'height':844});page.locator('#open-science').click();page.locator('[data-science-tab="knowledge"]').click()
+   checks.append('Agents discover schemas and retrieve saved reports with input hashes through the API')
+   page.set_viewport_size({'width':390,'height':844});page.locator('[data-science-tab="inspect"]').click()
    assert page.locator('#science-dialog').evaluate('e=>e.scrollWidth<=e.clientWidth+1');checks.append('Materials tools fit390px viewport without horizontal overflow')
    assert not errors,errors;browser.close()
  except Exception as exc:failure=f'{type(exc).__name__}: {exc}';raise

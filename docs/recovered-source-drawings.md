@@ -1,6 +1,6 @@
 # Recovered source drawings
 
-The catalog includes 17 source drawings and 49 monomers, including 13 reviewed chemical diagrams that were absent from the original four-drawing desktop bundle. Their chemical graphs, continuation interfaces, coordinates, source qualifications, and presentation metadata are now portable. Original publication images, PDFs, page text, and workstation paths are excluded.
+The catalog includes 17 source drawings and 81 monomers, including 13 reviewed chemical diagrams that were absent from the original four-drawing desktop bundle. Their chemical graphs, continuation interfaces, coordinates, source qualifications, and presentation metadata are now portable. See the [manual monomer update](manual-monomer-update.md) for the first 14 additions and the subsequent master-record review. Original publication images, PDFs, page text, and workstation paths are excluded.
 
 The existing TFB–TAB and sulfonated TpPa/SCOF entries also regain their previously reviewed manual source layouts. TFB–TAB retains all 108 anchored atom positions. SCOF retains 138 visible positions; the 18 oxygen atoms hidden inside source SO3H abbreviations receive explicitly qualified illustrative coordinates for chemical export. They are not reported as observed source positions.
 
@@ -47,3 +47,11 @@ The importer selects reviewed revisions, verifies review/draft hashes, validates
 To admit the Pyurea/UCOF manual revisions, also provide `--layout-revisions path/to/revisions`, containing `pyurea-source-layout-adjusted.recipe.json` and `ucof-source-layout-adjusted.recipe.json`. These are the intermediate placement records with `layout_evidence`; the importer verifies unchanged chemistry against the peer-bound upstream graphs before copying their coordinates into the public recipes. The two distributed recipes in `data/framework-drawing/recovered/` are the final portable coordinate revisions.
 
 For the other recovered explicit diagrams, source coordinate conversion applies only a shared translation, a uniform scale, and a y-axis convention change. Rendering any saved source recipe retains its admitted coordinates. Future layout corrections must be admitted as a new reviewed coordinate revision with their scope recorded.
+
+## TpPa and TPB–DMTP coordinate revision
+
+The TpPa and TPB–DMTP recipes now retain 126 and 234 explicit atom positions, respectively. Their previous recipes specified coarse block centers; the revised planar layouts use rigid block poses and the connection-side arrangement checked against the actual source drawings. Both retain the exact chemical graph, isotope/stereo fields, boundary ports and real intrablock distances. A shared rotation and centering preserve the source's display orientation; there is no local shape warp.
+
+These coordinates are **source-informed, not exact atomwise registrations**. The source comparison used six approximate ring-center landmarks and a bond-centerline-to-ink distance proxy. That proxy improved from 1.18 to 0.10 pixels for TpPa and from 3.97 to 0.25 pixels for TPB–DMTP. These are drawing comparisons, not structural accuracy or physical-energy measurements. Both revised drawings have no detected nonbonded overlaps or nonincident bond crossings, and their planar junction deviations are below 0.01 degrees. Depiction geometry does not establish experimental E/Z assignments, topology or crystal coordinates.
+
+The [separate layout audit](../data/framework-drawing/catalog/source-layout-revisions.audit.json) records candidate/source hashes, graph signatures and qualified review metrics. Prior recipes, registry and catalog bytes remain in hash-addressed history. The other 15 source recipes, including all 108 registered TFB–TAB positions, remain unchanged. `scripts/import_source_layouts.py` verifies the selected candidate hash and unchanged graph before transferring only keyed coordinates and their qualification into the original source record.

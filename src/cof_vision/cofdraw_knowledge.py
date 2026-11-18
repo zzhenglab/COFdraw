@@ -75,6 +75,7 @@ def _bound_file(base, relative, expected_hash, max_bytes):
 def capability_inventory():
     """Describe implemented API operations, taking request schemas from models."""
     from . import drawing_api
+    from .cofdraw_adsorption import AdsorptionRequest
     definitions = [
         ("describe-cof", "/api/drawing/describe", "DescribeDrawing", "Describe a COF and review a catalog-grounded drawing plan",
          "Offline name and word matching by default; optional explicitly configured LLM selects catalog IDs. Chemistry is validated locally. Ambiguity and unsupported requests require review; prose does not determine a unique crystal or establish a source identity.",
@@ -97,9 +98,18 @@ def capability_inventory():
         ("finite-stack", "/api/drawing/science/patch", "Patch3D", "Illustrative layers from a finite drawing",
          "Nonperiodic drawing-derived coordinates, not a relaxed crystal; continuation sites remain X. AB requires explicit slip.",
          {"source_recipe_id": "ucof-source-layout-v1", "layers": 2, "layer_spacing": 3.4, "stacking": "AB", "slip": [1.7, 0]}, ["xyz", "json"]),
+        ("network-hypothesis", "/api/drawing/science/networks", "NetworkHypothesis", "Compare explicitly translated periodic-network copies",
+         "User-chosen fractional offsets with collision checks. Copy count is not an assigned interpenetration degree, cat value or stability result.",
+         None, ["cif", "xyz", "pdb", "json"]),
         ("periodic-porosity", "/api/drawing/science/porosity", "PoreAnalysis", "Periodic hard-sphere pore geometry",
          "Requires an explicit periodic structure. Sampled volumes/surfaces and voxel connectivity are not BET area or certified transport accessibility.",
          None, ["json"]),
+        ("periodic-geometry", "/api/drawing/science/geometry", "GeometryAnalysis", "Deterministic periodic geometry with pore-diameter bounds",
+         "Explicit periodic hard-sphere model: grid lower/upper bounds for PLD/LCD and transport-connected probe-center volume; sampled probe-inflated surface connected by certified segments. Coarse grids can leave transport unresolved. Not Zeo++/Voronoi, adsorption, BET, helium porosimetry or experimental pore size.",
+         None, ["json"]),
+        ("local-adsorption", "/api/drawing/science/adsorption/jobs", "AdsorptionRequest", "Start a local RASPA3 adsorption simulation job",
+         "Asynchronous rigid-framework classical simulation: separate Widom Henry coefficients, GCMC loadings and mixture selectivity, optional finite-difference zero-loading heat. Explicit model/charge/force-field/fugacity assumptions; defaults do not establish convergence. Poll the returned job_id until terminal; cancellation preserves completed stages. No finite-loading heat curve, chemisorption or synthesis prediction.",
+         None, ["json", "csv", "zip"]),
         ("bet-fit", "/api/drawing/science/bet", "BETAnalysis", "Fit supplied adsorption-branch data",
          "Requires user-supplied measured data and a selected interval; no BET value is inferred from a drawing or geometric surface.",
          None, ["json"]),
@@ -121,13 +131,17 @@ def capability_inventory():
     ]
     result = []
     for identifier, endpoint, model_name, label, scope, example, formats in definitions:
-        schema = getattr(drawing_api, model_name).model_json_schema()
+        schema = (AdsorptionRequest if model_name == "AdsorptionRequest" else getattr(drawing_api, model_name)).model_json_schema()
         result.append(_record("capability", identifier, label,
             {"method": "POST", "endpoint": endpoint, "request_schema": schema,
              "example_request": example, "possible_formats": formats, "scope": scope,
              "formats_qualification": "Only files actually listed in a result's downloads are available."},
             {"status": "implemented", "scope": scope}, {"kind": "local_runtime_contract", "request_model": model_name}, [scope]))
     for identifier, endpoint, label, scope in [
+        ("adsorption-engine", "/api/drawing/science/adsorption/engine", "Inspect local adsorption engine availability",
+         "Reports the pinned local RASPA3 CPU package/profile and supported gases without starting a simulation; availability does not establish numerical convergence or experimental validity."),
+        ("precursor-sa-library", "/api/drawing/science/synthesis-library", "Offline finite-monomer SA Score catalog",
+         "RDKit Contrib SA Score for eligible complete finite catalog monomers: 1 easier to 10 harder. A molecular heuristic, not ASKCOS, retrosynthesis, reaction support or COF yield/feasibility. Render audits separately summarize only declared finite precursors."),
         ("api-contracts", "/api/drawing/science/capabilities", "Read actual JSON request schemas",
          "Read the running service's supported operations and exact request schemas before constructing calculations."),
         ("saved-reports", "/api/drawing/science/reports", "List recent local machine-readable calculation reports",

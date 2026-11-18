@@ -1,4 +1,7 @@
+> Historical catalog documentation. The current v0.7.0 release contains 81 monomers and 17 source-associated drawings. See the [manual master-record review](manual-master-crosscheck.md) and [current drawing catalog](recovered-source-drawings.md).
+
 # Drawing catalog and source identity
+
 
 `scripts/export_cofdraw_catalog.py` exports the portable catalog used by the
 desktop drawing application. It reads the local `cofex.sqlite` and the four

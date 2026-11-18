@@ -1,0 +1,911 @@
+{
+  "schema_version": "cofdraw-master-key-ground-truth-crosscheck-1",
+  "catalog_sha256": "05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0",
+  "admission_audit_sha256": "38352f3aa2a965d8d923ffa7edf158cb21ff277cf831491f9f8153e4ca516da7",
+  "selection_sha256": "9613ebe10bedaf411cafbcddb4eee3c8533eaf62d529d80b1d60d7d57cfa49aa",
+  "snapshot": {
+    "reference_index_sha256": "73c8adab133bcdb146a50c7ebddef03c1bf6b76513bcd7777cc6895194aecc92",
+    "master_sha256": "3f8ecfdb57df942f14a9df43a465a21802089f0717907ba33f1f53bdaae2eb5c",
+    "mapped_sha256": "4e684ca691ae5068570ec7e72e725d0572820f7bd24dd73e9fed86b5fa4eabc7",
+    "upstream_curation_catalog_sha256": "691bc32a07534f178a68b2f709bbfbdfb4cf8883a10fab02f85d41b7b0c0bfbe",
+    "upstream_current_pointer_sha256": "b97c55338865f1e648c353e8bd7e1056f1958e4634e79efee6a103b89c96a55f",
+    "upstream_continuation_pointer_sha256": "d5e93ceeb5b3c1c603018e3bd6dcd83985001ea60c78c360612b095f1a289eda"
+  },
+  "sealed_annotation_file_count": 199,
+  "annotation_scan": {
+    "rows": 2489,
+    "task:None": 1087,
+    "review:agent_reviewed": 2488,
+    "ground:False": 2489,
+    "finite_occurrences": 2151,
+    "known_occurrences": 565,
+    "not_complete_finite": 42,
+    "task:monomer_synthesis": 176,
+    "task:framework": 380,
+    "task:molecule": 790,
+    "task:model_compound_synthesis": 28,
+    "review:agent_reviewed_source_conflict": 1,
+    "task:finite_model_compound_synthesis": 5,
+    "task:auxiliary_model_synthesis": 6,
+    "task:cof_structure": 4,
+    "task:framework_formation": 13
+  },
+  "unique_novel_finite_graphs_before_manual_filter": 689,
+  "novel_graphs_with_same_doi_installed_master_precursor_match": 28,
+  "individually_visually_inspected_candidates": 19,
+  "admitted_monomers": 18,
+  "human_review_queues": [
+    {
+      "artifact_role": "human_review_template",
+      "sha256": "6a1f666c118aa2d6a41f7339d7dcbc13c4861a22691ea81dd92389f43d2d3499",
+      "decision_count": 20,
+      "unreviewed_count": 20,
+      "reviewer_type": null,
+      "completed_human_review": false
+    },
+    {
+      "artifact_role": "human_review_template",
+      "sha256": "6aef646d7f4e93b37b726f824b5e41a9a89b2e4504da3ca45c2a2fa32784006a",
+      "decision_count": 100,
+      "unreviewed_count": 100,
+      "reviewer_type": null,
+      "completed_human_review": false
+    }
+  ],
+  "ground_truth": false,
+  "reviewer_type": "agent",
+  "human_gold_found_in_inspected_records": false,
+  "ground_truth_scope": "All 2,489 sealed annotation rows explicitly retain ground_truth:false. Two available human review templates contain no completed human decisions. The 25-case coarse review identifies its reviewer as agent. This is not an assertion about inaccessible or future reviews.",
+  "historical_reports": [
+    {
+      "role": "PSM_state_v9_manifest",
+      "sha256": "55e3f4d9cfe9a23efe606f286cca89e598520486fbe2b8cd8b1e0e70682afc1c",
+      "qualification": "Historical report binds inventory-0028, predating the current catalog-0042. PSM products are not treated as new precursors."
+    },
+    {
+      "role": "installed_master_v8b_status",
+      "sha256": "868d6ede2c096cf7c17b1dd0ada879fa5c086d3700cfd40af8d75206c8c65d65",
+      "qualification": "Historical receipt review only; current master/index hashes above govern this admission."
+    }
+  ],
+  "excluded_master_matched_candidates": [
+    {
+      "annotation_id": "rsc-molecule-r006-01",
+      "source_doi": "10.1039/c6sc03590f",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r014-02",
+      "source_doi": "10.1039/d1ta03951b",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r028-04",
+      "source_doi": "10.1039/c5cc05689f",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "acs-context-r416-002",
+      "source_doi": "10.1021/acs.chemmater.2c00922",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r038-03",
+      "source_doi": "10.1039/d5ta03899e",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r038-11",
+      "source_doi": "10.1039/d5ta03899e",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "acs-context-r221-001",
+      "source_doi": "10.1021/acs.chemmater.4c03161",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r040-03",
+      "source_doi": "10.1039/c7cc01131h",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "rsc-molecule-r042-01",
+      "source_doi": "10.1039/d2re00241h",
+      "reason": "Outside this individually inspected monomer selection: master graph matching alone does not establish source role or drawing readiness."
+    },
+    {
+      "annotation_id": "nature-00071-m008",
+      "source_doi": "10.1038/s44160-022-00071-y",
+      "reason": "Current occurrence has an identity hold; not admitted."
+    }
+  ],
+  "existing_monomer_reconciliation": [
+    {
+      "monomer_id": "tfb",
+      "declared_source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/jacs.2c06042"
+      ],
+      "source_doi_and_graph_record_ids": [
+        1262,
+        4639,
+        4640
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tapb",
+      "declared_source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/jacs.0c06468",
+        "10.1021/jacs.4c14535"
+      ],
+      "source_doi_and_graph_record_ids": [
+        1259,
+        1260,
+        1261,
+        1262,
+        4194,
+        4195,
+        4196,
+        4197,
+        4253,
+        4254,
+        4255
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tp",
+      "declared_source_dois": [
+        "10.1002/anie.202104106",
+        "10.1021/acsami.5c01437",
+        "10.1021/acscatal.3c03857"
+      ],
+      "source_doi_and_graph_record_ids": [
+        1256,
+        1257,
+        1258,
+        1259,
+        1414,
+        2018
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pa",
+      "declared_source_dois": [
+        "10.1021/acscatal.3c03857",
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "source_doi_and_graph_record_ids": [
+        1256,
+        2993
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "dmtp",
+      "declared_source_dois": [
+        "10.1021/acssuschemeng.4c04003",
+        "10.1021/jacs.4c14535"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4194,
+        4195,
+        4196
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pa_so3h",
+      "declared_source_dois": [
+        "10.1002/anie.202104106",
+        "10.1002/smll.202508217"
+      ],
+      "source_doi_and_graph_record_ids": [
+        1414
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "ta",
+      "declared_source_dois": [
+        "10.1021/jacs.3c10312"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4674,
+        4676,
+        4678,
+        4680
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfta",
+      "declared_source_dois": [
+        "10.1021/jacs.3c10312"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4675,
+        4677,
+        4679,
+        4681
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "dhta",
+      "declared_source_dois": [
+        "10.1021/acsmaterialslett.4c01665"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2585
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "bpda_cho",
+      "declared_source_dois": [
+        "10.1021/jacs.9b09502"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4996,
+        4997,
+        4998,
+        5000
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfpb",
+      "declared_source_dois": [
+        "10.1021/ja204728y"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfpt",
+      "declared_source_dois": [
+        "10.1021/acssuschemeng.4c04144"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfpm",
+      "declared_source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfppy",
+      "declared_source_dois": [
+        "10.1002/anie.201902543"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "por_cho",
+      "declared_source_dois": [
+        "10.1002/anie.202207130"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "hfptp_h",
+      "declared_source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "hfptp_f",
+      "declared_source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tapt",
+      "declared_source_dois": [
+        "10.1021/acsmaterialslett.2c00669"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5765
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tapa",
+      "declared_source_dois": [
+        "10.1021/acs.nanolett.1c02050"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tapm",
+      "declared_source_dois": [
+        "10.1021/jacs.0c12505"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pytta",
+      "declared_source_dois": [
+        "10.1002/chem.202303556"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfappm",
+      "declared_source_dois": [
+        "10.1002/anie.202117101"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "benzidine",
+      "declared_source_dois": [
+        "10.1021/acsaem.1c00807"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "bpy55",
+      "declared_source_dois": [
+        "10.1002/anie.202319876"
+      ],
+      "source_doi_and_graph_record_ids": [
+        391,
+        392
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "azoda",
+      "declared_source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pame2",
+      "declared_source_dois": [
+        "10.1039/d0gc02670k"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2403
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "melamine",
+      "declared_source_dois": [
+        "10.1039/d2re00241h"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5184
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "deth",
+      "declared_source_dois": [
+        "10.1002/anie.202319876"
+      ],
+      "source_doi_and_graph_record_ids": [
+        387,
+        388
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "dmth",
+      "declared_source_dois": [
+        "10.1002/cssc.201601702"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4874
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "bth",
+      "declared_source_dois": [
+        "10.1002/cssc.202401046"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5599,
+        5600
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "hydrazine",
+      "declared_source_dois": [
+        "10.1021/jacs.4c08231"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2994,
+        2995
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "bdba",
+      "declared_source_dois": [
+        "10.1039/c2ra21531d"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2055,
+        2056,
+        2057,
+        2058,
+        2059,
+        2060,
+        2061,
+        2062,
+        2063,
+        2064,
+        2065,
+        2066,
+        2067,
+        2068
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "bpbda",
+      "declared_source_dois": [
+        "10.1039/c6cc07399a"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2961,
+        2962
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "hhtp",
+      "declared_source_dois": [
+        "10.1039/c6cc07399a"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2961
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "thb",
+      "declared_source_dois": [
+        "10.1039/c0cc04386a"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4159,
+        4160,
+        4161,
+        4162,
+        4163,
+        4164,
+        4165
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "thdma",
+      "declared_source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_doi_and_graph_record_ids": [
+        3562
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "thdea",
+      "declared_source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_doi_and_graph_record_ids": [
+        3563
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pmda",
+      "declared_source_dois": [
+        "10.1002/marc.202200782"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "piperazine",
+      "declared_source_dois": [
+        "10.1002/anie.202207130"
+      ],
+      "source_doi_and_graph_record_ids": [
+        924
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "pdan",
+      "declared_source_dois": [
+        "10.1021/acsapm.3c01765"
+      ],
+      "source_doi_and_graph_record_ids": [
+        3098
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tkb",
+      "declared_source_dois": [
+        "10.1021/jacs.4c08231"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2994
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_tt",
+      "declared_source_dois": [
+        "10.1021/acsami.2c11052"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2243,
+        2244
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_compound2",
+      "declared_source_dois": [
+        "10.1021/acsami.7b09061"
+      ],
+      "source_doi_and_graph_record_ids": [
+        3561,
+        3562,
+        3563,
+        3564
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_t_node",
+      "declared_source_dois": [
+        "10.1021/acsmacrolett.6b00805"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_tfbp",
+      "declared_source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4108
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_bd",
+      "declared_source_dois": [
+        "10.1021/acs.inorgchem.4c05494"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4108
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_urea",
+      "declared_source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4076
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_monoformylphloroglucinol",
+      "declared_source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5148
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "recovered_1_4_phenylene_diisocyanate",
+      "declared_source_dois": [
+        "10.1039/d2dt04057c"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5148
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "ppcn",
+      "declared_source_dois": [
+        "10.1002/anie.202203250"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4759
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfppy_ome",
+      "declared_source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfppy_f",
+      "declared_source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfppy_13c",
+      "declared_source_dois": [
+        "10.1002/anie.202208833"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tbpm_boronic",
+      "declared_source_dois": [
+        "10.1039/c3cc40358k"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2185
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "allyl_tbpa",
+      "declared_source_dois": [
+        "10.1039/c3cc40358k"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "dabd",
+      "declared_source_dois": [
+        "10.1021/acsmacrolett.6b00486"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "thz",
+      "declared_source_dois": [
+        "10.1039/d1qm00231g"
+      ],
+      "source_doi_and_graph_record_ids": [
+        4075
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tmc",
+      "declared_source_dois": [
+        "10.1002/aoc.5172"
+      ],
+      "source_doi_and_graph_record_ids": [],
+      "status": "no_current_match_at_declared_doi",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tape",
+      "declared_source_dois": [
+        "10.1021/acs.chemmater.1c04051"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2722
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "odh",
+      "declared_source_dois": [
+        "10.1021/acsami.8b18502"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2462,
+        2463
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfb_oh",
+      "declared_source_dois": [
+        "10.1021/acsami.5c01437"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2016
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "tfb_oh2",
+      "declared_source_dois": [
+        "10.1021/acsami.5c01437"
+      ],
+      "source_doi_and_graph_record_ids": [
+        2017
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    },
+    {
+      "monomer_id": "daaq",
+      "declared_source_dois": [
+        "10.1039/d4sc00241e"
+      ],
+      "source_doi_and_graph_record_ids": [
+        5222
+      ],
+      "status": "source_doi_and_finite_precursor_graph_match",
+      "original_row_unchanged": true,
+      "ground_truth": false
+    }
+  ],
+  "original_63_entries_unchanged": true,
+  "source_recipe_registry_unchanged": true,
+  "source_pixels_distributed": false,
+  "research_files_modified": false,
+  "training_authorized": false,
+  "qualification": "Finite precursor graph and DOI agreement is a reference cross-check, not human adjudication, material identity, topology, reaction feasibility, or periodic-structure validation."
+}

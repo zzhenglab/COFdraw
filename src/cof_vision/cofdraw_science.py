@@ -199,7 +199,12 @@ def normalize_structure(structure):
         if key in seen:
             raise ValueError("Coincident atomic sites remain after symmetry expansion; resolve the structure")
         seen.add(key)
-        atoms.append({"element": element, "fractional": fractional.tolist(), "occupancy": 1.0})
+        normalized_atom = {"element": element, "fractional": fractional.tolist(), "occupancy": 1.0}
+        if 'network' in atom:
+            normalized_atom['network'] = _integer(atom['network'], 'network group', 0, 15)
+        if 'charge' in atom and atom['charge'] is not None:
+            normalized_atom['charge'] = _finite(atom['charge'], 'partial charge', -10, 10)
+        atoms.append(normalized_atom)
     provenance = structure.get("provenance", {})
     return {"cell": cell.tolist(), "atoms": atoms, "periodic": True, "units": "angstrom",
             "cell_volume_angstrom3": volume, "provenance": provenance if isinstance(provenance, dict) else {}}
@@ -354,16 +359,20 @@ def import_cif(text):
                 fractional = np.array([_cif_number(row["_atom_site_fract_" + axis]) for axis in "xyz"])
             except KeyError:
                 raise ValueError("CIF atom loop requires fractional x, y and z") from None
+            charge_text = row.get('_atom_site_charge')
+            charge = _finite(_cif_number(charge_text), 'partial charge', -10, 10) if charge_text not in (None, '.', '?') else None
             for matrix, translation in operations:
                 pos = (matrix @ fractional + translation) % 1
                 pos[np.isclose(pos, 1, atol=1e-8, rtol=0)] = 0
                 key = tuple(np.round(pos, 7))
                 if key in seen:
-                    if seen[key] != element:
+                    if seen[key][0] != element:
                         raise ValueError("Coincident different elements require resolved disorder")
+                    if seen[key][1] != charge:
+                        raise ValueError('Coincident symmetry sites have inconsistent partial charges')
                     continue
-                seen[key] = element
-                atoms.append({"element": element, "fractional": pos.tolist()})
+                seen[key] = (element, charge)
+                atoms.append({"element": element, "fractional": pos.tolist(), **({'charge': charge} if charge is not None else {})})
                 if len(atoms) > MAX_ATOMS:
                     raise ValueError(f"Expanded CIF exceeds {MAX_ATOMS} atoms per cell")
     if not atoms:
@@ -400,15 +409,24 @@ def structure_exports(structure, repeats=(1, 1, 1)):
         for source in normalized["atoms"]:
             fractional = (np.asarray(source["fractional"]) + shift) / repeats
             xyz = fractional @ supercell
-            atoms.append({"element": source["element"], "x": float(xyz[0]), "y": float(xyz[1]), "z": float(xyz[2])})
+            viewer_atom = {"element": source["element"], "x": float(xyz[0]), "y": float(xyz[1]), "z": float(xyz[2])}
+            if 'network' in source:
+                viewer_atom['network'] = source['network']
+            if 'charge' in source:
+                viewer_atom['charge'] = source['charge']
+            atoms.append(viewer_atom)
             fractions.append(fractional)
     params = _cell_parameters(supercell)
     cif = "data_COFdraw\n# Explicit full-cell geometry; no new experimental identity assigned.\n"
     cif += "".join(f"_cell_{name} {number:.9f}\n" for name, number in zip(("length_a", "length_b", "length_c", "angle_alpha", "angle_beta", "angle_gamma"), params))
     cif += "_space_group_name_H-M_alt 'P 1'\n_space_group_IT_number 1\nloop_\n_space_group_symop_operation_xyz\n'x,y,z'\n"
     cif += "loop_\n_atom_site_label\n_atom_site_type_symbol\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n_atom_site_occupancy\n"
+    has_charges = any('charge' in atom for atom in atoms)
+    if has_charges:
+        cif += '_atom_site_charge\n'
     for index, (atom, fractional) in enumerate(zip(atoms, fractions), 1):
-        cif += f"{atom['element']}{index} {atom['element']} " + " ".join(f"{x:.10f}" for x in fractional) + " 1\n"
+        charge_column = (' ' + (f"{atom['charge']:.10f}" if 'charge' in atom else '.')) if has_charges else ''
+        cif += f"{atom['element']}{index} {atom['element']} " + " ".join(f"{x:.10f}" for x in fractional) + ' 1' + charge_column + '\n'
     lattice = " ".join(f"{x:.9f}" for x in supercell.ravel())
     xyz = f'{count}\nLattice="{lattice}" Properties=species:S:1:pos:R:3 pbc="T T T"\n'
     xyz += "".join(f"{atom['element']} {atom['x']:.8f} {atom['y']:.8f} {atom['z']:.8f}\n" for atom in atoms)
@@ -642,19 +660,20 @@ def fit_bet(relative_pressures, uptake_mmol_g, *, fit_min=.05, fit_max=.30, cros
                          "Cross-section 0.162 nm² is a conventional nitrogen value; match adsorptive, temperature, and analysis assumptions."]}
 
 
-def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, bond_length=1.4):
+def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15.):
     """Chemically scaled finite drawing layers; explicitly not a periodic crystal."""
     from .framework_drawing import build_patch
     layer_count = _integer(layers, "layers", 1, 6)
     spacing = _finite(layer_spacing, "layer_spacing", 1, 20)
     target_bond = _finite(bond_length, "bond_length", 1, 2)
-    if stacking not in ("AA", "AB", "slipped"):
-        raise ValueError("Stacking must be AA, AB, or slipped")
+    if stacking not in ("AA", "AB", "ABC", "slipped", "twisted"):
+        raise ValueError("Stacking must be AA, AB, ABC, slipped, or twisted")
+    twist = _finite(twist_degrees, 'twist_degrees', -180, 180)
     shift = np.asarray([0, 0] if slip is None else slip, dtype=float)
     if shift.shape != (2,) or not np.isfinite(shift).all() or np.max(np.abs(shift)) > 20:
         raise ValueError("Layer slip must contain two finite angstrom offsets between -20 and 20")
-    if stacking == "AB" and slip is None:
-        raise ValueError("AB illustration requires an explicit two-coordinate slip; it is not inferred from pore shape")
+    if stacking in ('AB', 'ABC', 'slipped') and slip is None:
+        raise ValueError("Offset stacking requires an explicit two-coordinate slip; it is not inferred from pore shape")
     mol, audit = build_patch(recipe)
     if mol.GetNumAtoms() * layer_count > 12000:
         raise ValueError("Finite layer preview exceeds 12000 atom/continuation sites")
@@ -665,14 +684,19 @@ def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, b
         raise ValueError("Patch has invalid drawing bond lengths")
     scale = target_bond / float(np.median(distances))
     base = (base - base.mean(axis=0)) * scale
-    atoms, bonds = [], []
+    atoms, bonds, layer_transforms = [], [], []
     for layer in range(layer_count):
         offset = np.zeros(3)
-        offset[:2] = shift * (layer % 2 if stacking == "AB" else layer) if stacking != "AA" else 0
+        factor = layer % 2 if stacking == 'AB' else layer % 3 if stacking == 'ABC' else layer if stacking == 'slipped' else 0
+        offset[:2] = shift * factor
         offset[2] = layer * spacing
-        for atom, position in zip(mol.GetAtoms(), base + offset):
+        angle = math.radians(layer*twist if stacking == 'twisted' else 0.)
+        rotation = np.array([[math.cos(angle), -math.sin(angle), 0], [math.sin(angle), math.cos(angle), 0], [0, 0, 1]])
+        layer_transforms.append({'layer': layer, 'translation_angstrom': offset.tolist(), 'rotation_degrees': math.degrees(angle)})
+        for atom, position, origin in zip(mol.GetAtoms(), base @ rotation.T + offset, audit['atom_origin']):
             atoms.append({"element": atom.GetSymbol(), "x": float(position[0]), "y": float(position[1]), "z": float(position[2]),
-                          "continuation_site": atom.GetAtomicNum() == 0, "layer": layer})
+                          "continuation_site": atom.GetAtomicNum() == 0, "layer": layer,
+                          'instance': origin['instance'], 'component': origin.get('component', origin['instance'])})
         for bond in mol.GetBonds():
             bonds.append({"a": layer * mol.GetNumAtoms() + bond.GetBeginAtomIdx(), "b": layer * mol.GetNumAtoms() + bond.GetEndAtomIdx(),
                           "order": bond.GetBondTypeAsDouble()})
@@ -682,7 +706,8 @@ def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, b
     return {"kind": "finite_illustrative_layer_stack", "periodic": False,
             "viewer": {"atoms": atoms, "bonds": bonds, "periodic": False, "bounds": _bounds(positions), "units": "angstrom"},
             "exports": {"xyz": xyz}, "parameters": {"layers": layer_count, "spacing_angstrom": spacing, "stacking": stacking,
-                        "slip_angstrom": shift.tolist(), "median_bond_length_angstrom": target_bond},
+                        "slip_angstrom": shift.tolist(), "median_bond_length_angstrom": target_bond,
+                        'twist_degrees': twist if stacking == 'twisted' else 0., 'layer_transforms': layer_transforms},
             "source_audit": audit, "warnings": ["Finite illustrative layers made from scaled 2D drawing coordinates; not an optimized periodic crystal.",
                 "No interlayer covalent bonds or missing hydrogens were invented. X sites preserve continuation placeholders.",
                 "Do not use this preview as input for periodic pore, adsorption, or BET calculations."]}

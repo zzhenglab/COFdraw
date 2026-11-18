@@ -26,9 +26,9 @@ This is useful for comparing candidate cells and stacking hypotheses. The model 
 
 View along **a**, **b** or **c**, toggle hydrogen visibility, inspect the fractional atom table and measure distances between displayed atoms. Display-only hydrogen hiding does not remove hydrogen from calculations. The atom table shows the calculation's unit cell; the displayed model may be a repeated supercell.
 
-**Find information** searches bundled monomer, linkage, topology, source, crystal and workflow records by normalized names, keywords or DOI. It reports available versus reference-only chemistry and retains source qualifications. Search results can open their saved drawing or periodic template and can be saved as JSON. Unknown queries return an empty result; the app does not invent an answer or silently query the internet.
+The agent query API searches bundled monomer, linkage, topology, source, crystal and workflow records by normalized names, keywords or DOI. It reports available versus reference-only chemistry and retains source qualifications. Unknown queries return an empty result; the app does not invent an answer or silently query the internet. The desktop Find information panel has been removed.
 
-**Recent calculation reports** retrieves local saved scientific reports. Each new report has an operation, engine version, timestamp, original request, input hash, method and units. Agents use the same interface:
+The reports API retrieves local saved scientific reports. Each new report has an operation, engine version, timestamp, original request, input hash, method and units. Agents use these interfaces:
 
 ```text
 GET  /api/drawing/science/capabilities
@@ -36,6 +36,7 @@ POST /api/drawing/science/query
 POST /api/drawing/science/inspect
 POST /api/drawing/science/pxrd
 POST /api/drawing/science/screen
+POST /api/drawing/science/networks
 GET  /api/drawing/science/reports
 GET  /api/drawing/science/reports/{report_id}
 ```

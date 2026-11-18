@@ -61,6 +61,7 @@ def main():
             page.screenshot(path=str(output/'studio-source-halo.png'));checks.append('Recovered source alignment and halo style rendered')
             page.locator('#edit-geometry').click();handles=page.locator('#geometry-overlay [data-atom]');assert handles.count()>50
             before=page.evaluate('JSON.stringify(window.COFdrawStudio.state.recipe.explicit_graph.atoms[0].xy)')
+            handles.first.scroll_into_view_if_needed()
             box=handles.first.bounding_box();page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+18,box['y']+12,steps=4);page.mouse.up()
             after=page.evaluate('JSON.stringify(window.COFdrawStudio.state.recipe.explicit_graph.atoms[0].xy)');assert before!=after
             assert page.evaluate('window.COFdrawStudio.state.sourceId') is None
@@ -75,15 +76,15 @@ def main():
             page.locator('[data-style="source"]').click();page.wait_for_function('!window.COFdrawStudio.state.busy')
             checks.append('Undo restores source identity; projected styles disable atom handles')
             page.locator('#edit-geometry').click()
-            page.locator('#open-science').click();page.locator('#crystal-template').select_option('dia-imine');page.locator('#build-crystal').click()
+            page.locator('#open-science').click();page.locator('#structure-source').select_option('periodic');page.locator('#crystal-template').select_option('dia-imine');page.locator('#build-crystal').click()
             page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model generated')")
             page.screenshot(path=str(output/'studio-3d-dia.png'));assert page.locator('#structure-exports').inner_text().find('CIF')>=0
             checks.append('Real periodic DIA model generated and shown with CIF/XYZ/PDB exports')
             with page.expect_download() as download:
                 page.locator('#structure-exports button').filter(has_text='CIF').click()
             download.value.save_as(output/'viewer-export.cif')
-            page.locator('[data-science-tab="porosity"]').click();page.locator('#pore-samples').select_option('4000');page.locator('#calculate-pores').click()
-            page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Pore screening complete')")
+            page.locator('[data-science-tab="porosity"]').click();page.locator('#pore-samples').select_option('0.9');page.locator('#calculate-pores').click()
+            page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Geometric properties complete')")
             assert page.locator('#porosity-results .metric-card').count()>=6
             page.screenshot(path=str(output/'studio-pore-analysis.png'));checks.append('Periodic geometric pore/volume/surface analysis completed')
             page.locator('[data-science-tab="model"]').click();page.locator('#crystal-template').select_option('hcb-imine-aa');page.locator('#build-crystal').click()

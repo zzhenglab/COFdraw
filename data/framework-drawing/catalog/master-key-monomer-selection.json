@@ -1,0 +1,415 @@
+{
+  "schema_version": "cofdraw-master-key-monomer-selection-1",
+  "reviewer_type": "agent",
+  "ground_truth": false,
+  "selection": [
+    {
+      "id": "tfpc",
+      "abbreviation": "TFPC",
+      "full_name": "2,4,6-Tris(4-formylphenoxy)-1,3,5-triazine",
+      "annotation_file": "manual-rsc-wave3-batch14.jsonl",
+      "annotation_file_sha256": "e08253c9545557bf65f3e41c77eae3b553f6dd7e2275beb7050aa05507f60c3f",
+      "annotation_id": "rsc-molecule-r036-01",
+      "canonical_smiles": "O=Cc1ccc(Oc2nc(Oc3ccc(C=O)cc3)nc(Oc3ccc(C=O)cc3)n2)cc1",
+      "source_crop_sha256": "5157364e28cedf8885a50af70ca98d5bdbc7cb4a7a3a5a38b0c6d844757689b0",
+      "source_doi": "10.1039/c8ta05070h",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Three para-aldehyde phenoxy arms and the alternating N/C triazine ring agree with the source.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        5144,
+        5145
+      ],
+      "master_component_ids": [
+        "48"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "aminal_a1",
+      "abbreviation": "A1 (Aminal-COF)",
+      "full_name": "Tetraphenylethene biphenyl tetraaldehyde A1",
+      "annotation_file": "manual-acs-context-r533-molecules-v1.jsonl",
+      "annotation_file_sha256": "821016e2f14dc449120a6d12f58d31d8799305bdb596f0d454456c0a420a8eea",
+      "annotation_id": "acs-context-r533-main-a1",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(C(=C(c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "source_crop_sha256": "a11f6fe7e6fa12b9e3a0ca06e1931608fe3c7876cdbc1cc9dfafdd6617bd7d72",
+      "source_doi": "10.1021/jacs.9b08017",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Source A1 has a central ethene and four biphenyl arms, each ending in para-CHO; the corrected complete graph is retained.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "master_record_ids": [
+        3798
+      ],
+      "master_component_ids": [
+        "261",
+        "2336"
+      ],
+      "installation_receipt_sha256": [
+        "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+      ]
+    },
+    {
+      "id": "aph",
+      "abbreviation": "APH",
+      "full_name": "4-Aminobenzohydrazide",
+      "annotation_file": "manual-acs-context-r664-molecules-v2.jsonl",
+      "annotation_file_sha256": "fd68c8d118e09d92bea26bdd34867945d7e5bbdec52a6d78191c3781ae7621c7",
+      "annotation_id": "acs-context-r664-002",
+      "canonical_smiles": "NNC(=O)c1ccc(N)cc1",
+      "source_crop_sha256": "49f4ffa81bbbeee56c4695916c5dc996edf68c19aad2390262a82ba7667f2759",
+      "source_doi": "10.1021/jacs.7b00925",
+      "catalog_use": "reference_only",
+      "visual_review": "One para aryl amine and one acylhydrazide are separate groups on the complete source precursor.",
+      "qualification": "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states.",
+      "master_record_ids": [
+        4693
+      ],
+      "master_component_ids": [
+        "586"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "tabpb",
+      "abbreviation": "TABPB",
+      "full_name": "1,3,5-Tris(4-aminobiphenyl-4-yl)benzene",
+      "annotation_file": "manual-acs-context-r520-molecules-v1.jsonl",
+      "annotation_file_sha256": "a3b79f3091dceeb686593acd0e04b83518f24911f2be44bbbacdc95be9e0fe31",
+      "annotation_id": "acs-context-r520-s2-tabpb",
+      "canonical_smiles": "Nc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(N)cc5)cc4)cc(-c4ccc(-c5ccc(N)cc5)cc4)c3)cc2)cc1",
+      "source_crop_sha256": "ab6c1cd6171a012b4a57d55a89c24d809ef5ec5560d2a9f9072edcc745d6b3f5",
+      "source_doi": "10.1021/jacs.4c12973",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Three biphenyl arms terminate in primary amines around the 1,3,5-substituted benzene core.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        3464
+      ],
+      "master_component_ids": [
+        "119"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "flt_boronic",
+      "abbreviation": "FLT-BA2",
+      "full_name": "Fluoranthene bis(phenylboronic acid)",
+      "annotation_file": "manual-acs-context-r594-molecules-v1.jsonl",
+      "annotation_file_sha256": "ca87bdeb840ea3961be34976fb4e5f1ca2fcd15360b6c7459885e63818730b7e",
+      "annotation_id": "acs-context-r594-008",
+      "canonical_smiles": "OB(O)c1ccc(-c2ccc(-c3ccc(B(O)O)cc3)c3c2-c2cccc4cccc-3c24)cc1",
+      "source_crop_sha256": "824327fd19f472dac9064258c2e8490fcc5086a0dff0ac6877e519f1b2546e03",
+      "source_doi": "10.1021/jacs.7b05555",
+      "catalog_use": "reference_only",
+      "visual_review": "The connected fluoranthene fused core and two para-phenylboronic-acid arms agree with the corrected source graph.",
+      "qualification": "Reference-only corrected source precursor. The current drawing engine does not implement boronic-acid framework chemistry.",
+      "master_record_ids": [
+        3420
+      ],
+      "master_component_ids": [
+        "2098"
+      ],
+      "installation_receipt_sha256": [
+        "17b17c62a3a98f4d92dc6fe0962be20d735ad5ddf085aafaff74732d23740690"
+      ]
+    },
+    {
+      "id": "dba12_cho",
+      "abbreviation": "DBA[12]-CHO",
+      "full_name": "Triformyl dehydrobenzo[12]annulene",
+      "annotation_file": "manual-acs-context-r580-molecules-v1.jsonl",
+      "annotation_file_sha256": "1b5ae1de2f879b2f7b62b10eed881d1069c417efabc0023a8ee51c97f85f8249",
+      "annotation_id": "acs-context-r580-main-aldehyde",
+      "canonical_smiles": "O=Cc1ccc2c(c1)C#Cc1ccc(C=O)cc1C#Cc1ccc(C=O)cc1C#C2",
+      "source_crop_sha256": "c0c7c25cd45f27c5b936552f802ff5630bd121b0e224fc1080f0197ba38361b7",
+      "source_doi": "10.1021/jacs.0c01026",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The source shows three phenylene units joined by three ethynyl edges, with three formyl substituents; no fused-ring surrogate.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        4669
+      ],
+      "master_component_ids": [
+        "2974"
+      ],
+      "installation_receipt_sha256": [
+        "e7da8978621a4e68d9da8fbc15e852939f416383a4366f5a9e418002d74e04c0"
+      ]
+    },
+    {
+      "id": "bfbapy",
+      "abbreviation": "BFBAPy",
+      "full_name": "1,6-Bis(4-formylphenyl)-3,8-bis(4-aminophenyl)pyrene",
+      "annotation_file": "manual-acs-context-r587-molecules-v1.jsonl",
+      "annotation_file_sha256": "f8d5e44be598a30f35e139ac5e71d4ac00497d394c8792666af1f48773bf29ef",
+      "annotation_id": "acs-context-r587-main-BFBAPy",
+      "canonical_smiles": "Nc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c45)cc1",
+      "source_crop_sha256": "6b8e9c8f959451b7545b7a44e6b7de08e1c66976ac391cceb89b34e580503875",
+      "source_doi": "10.1021/jacs.9b03463",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The pyrene graph retains two aldehyde and two amine phenyl arms in the source substitution pattern.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both aldehyde and amine groups are retained; selecting one reaction role does not reproduce the source self-condensation.",
+      "master_record_ids": [
+        3294,
+        3295,
+        3296,
+        3297,
+        3298,
+        3299,
+        3300,
+        3301,
+        3302,
+        3303,
+        3304
+      ],
+      "master_component_ids": [
+        "133"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "nda15",
+      "abbreviation": "NDA (1,5)",
+      "full_name": "1,5-Diaminonaphthalene",
+      "annotation_file": "manual-rsc-wave3-batch14.jsonl",
+      "annotation_file_sha256": "e08253c9545557bf65f3e41c77eae3b553f6dd7e2275beb7050aa05507f60c3f",
+      "annotation_id": "rsc-molecule-r036-02",
+      "canonical_smiles": "Nc1cccc2c(N)cccc12",
+      "source_crop_sha256": "26e399deb87de5ee6f29c70fa248e9fe2c2ab4577a52cd404989f7b756983035",
+      "source_doi": "10.1039/c8ta05070h",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Amines occupy the 1,5 positions of naphthalene, not the 2,6 isomer.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        5144,
+        5145
+      ],
+      "master_component_ids": [
+        "245"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "tbt",
+      "abbreviation": "TBT",
+      "full_name": "2,5,8-Triaminobenzotris(thiazole)",
+      "annotation_file": "manual-acs-context-r510-molecules-v1.jsonl",
+      "annotation_file_sha256": "2f209dd0430de272112e58a8deaaf8de5a4bbfbe9c90330b93214e5d8a36a5a4",
+      "annotation_id": "acs-context-r510-m10-main2-tbt",
+      "canonical_smiles": "Nc1nc2c(s1)c1nc(N)sc1c1nc(N)sc21",
+      "source_crop_sha256": "9d9cb1d49afd241f4d397f0702e85411c223892366825a442f16eccad27cf5a2",
+      "source_doi": "10.1021/acsmaterialslett.2c00669",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The three fused thiazole rings retain source N/S ordering and three exocyclic primary amines.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "master_record_ids": [
+        5766
+      ],
+      "master_component_ids": [
+        "1427"
+      ],
+      "installation_receipt_sha256": [
+        "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+      ]
+    },
+    {
+      "id": "aminal_a2",
+      "abbreviation": "A2 (Aminal-COF)",
+      "full_name": "Tetrakis(formylbiphenyl)benzene tetraaldehyde A2",
+      "annotation_file": "manual-acs-context-r533-molecules-v1.jsonl",
+      "annotation_file_sha256": "821016e2f14dc449120a6d12f58d31d8799305bdb596f0d454456c0a420a8eea",
+      "annotation_id": "acs-context-r533-main-a2",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(-c3cc(-c4ccc(-c5ccc(C=O)cc5)cc4)c(-c4ccc(-c5ccc(C=O)cc5)cc4)cc3-c3ccc(-c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "source_crop_sha256": "fa9e1b0cae5aae4d378a7d816fdd42cad0c10841d60b2a971be8420babca3304",
+      "source_doi": "10.1021/jacs.9b08017",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The central 1,2,4,5-substituted benzene and four biphenyl aldehyde arms agree with source A2.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. The source aminal/imide reaction is not implemented; any imine drawing is a separate designed variant.",
+      "master_record_ids": [
+        3799
+      ],
+      "master_component_ids": [
+        "2337"
+      ],
+      "installation_receipt_sha256": [
+        "ec61ca69a9fb77323e8c5b9cb830e5208b48cdee9b76460ee20f21c9b83dbc64"
+      ]
+    },
+    {
+      "id": "bpp",
+      "abbreviation": "BPP",
+      "full_name": "2,9-Bis(4-formylphenyl)-1,10-phenanthroline",
+      "annotation_file": "manual-acs-context-r520-molecules-v1.jsonl",
+      "annotation_file_sha256": "a3b79f3091dceeb686593acd0e04b83518f24911f2be44bbbacdc95be9e0fe31",
+      "annotation_id": "acs-context-r520-main-bpp",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc3ccc4ccc(-c5ccc(C=O)cc5)nc4c3n2)cc1",
+      "source_crop_sha256": "0b24518be371433bf1886d2ddf43fcc1f761842a46bc3fd514c3e337a1d84e53",
+      "source_doi": "10.1021/jacs.4c12973",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The phenanthroline N positions and two para-formylphenyl arms are retained.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        3463,
+        3464
+      ],
+      "master_component_ids": [
+        "823"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "ash",
+      "abbreviation": "ASH",
+      "full_name": "4-Amino-2-hydroxybenzohydrazide",
+      "annotation_file": "manual-acs-context-r664-molecules-v2.jsonl",
+      "annotation_file_sha256": "fd68c8d118e09d92bea26bdd34867945d7e5bbdec52a6d78191c3781ae7621c7",
+      "annotation_id": "acs-context-r664-004",
+      "canonical_smiles": "NNC(=O)c1ccc(N)cc1O",
+      "source_crop_sha256": "09d5ea7a19a1277cee832ec6a80fd6d3d8c35edb43e77810d5534ee625171162",
+      "source_doi": "10.1021/jacs.7b00925",
+      "catalog_use": "reference_only",
+      "visual_review": "Source ASH has para NH2 and ortho OH relative to its acylhydrazide; it is a precursor, not a grafted PSM product.",
+      "qualification": "Reference-only mixed-function source precursor: one aryl amine and one acylhydrazide. The current drawing templates require at least two sites of the selected role and do not implement the source mixed-linkage reaction or PSM states.",
+      "master_record_ids": [
+        4694
+      ],
+      "master_component_ids": [
+        "1782"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "dhzdpr",
+      "abbreviation": "DHzDPr",
+      "full_name": "2,5-Dipropoxyterephthalohydrazide",
+      "annotation_file": "manual-rsc-wave3-batch22.jsonl",
+      "annotation_file_sha256": "d6fff0b86432280f19a4d3a4dcad563bde55b16eb0b476a7d27f19a08552f9b6",
+      "annotation_id": "rsc-molecule-r045-05",
+      "canonical_smiles": "CCCOc1cc(C(=O)NN)c(OCCC)cc1C(=O)NN",
+      "source_crop_sha256": "83e61f0cd770fbf44ecdbb298394c9a388c6c6a1e94a9a872296dc31e077d9d9",
+      "source_doi": "10.1039/c7cc05779b",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Both para acylhydrazides and two opposite n-propoxy substituents match the source.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        1539,
+        1540
+      ],
+      "master_component_ids": [
+        "256"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "bpf",
+      "abbreviation": "BPF",
+      "full_name": "3,3-prime-Bipyridine-6,6-prime-dicarbaldehyde",
+      "annotation_file": "manual-nature-context-00071-v1.jsonl",
+      "annotation_file_sha256": "82a824ec4329eb139bbb0b45ed328fe4d91c417df8af11c1d983ed60f215daaf",
+      "annotation_id": "nature-00071-m015",
+      "canonical_smiles": "O=Cc1ccc(-c2ccc(C=O)nc2)cn1",
+      "source_crop_sha256": "fc15c22cfcf77e62460c53e293440b1984ee8462dcffc8daeee2ccf471adb67e",
+      "source_doi": "10.1038/s44160-022-00071-y",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The two pyridine N atoms and 6,6-prime aldehydes match the complete source graph and MOL file.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established.",
+      "master_record_ids": [
+        827,
+        829
+      ],
+      "master_component_ids": [
+        "548"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "btbba",
+      "abbreviation": "BTBBA",
+      "full_name": "Benzothiadiazole acetal diamine BTBBA",
+      "annotation_file": "manual-rsc-context-d4tc02995j-v1.jsonl",
+      "annotation_file_sha256": "c3aa5d3f8839196a4fbfaca7d7cf303f475844f08fc2cb9e47f751d54c7ecda9",
+      "annotation_id": "rsc-d4tc02995j-M010",
+      "canonical_smiles": "CC1(C)COC(c2cc(-c3ccc(N)cc3)cc(-c3ccc(-c4cc(-c5ccc(N)cc5)cc(C5OCC(C)(C)CO5)c4)c4nsnc34)c2)OC1",
+      "source_crop_sha256": "11ee21869263b99790d981278bb076642139e19d1fe47da41904e88b65a0394a",
+      "source_doi": "10.1039/d4tc02995j",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The central benzothiadiazole, meta-connected acetal-bearing rings and terminal para amines match the source and MOL graph.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented.",
+      "master_record_ids": [
+        4918
+      ],
+      "master_component_ids": [
+        "1800"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "btbbav",
+      "abbreviation": "BTBBAv",
+      "full_name": "Benzothiadiazole acetal diamine BTBBAv",
+      "annotation_file": "manual-rsc-context-d4tc02995j-v1.jsonl",
+      "annotation_file_sha256": "c3aa5d3f8839196a4fbfaca7d7cf303f475844f08fc2cb9e47f751d54c7ecda9",
+      "annotation_id": "rsc-d4tc02995j-M020",
+      "canonical_smiles": "CC1(C)COC(c2ccc(-c3cc(N)cc(-c4ccc(-c5cc(N)cc(-c6ccc(C7OCC(C)(C)CO7)cc6)c5)c5nsnc45)c3)cc2)OC1",
+      "source_crop_sha256": "b551fd764ecb57ab4a0f8a78814cf89973e7ea11291b601cff480b72c54bfb87",
+      "source_doi": "10.1039/d4tc02995j",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "The positional isomer preserves amines on the inner phenyl rings and acetals on the terminal para-substituted rings.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Protected acetals stay protected; automatic acetal deprotection and self-condensation are not implemented.",
+      "master_record_ids": [
+        4919
+      ],
+      "master_component_ids": [
+        "1843"
+      ],
+      "installation_receipt_sha256": []
+    },
+    {
+      "id": "hth_s",
+      "abbreviation": "Hth (S,S)",
+      "full_name": "(S,S)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "annotation_file": "manual-elsevier-context-cclet202011063-v1.jsonl",
+      "annotation_file_sha256": "e7c80c7eba8fe75b788b13652eb4e937039e4d93c4107cefca12c3bae2e9cd51",
+      "annotation_id": "cclet-2020-11-063-M001",
+      "canonical_smiles": "C[C@H](O)COc1cc(C(=O)NN)c(OC[C@H](C)O)cc1C(=O)NN",
+      "source_crop_sha256": "b1c469d8fad89a301cbe2fb5035d2486a1f8c0d42fe9c4f710cc82d541fe9c6e",
+      "source_doi": "10.1016/j.cclet.2020.11.063",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Source solid OH wedges encode two S centers; hydrazide connectivity and both chiral ether side chains match the MOL graph.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality.",
+      "master_record_ids": [
+        322
+      ],
+      "master_component_ids": [
+        "1143"
+      ],
+      "installation_receipt_sha256": [
+        "d2d99e7c10eb3e477964e66ce56c22bc8632f475daa291e1e5df9f45641f4c0f"
+      ]
+    },
+    {
+      "id": "hth_r",
+      "abbreviation": "Hth (R,R)",
+      "full_name": "(R,R)-2,5-Bis(2-hydroxypropoxy)terephthalohydrazide",
+      "annotation_file": "manual-elsevier-context-cclet202011063-v1.jsonl",
+      "annotation_file_sha256": "e7c80c7eba8fe75b788b13652eb4e937039e4d93c4107cefca12c3bae2e9cd51",
+      "annotation_id": "cclet-2020-11-063-M002",
+      "canonical_smiles": "C[C@@H](O)COc1cc(C(=O)NN)c(OC[C@@H](C)O)cc1C(=O)NN",
+      "source_crop_sha256": "544c8e4b2516902440f41d84750792292d6013ce192796c802a518fdbb952e1c",
+      "source_doi": "10.1016/j.cclet.2020.11.063",
+      "catalog_use": "scoped_drawing_candidate",
+      "visual_review": "Source dashed OH wedges encode two R centers. A neighboring reaction-arrow crop hold concerns image training, not this complete finite graph.",
+      "qualification": "Provisional agent-reviewed source precursor. Recognized functional groups permit scoped drawing designs; source reaction, topology, crystal structure and synthesis feasibility are not established. Both source-assigned stereocenters are retained; a 2D COF patch is not evidence of bulk chirality.",
+      "master_record_ids": [
+        323
+      ],
+      "master_component_ids": [
+        "1129"
+      ],
+      "installation_receipt_sha256": [
+        "d2d99e7c10eb3e477964e66ce56c22bc8632f475daa291e1e5df9f45641f4c0f"
+      ]
+    }
+  ]
+}

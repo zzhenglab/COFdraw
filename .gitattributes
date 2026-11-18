@@ -7,5 +7,7 @@ docs/third-party-licenses/* -text -whitespace
 *.md text eol=lf
 *.yml text eol=lf
 *.json -text whitespace=cr-at-eol
+# Preserve checksum-bound simulation profiles and upstream resource files.
+data/raspa/* -text
 *.png binary
 *.ico binary

@@ -91,7 +91,22 @@ def measure_drawing(recipe):
         clearance=np.minimum(distances.min(axis=1),_edge_clearance(chunk,polygon));i=int(clearance.argmax())
         if clearance[i]>best[0]:best=(float(clearance[i]),chunk[i])
     if best[0]<=0:raise ValueError("No positive opening remains after atomic radii are included")
-    return {"diameter_angstrom":2*best[0],"center_angstrom":best[1].tolist(),
+    center = best[1] / scale
+    radius = best[0] / scale
+    # This line spans the sampled inscribed circle, not a wall-to-wall chord.
+    # Retain the uncalibrated coordinate frame for an exact rendered overlay.
+    endpoints = [center + [-radius, 0.], center + [radius, 0.]]
+    anchor_indices = sorted({0, mol.GetNumAtoms() // 2, mol.GetNumAtoms() - 1})
+    annotation = {"coordinate_system": "drawing_xy_cartesian_y_up",
+                  "center": center.tolist(), "radius": float(radius),
+                  "endpoints": [point.tolist() for point in endpoints],
+                  "angstrom_per_drawing_unit": scale,
+                  "coordinate_anchors": [{"atom_index": i, "xy": (xy[i] / scale).tolist()}
+                                         for i in anchor_indices],
+                  "meaning": "Horizontal diameter of the sampled inscribed circle; not a wall-to-wall width",
+                  "label_qualification": "2D drawing estimate"}
+    return {"diameter_angstrom":2*best[0],"diameter_nm":best[0]/5,
+            "center_angstrom":best[1].tolist(),"annotation":annotation,
             "projected_ring_area_angstrom2":area(ring),"ring_atoms":len(ring),
             "calibration_bond_angstrom":reference_length,"grid_points":len(points),
             "grid_diagonal_angstrom":float(np.linalg.norm((hi-lo)/89)),

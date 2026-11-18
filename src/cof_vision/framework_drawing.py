@@ -143,14 +143,15 @@ def _ports(mol):
     return out
 
 
-def _fragment_layout(mol, incoming, outgoing, position, previous, following, flip_across_attachment_axis=False):
+def _fragment_layout(mol, incoming, outgoing, position, previous, following, flip_across_attachment_axis=False, endpoint_alignment=False):
     rdDepictor.Compute2DCoords(mol, canonOrient=False, forceRDKit=True)
     coords = np.array(mol.GetConformer().GetPositions())[:, :2]
     real = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]
     center = coords[real].mean(axis=0)
     coords -= center
     ports = _ports(mol)
-    left, right = coords[ports[incoming][0]], coords[ports[outgoing][0]]
+    endpoint = 1 if endpoint_alignment else 0
+    left, right = coords[ports[incoming][endpoint]], coords[ports[outgoing][endpoint]]
     target_left, target_right = np.asarray(previous)-position, np.asarray(following)-position
     # A planar reflection is safe only when no stereochemistry is specified.
     local = np.array([left/np.linalg.norm(left), right/np.linalg.norm(right)])
@@ -161,6 +162,14 @@ def _fragment_layout(mol, incoming, outgoing, position, previous, following, fli
     if stereo:
         correction[-1, -1] = np.linalg.det(u @ vt)
     rotation = u @ correction @ vt
+    if endpoint_alignment and np.linalg.norm(target[0]+target[1]) < 1e-8:
+        # A linear linker has a rank-one fit. SVD's arbitrary null-space sign
+        # used to reflect equivalent linkers differently around the same pore.
+        # Its directed attachment chord fixes a unique proper rotation.
+        chord = right-left
+        desired = target_right-target_left
+        theta = math.atan2(desired[1], desired[0])-math.atan2(chord[1], chord[0])
+        rotation = np.array([[math.cos(theta), math.sin(theta)], [-math.sin(theta), math.cos(theta)]])
     fitted = coords @ rotation
     if flip_across_attachment_axis:
         if stereo:
@@ -267,7 +276,8 @@ def build_patch(recipe: dict):
             if i == len(instances)-1:
                 nxt = (2*position-np.asarray(prev)).tolist()
         coords[name] = _fragment_layout(mol, item["incoming_port"], item["outgoing_port"], position, prev, nxt,
-                                       item.get("flip_across_attachment_axis", False))
+                                       item.get("flip_across_attachment_axis", False),
+                                       recipe.get('layout_refinement') == 'bond_angle_pose_v2')
         angle = item.get('layout_rotation_degrees', 0)
         if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle):
             raise ValueError('Block rotation must be a finite angle')
@@ -378,13 +388,18 @@ def build_patch(recipe: dict):
     kept_origin = [p for i, p in enumerate(atom_origin) if i not in removed]
     refinement = {'method': None, 'applied': False}
     if recipe.get('layout_refinement') not in (None, 'manual') and not recipe.get('atom_coordinates'):
-        if recipe['layout_refinement'] == 'rigid_block_pose_v1':
-            from .cofdraw_layout import refine_rigid_poses
+        if recipe['layout_refinement'] in ('rigid_block_pose_v1', 'bond_angle_pose_v2'):
+            from .cofdraw_layout import refine_rigid_poses, refine_bond_angles
             if specified_double_stereo or any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()):
-                refinement = {'method': 'rigid_block_pose_v1', 'applied': False, 'reason': 'explicit_stereochemistry_preserved_without_automatic_reorientation'}
+                refinement = {'method': recipe['layout_refinement'], 'applied': False, 'reason': 'explicit_stereochemistry_preserved_without_automatic_reorientation'}
+                if recipe['layout_refinement'] == 'bond_angle_pose_v2':
+                    kept_coords, spacing = _refine_block_spacing(mol, kept_coords, kept_origin)
+                    refinement.update(applied=spacing['applied'], angle_fit_applied=False, quality='needs_review',
+                                      spacing=spacing, rigid_intrablock_geometry_preserved=True)
             else:
                 joins = [{**j, 'a': retained_atom_indices[j['a']], 'b': retained_atom_indices[j['b']]} for j in port_joins]
-                kept_coords, refinement = refine_rigid_poses(mol, kept_coords, kept_origin, joins)
+                fit = refine_bond_angles if recipe['layout_refinement'] == 'bond_angle_pose_v2' else refine_rigid_poses
+                kept_coords, refinement = fit(mol, kept_coords, kept_origin, joins)
         elif recipe['layout_refinement'] == 'rigid_block_translation_v1':
             kept_coords, refinement = _refine_block_spacing(mol, kept_coords, kept_origin)
         else:

@@ -63,7 +63,7 @@ def main():
         page.get_by_text("Local chemistry engine · ready",exact=True).wait_for()
         page.locator('#mode-manual').click()
         page.locator('#appearance-options').evaluate('e=>e.open=true')
-        page.locator('details.identity-panel').evaluate('e=>e.open=true')
+        assert page.locator('.identity-summary').is_visible()
         library=page.request.get(f"{base_url}/api/drawing/library").json()
         page.wait_for_function("() => document.querySelector('#preview-a').complete && !document.querySelector('#preview-a').hidden")
         page.wait_for_function("() => document.querySelector('.brand-logo').complete && document.querySelector('.brand-logo').naturalWidth>0")
@@ -102,19 +102,20 @@ def main():
           # This legacy case checks fixed-linkage compatibility; automatic
           # switching is covered by smoke_cofdraw_studio.py.
           page.keyboard.press("Escape")
-          page.locator("#auto-chemistry").uncheck()
+          page.locator("#auto-chemistry").select_option("manual")
           page.locator("#open-monomer-library").click()
           page.locator("#library-sites").select_option("4")
           assert page.locator(".library-row").count()>0
           assert all(text=="4c" for text in page.locator(".library-site-badge").all_text_contents())
-          page.locator("#library-target").select_option("b")
+          page.locator("#library-step-b").click()
+          page.locator("#library-show-all").check()
           assert page.locator(".library-row.unavailable .library-use:disabled").count()>0
           page.locator(".library-row.unavailable .inspect-monomer").first.click()
           assert page.locator("#library-apply").is_disabled()
           assert "Requires" in page.locator("#library-compatibility").inner_text()
           page.wait_for_function("() => !document.querySelector('#library-preview').hidden && document.querySelector('#library-preview').complete")
           page.screenshot(path=str(out/"cofdraw-library.png"),full_page=True)
-          page.locator("#library-target").select_option("editor")
+          page.locator("#library-editor-mode").click()
           page.locator("#library-edit").click()
           page.wait_for_function("() => document.querySelector('#sketch-formula').textContent.length>0")
           with page.expect_download() as single_mol:page.locator("#sketch-export").click()
@@ -125,6 +126,8 @@ def main():
           page.locator("#open-monomer-library").click()
           page.locator('[data-id="tfb"] .library-use').click()
           page.wait_for_function("() => document.querySelector('#library-target').value==='b'")
+          assert page.locator('[data-id="tfb"]').count()==0
+          page.locator("#library-show-all").check()
           assert page.locator('[data-id="tfb"] .library-use').is_disabled()
           page.locator('[data-id="tapb"] .library-use').click()
           page.locator("#monomer-library-dialog").wait_for(state="hidden")

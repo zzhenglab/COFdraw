@@ -28,3 +28,5 @@ jobs:
         run: python -m pytest -q
       - name: Check monomer library behavior
         run: node scripts/test_cofdraw_library.cjs
+      - name: Check automatic chemistry choices
+        run: node scripts/test_cofdraw_automatic.cjs

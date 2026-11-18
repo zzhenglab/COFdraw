@@ -1,0 +1,172 @@
+{
+  "schema_version": "cof-chemical-patch-1",
+  "recipes": [
+    {
+      "recipe_id": "tfb-tab-pore-v1",
+      "cofex_id": "COFEXM-YOZRE7ACVU7MOTKX2M",
+      "label": "TFB-TAB",
+      "path": "tfb-tab-pore-v1.recipe.json",
+      "sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656",
+      "upstream_sha256": "d817695ff71ab16ff2024320df49893f5778ca68a611f10006f8cc48f95d7bf3",
+      "preferred_style_id": "source",
+      "representation_kind": "source_registered_pore"
+    },
+    {
+      "recipe_id": "tppa-pore-v1",
+      "cofex_id": "COFEXM-HTM4SO6D3NX6MNYL2K",
+      "label": "TpPa",
+      "path": "tppa-pore-v1.recipe.json",
+      "sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "upstream_sha256": "b2b57fead346c4f3f153ba1cd4d4c2563db1bbe4189797309d27e69b0193a7df"
+    },
+    {
+      "recipe_id": "tpb-dmtp-cof-pore-v1",
+      "cofex_id": "COFEXM-SFCGI4C4YTZOA6PXNW",
+      "label": "TPB-DMTP-COF",
+      "path": "tpb-dmtp-cof-pore-v1.recipe.json",
+      "sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "upstream_sha256": "ce594ee2dccb58513eb1b88035679f518a237732217922e11a90fe5d9b43a05b"
+    },
+    {
+      "recipe_id": "wiley-r198-tppa-so3h-pore-0002",
+      "cofex_id": "COFEXM-6YYNDORX3H7Z5YA3HT",
+      "label": "TpPa-SO3H",
+      "path": "wiley-r198-tppa-so3h-drawing-0002.json",
+      "sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701",
+      "upstream_sha256": "07513301758ab6291ff6765df5b11c430365399e9c437244f82517b5c06ec827",
+      "preferred_style_id": "source",
+      "representation_kind": "source_registered_pore"
+    },
+    {
+      "recipe_id": "f-cof-1-source-v1",
+      "cofex_id": "COFEXM-7QLVSH5C2JXMRSXVUV",
+      "label": "F-COF-1",
+      "path": "recovered/f-cof-1-source-v1.recipe.json",
+      "sha256": "01e097aa0d5ec79e18e06230bf5865b24b90a961b3a4e42a06b25ec0cc817bbe",
+      "upstream_sha256": "79fd5ef76d08e402990d8e04fb7fd5f63768e189f11449eaf5ac4ddc0dd4c5ee",
+      "preferred_style_id": "source",
+      "representation_kind": "source_registered_pore"
+    },
+    {
+      "recipe_id": "cof-300-projection-v1",
+      "cofex_id": null,
+      "label": "COF-300 · projected network",
+      "path": "recovered/cof-300-projection-v1.recipe.json",
+      "sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59",
+      "upstream_sha256": "e0a7d4a6dc67476149ab01cadfffde9b2cbaf4e2c411de9acde4816a71164d64",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_projected_network"
+    },
+    {
+      "recipe_id": "bta-cof-1-local-v1",
+      "cofex_id": null,
+      "label": "BTA-COF1 · local boronate fragment",
+      "path": "recovered/bta-cof-1-local-v1.recipe.json",
+      "sha256": "a23ef502a7168524f298b85c1048a0bc95511a7e2056461ada6a9fe260d44ff0",
+      "upstream_sha256": "f1a81d85c3de180b842db5052be88842f48cc39e8c90979893cfe78988a54563",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_local_fragment"
+    },
+    {
+      "recipe_id": "bta-cof-2-local-v1",
+      "cofex_id": null,
+      "label": "BTA-COF2 · local boronate fragment",
+      "path": "recovered/bta-cof-2-local-v1.recipe.json",
+      "sha256": "e31c8ec583c5325fc172a20696891fc7e93bbfe98e83652a666190bcbe8017dc",
+      "upstream_sha256": "77a1c88c70ee2c88d104b63e99b41dd810cddc5df45edcf297450c1d1e47be0f",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_local_fragment"
+    },
+    {
+      "recipe_id": "bta-cof-3-local-v1",
+      "cofex_id": null,
+      "label": "BTA-COF3 · local boronate fragment",
+      "path": "recovered/bta-cof-3-local-v1.recipe.json",
+      "sha256": "cc563d3ab62843828ec7592697e294ac832dce8ce49a194d1a26f998105ea66f",
+      "upstream_sha256": "cd41ba58043311be40ccae4754962c312f482d040aa06aece5ba95ac7a6c144b",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_local_fragment"
+    },
+    {
+      "recipe_id": "bta-cof-4-pore-v1",
+      "cofex_id": null,
+      "label": "BTA-COF4 · boroxine pore",
+      "path": "recovered/bta-cof-4-pore-v1.recipe.json",
+      "sha256": "394652709efb57f1f06f524e083f0dbd339d057fda0dfac4c9b299b0889d9a5b",
+      "upstream_sha256": "eec33b25fbca5bdee7ad6385ec16367969eaec399b91fe7852b73a092fe1ef06",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore"
+    },
+    {
+      "recipe_id": "brick-wall-pore-v1",
+      "cofex_id": null,
+      "label": "Brick-wall COF",
+      "path": "recovered/brick-wall-pore-v1.recipe.json",
+      "sha256": "45dafb9eab062c709d35e81c1ffbbe16be63a605a72ea67bdd337ce716473f55",
+      "upstream_sha256": "406175781401e112ca10216dc5c7ece3ed13699dddd51eb282a94a69c68c29aa",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_pore"
+    },
+    {
+      "recipe_id": "herringbone-proposal-v1",
+      "cofex_id": null,
+      "label": "Herringbone · rejected source proposal",
+      "path": "recovered/herringbone-proposal-v1.recipe.json",
+      "sha256": "0c7d13c952108a5d6e81cf3d04bd1eb7a34a128498a07acecec08f10bd70ff8d",
+      "upstream_sha256": "dc1b224ad264756b9979c1bc7b07311dc7a46d34310e54032fe2b350e67bfc99",
+      "preferred_style_id": "source",
+      "representation_kind": "rejected_source_hypothesis"
+    },
+    {
+      "recipe_id": "cof-bp-network-v1",
+      "cofex_id": null,
+      "label": "COF-BP · parent network",
+      "path": "recovered/cof-bp-network-v1.recipe.json",
+      "sha256": "b35107ea706b860880651ee436de1100e8636e8488d632e0762c197f41fe4a0c",
+      "upstream_sha256": "54eb64fda7365ec449353318eb4b77a80d3fb2ff07b1af7f575be881c1195d48",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_network"
+    },
+    {
+      "recipe_id": "cof-bp-ni1-network-v1",
+      "cofex_id": null,
+      "label": "COF-BP-Ni1 · drawn coordination sites",
+      "path": "recovered/cof-bp-ni1-network-v1.recipe.json",
+      "sha256": "23ced4b57b460a39dda9892c46ac0ce5c15e3572e7990e25020cbfe652b4c79d",
+      "upstream_sha256": "21a448c1277aace3d1827507ef9d461b5479136d61f5e586dce8afa3ebfe0252",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_coordination_patch"
+    },
+    {
+      "recipe_id": "cof-bp-ni2-network-v1",
+      "cofex_id": null,
+      "label": "COF-BP-Ni2 · drawn coordination sites",
+      "path": "recovered/cof-bp-ni2-network-v1.recipe.json",
+      "sha256": "3f1b198e01a7e69298e97c48ed9e167f52bd0ae48791e24710a313d6691ae437",
+      "upstream_sha256": "5d8ffe5fea6a939616677a3a09eba17af077d170dc0ffb20862fa2aa69312b98",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_coordination_patch"
+    },
+    {
+      "recipe_id": "pyurea-source-layout-v1",
+      "cofex_id": null,
+      "label": "Pyurea-COF",
+      "path": "recovered/pyurea-source-layout-v1.recipe.json",
+      "sha256": "4ac625b388f5b6239d867c0e5e292e424a313c1ebfcf3cffa47bc285224bef71",
+      "upstream_sha256": "9763e611eefa49171793752e681a8fcf4e972c684f0d63ccd131957c2e106a75",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_manual_pore"
+    },
+    {
+      "recipe_id": "ucof-source-layout-v1",
+      "cofex_id": null,
+      "label": "UCOF",
+      "path": "recovered/ucof-source-layout-v1.recipe.json",
+      "sha256": "b1665273b102bb12f8b66c448eae54ee8263bd35e71b3f24827bd9088750f6fd",
+      "upstream_sha256": "19f861f259dd599bca149c210a46e09bb1143ac5ecf868a8b2bd5f11af774977",
+      "preferred_style_id": "source",
+      "representation_kind": "source_informed_manual_pore"
+    }
+  ],
+  "upstream_registry_sha256": "e931fd95f6975e89b962b571b1503c876bb631ebf3fae30598dde9166bb2e6cd"
+}

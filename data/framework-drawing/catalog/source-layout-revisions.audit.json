@@ -1,0 +1,533 @@
+{
+  "schema_version": "cofdraw-source-layout-revision-1",
+  "created_at_utc": "2026-11-18T00:59:00.319839+00:00",
+  "previous_catalog_sha256": "1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097",
+  "catalog_sha256": "e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574",
+  "previous_registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+  "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
+  "monomer_count": 63,
+  "source_count": 17,
+  "monomers_unchanged": true,
+  "reviewer_type": "agent",
+  "ground_truth": false,
+  "source_pixels_distributed": false,
+  "revisions": [
+    {
+      "recipe_id": "tppa-pore-v1",
+      "previous_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+      "recipe_sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
+      "candidate_sha256": "b7b08f9d23acf17a27a63cdd85be0f76cb2275aeb07ec318563e65d2af10f95d",
+      "graph_signature_sha256": "bfee4e1f000a2070c8b20de3c11a108109f8240465a0e55c21cdf8e4f2024a78",
+      "review_evidence_sha256": "ea2331c08bd2d7b2ed6bcc9c72939447d1cf26def89fafe878ac8c1bfe63bbaa",
+      "source_image_sha256": "64a5b68ed92a5e6bd9548566a7f1f75fa3663dc2b880345e7450cde9b8b12829",
+      "source_registered": false,
+      "graph_unchanged": true,
+      "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth.",
+      "source_overlay_evidence": {
+        "recipe_id": "tppa-pore-v1",
+        "selected_candidate_filename": "tppa-pore-v1-selected.recipe.json",
+        "selected_candidate_sha256": "b7b08f9d23acf17a27a63cdd85be0f76cb2275aeb07ec318563e65d2af10f95d",
+        "original_recipe_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7",
+        "source_registered": false,
+        "graph_serialization_sha256": "85d9bcbae3b3cd3b2fd6750d1237bcad4b1a052821f97d16f3ee6b106525273b",
+        "graph_unchanged": true,
+        "atom_count": 126,
+        "coordinate_count": 126,
+        "maximum_real_intrablock_distance_change": 4.884981308350689e-15,
+        "global_alignment_determinant": 0.9999999999999997,
+        "maximum_junction_angle_error_degrees": 0.005600085649589914,
+        "overlap_count": 0,
+        "crossing_count": 0,
+        "overlay_metrics": {
+          "pattern": 0,
+          "source_ink_mean_distance_px": 0.09770497177914934,
+          "source_ink_p90_distance_px": 0.0,
+          "maximum_junction_angle_error_degrees": 0.005600085649561493,
+          "maximum_join_length_fraction_error": 6.511546755727515e-05,
+          "overlap_count": 0,
+          "crossing_count": 0,
+          "solver_applied": true,
+          "solver_reason": null,
+          "geometry_pass": true
+        },
+        "metric_scope": "One-sided bond-centerline to source-ink raster proxy after six approximate node landmarks; not atomwise registration.",
+        "recipe_before_sha256": "0cdc8517a0ac855eab5dc7c5117dd98333b0fce9b41f165b67664a79739f22b7"
+      },
+      "layout_diagnostics": {
+        "coordinate_scope": "2D depiction; not a strain or physical energy calculation",
+        "finite_coordinates": true,
+        "median_bond_length": 1.5000000000000002,
+        "bond_length_outliers_35percent": 0,
+        "junction_bond_ratios": [
+          1.000065115467554,
+          1.000022268424683,
+          1.000065115467555,
+          1.0000222684246836,
+          1.0000651154675573,
+          1.0000222684246838,
+          1.0000651154675537,
+          1.0000222684246822,
+          1.0000651154675542,
+          1.0000222684246818,
+          1.0000651154675548,
+          1.000022268424685
+        ],
+        "junction_angles": [
+          {
+            "atom": 12,
+            "internal_neighbor": 11,
+            "external_neighbor": 20,
+            "angle_degrees": 120.00411945652465,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524648513
+          },
+          {
+            "atom": 20,
+            "internal_neighbor": 19,
+            "external_neighbor": 12,
+            "angle_degrees": 120.00439780951476,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0043978095147565455
+          },
+          {
+            "atom": 16,
+            "internal_neighbor": 15,
+            "external_neighbor": 24,
+            "angle_degrees": 120.00560008564959,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005600085649589914
+          },
+          {
+            "atom": 24,
+            "internal_neighbor": 23,
+            "external_neighbor": 16,
+            "angle_degrees": 120.00532173265941,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005321732659410827
+          },
+          {
+            "atom": 33,
+            "internal_neighbor": 32,
+            "external_neighbor": 41,
+            "angle_degrees": 120.0041194565247,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524705356
+          },
+          {
+            "atom": 41,
+            "internal_neighbor": 40,
+            "external_neighbor": 33,
+            "angle_degrees": 120.00439780951454,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004397809514543383
+          },
+          {
+            "atom": 37,
+            "internal_neighbor": 36,
+            "external_neighbor": 45,
+            "angle_degrees": 120.00560008564928,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0056000856492772755
+          },
+          {
+            "atom": 45,
+            "internal_neighbor": 44,
+            "external_neighbor": 37,
+            "angle_degrees": 120.00532173265935,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005321732659353984
+          },
+          {
+            "atom": 54,
+            "internal_neighbor": 53,
+            "external_neighbor": 62,
+            "angle_degrees": 120.00411945652475,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524747989
+          },
+          {
+            "atom": 62,
+            "internal_neighbor": 61,
+            "external_neighbor": 54,
+            "angle_degrees": 120.0043978095148,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004397809514799178
+          },
+          {
+            "atom": 58,
+            "internal_neighbor": 57,
+            "external_neighbor": 66,
+            "angle_degrees": 120.0056000856494,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005600085649405173
+          },
+          {
+            "atom": 66,
+            "internal_neighbor": 65,
+            "external_neighbor": 58,
+            "angle_degrees": 120.00532173265941,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005321732659410827
+          },
+          {
+            "atom": 75,
+            "internal_neighbor": 74,
+            "external_neighbor": 83,
+            "angle_degrees": 120.00411945652465,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524648513
+          },
+          {
+            "atom": 83,
+            "internal_neighbor": 82,
+            "external_neighbor": 75,
+            "angle_degrees": 120.0043978095146,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004397809514600226
+          },
+          {
+            "atom": 79,
+            "internal_neighbor": 78,
+            "external_neighbor": 87,
+            "angle_degrees": 120.00560008564918,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0056000856491777995
+          },
+          {
+            "atom": 87,
+            "internal_neighbor": 86,
+            "external_neighbor": 79,
+            "angle_degrees": 120.00532173265908,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0053217326590839775
+          },
+          {
+            "atom": 96,
+            "internal_neighbor": 95,
+            "external_neighbor": 104,
+            "angle_degrees": 120.00411945652468,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524676934
+          },
+          {
+            "atom": 104,
+            "internal_neighbor": 103,
+            "external_neighbor": 96,
+            "angle_degrees": 120.00439780951464,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004397809514642859
+          },
+          {
+            "atom": 100,
+            "internal_neighbor": 99,
+            "external_neighbor": 108,
+            "angle_degrees": 120.00560008564946,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005600085649462017
+          },
+          {
+            "atom": 108,
+            "internal_neighbor": 107,
+            "external_neighbor": 100,
+            "angle_degrees": 120.00532173265945,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.00532173265945346
+          },
+          {
+            "atom": 117,
+            "internal_neighbor": 116,
+            "external_neighbor": 125,
+            "angle_degrees": 120.00411945652455,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004119456524549037
+          },
+          {
+            "atom": 125,
+            "internal_neighbor": 124,
+            "external_neighbor": 117,
+            "angle_degrees": 120.0043978095146,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.004397809514600226
+          },
+          {
+            "atom": 121,
+            "internal_neighbor": 120,
+            "external_neighbor": 3,
+            "angle_degrees": 120.00560008564933,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005600085649334119
+          },
+          {
+            "atom": 3,
+            "internal_neighbor": 2,
+            "external_neighbor": 121,
+            "angle_degrees": 120.00532173265931,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.005321732659311351
+          }
+        ],
+        "nonbonded_overlap_pairs": [],
+        "nonincident_bond_crossings": [],
+        "overlap_threshold_bond_fraction": 0.35,
+        "rigid_blocks": 12
+      }
+    },
+    {
+      "recipe_id": "tpb-dmtp-cof-pore-v1",
+      "previous_recipe_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+      "recipe_sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
+      "candidate_sha256": "2fb49b5a8e5d65933ab5b1bb1a70bf29915629e03b03dcbcfb34ce8cfb4ec0a5",
+      "graph_signature_sha256": "af22200c981e29077f891e4280931bc13f82c6c0cd11d5f2b67808c88ec13062",
+      "review_evidence_sha256": "ea2331c08bd2d7b2ed6bcc9c72939447d1cf26def89fafe878ac8c1bfe63bbaa",
+      "source_image_sha256": "10f897f4ac672f86ac1db5e44f0552541566c6bd70cd848dfd1e0465b92119c7",
+      "source_registered": false,
+      "graph_unchanged": true,
+      "qualification": "Same reviewed finite chemical graph; revised rigid-block planar coordinates were visually compared with the original source. This is a source-informed reconstruction, not exact atomwise registration, experimental E/Z assignment, crystal geometry or human ground truth.",
+      "source_overlay_evidence": {
+        "recipe_id": "tpb-dmtp-cof-pore-v1",
+        "selected_candidate_filename": "tpb-dmtp-cof-pore-v1-selected.recipe.json",
+        "selected_candidate_sha256": "2fb49b5a8e5d65933ab5b1bb1a70bf29915629e03b03dcbcfb34ce8cfb4ec0a5",
+        "original_recipe_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3",
+        "source_registered": false,
+        "graph_serialization_sha256": "988c7810af0a27b645c420307cb17363f0391d0b667febdc5c196939f7d87aad",
+        "graph_unchanged": true,
+        "atom_count": 234,
+        "coordinate_count": 234,
+        "maximum_real_intrablock_distance_change": 1.2434497875801753e-14,
+        "global_alignment_determinant": 1.0,
+        "maximum_junction_angle_error_degrees": 0.002744487015775121,
+        "overlap_count": 0,
+        "crossing_count": 0,
+        "overlay_metrics": {
+          "node_center_rms_px": 0.88583184140282,
+          "source_ink_mean_distance_px": 0.2503895500436204,
+          "source_ink_p90_distance_px": 1.0,
+          "sample_count": 3870,
+          "junction_max_error_deg": 0.0027444870157182777,
+          "nonbonded_overlap_count": 0,
+          "nonincident_bond_crossing_count": 0
+        },
+        "metric_scope": "One-sided bond-centerline to source-ink raster proxy after six approximate node landmarks; not atomwise registration.",
+        "recipe_before_sha256": "2343c1c85d113859ce6e511d72e6182606bb896a7006eeab29834dd7972e52b3"
+      },
+      "layout_diagnostics": {
+        "coordinate_scope": "2D depiction; not a strain or physical energy calculation",
+        "finite_coordinates": true,
+        "median_bond_length": 1.5,
+        "bond_length_outliers_35percent": 0,
+        "junction_bond_ratios": [
+          1.0000207142065023,
+          1.0000207142065027,
+          1.0000207142065018,
+          1.0000207142065038,
+          1.0000207142065,
+          1.0000207142065067,
+          1.0000207142065045,
+          1.0000207142065047,
+          1.0000207142064996,
+          1.0000207142065054,
+          1.0000207142065023,
+          1.0000207142065054
+        ],
+        "junction_angles": [
+          {
+            "atom": 10,
+            "internal_neighbor": 9,
+            "external_neighbor": 38,
+            "angle_degrees": 120.00274448701552,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155193257
+          },
+          {
+            "atom": 38,
+            "internal_neighbor": 37,
+            "external_neighbor": 10,
+            "angle_degrees": 120.00274448701568,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015675645
+          },
+          {
+            "atom": 32,
+            "internal_neighbor": 31,
+            "external_neighbor": 65,
+            "angle_degrees": 120.00274448701559,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.00274448701559038
+          },
+          {
+            "atom": 65,
+            "internal_neighbor": 64,
+            "external_neighbor": 32,
+            "angle_degrees": 120.00274448701559,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.00274448701559038
+          },
+          {
+            "atom": 49,
+            "internal_neighbor": 48,
+            "external_neighbor": 77,
+            "angle_degrees": 120.00274448701533,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870153345846
+          },
+          {
+            "atom": 77,
+            "internal_neighbor": 76,
+            "external_neighbor": 49,
+            "angle_degrees": 120.00274448701556,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155619583
+          },
+          {
+            "atom": 71,
+            "internal_neighbor": 70,
+            "external_neighbor": 104,
+            "angle_degrees": 120.00274448701546,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870154624823
+          },
+          {
+            "atom": 104,
+            "internal_neighbor": 103,
+            "external_neighbor": 71,
+            "angle_degrees": 120.00274448701569,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015689856
+          },
+          {
+            "atom": 88,
+            "internal_neighbor": 87,
+            "external_neighbor": 116,
+            "angle_degrees": 120.00274448701562,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870156188017
+          },
+          {
+            "atom": 116,
+            "internal_neighbor": 115,
+            "external_neighbor": 88,
+            "angle_degrees": 120.00274448701578,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015775121
+          },
+          {
+            "atom": 110,
+            "internal_neighbor": 109,
+            "external_neighbor": 143,
+            "angle_degrees": 120.00274448701542,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870154198497
+          },
+          {
+            "atom": 143,
+            "internal_neighbor": 142,
+            "external_neighbor": 110,
+            "angle_degrees": 120.00274448701536,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870153630063
+          },
+          {
+            "atom": 127,
+            "internal_neighbor": 126,
+            "external_neighbor": 155,
+            "angle_degrees": 120.00274448701549,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015490904
+          },
+          {
+            "atom": 155,
+            "internal_neighbor": 154,
+            "external_neighbor": 127,
+            "angle_degrees": 120.00274448701549,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015490904
+          },
+          {
+            "atom": 149,
+            "internal_neighbor": 148,
+            "external_neighbor": 182,
+            "angle_degrees": 120.00274448701568,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015675645
+          },
+          {
+            "atom": 182,
+            "internal_neighbor": 181,
+            "external_neighbor": 149,
+            "angle_degrees": 120.00274448701536,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870153630063
+          },
+          {
+            "atom": 166,
+            "internal_neighbor": 165,
+            "external_neighbor": 194,
+            "angle_degrees": 120.00274448701556,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155619583
+          },
+          {
+            "atom": 194,
+            "internal_neighbor": 193,
+            "external_neighbor": 166,
+            "angle_degrees": 120.00274448701578,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015775121
+          },
+          {
+            "atom": 188,
+            "internal_neighbor": 187,
+            "external_neighbor": 221,
+            "angle_degrees": 120.00274448701546,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870154624823
+          },
+          {
+            "atom": 221,
+            "internal_neighbor": 220,
+            "external_neighbor": 188,
+            "angle_degrees": 120.00274448701549,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.002744487015490904
+          },
+          {
+            "atom": 205,
+            "internal_neighbor": 204,
+            "external_neighbor": 233,
+            "angle_degrees": 120.00274448701556,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155619583
+          },
+          {
+            "atom": 233,
+            "internal_neighbor": 232,
+            "external_neighbor": 205,
+            "angle_degrees": 120.00274448701552,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155193257
+          },
+          {
+            "atom": 227,
+            "internal_neighbor": 226,
+            "external_neighbor": 26,
+            "angle_degrees": 120.00274448701562,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870156188017
+          },
+          {
+            "atom": 26,
+            "internal_neighbor": 25,
+            "external_neighbor": 227,
+            "angle_degrees": 120.00274448701556,
+            "reference_degrees": 120.0,
+            "deviation_degrees": 0.0027444870155619583
+          }
+        ],
+        "nonbonded_overlap_pairs": [],
+        "nonincident_bond_crossings": [],
+        "overlap_threshold_bond_fraction": 0.35,
+        "rigid_blocks": 12
+      }
+    }
+  ]
+}

@@ -39,7 +39,8 @@ def test_explicit_cleanup_preserves_rigid_blocks_and_graph_and_remains_manual():
         assert np.allclose(np.linalg.norm(a[indices, None]-a[np.array(indices)[None]], axis=2),
                            np.linalg.norm(b[indices, None]-b[np.array(indices)[None]], axis=2), atol=1e-9)
     assert after['layout_diagnostics']['nonbonded_overlap_pairs'] == []
-    assert result['audit']['layout_refinement']['final_constraint_error'] < result['audit']['layout_refinement']['initial_constraint_error']
+    assert result['audit']['layout_refinement']['quality'] == 'regular'
+    assert result['audit']['layout_refinement']['final_max_junction_angle_deviation_degrees'] < 1
     assert after['depiction_geometry']['max_to_median_ratio'] < before['depiction_geometry']['max_to_median_ratio']
 
 

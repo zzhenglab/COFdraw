@@ -29,7 +29,7 @@ def prepare(client, keto=False):
 @pytest.mark.parametrize("keto", [False, True])
 def test_actual_prepare_render_and_four_downloads(client, keto):
     recipe = prepare(client, keto)
-    assert recipe["layout_refinement"] == "rigid_block_translation_v1"
+    assert recipe["layout_refinement"] == "bond_angle_pose_v2"
     response = client.post("/api/drawing/render", json={"recipe": recipe, "size": 500})
     assert response.status_code == 200, response.text
     result = response.json()
@@ -37,7 +37,7 @@ def test_actual_prepare_render_and_four_downloads(client, keto):
     assert result["audit"]["graph_scope"] == "finite_designed_pore_patch_with_continuation_ports"
     assert result["audit"]["cofex_id"] is None
     assert result["audit"]["ground_truth"] is False
-    assert result["audit"]["layout_refinement"]["method"] == "rigid_block_translation_v1"
+    assert result["audit"]["layout_refinement"]["method"] == "bond_angle_pose_v2"
     assert len(result["audit"]["continuation_ports"]) == (6 if keto else 3)
     assert result["audit"]["building_block_instances"] == (12 if keto else 6)
     outputs = {ext: client.get(url) for ext, url in result["downloads"].items()}

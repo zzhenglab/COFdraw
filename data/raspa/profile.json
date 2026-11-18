@@ -1,0 +1,369 @@
+{
+  "id": "raspa-example-dreiding-uff-buch-v1",
+  "name": "RASPA example DREIDING/UFF + published gas models",
+  "framework": {
+    "O": {
+      "epsilon_K": 48.1581,
+      "sigma_angstrom": 3.03315,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "N": {
+      "epsilon_K": 38.9492,
+      "sigma_angstrom": 3.26256,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "C": {
+      "epsilon_K": 47.8562,
+      "sigma_angstrom": 3.47299,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "F": {
+      "epsilon_K": 36.4834,
+      "sigma_angstrom": 3.0932,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "B": {
+      "epsilon_K": 47.8058,
+      "sigma_angstrom": 3.58141,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "P": {
+      "epsilon_K": 161.03,
+      "sigma_angstrom": 3.69723,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "S": {
+      "epsilon_K": 173.107,
+      "sigma_angstrom": 3.59032,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Cl": {
+      "epsilon_K": 142.562,
+      "sigma_angstrom": 3.51932,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Br": {
+      "epsilon_K": 186.191,
+      "sigma_angstrom": 3.51905,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "H": {
+      "epsilon_K": 7.64893,
+      "sigma_angstrom": 2.84642,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Al": {
+      "epsilon_K": 155.998,
+      "sigma_angstrom": 3.91105,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Si": {
+      "epsilon_K": 155.998,
+      "sigma_angstrom": 3.80414,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Zn": {
+      "epsilon_K": 62.3992,
+      "sigma_angstrom": 2.46155,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Be": {
+      "epsilon_K": 42.7736,
+      "sigma_angstrom": 2.44552,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Cr": {
+      "epsilon_K": 7.54829,
+      "sigma_angstrom": 2.69319,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Fe": {
+      "epsilon_K": 6.54185,
+      "sigma_angstrom": 2.5943,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Mn": {
+      "epsilon_K": 6.54185,
+      "sigma_angstrom": 2.63795,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Cu": {
+      "epsilon_K": 2.5161,
+      "sigma_angstrom": 3.11369,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Co": {
+      "epsilon_K": 7.04507,
+      "sigma_angstrom": 2.55866,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Ga": {
+      "epsilon_K": 208.836,
+      "sigma_angstrom": 3.90481,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Ti": {
+      "epsilon_K": 8.55473,
+      "sigma_angstrom": 2.8286,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Sc": {
+      "epsilon_K": 9.56117,
+      "sigma_angstrom": 2.93551,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "V": {
+      "epsilon_K": 8.05151,
+      "sigma_angstrom": 2.80099,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Ni": {
+      "epsilon_K": 7.54829,
+      "sigma_angstrom": 2.52481,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Zr": {
+      "epsilon_K": 34.7221,
+      "sigma_angstrom": 2.78317,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Mg": {
+      "epsilon_K": 55.8574,
+      "sigma_angstrom": 2.69141,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Ne": {
+      "epsilon_K": 21.1352,
+      "sigma_angstrom": 2.88918,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Ag": {
+      "epsilon_K": 18.1159,
+      "sigma_angstrom": 2.80455,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "In": {
+      "epsilon_K": 301.428,
+      "sigma_angstrom": 3.97608,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Cd": {
+      "epsilon_K": 114.734,
+      "sigma_angstrom": 2.53728,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Sb": {
+      "epsilon_K": 225.946,
+      "sigma_angstrom": 3.93777,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    },
+    "Te": {
+      "epsilon_K": 200.281,
+      "sigma_angstrom": 3.98232,
+      "source": "RASPA2 ExampleMOFsForceField: DREIDING for organic elements; UFF for listed metals"
+    }
+  },
+  "gases": {
+    "CO2": {
+      "critical_temperature_K": 304.1282,
+      "critical_pressure_Pa": 7377300.0,
+      "acentric_factor": 0.22394,
+      "sites": [
+        {
+          "name": "O_co2",
+          "framework": false,
+          "print_to_output": true,
+          "element": "O",
+          "print_as": "O",
+          "mass": 15.9994,
+          "charge": -0.3256,
+          "source": "A. Garcia-Sanchez et al., J. Phys. Chem. C 2009, 113, 8814-8820",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            1.149
+          ],
+          "epsilon_K": 85.671,
+          "sigma_angstrom": 3.017
+        },
+        {
+          "name": "C_co2",
+          "framework": false,
+          "print_to_output": true,
+          "element": "C",
+          "print_as": "C",
+          "mass": 12.0,
+          "charge": 0.6512,
+          "source": "A. Garcia-Sanchez et al., J. Phys. Chem. C 2009, 113, 8814-8820",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "epsilon_K": 29.933,
+          "sigma_angstrom": 2.745
+        },
+        {
+          "name": "O_co2",
+          "framework": false,
+          "print_to_output": true,
+          "element": "O",
+          "print_as": "O",
+          "mass": 15.9994,
+          "charge": -0.3256,
+          "source": "A. Garcia-Sanchez et al., J. Phys. Chem. C 2009, 113, 8814-8820",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            -1.149
+          ],
+          "epsilon_K": 85.671,
+          "sigma_angstrom": 3.017
+        }
+      ]
+    },
+    "N2": {
+      "critical_temperature_K": 126.192,
+      "critical_pressure_Pa": 3395800.0,
+      "acentric_factor": 0.0372,
+      "sites": [
+        {
+          "name": "N_n2",
+          "framework": false,
+          "print_to_output": true,
+          "element": "N",
+          "print_as": "N",
+          "mass": 14.00674,
+          "charge": -0.405,
+          "source": "A. Martin-Calvo et al. , Phys. Chem. Chem. Phys. 2011, 13, 11165-11174",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            0.55
+          ],
+          "epsilon_K": 38.298,
+          "sigma_angstrom": 3.306
+        },
+        {
+          "name": "N_com",
+          "framework": false,
+          "print_to_output": false,
+          "element": "N",
+          "print_as": "-",
+          "mass": 0.0,
+          "charge": 0.81,
+          "source": "A. Martin-Calvo et al. , Phys. Chem. Chem. Phys. 2011, 13, 11165-11174",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "epsilon_K": 0.0,
+          "sigma_angstrom": 1.0
+        },
+        {
+          "name": "N_n2",
+          "framework": false,
+          "print_to_output": true,
+          "element": "N",
+          "print_as": "N",
+          "mass": 14.00674,
+          "charge": -0.405,
+          "source": "A. Martin-Calvo et al. , Phys. Chem. Chem. Phys. 2011, 13, 11165-11174",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            -0.55
+          ],
+          "epsilon_K": 38.298,
+          "sigma_angstrom": 3.306
+        }
+      ]
+    },
+    "CH4": {
+      "critical_temperature_K": 190.564,
+      "critical_pressure_Pa": 4599200.0,
+      "acentric_factor": 0.01142,
+      "sites": [
+        {
+          "name": "CH4",
+          "framework": false,
+          "print_to_output": true,
+          "element": "C",
+          "print_as": "C",
+          "mass": 16.04246,
+          "charge": 0.0,
+          "source": "M. G. Martin et al., J. Chem. Phys. 2001, 114, 7174-7181",
+          "position_angstrom": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "epsilon_K": 158.5,
+          "sigma_angstrom": 3.72
+        }
+      ]
+    },
+    "H2": {
+      "critical_temperature_K": 33.19,
+      "critical_pressure_Pa": 1315000.0,
+      "acentric_factor": -0.214,
+      "qualification": "Classical spherical Buch Lennard-Jones approximation; no quadrupole, Feynman-Hibbs correction or nuclear quantum effects. Cryogenic values require particular caution.",
+      "sites": [
+        {
+          "name": "H2_Buch",
+          "element": "H",
+          "mass": 2.01588,
+          "charge": 0.0,
+          "position_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "epsilon_K": 34.2,
+          "sigma_angstrom": 2.96,
+          "source": "Buch, J. Chem. Phys. 100, 7610 (1994), doi:10.1063/1.466854; explicit H2 parameters verified in correction doi:10.1021/jp110139d"
+        }
+      ]
+    },
+    "Ar": {
+      "critical_temperature_K": 150.687,
+      "critical_pressure_Pa": 4863000.0,
+      "acentric_factor": -0.00219,
+      "sites": [
+        {
+          "name": "Ar",
+          "element": "Ar",
+          "mass": 39.948,
+          "charge": 0.0,
+          "position_angstrom": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "epsilon_K": 124.07,
+          "sigma_angstrom": 3.38,
+          "source": "Martin-Calvo et al., Phys. Chem. Chem. Phys. 13,11165 (2011), doi:10.1039/C1CP20168A; RASPA2 ExampleMOFsForceField"
+        }
+      ]
+    }
+  },
+  "mixing_rule": "Lorentz-Berthelot",
+  "cutoff_angstrom": 12.0,
+  "shifted": true,
+  "tail_corrections": false,
+  "sources": [
+    {
+      "url": "https://github.com/iRASPA/RASPA2/blob/master/forcefield/ExampleMOFsForceField/force_field_mixing_rules.def",
+      "file": "RASPA2-force-field-mixing-rules.def",
+      "sha256": "c2eaeaa6c9d677c64549d23b681a2a128cdd8c8c21f7605efb054e9e3f327912"
+    },
+    {
+      "url": "https://github.com/iRASPA/RASPA3/blob/v3.0.24/examples/basic/12_mc_henry_coefficient_of_co2_n2_methane_in_mfi/force_field.json",
+      "file": "RASPA3-example-force-field.json",
+      "sha256": "68f26e45dee9db2bb5d17377b3307d78f90e1c2e463c63958b582911c35828a9"
+    }
+  ],
+  "citation": "RASPA3: Ran et al., J. Chem. Phys.161,114106(2024), doi:10.1063/5.0226249",
+  "scope": "Rigid-framework classical physical adsorption screening; parameters are not fitted or validated for each COF. No chemisorption, flexibility, synthesis stability, or quantum correction."
+}

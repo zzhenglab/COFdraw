@@ -1,0 +1,52 @@
+{
+  "schema_version": "cofdraw-manual-monomer-admission-1",
+  "created_at_utc": "2026-11-18T00:48:33.396747+00:00",
+  "previous_catalog_sha256": "3be28b4907849d8b9269311df7237a2dc92c1d22367f08145065a353a09bca73",
+  "catalog_sha256": "1c382914d946da1ac018b506366783233bb16e8da0ca5c195c5d2facd7dd4097",
+  "upstream_curation_catalog_sha256": "ecd415e36c6c9cb029705a2d6e14ad2425686764ea6d1befd92a0e883ba59403",
+  "selection_sha256": "721dda9ac33d6c0a89ad9951f50c79e771e999fed004b0dde45aed58099a7435",
+  "original_monomer_count": 49,
+  "monomer_count": 63,
+  "added_ids": [
+    "ppcn",
+    "tfppy_ome",
+    "tfppy_f",
+    "tfppy_13c",
+    "tbpm_boronic",
+    "allyl_tbpa",
+    "dabd",
+    "thz",
+    "tmc",
+    "tape",
+    "odh",
+    "tfb_oh",
+    "tfb_oh2",
+    "daaq"
+  ],
+  "automatic_drawing_candidate_ids": [
+    "tfppy_ome",
+    "tfppy_f",
+    "tfppy_13c",
+    "dabd",
+    "thz",
+    "tape",
+    "odh",
+    "tfb_oh",
+    "tfb_oh2",
+    "daaq"
+  ],
+  "reference_only_ids": [
+    "ppcn",
+    "tbpm_boronic",
+    "allyl_tbpa",
+    "tmc"
+  ],
+  "source_count": 17,
+  "registry_sha256": "6036130c3bb935561863224a298de0a6406d4611d6384f5a2dfa036ff9477259",
+  "reviewer_type": "agent",
+  "ground_truth": false,
+  "source_pixels_distributed": false,
+  "research_annotations_modified": false,
+  "scope": "Selected complete molecular precursors, individually inspected against existing manual source/graph evidence. No automatic training admission or source reaction implementation.",
+  "excluded_scope": "Model compounds, postsynthetic reagents, catalytic products, ambiguous precursor labels, boundary fragments and unreviewed records were not bulk imported."
+}

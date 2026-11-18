@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.6.1"
+VERSION = "0.7.0"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -79,7 +79,7 @@ class DesktopBridge:
         import webview
         self._check()
         name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", str(suggested))[:160]
-        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb", ".csv"}:
+        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb", ".csv", ".zip"}:
             raise ValueError("Unsupported export extension")
         selected = self._window.create_file_dialog(webview.FileDialog.SAVE, save_filename=name)
         if not selected:
@@ -90,11 +90,12 @@ class DesktopBridge:
 
     def save_export(self, relative_path, suggested_filename):
         self._check()
-        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json|cif|xyz|pdb|csv)", str(relative_path)):
+        if not re.fullmatch(r"/api/drawing/exports/[0-9a-f]{32}/(png|svg|mol|sdf|cdxml|json|cif|xyz|pdb|csv|zip)", str(relative_path)):
             raise ValueError("Not a generated COFdraw export")
+        limit = 100_000_000 if str(relative_path).endswith('/zip') else 20_000_000
         with urlopen(self._origin + relative_path, timeout=30) as response:
-            data = response.read(20_000_001)
-        if len(data) > 20_000_000:
+            data = response.read(limit+1)
+        if len(data) > limit:
             raise ValueError("Export exceeds the desktop save limit")
         return self._save(suggested_filename, data)
 
@@ -161,7 +162,7 @@ def main(argv=None):
             raise RuntimeError("The local drawing service did not become ready")
         import webview
         bridge = DesktopBridge(origin)
-        window = webview.create_window("COFdraw", origin + "/", js_api=bridge, width=1400, height=960, min_size=(980, 700), hidden=args.smoke_window, text_select=True, background_color="#f4f3ee")
+        window = webview.create_window(f"COFdraw {VERSION}", origin + "/", js_api=bridge, width=1400, height=960, min_size=(980, 700), hidden=args.smoke_window, text_select=True, background_color="#f4f3ee")
         bridge._window = window
         status["status"] = "desktop_window"; write_status()
         def smoke():

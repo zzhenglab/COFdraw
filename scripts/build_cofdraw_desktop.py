@@ -17,7 +17,28 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.6.1"
+VERSION = "0.7.0"
+
+
+def validate_synthesis_resources(directory=None):
+    """Fail the build if the offline SA Score table was omitted or changed."""
+    sys.path.insert(0, str(REPO / "src"))
+    from cof_vision.cofdraw_synthesis import resource_information
+    try:
+        if directory is not None and not (directory / "sascorer.py").is_file():
+            raise RuntimeError("SA Score source was not collected")
+        return resource_information(directory)
+    except (ImportError, RuntimeError):
+        raise SystemExit("The build requires the verified RDKit SA Score implementation and fragment table") from None
+
+
+def validate_raspa_resources():
+    sys.path.insert(0, str(REPO / "src"))
+    from cof_vision.cofdraw_raspa import engine_status
+    status = engine_status()
+    if not status["available"]:
+        raise SystemExit("The build requires the pinned RASPA3 CPU runtime: " + status.get("reason", "missing package"))
+    return status
 
 
 def sha(path):
@@ -84,6 +105,7 @@ def main():
         raise SystemExit("Output already exists; choose a fresh --output-dir")
     data = args.catalog_data.resolve()
     catalog = validate_catalog(data)
+    validate_synthesis_resources()
     run = inside_repository(REPO / "build" / uuid.uuid4().hex)
     run.mkdir(parents=True)
     destination.mkdir(parents=True, exist_ok=True)
@@ -96,12 +118,14 @@ def main():
         square = Image.new("RGBA", (edge, edge), (255, 255, 255, 0))
         square.alpha_composite(rgba, ((edge - rgba.width) // 2, (edge - rgba.height) // 2))
         square.save(icon, format="ICO", sizes=[(x, x) for x in (16, 24, 32, 48, 64, 128, 256)])
+    validate_raspa_resources()
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--windowed",
                "--name", "COFdraw", "--distpath", str(run / "dist"),
                "--workpath", str(run / "work"), "--specpath", str(run),
                "--paths", str(REPO / "src"), "--icon", str(icon),
                "--add-data", f"{REPO / 'src/cof_vision/web'};cof_vision/web",
                "--collect-all", "rdkit", "--collect-all", "resvg_py",
+               "--collect-all", "raspalib", "--copy-metadata", "raspalib",
                "--hidden-import", "uvicorn.logging", "--hidden-import", "uvicorn.loops.asyncio",
                "--hidden-import", "uvicorn.protocols.http.h11_impl", "--hidden-import", "uvicorn.lifespan.on"]
     for module in ("torch", "onnx", "onnxruntime", "pymupdf", "fitz", "matplotlib", "IPython",
@@ -112,6 +136,7 @@ def main():
     staged = inside_repository(run / "dist/COFdraw")
     if not (staged / "COFdraw.exe").is_file():
         raise SystemExit("PyInstaller did not produce COFdraw.exe")
+    synthesis_resource = validate_synthesis_resources(staged / "_internal/rdkit/Contrib/SA_Score")
     # Windows preserves the Internet-zone marking when Explorer extracts a
     # downloaded ZIP. The process-scoped CLR setting lets Python.NET/WebView2
     # load the supplied managed DLLs without unblocking files or changing the OS.
@@ -131,6 +156,12 @@ def main():
         if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
             raise SystemExit("Periodic template hash mismatch")
     shutil.copytree(crystal_data, staged / "data/crystal-models")
+    # Immutable engine/profile resources belong to the application, independent
+    # of a user's writable catalog-data location.
+    shutil.copytree(REPO / "data/raspa", staged / "data/raspa")
+    for cpu in ("base", "avx", "avx2", "avx512"):
+        if not list((staged / "_internal/raspalib").glob(f"raspalib_{cpu}*.pyd")):
+            raise SystemExit(f"Bundled RASPA CPU variant missing: {cpu}")
     shutil.copy2(icon, staged / "COFdraw.ico")
     shutil.copy2(REPO / "LICENSE", staged / "LICENSE.txt")
     for name in ("README.md", "LICENSE", "CONTRIBUTING.md", "CHANGELOG.md", "SKILL.md", "AGENTS.md"):
@@ -141,6 +172,8 @@ def main():
             shutil.copytree(REPO / name, staged / name,
                             ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.log"))
     copy_licenses(staged / "third-party-licenses")
+    shutil.copy2(REPO / "docs/third-party-licenses/RDKit-SA-Score-BSD.txt",
+                 staged / "third-party-licenses/RDKit-SA-Score-BSD.txt")
     # The generated Gemmi coefficient table retains MPL-2.0. Supply its exact
     # editable source beside the executable, as well as the upstream license.
     coefficient_source = staged / "third-party-sources/Gemmi"
@@ -150,6 +183,7 @@ def main():
     manifest = {"application_id": "cofdraw", "version": VERSION,
                 "executable_sha256": sha(staged / "COFdraw.exe"),
                 "catalog_sha256": catalog["catalog_sha256"],
+                "synthetic_accessibility": {"method_id": "rdkit_sa_score", "fragment_table": synthesis_resource},
                 "files": [{"path": p.relative_to(staged).as_posix(), "bytes": p.stat().st_size, "sha256": sha(p)}
                           for p in sorted(staged.rglob("*")) if p.is_file()]}
     (staged / "release-manifest.json").write_text(json.dumps(manifest, indent=2), "utf-8")

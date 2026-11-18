@@ -1,0 +1,31 @@
+{
+  "engine": "RASPA3",
+  "distribution": "raspalib",
+  "version": "3.1.0",
+  "license": "MIT",
+  "project_url": "https://github.com/iRASPA/RASPA3",
+  "windows_wheel": {
+    "filename": "raspalib-3.1.0-cp311-cp311-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/67/0e/abf787ceb79a3e71de56a3e81664e08c42e46ae36e52ab576b079858d0fc/raspalib-3.1.0-cp311-cp311-win_amd64.whl",
+    "sha256": "6b34a401305dc41a41536aef0fb5c4ce94546937ff239d21a0dee991b8f32ddd"
+  },
+  "cpu_variants": [
+    "base",
+    "avx",
+    "avx2",
+    "avx512"
+  ],
+  "native_cli_3_0_24_rejected": "Published Windows AVX2 CLI gave DSYEV errors and incorrect CO2/N2 inertia; not bundled.",
+  "profile_sha256": "02af8c3ce9e3ccc8b8754e0ad78eb952bbb0bdb014db0a4322b1f7dea1b43eb7",
+  "windows_cp311_native_files": {
+    "raspalib_avx.cp311-win_amd64.pyd": "2e8941c45cbd8319c0f10ea70c12759979882666b3daf03da31718bfc004c5fd",
+    "raspalib_avx2.cp311-win_amd64.pyd": "1e820cdd2f1b073012b725b5f05002cfd23c45f90025517a29734a2ca4e82f54",
+    "raspalib_avx512.cp311-win_amd64.pyd": "16d2c6ee773a854fd238dac5081d5810ed4d2bc7e8cfa5b99b55bbd7ab1c165c",
+    "raspalib_base.cp311-win_amd64.pyd": "84fcaa0fb2bfdd2d3637cd00a94a7898f4879e634ef4e51dd7edec296307f5a9"
+  },
+  "cpu_runtime_imports": [
+    "python311.dll",
+    "KERNEL32.dll",
+    "WS2_32.dll"
+  ]
+}
