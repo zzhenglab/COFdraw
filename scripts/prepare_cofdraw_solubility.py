@@ -20,8 +20,8 @@ from rdkit.Chem.Scaffolds import MurckoScaffold
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 from cof_vision.cofdraw_solubility import (  # noqa: E402
-    DATASET, DATASET_DOI, MIN_SOLUTES, SOLVENTS, TARGET_K, WINDOW_K, Observation, ReferenceSet,
-    neighbor_estimate, solvent_trend,
+    DATASET, DATASET_DOI, MAX_DESCRIPTOR_DISTANCE, MIN_FINGERPRINT, MIN_SOLUTES, SOLVENTS, TARGET_K, WINDOW_K, Observation, ReferenceSet,
+    neighbor_estimate, solvent_trend, shared_solvent_trends, descriptor_estimate,
 )
 
 SOURCE_SHA256 = {
@@ -148,6 +148,57 @@ def benchmark(dataset):
     return result
 
 
+def benchmark_transfer(dataset, validation):
+    folds = scaffold_folds(dataset)
+    errors, baselines, aromatic_errors, aromatic_baselines = (defaultdict(list) for _ in range(4))
+    fold_counts = defaultdict(set)
+    for fold in range(5):
+        pools = {}
+        for key, (indices, values) in dataset.pools.items():
+            train = folds[indices] != fold
+            pools[key] = indices[train], values[train]
+        trends = shared_solvent_trends(dataset.features, pools)
+        for index in np.flatnonzero(folds == fold):
+            mol = dataset.mols[index]
+            similarity, distances = dataset.distances(mol)
+            aromatic = rdMolDescriptors.CalcNumAromaticRings(mol) >= 2
+            for key, trend in trends.items():
+                indices, values = dataset.pools[key]
+                row = np.searchsorted(indices, index)
+                if row == len(indices) or indices[row] != index:
+                    continue
+                train, labels = pools[key]
+                if validation[key]['enabled'] and len(train) >= MIN_SOLUTES:
+                    if np.count_nonzero((similarity[train] >= MIN_FINGERPRINT)
+                                        & (distances[train] <= MAX_DESCRIPTOR_DISTANCE)) >= 3:
+                        continue
+                estimate = descriptor_estimate(dataset.features[index], distances, train, trend)
+                if estimate is None:
+                    continue
+                error = abs(estimate - values[row])
+                baseline = abs(float(np.median(labels)) - values[row])
+                errors[key].append(error)
+                baselines[key].append(baseline)
+                fold_counts[key].add(fold)
+                if aromatic:
+                    aromatic_errors[key].append(error)
+                    aromatic_baselines[key].append(baseline)
+    aromatic_band = float(np.quantile([e for group in aromatic_errors.values() for e in group], .9, method='higher'))
+    for key, result in validation.items():
+        stats = statistics(errors[key], baselines[key])
+        rings = statistics(aromatic_errors[key], aromatic_baselines[key])
+        enabled = (stats['predicted'] >= 20 and len(fold_counts[key]) == 5
+                   and stats['mae_log10'] < stats['median_baseline_mae_log10'])
+        if rings['predicted'] >= 20:
+            enabled &= rings['mae_log10'] < rings['median_baseline_mae_log10']
+        band = max(1., stats['p90_absolute_error_log10'], rings['p90_absolute_error_log10']
+                   if rings['predicted'] >= 20 else aromatic_band) if enabled else None
+        result['descriptor_transfer'] = {
+            'enabled': enabled, **stats, 'scaffold_folds_represented': len(fold_counts[key]),
+            'screening_half_width_log10': band, 'two_or_more_aromatic_rings': rings,
+        }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path, help="Directory with both pinned BigSolDB 2.2 files")
@@ -156,6 +207,7 @@ def main():
     rows = observations(args.source)
     dataset = ReferenceSet(rows)
     validation = benchmark(dataset)
+    benchmark_transfer(dataset, validation)
     args.output.mkdir(parents=True, exist_ok=True)
     table = args.output / "measurements.csv"
     with table.open("w", encoding="utf-8", newline="") as destination:
@@ -163,7 +215,7 @@ def main():
         writer.writeheader()
         writer.writerows(asdict(row) for row in rows)
     metadata = {
-        "schema": "cofdraw-solubility-1",
+        "schema": "cofdraw-solubility-2",
         "dataset": DATASET, "dataset_doi": DATASET_DOI, "license": "CC-BY-4.0",
         "source_sha256": SOURCE_SHA256,
         "measurements_sha256": hashlib.sha256(table.read_bytes()).hexdigest(),
@@ -176,6 +228,10 @@ def main():
                      "eligibility": "At least 25 held-out predictions and lower MAE than the solvent median. Also require improvement for the multi-aromatic subset when it has 20 or more estimates."},
         "solvents": validation,
     }
+    metadata["protocol"]["descriptor_transfer"] = (
+        "Hold out each test scaffold from every solvent. Evaluate on cases left over by the analog model. "
+        "Require at least 20 predictions across all five folds and improvement over the same-solvent median, "
+        "including the multi-aromatic subset when it has at least 20. Bands use a one-log-unit floor.")
     (args.output / "validation.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     print(f"{len(rows)} measurements and {len(dataset.smiles)} estimator solutes")
     for key, stats in validation.items():

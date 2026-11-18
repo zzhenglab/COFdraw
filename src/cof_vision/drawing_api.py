@@ -94,7 +94,7 @@ class SolubilityScreen(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
     smiles: str | None = Field(default=None, min_length=1, max_length=10000)
     monomer_id: str | None = Field(default=None, min_length=1, max_length=80)
-    solvent_ids: list[Annotated[str, Field(min_length=1, max_length=24)]] | None = Field(default=None, min_length=1, max_length=19)
+    solvent_ids: list[Annotated[str, Field(min_length=1, max_length=24)]] | None = Field(default=None, min_length=1, max_length=64)
     solvent_ml: float = Field(default=1.0, ge=0.01, le=1000)
 
     @model_validator(mode="after")
@@ -717,6 +717,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             result['exports']['cif'] = result['exports']['cif'].replace('data_COFdraw\n', (
                 'data_COFdraw\n# COFdraw unrelaxed AA starting model.\n'
                 f"# Template {design[0]['selected_template']['id']}; layer spacing {provenance['spacing_angstrom']:.4f} angstrom.\n"
+                + (f"# Fragment geometry: {provenance['fragment_geometry']}.\n" if 'fragment_geometry' in provenance else '')
                 + (f"# Meso phenyl tilt {provenance['phenyl_tilt_degrees']} degrees.\n"
                    if provenance.get('phenyl_tilt_degrees') else '')), 1)
             return scientific_result(result, 'build-periodic', request.model_dump())

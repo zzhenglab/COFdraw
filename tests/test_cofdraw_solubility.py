@@ -54,3 +54,16 @@ def test_lookup_estimates_and_literature_load_use_distinct_amounts(tmp_path):
         metal = client.post(path, json={"smiles": "N->[Zn+2]", "solvent_ids": ["dmf"]}).json()
         assert metal["solvents"][0]["status"] == "unavailable"
         assert client.post(path, json={"smiles": "CC.O"}).status_code == 422
+
+        all_ids = list(capabilities["solubility"]["solvents"])
+        expanded = client.post(path, json={"monomer_id": "tfb", "solvent_ids": all_ids, "solvent_ml": 2}).json()
+        solvents = {r["solvent_id"]: r for r in expanded["solvents"]}
+        assert len(solvents) == len(all_ids) > 19
+        shared = solvents["dmso"]
+        assert shared["estimate_method"] == "shared_descriptor_regression" and shared["evaluation"]["enabled"]
+        assert shared["screening_band"]["lower"]["mass_mg"] < shared["mass_mg"] < shared["screening_band"]["upper"]["mass_mg"]
+        large = client.post(path, json={"monomer_id": "pytta", "solvent_ids": ["dioxane"], "solvent_ml": 3}).json()
+        unsupported, = large["solvents"]
+        assert unsupported["status"] == "unavailable" and "mass_mg" not in unsupported
+        assert all(ref["smiles"] != large["canonical_smiles"] for ref in unsupported["reference_compounds"])
+        assert large["preparation_loadings"][0]["mg_per_ml_solvent"] == 20

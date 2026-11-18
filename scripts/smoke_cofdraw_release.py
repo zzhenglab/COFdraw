@@ -53,6 +53,17 @@ def main():
         expected_monomers=len(expected_catalog['monomer_presets'])
         assert {r['id'] for r in library['monomer_presets']}=={r['id'] for r in expected_catalog['monomer_presets']}
         assert len(library["templates"]) == 7
+        smiles = {row["id"]: row["smiles"] for row in library["monomer_presets"]}
+        for a, b, linkage, template, method in (
+            ("ta", "pytta", "imine", "sql_4_2", "phenyl_torsions"),
+            ("tp", "deth", "keto_hydrazide", "hcb_3_2", "restrained_mmff94"),
+        ):
+            drawing = api("/api/drawing/prepare", {"monomer_a": smiles[a], "monomer_b": smiles[b],
+                          "linkage": linkage, "template_id": template})
+            built = api("/api/drawing/science/build-periodic", {"recipe": drawing["recipe"]})
+            assert built["available"] and built["structure"]["provenance"]["fragment_geometry"] == method
+            assert built["cell_validation"]["short_contacts"] == 0 and built["downloads"]["cif"]
+        report["recovered_periodic_cells"] = ["ta+pytta", "tp+deth"]
         report["library"] = {key: len(library[key]) for key in ("styles", "monomer_presets", "templates", "topology_catalog", "linkages")}
         def download(path):
             with urlopen(base + path, timeout=30) as response:

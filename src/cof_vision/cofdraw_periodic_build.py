@@ -6,6 +6,7 @@ import math
 
 import numpy as np
 from rdkit import Chem
+from rdkit.Chem import rdForceFieldHelpers
 
 from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core
 from .cofdraw_network import inspect_periodic_network
@@ -44,13 +45,10 @@ def _net(template, counts):
     raise ValueError('Periodic construction supports selected hexagonal and square planar templates.')
 
 
-def _tilt_phenyl_arms(mol, core):
-    """Tilt para-substituted meso phenyl rings about their unchanged axes."""
-    if not core:
-        return 0
+def _tilt_phenyl_arms(mol, core, general_tilt):
+    """Rotate unfused para-phenylene rings about their two attachment atoms."""
     conformer = mol.GetConformer()
     xyz = conformer.GetPositions()
-    angle = math.radians(60)
     count = 0
     for ring in mol.GetRingInfo().AtomRings():
         if len(ring) != 6 or any(not mol.GetAtomWithIdx(i).GetIsAromatic()
@@ -59,12 +57,15 @@ def _tilt_phenyl_arms(mol, core):
         ring_set = set(ring)
         external_heavy = [(i, a.GetIdx()) for i in ring for a in mol.GetAtomWithIdx(i).GetNeighbors()
                           if a.GetIdx() not in ring_set and a.GetAtomicNum() != 1]
+        if len(external_heavy) != 2 or any(mol.GetRingInfo().NumAtomRings(i) != 1 for i in ring):
+            continue
         meso = [i for i, a in external_heavy if a in core]
-        if len(meso) != 1:
+        first = meso[0] if meso else external_heavy[0][0]
+        opposite = ring[(ring.index(first)+3) % 6]
+        degrees = 60 if meso else general_tilt
+        if not degrees or {i for i, _ in external_heavy} != {first, opposite}:
             continue
-        first, opposite = meso[0], ring[(ring.index(meso[0])+3) % 6]
-        if any(i not in (first, opposite) for i, _ in external_heavy):
-            continue
+        angle = math.radians(degrees)
         axis = xyz[opposite] - xyz[first]
         axis /= np.linalg.norm(axis)
         move = [i for i in ring if i not in (first, opposite)]
@@ -78,7 +79,48 @@ def _tilt_phenyl_arms(mol, core):
     return count
 
 
-def _block(component):
+def _relieve_fragment(mol, ports, cap_element):
+    """Minimize a capped fragment while fixing each junction and its tangent."""
+    capped = Chem.RWMol(mol)
+    fixed = set()
+    for dummy, endpoint in ports.values():
+        capped.ReplaceAtom(dummy, Chem.Atom(cap_element))
+        fixed.update((dummy, endpoint))
+    capped = capped.GetMol()
+    Chem.SanitizeMol(capped)
+    conf = capped.GetConformer()
+    conf.Set3D(True)
+    # Break the exact reflection symmetry of the drawing so a torsion can
+    # move away from its planar saddle point during minimization.
+    for i, (x, y, z) in enumerate(conf.GetPositions()):
+        if i not in fixed:
+            conf.SetAtomPosition(i, (x, y, z + .15*math.sin(2.4*i + .5)))
+    capped = Chem.AddHs(capped, addCoords=True)
+    props = rdForceFieldHelpers.MMFFGetMoleculeProperties(capped)
+    if props is None:
+        return False
+    ff = rdForceFieldHelpers.MMFFGetMoleculeForceField(capped, props)
+    if ff is None:
+        return False
+    for i in fixed:
+        ff.AddFixedPoint(i)
+    for atom in capped.GetAtoms():
+        i = atom.GetIdx()
+        if atom.GetAtomicNum() > 1 and i not in fixed:
+            ff.MMFFAddPositionConstraint(i, .4, 3.)
+    ff.Initialize()
+    if ff.Minimize(maxIts=600) != 0:
+        return False
+    result = capped.GetConformer().GetPositions()[:mol.GetNumAtoms()]
+    if not np.isfinite(result).all():
+        return False
+    conf = mol.GetConformer()
+    for i, point in enumerate(result):
+        conf.SetAtomPosition(i, tuple(point))
+    return True
+
+
+def _block(component, general_tilt=0, cap_element=None):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     if mol is None or len(Chem.GetMolFrags(mol)) != 1:
         raise ValueError('Each reacted building block must be one connected molecule.')
@@ -100,7 +142,9 @@ def _block(component):
     # Port bonds remain in place during hydrogen addition, so a C=N port has
     # the same valence and H count as the actual inter-block C=N bond.
     mol = Chem.AddHs(mol, addCoords=True)
-    tilted_rings = _tilt_phenyl_arms(mol, set(core))
+    tilted_rings = _tilt_phenyl_arms(mol, set(core), general_tilt)
+    if cap_element is not None and not _relieve_fragment(mol, ports, cap_element):
+        raise ValueError('The restrained fragment geometry did not converge.')
     indices = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]
     index = {i: j for j, i in enumerate(indices)}
     atoms = [mol.GetAtomWithIdx(i) for i in indices]
@@ -271,10 +315,36 @@ def build_periodic_layer(design, *, spacing=None):
     poses = _fit_blocks(blocks, reference, positions, edges, 1.29 if order == 2 else 1.42)
     if not poses:
         raise ValueError('The selected building blocks could not close this cell with consistent bond lengths and directions.')
-    tilted_rings = sum(block['tilted_rings'] for block in blocks)
-    spacings = [spacing] if spacing is not None else [5., 5.8] if tilted_rings else [3.4]
-    for height in spacings:
-        for pose in poses[:8]:
+    # The attachment atoms and port tangents are fixed in all recovery poses.
+    # Their fitted translations and junction lengths can therefore be reused.
+    cap_elements = {}
+    for key, block in unique.items():
+        partner = unique['B' if key == 'A' else 'A']
+        elements = {partner['elements'][i] for i in partner['sites']}
+        cap_elements[key] = elements.pop() if len(elements) == 1 else None
+    best = None
+    for method in ('rigid', 'phenyl_torsions', 'restrained_mmff94'):
+        if method != 'rigid':
+            if method == 'restrained_mmff94' and not all(cap_elements.values()):
+                continue
+            try:
+                adjusted = {k: _block(c, general_tilt=45,
+                                      cap_element=cap_elements[k] if method == 'restrained_mmff94' else None)
+                            for k, c in components.items()}
+            except ValueError:
+                continue
+            if all(np.allclose(adjusted[k]['xyz'], unique[k]['xyz']) for k in unique):
+                continue
+            blocks = [adjusted[k] for k in block_types]
+        tilted_rings = sum(block['tilted_rings'] for block in blocks)
+        z = np.concatenate([block['xyz'][:, 2] for block in blocks])
+        if spacing is not None:
+            spacings = [spacing]
+        elif method == 'rigid':
+            spacings = [5., 5.8] if tilted_rings else [3.4]
+        else:
+            spacings = [round(3.4 + float(np.ptp(z)), 2)]
+        for height, pose in product(spacings, poses):
             structure, bonds, charges, lengths, angle_error = _cell_atoms(blocks, edges, pose, height, order)
             try:
                 structure = normalize_structure(structure)
@@ -283,16 +353,25 @@ def build_periodic_layer(design, *, spacing=None):
                 continue
             expected = {edge_key(a, b, t) for a, b, t, _ in bonds}
             observed = {edge_key(e['a'], e['b'], e['translation']) for e in network['edges']}
-            if (network['short_contact_count'] or network['dimensions'] != [2]
-                    or network['quotient_component_count'] != 1 or network['threshold_sensitivity']['classification_changed']
-                    or expected != observed or len(expected) != len(bonds)):
+            extra, missing = len(observed - expected), len(expected - observed)
+            short = network['short_contact_count']
+            unstable = network['threshold_sensitivity']['classification_changed']
+            if (short or network['dimensions'] != [2] or network['quotient_component_count'] != 1
+                    or unstable or extra or missing or len(expected) != len(bonds)):
+                score = short + missing + extra + int(unstable)
+                if best is None or score < best[0]:
+                    best = (score, f'{short} short contacts, {extra} unintended bonds and {missing} missing bonds'
+                            f' at the distance cutoff (network ranks {network["dimensions"]},'
+                            f' {network["quotient_component_count"]} component(s),'
+                            f' cutoff-sensitive: {"yes" if unstable else "no"}).')
                 continue
             structure['provenance'] = {
                 'kind': 'cofdraw_periodic_starting_model', 'template': template, 'linkage': design['linkage'],
                 'precursors': [c['monomer_smiles'] for c in components.values()],
-                'geometry_method': 'Rigid reacted fragments fitted to the chosen periodic connection graph',
+                'geometry_method': 'Reacted fragments fitted to the chosen periodic connection graph',
+                'fragment_geometry': method, 'corrugated_layer': bool(np.ptp(z) > .35),
                 'preserves_drawing_coordinates': False, 'stacking': 'AA', 'spacing_angstrom': height,
-                'phenyl_tilt_degrees': 60 if tilted_rings else None, 'tilted_phenyl_ring_count': tilted_rings,
+                'phenyl_tilt_degrees': 60 if tilted_rings and method == 'rigid' else None, 'tilted_phenyl_ring_count': tilted_rings,
                 'qualification': 'Unrelaxed periodic starting model with explicit hydrogens and chosen layer spacing.',
             }
             periodic_bonds = [{'a': int(a), 'b': int(b), 'translation': list(map(int, t)), 'order': kind}
@@ -303,4 +382,6 @@ def build_periodic_layer(design, *, spacing=None):
                 'junction_length_range_angstrom': [float(lengths.min()), float(lengths.max())],
                 'maximum_port_direction_error_degrees': angle_error,
             }
-    raise ValueError('The fitted cell has steric contacts or does not reproduce the intended periodic bonds. Try a validated CIF.')
+    detail = best[1] if best else 'The candidate coordinates exceeded the structural validation bounds.'
+    raise ValueError(f'The {template} cell failed geometric validation. Best fit: {detail} '
+                     'Inspect the precursor geometry and template, or import a corresponding CIF.')

@@ -64,4 +64,5 @@
 .solubility-notes,.solubility-loadings{color:#456457;background:#f5f8f4;border-radius:6px;padding:9px 12px;font-size:11px;line-height:1.55;margin:9px 0}
 .solubility-notes p,.solubility-loadings p{margin:5px 0}
 .solubility-notes ul{padding-left:17px;margin:6px 0}
+.solubility-notes li code{overflow-wrap:anywhere}
 .solubility-dialog a{color:#126751}

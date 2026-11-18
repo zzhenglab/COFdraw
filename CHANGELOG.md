@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.5 - 2026-11-18
+
+- Recover crowded periodic starting cells using phenyl rotations and restrained fragment geometry. Report the remaining clashes and missing or unintended bonds if validation fails.
+- Screen 46 solvents. Add a scaffold-tested descriptor fallback, measured reference compounds, and published preparation amounts for PyTTA, TAPP and terephthalaldehyde.
+
 ## 0.8.4 - 2026-11-18
 
 - Include the offline solubility measurements when the agent helper creates a scratch runtime.

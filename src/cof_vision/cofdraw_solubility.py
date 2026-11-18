@@ -37,6 +37,33 @@ SOLVENTS = (
     ("methanol", "Methanol", "CO"),
     ("ipoh", "Isopropanol", "CC(C)O"),
     ("water", "Water", "O"),
+    ("buth", "1-Butanol", "CCCCO"),
+    ("proh", "1-Propanol", "CCCO"),
+    ("iboh", "Isobutanol", "CC(C)CO"),
+    ("sboh", "2-Butanol", "CCC(C)O"),
+    ("tboh", "tert-Butanol", "CC(C)(C)O"),
+    ("pentoh", "1-Pentanol", "CCCCCO"),
+    ("hexoh", "1-Hexanol", "CCCCCCO"),
+    ("octoh", "1-Octanol", "CCCCCCCCO"),
+    ("eg", "Ethylene glycol", "OCCO"),
+    ("mek", "2-Butanone", "CCC(C)=O"),
+    ("cyone", "Cyclohexanone", "O=C1CCCCC1"),
+    ("meoac", "Methyl acetate", "COC(C)=O"),
+    ("buoac", "n-Butyl acetate", "CCCCOC(C)=O"),
+    ("iproac", "Isopropyl acetate", "CC(C)OC(C)=O"),
+    ("ether", "Diethyl ether", "CCOCC"),
+    ("mtbe", "Methyl tert-butyl ether", "COC(C)(C)C"),
+    ("cpme", "Cyclopentyl methyl ether", "COC1CCCC1"),
+    ("hexane", "n-Hexane", "CCCCCC"),
+    ("heptane", "n-Heptane", "CCCCCCC"),
+    ("cyclohexane", "Cyclohexane", "C1CCCCC1"),
+    ("dce", "1,2-Dichloroethane", "ClCCCl"),
+    ("phcl", "Chlorobenzene", "Clc1ccccc1"),
+    ("anisole", "Anisole", "COc1ccccc1"),
+    ("oxylene", "o-Xylene", "Cc1ccccc1C"),
+    ("mxylene", "m-Xylene", "Cc1cccc(C)c1"),
+    ("pxylene", "p-Xylene", "Cc1ccc(C)cc1"),
+    ("pc", "Propylene carbonate", "CC1COC(=O)O1"),
 )
 SOLVENT_NAMES = {key: name for key, name, _ in SOLVENTS}
 DATASET = "BigSolDB 2.2"
@@ -93,6 +120,7 @@ class ReferenceSet:
                 mols[smiles] = Chem.MolFromSmiles(smiles)
         self.smiles = sorted(s for s, mol in mols.items() if mol is not None and prediction_domain(mol))
         self.mols = [mols[s] for s in self.smiles]
+        self.weights = [Descriptors.MolWt(mol) for mol in self.mols]
         self.features = np.array([molecular_features(mol) for mol in self.mols])
         self.fingerprints = [_FP.GetFingerprint(mol) for mol in self.mols]
         self.pools = {}
@@ -108,6 +136,7 @@ class ReferenceSet:
             self.pools[solvent] = np.asarray(indices, dtype=int), np.asarray(values)
         self.trends = {solvent: solvent_trend(self.features, indices, values)
                        for solvent, (indices, values) in self.pools.items() if len(indices) >= MIN_SOLUTES}
+        self.shared_trends = shared_solvent_trends(self.features, self.pools)
 
     def distances(self, mol):
         resemblance = np.array(DataStructs.BulkTanimotoSimilarity(_FP.GetFingerprint(mol), self.fingerprints))
@@ -123,6 +152,40 @@ def solvent_trend(features, indices, values):
     penalty = 8 * np.eye(centered.shape[1])
     coefficients = np.linalg.solve(centered.T @ centered + penalty, centered.T @ (values - values.mean()))
     return coefficients, float(values.mean() - mean @ coefficients)
+
+
+def shared_solvent_trends(features, pools):
+    """Share descriptor slopes across solvents, retaining each solvent's intercept."""
+    gram = np.eye(features.shape[1]) * 8
+    rhs = np.zeros(features.shape[1])
+    centers = {}
+    for key, (ids, values) in pools.items():
+        if len(ids) < 8:
+            continue
+        x = features[ids]
+        mean = x.mean(axis=0)
+        x = x - mean
+        y = values - values.mean()
+        local_gram, local_rhs = x.T @ x, x.T @ y
+        weight = 1 / math.sqrt(len(ids))
+        gram += weight * local_gram
+        rhs += weight * local_rhs
+        centers[key] = mean, values.mean(), local_gram, local_rhs
+    prior = np.linalg.solve(gram, rhs)
+    trends = {}
+    for key, (center, mean_y, local_gram, local_rhs) in centers.items():
+        coef = np.linalg.solve(local_gram + 60*np.eye(len(prior)), local_rhs + 60*prior)
+        trends[key] = coef, float(mean_y - center @ coef)
+    return trends
+
+
+def descriptor_estimate(features, distances, indices, trend):
+    """Limit transfer to molecular sizes and descriptor neighborhoods seen in this solvent."""
+    local = distances[indices]
+    if trend is None or len(local) < 8 or np.partition(local, 2)[2] > .95:
+        return None
+    coef, intercept = trend
+    return float(features @ coef + intercept)
 
 
 def neighbor_estimate(features, resemblance, descriptor_distance, indices, values, training_features, trend):
@@ -220,20 +283,51 @@ def screen_solubility(smiles, data_directory, *, solvent_ids=None, solvent_ml=1.
                     {"smiles": references.smiles[i], "morgan_similarity": float(s), "relative_weight": float(w)}
                     for i, s, w in zip(neighbors, similarity, fractions)
                 ]
+        if row["status"] == "estimated":
+            row["estimate_method"] = "same_solvent_analogs"
+        elif row["status"] == "unavailable" and distances is not None:
+            transfer = calibration.get("descriptor_transfer", {})
+            if transfer.get("enabled"):
+                log_s = descriptor_estimate(features, distances[1], indices, references.shared_trends.get(solvent))
+                if log_s is not None:
+                    error = transfer["screening_half_width_log10"]
+                    row.pop("reason")
+                    row.update(status="estimated", estimate_method="shared_descriptor_regression",
+                               evaluation=transfer, temperature_k=TARGET_K, **_amount(log_s, weight, solvent_ml))
+                    row["screening_band"] = {"lower": _amount(log_s-error, weight, solvent_ml),
+                                             "upper": _amount(log_s+error, weight, solvent_ml)}
+            if row["status"] == "unavailable":
+                # Only describe observations on the named reference molecule.
+                # Its mass concentration must use its own molecular weight.
+                sim, dist = distances
+                neighbors = indices[sim[indices] >= .20]
+                order = np.argsort(1-sim[neighbors] + .16*dist[neighbors], kind="stable")[:3]
+                examples = []
+                for i in neighbors[order]:
+                    graph = references.smiles[i]
+                    obs = min(references.exact[graph, solvent],
+                              key=lambda o: (abs(o.temperature_k - TARGET_K), o.doi, o.solid_form))
+                    examples.append({"smiles": graph, "morgan_similarity": float(sim[i]), "source_doi": obs.doi,
+                                     "temperature_k": obs.temperature_k, "solid_form": obs.solid_form,
+                                     "mg_per_ml_solvent": obs.mol_per_liter_solvent*references.weights[i]})
+                if examples:
+                    row["reference_compounds"] = examples
         rows.append(row)
 
+    published_loadings = json.loads((Path(data_directory) / "preparation-loadings.json").read_text("utf-8"))
     loadings = [
         {**record, "solvent": SOLVENT_NAMES[record["solvent_id"]],
          "mg_per_ml_solvent": record["mass_mg"] / record["solvent_ml"],
          "status": "reported_loading"}
-        for record in preparation_loadings
+        for record in (*preparation_loadings, *published_loadings)
         if record["canonical_smiles"] == canonical and record["solvent_id"] in solvent_ids
     ]
     output = io.StringIO()
     columns = [
         "solvent_id", "solvent", "status", "temperature_k", "mol_per_liter_solvent", "mg_per_ml_solvent",
         "solvent_ml", "mass_mg", "low_mg_per_ml_solvent", "high_mg_per_ml_solvent", "mole_fraction", "source_doi",
-        "source_locator", "solid_form", "method", "reference_solute_count", "reason",
+        "source_locator", "solid_form", "method", "estimate_method", "reference_solute_count", "reason",
+        "reference_smiles", "reference_mg_per_ml_solvent", "reference_similarity",
     ]
     writer = csv.DictWriter(output, fieldnames=columns, extrasaction="ignore")
     writer.writeheader()
@@ -247,13 +341,19 @@ def screen_solubility(smiles, data_directory, *, solvent_ids=None, solvent_ml=1.
                              "high_mg_per_ml_solvent": row["screening_band"]["upper"]["mg_per_ml_solvent"]})
         else:
             writer.writerow(row)
+            for ref in row.get("reference_compounds", ()):
+                writer.writerow({"solvent": row["solvent"], "solvent_id": row["solvent_id"],
+                                 "status": "reference_compound", "source_doi": ref["source_doi"],
+                                 "temperature_k": ref["temperature_k"], "solid_form": ref["solid_form"],
+                                 "reference_smiles": ref["smiles"], "reference_similarity": ref["morgan_similarity"],
+                                 "reference_mg_per_ml_solvent": ref["mg_per_ml_solvent"]})
     writer.writerows(loadings)
     return {
         "scope": "Equilibrium solubility screening for a single monomer in neat solvents near room temperature.",
         "canonical_smiles": canonical, "formula": rdMolDescriptors.CalcMolFormula(mol),
         "molecular_weight_g_mol": weight, "solvent_ml": solvent_ml, "target_temperature_k": TARGET_K,
         "temperature_window_k": WINDOW_K, "solvents": rows, "preparation_loadings": loadings,
-        "method": {"name": "Descriptor regression with same-solvent analogs", "version": metadata["schema"],
+        "method": {"name": "Same-solvent analogs and scaffold-tested shared descriptor regression", "version": metadata["schema"],
                    "dataset": DATASET, "dataset_doi": DATASET_DOI, "license": "CC BY 4.0",
                    "measurements_sha256": metadata["measurements_sha256"], "rdkit_version": rdBase.rdkitVersion,
                    "calibration": metadata["protocol"]},

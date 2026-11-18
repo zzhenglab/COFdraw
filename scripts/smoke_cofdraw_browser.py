@@ -133,6 +133,9 @@ def main():
           first = first_screen.value.json()
           measured = next(row for row in first["solvents"] if row["solvent_id"]=="dioxane")
           assert measured["status"]=="reported" and measured["source_doi"]
+          transfer = next(row for row in first["solvents"] if row["solvent_id"]=="dmso")
+          assert transfer["estimate_method"]=="shared_descriptor_regression" and len(first["solvents"])==46
+          page.get_by_text("Estimated · descriptors", exact=True).first.wait_for()
           page.locator("#solubility-output .solubility-reported").first.wait_for()
           page.locator("#solubility-volume").fill("2")
           with page.expect_response("**/api/drawing/science/solubility") as next_screen:

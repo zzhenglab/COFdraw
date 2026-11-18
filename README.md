@@ -36,7 +36,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 
 ## What you can do
 
-| Feature | Included in v0.8.4 |
+| Feature | Included in v0.8.5 |
 | --- | --- |
 | Describe a COF | Local conversation, follow-up changes, suggested actions and review before applying; optional catalog-bound LLM |
 | Optional LLM API | An OpenAI-compatible API can propose catalog parameters; the local chemistry engine validates them |

@@ -106,7 +106,7 @@ def capability_inventory():
          "Complete finite molecules; seeded ETKDG and MMFF/UFF. Empirical charges and force-field energies are not DFT, band gaps or crystal stability.",
          {"smiles": "Nc1ccc(N)cc1", "conformers": 2}, ["xyz", "sdf", "json"]),
         ("monomer-solubility", "/api/drawing/science/solubility", "SolubilityScreen", "Screen neat-solvent solubility near room temperature",
-         "Exact equilibrium records, bounded analog estimates and separate reported preparation loads. Mass is relative to starting solvent volume.",
+         "Exact equilibrium records, scaffold-tested analog and shared-descriptor estimates, related-compound observations and separate preparation loads. Mass is relative to starting solvent volume.",
          {"monomer_id": "ta", "solvent_ids": ["dmf", "dioxane", "ethanol"], "solvent_ml": 2}, ["csv", "json"]),
         ("periodic-model", "/api/drawing/science/model", "ModelDrawing", "Import periodic CIF or select an unrelaxed model",
          "Explicit cell and coordinates; supercell export does not optimize or experimentally validate the structure.",

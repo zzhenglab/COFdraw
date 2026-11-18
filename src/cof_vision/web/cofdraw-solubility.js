@@ -44,8 +44,10 @@
       for (const measurement of row.measurements) disclosure.append(renderMeasurement(measurement));
     } else {
       const prediction = row.evaluation;
-      disclosure.append(node("summary", "Estimated", "solubility-estimated"));
-      disclosure.append(node("p", `${row.analogs.length} measured analogs · ${prediction.predicted} held-out predictions · mean error ${prediction.mae_log10.toFixed(2)} log units`));
+      const local = row.estimate_method !== "shared_descriptor_regression";
+      disclosure.append(node("summary", local ? "Estimated · analogs" : "Estimated · descriptors", "solubility-estimated"));
+      const method = local ? `${row.analogs.length} measured analogs` : "Shared descriptor model with a solvent-specific fit";
+      disclosure.append(node("p", `${method} · ${prediction.predicted} held-out predictions · mean error ${prediction.mae_log10.toFixed(2)} log units`));
     }
     origin.append(disclosure);
     const concentration = node("td", amount(row.mg_per_ml_solvent));
@@ -81,6 +83,7 @@
       for (const load of report.preparation_loadings) {
         const p = node("p", `${load.solvent} · ${load.mass_mg} mg in ${load.solvent_ml} mL (${amount(load.mg_per_ml_solvent)} mg/mL) · `);
         p.append(doiLink(load.source_doi, load.source_locator));
+        if (load.method) p.append(` · ${load.method}`);
         section.append(p);
       }
       section.append(node("p", "These are reported dissolution loads. Saturation and preparation temperature were unspecified.", "small-note"));
@@ -91,7 +94,20 @@
       details.open = !reported.length && !estimated.length;
       details.append(node("summary", `Unavailable solvents (${unavailable.length})`));
       const ul = node("ul");
-      for (const row of unavailable) ul.append(node("li", `${row.solvent} · ${row.reason}`));
+      for (const row of unavailable) {
+        const li = node("li", `${row.solvent} · ${row.reason}`);
+        if (row.reference_compounds?.length) {
+          const evidence = node("details");
+          evidence.append(node("summary", "Measurements on related molecules"));
+          for (const ref of row.reference_compounds) {
+            const p = node("p", `${amount(ref.mg_per_ml_solvent)} mg/mL for `);
+            p.append(node("code", ref.smiles), ` at ${(ref.temperature_k - 273.15).toFixed(1)} °C · similarity ${ref.morgan_similarity.toFixed(2)} · `, doiLink(ref.source_doi, "Study"));
+            evidence.append(p);
+          }
+          li.append(evidence);
+        }
+        ul.append(li);
+      }
       details.append(ul); output.append(details);
     }
     const details = node("details", undefined, "solubility-notes");
@@ -109,7 +125,7 @@
       });
       downloads.append(button);
     }
-    status.textContent = `${report.formula} · ${reported.length} reported · ${estimated.length} estimated`;
+    status.textContent = `${report.formula} · ${reported.length} reported · ${estimated.length} estimated · ${unavailable.length} unavailable`;
   }
   async function screen() {
     const token = ++revision;

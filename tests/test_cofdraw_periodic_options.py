@@ -117,3 +117,31 @@ def test_builds_an_unbundled_current_cell_with_real_bonds_and_cif(tmp_path,a,b,l
         drawing['design_template_signature']=design_signature(drawing)
         rejected=client.post('/api/drawing/science/build-periodic',json={'recipe':drawing}).json()
         assert rejected['available'] is False and 'downloads' not in rejected
+
+
+@pytest.mark.parametrize('a,b,linkage,template,method', [
+    ('ta', 'pytta', 'imine', 'sql_4_2', 'phenyl_torsions'),
+    ('tp', 'deth', 'keto_hydrazide', 'hcb_3_2', 'restrained_mmff94'),
+])
+def test_crowded_cells_retain_each_translated_bond_after_cif_export(tmp_path, a, b, linkage, template, method):
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    from cof_vision.cofdraw_network import inspect_periodic_network
+    from cof_vision.cofdraw_periodic_build import edge_key
+    from cof_vision.cofdraw_science import import_cif
+    path = Path(__file__).resolve().parents[1] / 'data/framework-drawing/catalog/current.json'
+    rows = {r['id']: r['smiles'] for r in json.loads(path.read_text('utf8'))['monomer_presets']}
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        prepared = client.post('/api/drawing/prepare', json={'monomer_a': rows[a], 'monomer_b': rows[b],
+                               'linkage': linkage, 'template_id': template})
+        assert prepared.status_code == 200, prepared.text
+        response = client.post('/api/drawing/science/build-periodic', json={'recipe': prepared.json()['recipe']})
+        assert response.status_code == 200, response.text
+        result = response.json()
+        assert result['available'] and result['structure']['provenance']['fragment_geometry'] == method
+        cif = client.get(result['downloads']['cif']).text
+        network = inspect_periodic_network(import_cif(cif))
+        assert network['dimensions'] == [2] and network['quotient_component_count'] == 1
+        assert network['short_contact_count'] == 0 and not network['threshold_sensitivity']['classification_changed']
+        def keys(edges):
+            return {edge_key(e['a'], e['b'], e['translation']) for e in edges}
+        assert keys(network['edges']) == keys(result['cell_validation']['periodic_bonds'])

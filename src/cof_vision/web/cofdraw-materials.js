@@ -128,7 +128,7 @@
     const spacing=origin==='current-periodic'&&parent.provenance?.spacing_angstrom
       ?parent.provenance.spacing_angstrom:Number($('patch-spacing').value);
     const slip=[Number($('patch-slip-x').value),Number($('patch-slip-y').value)];
-    const corrugated_layer=origin==='current-periodic'&&Boolean(parent.provenance?.tilted_phenyl_ring_count);
+    const corrugated_layer=origin==='current-periodic'&&Boolean(parent.provenance?.corrugated_layer || parent.provenance?.tilted_phenyl_ring_count);
     const rows=[], rejected=[];
     for(const mode of modes){
       try{
