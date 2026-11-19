@@ -77,6 +77,44 @@ function refreshPresetLists(){
   }
   refreshCombinations();
 }
+let matchingCombinations=[], crystalSuggestions=[], suggestionIndex=-1;
+const comboInput=$('combination-search'),suggestions=$('combination-suggestions');
+window.addEventListener('cofdraw:crystal-catalog',e=>{
+  crystalSuggestions=e.detail.map(r=>({id:r.id,label:r.model_name,group:'Open 3D crystal',crystal:true}));
+  if(document.activeElement===comboInput)showSuggestions();
+});
+function closeSuggestions(){
+  suggestions.hidden=true;suggestionIndex=-1;
+  comboInput.setAttribute('aria-expanded','false');comboInput.removeAttribute('aria-activedescendant');
+}
+function showSuggestions(){
+  const term=comboInput.value.trim().toLowerCase();
+  const compact=s=>s.toLowerCase().replace(/[\s–-]/g,'');
+  const priority=row=>term&&compact(row.label).startsWith(compact(term))?0:
+    ['source:cof-300-projection-v1','source:tppa-pore-v1','named:COF-LZU1','named:COF-76','design-tfb_deth'].includes(row.id)?1:
+    row.group==='Named starting pairs'?2:row.source?3:4;
+  const crystals=term?crystalSuggestions.filter(r=>compact(r.label).includes(compact(term))):[];
+  if(crystals.length)$('combination-count').textContent=matchingCombinations.length+' drawing choices · '+crystals.length+' crystal models';
+  const choices=[...matchingCombinations,...crystals].sort((a,b)=>priority(a)-priority(b)).slice(0,12);
+  closeSuggestions();suggestions.replaceChildren();
+  for(const row of choices){
+    const item=document.createElement('div');
+    item.id='suggestion-'+suggestions.childElementCount;item.dataset.value=row.id;item.setAttribute('role','option');
+    if(row.crystal)item.dataset.crystal='true';
+    item.setAttribute('aria-selected','false');
+    const name=document.createElement('strong'),group=document.createElement('small');
+    name.textContent=row.label;group.textContent=row.source?'Recorded drawing':row.group;
+    item.append(name,group);suggestions.append(item);
+  }
+  if(choices.length){suggestions.hidden=false;comboInput.setAttribute('aria-expanded','true');}
+}
+function selectSuggestion(item){
+  if(!item)return;
+  const id=item.dataset.value;closeSuggestions();comboInput.value='';
+  refreshCombinations(true);
+  if(item.dataset.crystal){window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:id}));return;}
+  $('cof-preset').value=id;$('cof-preset').dispatchEvent(new Event('change'));
+}
 function refreshCombinations(force=false){
   const query=$("combination-search").value.trim().toLowerCase(), linkage=state.autoChemistry?'':$("linkage").value;
   const key=JSON.stringify([query,linkage]);
@@ -86,9 +124,11 @@ function refreshCombinations(force=false){
   const groups=new Map(),words=query.split(/\s+/).filter(Boolean),fragment=document.createDocumentFragment();
   fragment.append(option("custom","Custom monomers"));
   let found=0,selected=false;
+  matchingCombinations=[];
   for(const row of combinations){
     if(linkage ? row.linkage!==linkage&&!row.source : row.linkage==='secondary_amine')continue;
     if(!words.every(word=>row.search.includes(word)))continue;
+    matchingCombinations.push(row);
     if(!groups.has(row.group)){
       const group=document.createElement('optgroup');group.label=row.group;fragment.append(group);groups.set(row.group,group);
     }
@@ -274,7 +314,24 @@ for(const block of ["a","b"]){
   $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;const choice=monomerChoice(item,block,checkedMonomer(block==='a'?'b':'a'));if(!choice.compatible){refreshPresetLists();notice(choice.reason,true);return;}$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;delete state.monomers[block];markInputsChanged();refreshChemistry();validateMonomer(block).then(queueDrawing).catch(e=>notice(e.message,true));});
 }
 document.querySelectorAll(".validate-monomer").forEach(b=>b.addEventListener("click",()=>validateMonomer(b.dataset.block).catch(e=>notice(e.message,true))));
-$("combination-search").addEventListener("input",()=>refreshCombinations());
+comboInput.addEventListener('focus',()=>{refreshCombinations();showSuggestions();});
+comboInput.addEventListener('input',()=>{refreshCombinations();showSuggestions();});
+comboInput.addEventListener('blur',closeSuggestions);
+suggestions.addEventListener('pointerdown',e=>e.preventDefault());
+suggestions.addEventListener('click',e=>selectSuggestion(e.target.closest('[role=option]')));
+comboInput.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();closeSuggestions();return;}
+  if(e.key==='Enter'&&!suggestions.hidden){
+    e.preventDefault();selectSuggestion(suggestions.children[Math.max(0,suggestionIndex)]);return;
+  }
+  if(!['ArrowDown','ArrowUp'].includes(e.key))return;
+  e.preventDefault();if(suggestions.hidden)showSuggestions();
+  const items=[...suggestions.children];if(!items.length)return;
+  suggestionIndex=suggestionIndex<0?(e.key==='ArrowDown'?0:items.length-1):
+    (suggestionIndex+(e.key==='ArrowDown'?1:-1)+items.length)%items.length;
+  items.forEach((item,i)=>item.setAttribute('aria-selected',String(i===suggestionIndex)));
+  const active=items[suggestionIndex];comboInput.setAttribute('aria-activedescendant',active.id);active.scrollIntoView({block:'nearest'});
+});
 $("cof-preset").addEventListener("change",()=>{
   const row=combinations.find(p=>p.id===$("cof-preset").value);
   if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
@@ -287,7 +344,7 @@ $("linkage-search").addEventListener("input",()=>populateLinkages());
 $("pore").addEventListener("change",markInputsChanged);
 $("template").addEventListener("change",()=>{markInputsChanged();refreshTemplates();updateIdentity();});
 $("source-select").addEventListener("change",sync);
-$("load-source").addEventListener("click",async()=>{state.busy=true;sync();try{const id=$("source-select").value,result=await api(`sources/${encodeURIComponent(id)}`);acceptRecipe(result.recipe,id,result.metadata);showSourceMonomers(result.recipe,result.metadata);state.busy=false;await render();}catch(e){notice(e.message,true);}finally{state.busy=false;sync();}});
+$("load-source").addEventListener("click",async()=>{state.busy=true;sync();try{const id=$("source-select").value,result=await api(`sources/${encodeURIComponent(id)}`);acceptRecipe(result.recipe,id,result.metadata);showSourceMonomers(result.recipe,result.metadata);state.style=result.recipe.source_style?"source":"standard";state.styleOptions={};state.seed=null;state.busy=false;await render();}catch(e){notice(e.message,true);}finally{state.busy=false;sync();}});
 function styleIcon(style){
   const span=document.createElement("span");span.className="style-icon";span.setAttribute("aria-hidden","true");const svg=node("svg",{viewBox:"0 0 56 48",fill:"none"});
   const kind=style.preview_kind||style.id,layered=style.category==="layered"||/stack|layer|3d/.test(kind),schematic=style.category==="schematic"||/cartoon|schematic/.test(kind);

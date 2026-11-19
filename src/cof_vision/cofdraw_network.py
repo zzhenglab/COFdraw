@@ -50,7 +50,43 @@ def _append_independent(basis, vector):
         basis.append(vector)
 
 
-def _components(atom_count, edges, cell):
+def _translation_basis(vectors):
+    """Integer row elimination preserves the subgroup, including nonprimitive periods."""
+    rows = sorted(set(vectors) - {(0, 0, 0)})
+    basis = []
+    for axis in range(3):
+        while any(row[axis] for row in rows):
+            pivot = min((r for r in rows if r[axis]), key=lambda r: abs(r[axis]))
+            rows.remove(pivot)
+            if pivot[axis] < 0:
+                pivot = tuple(-x for x in pivot)
+            rows = [tuple(x - (r[axis] // pivot[axis]) * y for x, y in zip(r, pivot)) for r in rows]
+            if not any(r[axis] for r in rows):
+                basis.append(pivot)
+                break
+            rows.append(pivot)
+    return basis
+
+
+def label_periodic_networks(viewer, structure, repeats, edges):
+    """Color translated copies by cosets of the full-rank cycle lattice."""
+    groups, _ = _components(len(structure['atoms']), edges, np.asarray(structure['cell']), track_translations=True)
+    labels = {}
+    for group in groups:
+        if group['periodic_rank'] != 3:
+            continue
+        basis = _translation_basis(group['cycles'])
+        for image, shift in enumerate(itertools.product(*(range(n) for n in repeats))):
+            for site, path in group['paths'].items():
+                v = [x-y for x,y in zip(shift,path)]
+                for axis,row in enumerate(basis):
+                    factor = v[axis] // row[axis]
+                    v = [x-factor*y for x,y in zip(v,row)]
+                key = (group['id'], *v)
+                viewer['atoms'][image*len(structure['atoms'])+site]['network'] = labels.setdefault(key,len(labels))
+
+
+def _components(atom_count, edges, cell, *, track_translations=False):
     adjacency = [[] for _ in range(atom_count)]
     for edge in edges:
         a, b, shift = edge['a'], edge['b'], tuple(edge['translation'])
@@ -64,6 +100,7 @@ def _components(atom_count, edges, cell):
         potential = {root: (0, 0, 0)}
         queue = deque([root]); visited.add(root)
         basis = []
+        cycles = set()
         while queue:
             a = queue.popleft()
             for b, shift in adjacency[a]:
@@ -71,7 +108,10 @@ def _components(atom_count, edges, cell):
                 if b not in potential:
                     potential[b] = expected; visited.add(b); queue.append(b)
                 else:
-                    _append_independent(basis, tuple(x-y for x, y in zip(expected, potential[b])))
+                    cycle = tuple(x-y for x, y in zip(expected, potential[b]))
+                    _append_independent(basis, cycle)
+                    if track_translations:
+                        cycles.add(cycle)
         indices = sorted(potential)
         components.append({
             'id': len(components), 'atom_indices': indices, 'atom_count': len(indices),
@@ -79,6 +119,7 @@ def _components(atom_count, edges, cell):
             'periodic_rank': len(basis), 'inferred_dimension': len(basis),
             'independent_cycle_translations': [list(v) for v in basis],
             'independent_cycle_vectors_angstrom': [(np.asarray(v) @ cell).tolist() for v in basis],
+            **({'cycles': cycles, 'paths': potential} if track_translations else {}),
         })
     return components, [len(rows) for rows in adjacency]
 

@@ -65,7 +65,14 @@
   function details(container,data){const el=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');summary.textContent='Method, units, and diagnostics';pre.textContent=JSON.stringify(data,null,2);el.append(summary,pre);container.append(el);}
   function report(container,data,labels={}){container.replaceChildren();for(const [key,value] of Object.entries(data||{}))if(typeof value==='number'&&Number.isFinite(value))metric(container,labels[key]||key.replaceAll('_',' '),fmt(value,3));}
   function exportsFor(result){$('structure-exports').replaceChildren();for(const [ext,path] of Object.entries(result.downloads||{})){const b=document.createElement('button');b.className='button outline';b.textContent=ext.toUpperCase();b.addEventListener('click',()=>S.saveExport(path,ext));$('structure-exports').append(b);}if(result.viewer){const b=document.createElement('button');b.className='button outline';b.textContent='View PNG';b.addEventListener('click',async()=>{try{const data=$('structure-canvas').toDataURL('image/png');if(window.pywebview?.api?.save_image)await window.pywebview.api.save_image('COFdraw-3D-view.png',data);else{const a=document.createElement('a');a.href=data;a.download='COFdraw-3D-view.png';a.click();}}catch(e){status(e.message,true);}});$('structure-exports').append(b);}}
+  let automaticNetworkColor=false;
+  $('viewer-color').addEventListener('change',()=>{automaticNetworkColor=false;});
   function display(result,title,kind='periodic',parentLayer=null){
+    if(result.structure?.provenance?.network_dimension===3&&$('viewer-color').value==='element'){
+      $('viewer-color').value='network';automaticNetworkColor=true;
+    }else if(automaticNetworkColor&&result.structure?.provenance?.network_dimension!==3){
+      $('viewer-color').value='element';automaticNetworkColor=false;
+    }
     comparisonParent=parentLayer;
     currentStructure=result.structure||null;origin=kind;viewer.set(result.viewer||{atoms:[],bonds:[]});$('viewer-title').textContent=title;
     const provenance = currentStructure?.provenance;
@@ -109,8 +116,8 @@
       currentLayer=result.structure;
       const provenance=result.structure.provenance;
       const reported=provenance.kind==='reported_crystal';
-      display(result,reported?provenance.model_name+' · published ribbon packing':'Current drawing · periodic AA','current-periodic');
-      if(reported)$('viewer-provenance').textContent=drawingName()+' · published precursor match · DOI '+provenance.doi;
+      display(result,reported?provenance.model_name+(provenance.network_dimension===1?' · published ribbon packing':' · published crystal model'):'Current drawing · periodic AA','current-periodic');
+      if(reported)$('viewer-provenance').textContent=drawingName()+' · published coordinates · DOI '+provenance.doi;
       cellNote(reported?provenance.qualification:`CIF ready · ${result.structure.atoms.length} atoms per unit cell · ${fmt(provenance.spacing_angstrom)} Å layer spacing`);
       $('finite-view-options').open=false;
       status('Periodic model and CIF ready. PXRD and pore geometry are available.');
@@ -154,13 +161,29 @@
   let crystalTemplates=[];
   function templateNote(){const item=crystalTemplates.find(t=>t.id===$('crystal-template').value);$('crystal-template-note').textContent=item?.description||'';}
   $('crystal-template').addEventListener('change',()=>{templateNote();invalidate('Periodic template changed. Generate it to replace the displayed model.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
-  async function loadScience(){try{const data=await S.api('science/library');crystalTemplates=data.templates||[];$('crystal-template').replaceChildren();for(const t of crystalTemplates){const o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('crystal-template').append(o);}$('crystal-template').value=crystalTemplates.some(t=>t.id==='dia-imine')?'dia-imine':crystalTemplates[0]?.id;templateNote();
+  async function loadScience(){try{
+    const data=await S.api('science/library'),select=$('crystal-template');
+    const groups=[['Published models',data.reported_models],['3D structures · CURATED-COFs',data.curated_models],['Reticular designs',data.templates]];
+    crystalTemplates=[];select.replaceChildren();
+    for(const [label,entries] of groups){
+      if(!entries?.length)continue;
+      const group=document.createElement('optgroup');group.label=label;
+      for(const t of entries){group.append(new Option(t.label,t.id));crystalTemplates.push(t);}
+      select.append(group);
+    }
+    select.value=crystalTemplates.find(t=>t.id==='cof-300-c5')?.id||crystalTemplates[0]?.id;templateNote();
+    window.dispatchEvent(new CustomEvent('cofdraw:crystal-catalog',{detail:data.curated_models||[]}));
     if(new URLSearchParams(location.search).get('workspace')==='crystal'&&!currentStructure&&!origin){
       workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
       $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
     }
   }catch(e){status(e.message,true);}}
-  $('build-crystal').addEventListener('click',()=>work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);status('Periodic model generated. This template is independent of the active 2D drawing.');}));
+  window.addEventListener('cofdraw:open-crystal',e=>{
+    if(!crystalTemplates.some(t=>t.id===e.detail))return;
+    workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
+    $('crystal-template').value=e.detail;templateNote();$('build-crystal').click();
+  });
+  $('build-crystal').addEventListener('click',()=>work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);if(['reported_crystal','curated_crystal'].includes(r.structure.provenance.kind))$('viewer-provenance').textContent=(r.structure.provenance.dataset_id||'Published coordinates')+' · DOI '+r.structure.provenance.doi;status('Periodic model ready.');}));
   $('import-cif').addEventListener('click',()=>$('cif-file').click());
   $('cif-file').addEventListener('change',e=>{const file=e.target.files[0];if(file){basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;invalidate('Importing a periodic CIF…');work(async api=>{if(file.size>2000000)throw new Error('CIF limit is 2 MB.');const r=await api('science/model',{cif_text:await file.text(),repeats:repeats()});basePeriodic={result:r,title:file.name};hypothesis=null;$('network-comparison').hidden=true;display(r,file.name);status('CIF imported. Cell parameters, symmetry, and occupancies were checked.');});}e.target.value='';});
   $('build-networks').addEventListener('click',()=>work(async api=>{if(!basePeriodic?.result.structure)throw new Error('Generate a periodic model or import a CIF first.');const offsets=$('network-offsets').value.trim().split(/\r?\n/).filter(Boolean).map(row=>row.trim().split(/[\s,;]+/).map(Number));if(offsets.some(row=>row.length!==3||row.some(x=>!Number.isFinite(x))))throw new Error('Enter one fractional x, y, z offset per line.');const r=await api('science/networks',{structure:basePeriodic.result.structure,offsets,repeats:repeats()});hypothesis=r;$('network-comparison').hidden=false;$('network-view').value='hypothesis';$('viewer-color').value='network';display(r,'Translated-network hypothesis','networks');status('Network-copy hypothesis generated. Review contacts; the number of copies does not establish interpenetration.');}));
@@ -270,6 +293,12 @@
   $('viewer-preset').addEventListener('change',()=>{
     const key=$('viewer-preset').value;
     const presets={pore:[0,0,'spacefill'],layers:[-.06,1.38,'ballstick'],oblique:[-.36,.72,'mixed']};
+    if(key==='projection'&&currentStructure){
+      $('viewer-mode').value='wireframe';viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;
+      $('viewer-axis').value='c';$('viewer-axis').dispatchEvent(new Event('change'));
+      viewer.zoom=1;viewer.selected=[];$('viewer-distance').textContent='';
+      $('viewer-preset').value='';viewer.draw();return;
+    }
     if(!presets[key])return;
     [viewer.theta,viewer.phi,$('viewer-mode').value]=presets[key];
     viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;

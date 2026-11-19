@@ -11,6 +11,10 @@ python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/monome
 
 ## Choose the right object
 
+`GET /api/drawing/science/library` lists reticular templates, published models and screened CURATED-COFs coordinate files separately. Pass an exact returned ID to `science/model` as `template_id`. CURATED entries include the original DOI, a pinned coordinate source and matching COFex record IDs where available. Use the returned unit cell for porosity and diffraction. The registered COF-300 projection also resolves through `science/build-periodic` to the fivefold 2009 model. Its source drawing and powder model have separate identifiers.
+
+For a CURATED model, start PXRD at 2–20° 2θ with the default Cu Kα wavelength. This interval was tested for every included structure. Wider ranges can exceed the desktop reflection budget for large cells.
+
 | Endpoint | JSON body | Meaning and outputs |
 | --- | --- | --- |
 | `GET library` | None | Available independent periodic model templates and methods |

@@ -96,7 +96,7 @@
     if(!enabled && sketcher.selected?.kind==="group"){sketcher.selected=null;sketcher.draw();}
     if(!enabled&&["pan","chain"].includes(sketcher.tool))sketcher.setTool("bond","1");
     dialog.classList.toggle("classic",enabled);
-    $("classic-switch").textContent=enabled?"Standard layout":"Try classic layout";
+    $("classic-switch").textContent=enabled?"Compact toolbar":"Full drawing toolbar";
     $("classic-switch").setAttribute("aria-pressed",String(enabled));
     if(enabled){discoverInstalled();populate();}
     else {revision++;fragment=null;}
@@ -123,10 +123,10 @@
   dialog.addEventListener("cofdraw:open-sketch",()=>{
     if(!dialog.dataset.layoutChosen){setMode(true);dialog.dataset.layoutChosen="true";}
   });
-  $("launch-classic").addEventListener("click",()=>{setMode(true);openSketch("a");});
   if(new URLSearchParams(location.search).get("sketch")==="classic"){
-    if(state.online)$("launch-classic").click();
-    else window.addEventListener("cofdraw:library",()=>$("launch-classic").click(),{once:true});
+    const openEditor=()=>openSketch("a");
+    if(state.online)openEditor();
+    else window.addEventListener("cofdraw:library",openEditor,{once:true});
   }
   $("classic-partner").addEventListener("click",async()=>{
     try{const next=activeBlock==="a"?"b":"a";await applySketch();await openSketch(next);}

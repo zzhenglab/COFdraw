@@ -405,6 +405,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             except (ValueError, KeyError, OSError) as exc:
                 errors.append(str(exc))
         from .cofdraw_synthesis import synthetic_accessibility
+        from .cofdraw_describe import NAMED_PAIRS, NAMED_DESIGNS
         monomers = decorated_monomers(catalog_monomers(catalog))
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
@@ -414,6 +415,8 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": monomers,
                 "cof_presets": catalog.get("cof_presets", PRESETS), "catalog_version": catalog.get("catalog_version", "builtin-1"),
+                "named_pairs": [{"name":name,"a":a,"b":b,"linkage":link,"template_id":template,
+                                 "doi":NAMED_DESIGNS[name][1]} for name,(a,b,link,template) in NAMED_PAIRS.items()],
                 "style_evidence": catalog.get("style_evidence", catalog.get("source_styles", [])),
                 "source_registry_errors": errors, "max_atoms": 1000,
                 "presets": [{"instances": n, "label": f"{n // 2} A + {n // 2} B alternating pore"} for n in (6, 12)],
@@ -700,12 +703,36 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         structure = import_cif(path.read_text(encoding='utf-8'))
         structure['provenance'].update(template=item['id'], generator=manifest['generator'],
             model_name=item['model_name'], doi=manifest['citation_doi'], qualification=item['description'])
+        if 'citation_doi' in item:
+            structure['provenance'].update(kind='curated_crystal' if 'dataset_id' in item else 'reported_crystal',generator=item['generator'],
+                doi=item['citation_doi'],network_dimension=item['network_dimension'])
+            for field in ('data_doi','license','attribution','precursor_match','dataset_id','upstream_url'):
+                if field in item:
+                    structure['provenance'][field]=item[field]
         return structure
+
+    def crystal_exports(item,structure,repeats):
+        from .cofdraw_science import structure_exports
+        from .cofdraw_network import inspect_periodic_network, label_periodic_networks
+        network=inspect_periodic_network(structure)
+        result=structure_exports(structure,tuple(repeats),periodic_bonds=network['edges'])
+        if 3 in network['dimensions']:
+            label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
+        result['scope']=item['description']
+        credit='; '.join(str(item[k]) for k in ('model_name','citation_doi','data_doi','attribution','license') if k in item)
+        result['exports']['cif']=result['exports']['cif'].replace('data_COFdraw\n','data_COFdraw\n# '+credit+'\n',1)
+        return result
+
+    def reported_result(item,manifest,request):
+        result=crystal_exports(item,load_crystal_template(item,manifest),request.repeats)
+        result.update(available=True,cell_validation={'reported_model':item['id'],'source_sha256':item['sha256']})
+        return scientific_result(result,'build-periodic',request.model_dump())
 
     @router.get('/science/library')
     def scientific_library():
         data=crystal_manifest()
-        return {'templates':data['templates'],'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
+        return {'templates':data['templates'],'reported_models':data.get('reported_models',[]),
+                'curated_models':data.get('curated_models',[]),'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
 
     @router.get('/science/synthesis-library')
     def synthesis_library():
@@ -727,7 +754,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             if bool(request.template_id)==bool(request.cif_text):raise ValueError('Choose one model template or import one CIF')
             if request.template_id:
                 manifest=crystal_manifest()
-                matches=[x for x in manifest['templates'] if x['id']==request.template_id]
+                matches=[x for x in manifest['templates']+manifest.get('reported_models',[])+manifest.get('curated_models',[]) if x['id']==request.template_id]
                 if len(matches)!=1:raise ValueError('Unknown crystal template')
                 item=matches[0];structure=load_crystal_template(item,manifest)
                 if request.recipe_match:
@@ -738,8 +765,12 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             else:
                 if request.recipe_match:raise ValueError('Recipe matching applies only to validated built-in periodic designs')
                 structure=import_cif(request.cif_text)
-            with lock:result=structure_exports(structure,repeats=tuple(request.repeats))
-            result['scope']='Periodic atomic model with an explicit cell. Built-in templates are unrelaxed reticular designs, not experimentally assigned crystals; imported CIFs retain supplied geometry.'
+            with lock:
+                if request.template_id:
+                    result=crystal_exports(item,structure,request.repeats)
+                else:
+                    result=structure_exports(structure,repeats=tuple(request.repeats))
+                    result['scope']='Periodic atomic model with the supplied CIF geometry.'
             return scientific_result(result, 'model', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
 
@@ -753,6 +784,12 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             recipe = selected_recipe(request)
             manifest = crystal_manifest()
             with lock:
+                if request.source_recipe_id and request.layer_spacing is None:
+                    exact=next((r for r in manifest.get('reported_models',[])
+                                if r.get('source_recipe_id')==request.source_recipe_id
+                                and r.get('source_recipe_sha256')==source_recipe(request.source_recipe_id)[1]),None)
+                    if exact:
+                        return reported_result(exact,manifest,request)
                 try:
                     design = validated_design(recipe)
                     options = periodic_options(recipe, manifest, design=design)
@@ -760,20 +797,11 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                     return {'available': False, 'reason': str(exc)}
                 matches = {o['id'] for o in options['options']}
                 reported = next((entry for entry in manifest.get('reported_models', [])
-                    if entry['precursor_match']['linkage'] == recipe['linkage']
+                    if entry.get('precursor_match',{}).get('linkage') == recipe['linkage']
                     and design[0]['selected_template']['id'] in entry['precursor_match']['drawing_template_ids']
                     and sorted(entry['precursor_match']['canonical_smiles']) == design[1]), None)
                 if reported and request.layer_spacing is None:
-                    structure = load_crystal_template(reported, manifest)
-                    provenance = structure['provenance']
-                    provenance.update(kind='reported_crystal', generator='Powder-refined coordinates, SI Table S1',
-                                      doi=reported['citation_doi'], precursor_match=reported['precursor_match'])
-                    result = structure_exports(structure, repeats=tuple(request.repeats))
-                    result['exports']['cif'] = result['exports']['cif'].replace('data_COFdraw\n',
-                        f"data_COFdraw\n# {reported['model_name']}; DOI {reported['citation_doi']}; SI Table S1.\n", 1)
-                    result.update(available=True, scope=reported['description'],
-                                  cell_validation={'reported_model': reported['id'], 'source_sha256': reported['sha256']})
-                    return scientific_result(result, 'build-periodic', request.model_dump())
+                    return reported_result(reported,manifest,request)
                 item = next((entry for entry in manifest['templates']
                              if entry['id'] in matches and entry['model_name'].endswith('-AA')), None)
                 if item and request.layer_spacing is None:

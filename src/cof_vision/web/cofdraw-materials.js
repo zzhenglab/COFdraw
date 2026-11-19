@@ -7,8 +7,15 @@
   const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value;if(className)el.className=className;return el;};
   function structure(){if(!C.structure)throw new Error('Generate a periodic model or import a CIF first.');return C.structure;}
   function finite(){if(!C.finiteModel)throw new Error('Generate or select the structure to inspect first.');return C.finiteModel;}
+  let customDiffractionRange=false;
+  for(const id of ['xrd-min','xrd-max'])$(id).addEventListener('input',()=>{customDiffractionRange=true;});
   function syncModelState(){
     const periodic=Boolean(C.structure),available=periodic||Boolean(C.finiteModel);
+    if(!customDiffractionRange&&available){
+      // The complete curated collection has been screened at this angular range.
+      $('xrd-max').value=C.structure?.provenance?.dataset_id?'20':'50';
+    }
+    $('viewer-preset').querySelector('[value=projection]').disabled=!periodic;
     for(const id of ['inspect-model-state','pxrd-model-state','porosity-model-state']){
       const root=$(id);root.replaceChildren();root.append(text('span',periodic?'Current view: periodic atomic model with a unit cell.':available?'Current view: finite atoms from the drawing. Checks and finite-cluster scattering are available without a CIF. Density, PLD and periodic Bragg peaks require a periodic cell.':'Generate your drawing in 3D, or select a periodic model.'));
       if(!periodic){const b=text('button','Choose a periodic model','button outline');b.addEventListener('click',()=>{C.tab('model');$('structure-source').value='periodic';$('structure-source').dispatchEvent(new Event('change'));});root.append(b);}
@@ -23,9 +30,10 @@
     $('screen-current').disabled=!available;$('calculate-pxrd').disabled=!available;
     $('viewer-axis').disabled=!periodic;$('check-peaks').disabled=!periodic;
     $('check-peaks').title=periodic?'':'Build a periodic cell to check measured reflections.';
-    const ribbon=C.structure?.provenance?.template==='cof-76';
-    $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing')||ribbon;
-    $('compare-pxrd-stacks').title=ribbon?'Layer stacking requires a sheet. COF-76 contains covalent ribbons.':'';
+    const provenance=C.structure?.provenance;
+    const nonLayer=provenance?.network_dimension===1||provenance?.network_dimension===3||provenance?.template==='dia-imine';
+    $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing')||nonLayer;
+    $('compare-pxrd-stacks').title=nonLayer?'Layer stacking requires a two-dimensional sheet.':'';
     $('screen-pores').disabled=!periodic;
     $('calculate-pores').disabled=!periodic;
     $('calculate-pxrd').textContent=periodic?'Calculate periodic PXRD':'Calculate finite scattering';

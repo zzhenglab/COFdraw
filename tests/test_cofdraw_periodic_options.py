@@ -74,6 +74,24 @@ def test_actual_api_match_is_revalidated_before_model_generation(tmp_path):
         assert automatic['structure']['atoms']==result['structure']['atoms']
 
 
+def test_cof300_recorded_projection_opens_published_interpenetrated_crystal(tmp_path):
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    data=Path(__file__).resolve().parents[1]/'data'
+    for folder in ('framework-drawing','crystal-models'):
+        shutil.copytree(data/folder,tmp_path/folder,ignore=shutil.ignore_patterns('exports'))
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        source='cof-300-projection-v1'
+        result=client.post('/api/drawing/science/build-periodic',json={
+            'source_recipe_id':source,'repeats':[2,1,2]}).json()
+        s=result['structure']
+        assert result['available'] and len(s['atoms'])==292 and s['provenance']['network_dimension']==3
+        atoms=result['viewer']['atoms']
+        assert len({a['network'] for a in atoms})==5
+        assert all(atoms[i]['network']==atoms[j]['network'] for i,j in result['viewer']['bonds'])
+        recipe=client.get('/api/drawing/sources/'+source).json()['recipe']
+        assert not client.post('/api/drawing/science/build-periodic',json={'recipe':recipe}).json()['available']
+
+
 def test_exact_reported_ribbon_crystal_matches_the_pair_and_linkage(tmp_path):
     from cof_vision.cofdraw_desktop import create_desktop_app
     from cof_vision.cofdraw_network import inspect_periodic_network

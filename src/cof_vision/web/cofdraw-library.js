@@ -147,9 +147,12 @@
     const names=b=>b?[b.id,b.abbreviation,b.full_name,b.aliases||[],b.literature_names||[]]:[];
     const pairKey=(a,b,link)=>JSON.stringify([...[a,b].sort(),link]);
     const occupied=new Set(), rows=[];
+    const templates=new Map(Object.values(library.templates||{}).map(t=>[t.id,t]));
+    const nameFor=new Map((library.named_pairs||[]).map(n=>[pairKey(n.a,n.b,n.linkage),n]));
     for(const preset of library.cof_presets||[]){
       const a=byId.get(preset.monomer_a_id), b=byId.get(preset.monomer_b_id);
-      const name=sources.get(preset.source_recipe_id)?.literature_name;
+      const named=nameFor.get(pairKey(preset.monomer_a_id,preset.monomer_b_id,preset.linkage));
+      const name=sources.get(preset.source_recipe_id)?.literature_name||named?.name;
       const pair=preset.label_a+' + '+preset.label_b;
       const label=name?name+' · '+pair:preset.label;
       rows.push({...preset,label,group:name?'Named starting pairs':'Catalog designs',
@@ -161,7 +164,17 @@
       rows.push({id:'source:'+source.recipe_id,source,group:'Recorded drawings',label,
         search:searchText(label,source.label,source.recipe_id,(source.monomers||[]).map(names),(source.monomers||[]).map(m=>m.label))});
     }
-    const templates=new Map(Object.values(library.templates||{}).map(t=>[t.id,t]));
+    for(const named of nameFor.values()){
+      const a=byId.get(named.a),b=byId.get(named.b),template=templates.get(named.template_id);
+      if(!a||!b||!template)continue;
+      const key=pairKey(a.canonical_smiles||a.smiles,b.canonical_smiles||b.smiles,named.linkage);
+      if(occupied.has(key))continue;
+      occupied.add(key);
+      const label=named.name+' · '+pairName(a)+' + '+pairName(b);
+      rows.push({id:'named:'+named.name,label,group:'Named starting pairs',label_a:a.abbreviation,label_b:b.abbreviation,
+        monomer_a:a.smiles,monomer_b:b.smiles,linkage:named.linkage,template_id:template.id,instances:template.instances,
+        search:searchText(label,named.linkage,names(a),names(b),named.doi)});
+    }
     const reactive=blocks.filter(b=>b.compatible_roles?.length&&!b.catalog_use?.startsWith('reference_only'));
     const generated=[];
     for(let i=0;i<reactive.length;i++)for(let j=i+1;j<reactive.length;j++){

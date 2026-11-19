@@ -192,6 +192,1059 @@
         "drawing_template_ids": [
           "alternating_hexagon"
         ]
+      },
+      "network_dimension": 1,
+      "generator": "Powder-refined coordinates, SI Table S1"
+    },
+    {
+      "id": "cof-300-c5",
+      "label": "COF-300 \u00b7 fivefold diamond net (2009)",
+      "model_name": "COF-300",
+      "path": "cof-300.cif",
+      "sha256": "f21d3fae63a0d4acebed04075882018a5b95dd08e069d0371d6ecd738a6a1ebc",
+      "citation_doi": "10.1021/ja8096256",
+      "data_doi": "10.1021/ja8096256.s002",
+      "license": "CC BY-NC 4.0",
+      "attribution": "Fernando J. Uribe-Romo, Joseph R. Hunt, Hiroyasu Furukawa, Cornelius Kl\u00f6ck, Michael O\u2019Keeffe and Omar M. Yaghi (2009)",
+      "generator": "Published powder-diffraction model, supporting CIF",
+      "network_dimension": 3,
+      "source_recipe_id": "cof-300-projection-v1",
+      "description": "Fivefold interpenetrated diamond networks in the 2009 powder-diffraction model. The 2D drawing shows a source projection. Other COF-300 phases have different packing.",
+      "source_recipe_sha256": "c7079f18cea936cbbba603e4ba877e88352224fa96780850d01cbc53da1acc59"
+    }
+  ],
+  "curated_models": [
+    {
+      "id": "curated-07010N3",
+      "label": "COF-102 (CURATED 07010N3)",
+      "model_name": "COF-102",
+      "path": "curated/07010N3.cif",
+      "sha256": "37808a6898666ad921c5888c01a8ea902cd95c037a529ac8a16da16188ec8deb",
+      "network_dimension": 3,
+      "citation_doi": "10.1126/science.1139915",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "07010N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/07010N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1126/science.1139915",
+      "description": "COF-102, coordinates from CURATED-COFs (07010N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [],
+      "screening": {
+        "atom_sites": 588,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 12
+      }
+    },
+    {
+      "id": "curated-07011N3",
+      "label": "COF-103 (CURATED 07011N3)",
+      "model_name": "COF-103",
+      "path": "curated/07011N3.cif",
+      "sha256": "da763428d9220937fc1573be7831a1048fc5c33ed98cbd384bdd1b1ab437d2cd",
+      "network_dimension": 3,
+      "citation_doi": "10.1126/science.1139915",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "07011N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/07011N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1126/science.1139915",
+      "description": "COF-103, coordinates from CURATED-COFs (07011N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [],
+      "screening": {
+        "atom_sites": 588,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 14
+      }
+    },
+    {
+      "id": "curated-07012N3",
+      "label": "COF-105 (CURATED 07012N3)",
+      "model_name": "COF-105",
+      "path": "curated/07012N3.cif",
+      "sha256": "0989e15d8d1be8803c955152107de655ecb497b2466ed1c33c30d8cf7c2f24f7",
+      "network_dimension": 3,
+      "citation_doi": "10.1126/science.1139915",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "07012N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/07012N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1126/science.1139915",
+      "description": "COF-105, coordinates from CURATED-COFs (07012N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [],
+      "screening": {
+        "atom_sites": 1020,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 41
+      }
+    },
+    {
+      "id": "curated-07013N3",
+      "label": "COF-108 (CURATED 07013N3)",
+      "model_name": "COF-108",
+      "path": "curated/07013N3.cif",
+      "sha256": "f696e17d86da8b872bee8320c1fef43f2a94aeba709f66f169ed5fec2663ce72",
+      "network_dimension": 3,
+      "citation_doi": "10.1126/science.1139915",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "07013N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/07013N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1126/science.1139915",
+      "description": "COF-108, coordinates from CURATED-COFs (07013N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [],
+      "screening": {
+        "atom_sites": 255,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 34
+      }
+    },
+    {
+      "id": "curated-08000N3",
+      "label": "COF-202 (CURATED 08000N3)",
+      "model_name": "COF-202",
+      "path": "curated/08000N3.cif",
+      "sha256": "b3e7ad3a4de176d3e4b3e013924314219f471c8010c2d675563d309a7038d423",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/ja805064f",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "08000N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/08000N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/ja805064f",
+      "description": "COF-202, coordinates from CURATED-COFs (08000N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3720
+      ],
+      "screening": {
+        "atom_sites": 1084,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 16
+      }
+    },
+    {
+      "id": "curated-13040N3",
+      "label": "COF-320 (CURATED 13040N3)",
+      "model_name": "COF-320",
+      "path": "curated/13040N3.cif",
+      "sha256": "fa6e9b9d40efab14ba68c6e1854f07a6ec566248ce1cbe50e910c81b74f87b55",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/ja409033p",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "13040N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/13040N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/ja409033p",
+      "description": "COF-320, coordinates from CURATED-COFs (13040N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3118
+      ],
+      "screening": {
+        "atom_sites": 372,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 27
+      }
+    },
+    {
+      "id": "curated-14050N3",
+      "label": "BF-COF-1 (CURATED 14050N3)",
+      "model_name": "BF-COF-1",
+      "path": "curated/14050N3.cif",
+      "sha256": "a31bad410221b607625deb31d022df3caaa6da67a7be419db6e3a4f3f024b838",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201310500",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "14050N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/14050N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201310500",
+      "description": "BF-COF-1, coordinates from CURATED-COFs (14050N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        401
+      ],
+      "screening": {
+        "atom_sites": 138,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 27
+      }
+    },
+    {
+      "id": "curated-14051N3",
+      "label": "BF-COF-2 (CURATED 14051N3)",
+      "model_name": "BF-COF-2",
+      "path": "curated/14051N3.cif",
+      "sha256": "9c6610c0a1d4e5bfc63ab2356b008d4de9d4f4430dea8af56e4eb9de8e172186",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201310500",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "14051N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/14051N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201310500",
+      "description": "BF-COF-2, coordinates from CURATED-COFs (14051N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        402
+      ],
+      "screening": {
+        "atom_sites": 150,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 27
+      }
+    },
+    {
+      "id": "curated-16250N3",
+      "label": "3D-Py-COF (CURATED 16250N3)",
+      "model_name": "3D-Py-COF",
+      "path": "curated/16250N3.cif",
+      "sha256": "3e8ea39097739a71fc419061c7f1e1f7fc600c43f7d62b533fdba9eeb4f7c58f",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.6b00652",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "16250N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/16250N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.6b00652",
+      "description": "3D-Py-COF, coordinates from CURATED-COFs (16250N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        4411
+      ],
+      "screening": {
+        "atom_sites": 230,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 186
+      }
+    },
+    {
+      "id": "curated-17161N3",
+      "label": "3D-CuPor-COF (CURATED 17161N3)",
+      "model_name": "3D-CuPor-COF",
+      "path": "curated/17161N3.cif",
+      "sha256": "507c4b9b57caaa2ee9f89ad42ccceb740e71cb4b69c9c5a4edf39d46cbbbed01",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.7b04141",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "17161N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/17161N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.7b04141",
+      "description": "3D-CuPor-COF, coordinates from CURATED-COFs (17161N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2466
+      ],
+      "screening": {
+        "atom_sites": 504,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 167
+      }
+    },
+    {
+      "id": "curated-17163N3",
+      "label": "3D-Por-COF (CURATED 17163N3)",
+      "model_name": "3D-Por-COF",
+      "path": "curated/17163N3.cif",
+      "sha256": "972a8079c19f3a01b5fb97e3b47d4c05cc4c004cdaf90f373cbac61762be4e57",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.7b04141",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "17163N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/17163N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.7b04141",
+      "description": "3D-Por-COF, coordinates from CURATED-COFs (17163N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2465
+      ],
+      "screening": {
+        "atom_sites": 508,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 169
+      }
+    },
+    {
+      "id": "curated-18010N3",
+      "label": "CCOF-5 (CURATED 18010N3)",
+      "model_name": "CCOF-5",
+      "path": "curated/18010N3.cif",
+      "sha256": "0a303ff9d763f55c0580b7644c1f82b9f6fd65145aaea0816038668d2e7b7cdb",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.7b12110",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "18010N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/18010N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.7b12110",
+      "description": "CCOF-5, coordinates from CURATED-COFs (18010N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3130
+      ],
+      "screening": {
+        "atom_sites": 228,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 53
+      }
+    },
+    {
+      "id": "curated-18040N3",
+      "label": "3D-OH-COF (CURATED 18040N3)",
+      "model_name": "3D-OH-COF",
+      "path": "curated/18040N3.cif",
+      "sha256": "2df7363d698b643bdb37d99a76d7a4a65397d2f76d7e80e592e7242f607d87c9",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201712246",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "18040N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/18040N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201712246",
+      "description": "3D-OH-COF, coordinates from CURATED-COFs (18040N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        1248
+      ],
+      "screening": {
+        "atom_sites": 388,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 17
+      }
+    },
+    {
+      "id": "curated-18121N3",
+      "label": "3D-IL-COF-2 (CURATED 18121N3)",
+      "model_name": "3D-IL-COF-2",
+      "path": "curated/18121N3.cif",
+      "sha256": "5eea4919878d07e256699cdd1158c341437d94246217be491c34111848e50f7e",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.8b01320",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "18121N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/18121N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.8b01320",
+      "description": "3D-IL-COF-2, coordinates from CURATED-COFs (18121N3). Source modification: adjusted UC dimensions to have a physical aromatic C-C distance of ca. 1.45 Angs. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2334
+      ],
+      "screening": {
+        "atom_sites": 372,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 9
+      }
+    },
+    {
+      "id": "curated-18122N3",
+      "label": "3D-IL-COF-3 (CURATED 18122N3)",
+      "model_name": "3D-IL-COF-3",
+      "path": "curated/18122N3.cif",
+      "sha256": "5185e2028cb7eed6b2e56df37d334f8f2f7c38b1180e08413f5e44157a59f6b8",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.8b01320",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "18122N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/18122N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.8b01320",
+      "description": "3D-IL-COF-3, coordinates from CURATED-COFs (18122N3). Source modification: adjusted UC dimensions to have a physical aromatic C-C distance of ca. 1.45 Angs. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2335
+      ],
+      "screening": {
+        "atom_sites": 452,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 13
+      }
+    },
+    {
+      "id": "curated-19000N3",
+      "label": "JUC-518 (CURATED 19000N3)",
+      "model_name": "JUC-518",
+      "path": "curated/19000N3.cif",
+      "sha256": "5a8e78cf220dda1489115a63b36abc6a8cc923da11cf15c9fcba813896b9cd24",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.9b06908",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19000N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19000N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.9b06908",
+      "description": "JUC-518, coordinates from CURATED-COFs (19000N3). Source modification: Added some missing H. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3268
+      ],
+      "screening": {
+        "atom_sites": 168,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 59
+      }
+    },
+    {
+      "id": "curated-19020N3",
+      "label": "JUC-508 (CURATED 19020N3)",
+      "model_name": "JUC-508",
+      "path": "curated/19020N3.cif",
+      "sha256": "4845c836b84c8666a11b3e0ef43c74e99a169e4f8f196088b39c0732522a94e0",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.9b00485",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19020N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19020N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.9b00485",
+      "description": "JUC-508, coordinates from CURATED-COFs (19020N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3284
+      ],
+      "screening": {
+        "atom_sites": 308,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 33
+      }
+    },
+    {
+      "id": "curated-19022N3",
+      "label": "JUC-509 (CURATED 19022N3)",
+      "model_name": "JUC-509",
+      "path": "curated/19022N3.cif",
+      "sha256": "93f3f291a15dbcbf0c059d10c90261abae83b10e187c7b8b19d30b7b054d408d",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.9b00485",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19022N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19022N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.9b00485",
+      "description": "JUC-509, coordinates from CURATED-COFs (19022N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3285
+      ],
+      "screening": {
+        "atom_sites": 308,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 33
+      }
+    },
+    {
+      "id": "curated-19240N3",
+      "label": "3D-TPB-COF-H (CURATED 19240N3)",
+      "model_name": "3D-TPB-COF-H",
+      "path": "curated/19240N3.cif",
+      "sha256": "9fbaa159ccbb1fe6e885c41b6dbd93dad312014276987d8ee22a78b916cddd7c",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201905591",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19240N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19240N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201905591",
+      "description": "3D-TPB-COF-H, coordinates from CURATED-COFs (19240N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        134
+      ],
+      "screening": {
+        "atom_sites": 404,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 38
+      }
+    },
+    {
+      "id": "curated-19241N3",
+      "label": "3D-TPB-COF-Me (CURATED 19241N3)",
+      "model_name": "3D-TPB-COF-Me",
+      "path": "curated/19241N3.cif",
+      "sha256": "625cca950cf1b8be9b0113e3a7b810dee7cf266d30e14d2e53c62ef822278a54",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201905591",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19241N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19241N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201905591",
+      "description": "3D-TPB-COF-Me, coordinates from CURATED-COFs (19241N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        135
+      ],
+      "screening": {
+        "atom_sites": 428,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 38
+      }
+    },
+    {
+      "id": "curated-19242N3",
+      "label": "3D-TPB-COF-F (CURATED 19242N3)",
+      "model_name": "3D-TPB-COF-F",
+      "path": "curated/19242N3.cif",
+      "sha256": "48fd2c2981c838d45bfd994f3a61f36da5bb9c0c4103aa8e649a49b321b55075",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.201905591",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "19242N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/19242N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.201905591",
+      "description": "3D-TPB-COF-F, coordinates from CURATED-COFs (19242N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        136
+      ],
+      "screening": {
+        "atom_sites": 404,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 36
+      }
+    },
+    {
+      "id": "curated-20110N3",
+      "label": "JUC-550 (CURATED 20110N3)",
+      "model_name": "JUC-550",
+      "path": "curated/20110N3.cif",
+      "sha256": "fa639c2f4d6d2de41be238ff8980b5c124f5150d94776b426176b875d442b8d0",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.0c00560",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20110N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20110N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.0c00560",
+      "description": "JUC-550, coordinates from CURATED-COFs (20110N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3334
+      ],
+      "screening": {
+        "atom_sites": 420,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 115
+      }
+    },
+    {
+      "id": "curated-20113N3",
+      "label": "JUC-551 (CURATED 20113N3)",
+      "model_name": "JUC-551",
+      "path": "curated/20113N3.cif",
+      "sha256": "c6731369188ffed6482528627ee994d7a19b3f3ad537ad5ce5b2e0b8c10d9bde",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.0c00560",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20113N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20113N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.0c00560",
+      "description": "JUC-551, coordinates from CURATED-COFs (20113N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3335
+      ],
+      "screening": {
+        "atom_sites": 468,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 115
+      }
+    },
+    {
+      "id": "curated-20121N3",
+      "label": "3D-BMTA-COF (CURATED 20121N3)",
+      "model_name": "3D-BMTA-COF",
+      "path": "curated/20121N3.cif",
+      "sha256": "a7ca1247f61424f743cc4c61fc33bf075a76877d07a0eafd7c1efe747ce5de7c",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.9b13824",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20121N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20121N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.9b13824",
+      "description": "3D-BMTA-COF, coordinates from CURATED-COFs (20121N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3070,
+        3071
+      ],
+      "screening": {
+        "atom_sites": 544,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 35
+      }
+    },
+    {
+      "id": "curated-20260N3",
+      "label": "JUC-530 (CURATED 20260N3)",
+      "model_name": "JUC-530",
+      "path": "curated/20260N3.cif",
+      "sha256": "8f6de8e6341b283b74809f78a3f31b1785f7d8610509cf9ffff4c38f81395f4d",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202005277",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20260N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20260N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202005277",
+      "description": "JUC-530, coordinates from CURATED-COFs (20260N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        566
+      ],
+      "screening": {
+        "atom_sites": 740,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 17
+      }
+    },
+    {
+      "id": "curated-20261N3",
+      "label": "JUC-531 (CURATED 20261N3)",
+      "model_name": "JUC-531",
+      "path": "curated/20261N3.cif",
+      "sha256": "50cbe7d74cec2827617fc45c30f9bf2dd4f8b5e87c34f217d7b4c43422fd7db1",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202005277",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20261N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20261N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202005277",
+      "description": "JUC-531, coordinates from CURATED-COFs (20261N3). Source modification: added H to CN carbon. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        567
+      ],
+      "screening": {
+        "atom_sites": 820,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 29
+      }
+    },
+    {
+      "id": "curated-20430N3",
+      "label": "JUC-564 (CURATED 20430N3)",
+      "model_name": "JUC-564",
+      "path": "curated/20430N3.cif",
+      "sha256": "4df3e2af1223bb8b6c9f27ec541b5e5c16e622a5edab21a780b1ec096bbbac4b",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.0c06485",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "20430N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/20430N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.0c06485",
+      "description": "JUC-564, coordinates from CURATED-COFs (20430N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2834
+      ],
+      "screening": {
+        "atom_sites": 398,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 142
+      }
+    },
+    {
+      "id": "curated-21040N3",
+      "label": "CCOF-15 (CURATED 21040N3)",
+      "model_name": "CCOF-15",
+      "path": "curated/21040N3.cif",
+      "sha256": "3543d706a78b36c05b8e1715b2cb030c1b09aface5d1b4767218682f01c11a61",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202013926",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21040N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21040N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202013926",
+      "description": "CCOF-15, coordinates from CURATED-COFs (21040N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        366
+      ],
+      "screening": {
+        "atom_sites": 484,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 19
+      }
+    },
+    {
+      "id": "curated-21041N3",
+      "label": "CCOF-16 (CURATED 21041N3)",
+      "model_name": "CCOF-16",
+      "path": "curated/21041N3.cif",
+      "sha256": "d6658b811cc6d60a813f41f1f1e19c190c4ccae0581daa2f2540f7af3d93ab38",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202013926",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21041N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21041N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202013926",
+      "description": "CCOF-16, coordinates from CURATED-COFs (21041N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        367
+      ],
+      "screening": {
+        "atom_sites": 564,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 26
+      }
+    },
+    {
+      "id": "curated-21270N3",
+      "label": "3D-TPB-COF-OMe (CURATED 21270N3)",
+      "model_name": "3D-TPB-COF-OMe",
+      "path": "curated/21270N3.cif",
+      "sha256": "9e674481c2d3c508d26d519ca57a29d6dfcc8aacfdfa06cf2e79abc525fbdb1e",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.1c03042",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21270N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21270N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.1c03042",
+      "description": "3D-TPB-COF-OMe, coordinates from CURATED-COFs (21270N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        4828
+      ],
+      "screening": {
+        "atom_sites": 436,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 36
+      }
+    },
+    {
+      "id": "curated-21271N3",
+      "label": "3D-TPB-COF-Ph (CURATED 21271N3)",
+      "model_name": "3D-TPB-COF-Ph",
+      "path": "curated/21271N3.cif",
+      "sha256": "b1828691844cf3d639bb30dd1692a20997a86fc44981a4d26767ddbc76574af0",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.1c03042",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21271N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21271N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.1c03042",
+      "description": "3D-TPB-COF-Ph, coordinates from CURATED-COFs (21271N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        4829
+      ],
+      "screening": {
+        "atom_sites": 968,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 109
+      }
+    },
+    {
+      "id": "curated-21510N3",
+      "label": "JUC-565 (CURATED 21510N3)",
+      "model_name": "JUC-565",
+      "path": "curated/21510N3.cif",
+      "sha256": "e9773df806d99dbaee018cbfd70652bc348672386ff851b8de1ad05029d49a97",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202108357",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21510N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21510N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202108357",
+      "description": "JUC-565, coordinates from CURATED-COFs (21510N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        825
+      ],
+      "screening": {
+        "atom_sites": 350,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "unresolved_at_this_resolution",
+        "reflections_2_to_20_degrees": 35
+      }
+    },
+    {
+      "id": "curated-21511N3",
+      "label": "JUC-566 (CURATED 21511N3)",
+      "model_name": "JUC-566",
+      "path": "curated/21511N3.cif",
+      "sha256": "55a3ff97897e9527fcd4a5c92e3a0c63bcb07354873967ed5b2a90a9db72debe",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/anie.202108357",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21511N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21511N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/anie.202108357",
+      "description": "JUC-566, coordinates from CURATED-COFs (21511N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        826
+      ],
+      "screening": {
+        "atom_sites": 392,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 41
+      }
+    },
+    {
+      "id": "curated-21520N3",
+      "label": "SBFdiyne-COF (CURATED 21520N3)",
+      "model_name": "SBFdiyne-COF",
+      "path": "curated/21520N3.cif",
+      "sha256": "fbe5137ffd496f6e1ad56ef5088f436115fab88a34bad5bfa81908b3fd778681",
+      "network_dimension": 3,
+      "citation_doi": "10.1002/smll.202103152",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21520N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21520N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1002/smll.202103152",
+      "description": "SBFdiyne-COF, coordinates from CURATED-COFs (21520N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        722
+      ],
+      "screening": {
+        "atom_sites": 122,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 109
+      }
+    },
+    {
+      "id": "curated-21790N3",
+      "label": "3d-hea-COF (CURATED 21790N3)",
+      "model_name": "3d-hea-COF",
+      "path": "curated/21790N3.cif",
+      "sha256": "d577a212b8ff9a525670ed4be85ff1cc194444adf2ea90c33045340cb68575f1",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/acs.chemmater.1c03156",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "21790N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/21790N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/acs.chemmater.1c03156",
+      "description": "3d-hea-COF, coordinates from CURATED-COFs (21790N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        2703
+      ],
+      "screening": {
+        "atom_sites": 1365,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 365
+      }
+    },
+    {
+      "id": "curated-22240N3",
+      "label": "NKCOF-21 (CURATED 22240N3)",
+      "model_name": "NKCOF-21",
+      "path": "curated/22240N3.cif",
+      "sha256": "a2b8140c5233ac076784e713bdf5716082af414b61324d69e894c338081cbec0",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.2c01058",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "22240N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/22240N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.2c01058",
+      "description": "NKCOF-21, coordinates from CURATED-COFs (22240N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3843
+      ],
+      "screening": {
+        "atom_sites": 228,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 44
+      }
+    },
+    {
+      "id": "curated-22241N3",
+      "label": "NKCOF-22 (CURATED 22241N3)",
+      "model_name": "NKCOF-22",
+      "path": "curated/22241N3.cif",
+      "sha256": "d032c728f66754dc28e34e1274eab01dd863ffbc23a6d35d14d1a911847a76f4",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.2c01058",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "22241N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/22241N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.2c01058",
+      "description": "NKCOF-22, coordinates from CURATED-COFs (22241N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3844
+      ],
+      "screening": {
+        "atom_sites": 308,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 69
+      }
+    },
+    {
+      "id": "curated-22242N3",
+      "label": "NKCOF-23 (CURATED 22242N3)",
+      "model_name": "NKCOF-23",
+      "path": "curated/22242N3.cif",
+      "sha256": "0fcab2c5ad768e8a2afecaf966a0069e3f45ddcb89c82cc46188ca107fc8bb66",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.2c01058",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "22242N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/22242N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.2c01058",
+      "description": "NKCOF-23, coordinates from CURATED-COFs (22242N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3845
+      ],
+      "screening": {
+        "atom_sites": 388,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 103
+      }
+    },
+    {
+      "id": "curated-22250N3",
+      "label": "NUST-5 (CURATED 22250N3)",
+      "model_name": "NUST-5",
+      "path": "curated/22250N3.cif",
+      "sha256": "102d6e13ef32fb25a48f064e0ad7c031a09aa792b87b5788308570f38a0bd1be",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.2c01037",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "22250N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/22250N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.2c01037",
+      "description": "NUST-5, coordinates from CURATED-COFs (22250N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3440
+      ],
+      "screening": {
+        "atom_sites": 848,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 189
+      }
+    },
+    {
+      "id": "curated-22251N3",
+      "label": "NUST-6 (CURATED 22251N3)",
+      "model_name": "NUST-6",
+      "path": "curated/22251N3.cif",
+      "sha256": "157a9e22da4f316173e7bf330ed04fdf992511d6a722c26c57d87fa395a4b229",
+      "network_dimension": 3,
+      "citation_doi": "10.1021/jacs.2c01037",
+      "generator": "CURATED-COFs literature coordinates",
+      "dataset_id": "22251N3",
+      "upstream_url": "https://github.com/danieleongari/CURATED-COFs/blob/fddfde12e43787755e99be9238058fba475ca048/cifs/22251N3.cif",
+      "license": "MIT (CURATED-COFs collection)",
+      "attribution": "Daniele Ongari and contributors; original structure DOI 10.1021/jacs.2c01037",
+      "description": "NUST-6, coordinates from CURATED-COFs (22251N3). Source modification: none. Use this phase for geometry and ideal PXRD.",
+      "cofex_record_ids": [
+        3441
+      ],
+      "screening": {
+        "atom_sites": 952,
+        "inferred_dimension": 3,
+        "probe_radius_angstrom": 1.82,
+        "requested_grid_spacing_angstrom": 0.9,
+        "connectivity_status": "certified_channel",
+        "reflections_2_to_20_degrees": 196
       }
     }
   ]

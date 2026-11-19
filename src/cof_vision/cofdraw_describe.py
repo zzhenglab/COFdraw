@@ -24,6 +24,14 @@ NAMED_DESIGNS = {
     "Py-1P": ("TA + PyTTA imine", "10.1038/s41467-022-29086-x"),
     "COF-42": ("TFB + DETH acylhydrazone", "10.1021/ja204728y"),
     "COF-43": ("TFPB + DETH acylhydrazone", "10.1021/ja204728y"),
+    "COF-76": ("TFPPy + TAPA imine", "10.1021/jacs.9b13971"),
+}
+NAMED_PAIRS = {
+    "COF-LZU1": ("tfb","pa","imine","hcb_3_2"),
+    "Py-1P": ("ta","pytta","imine","sql_4_2"),
+    "COF-42": ("tfb","deth","acylhydrazone","hcb_3_2"),
+    "COF-43": ("tfpb","deth","acylhydrazone","hcb_3_2"),
+    "COF-76": ("tfppy","tapa","imine","alternating_hexagon"),
 }
 CORE_NAMES = {
     "tapp": ["porphyrin tetraamine", "aminophenyl porphyrin", "porphyrin node"],

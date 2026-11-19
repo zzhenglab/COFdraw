@@ -9,5 +9,8 @@ docs/third-party-licenses/* -text -whitespace
 *.json -text whitespace=cr-at-eol
 # Preserve checksum-bound simulation profiles and upstream resource files.
 data/raspa/* -text
+# Preserve hash-bound crystallographic data, including source CIF formatting.
+data/crystal-models/**/*.cif -text -whitespace
+data/crystal-models/*.cif -text -whitespace
 *.png binary
 *.ico binary
