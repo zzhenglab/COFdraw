@@ -51,6 +51,10 @@ class RenderDrawing(BaseModel):
         return self
 
 
+class RepeatDrawing(RenderDrawing):
+    repeats: int = Field(ge=2, le=4)
+
+
 class MonomerDrawing(BaseModel):
     model_config = ConfigDict(extra="forbid")
     smiles: str | None = Field(default=None, max_length=10000)
@@ -686,6 +690,21 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             clear_source_registration(value)
         validate_recipe(value)
         return value
+
+    @router.post('/repeat')
+    def repeat_drawing(request: RepeatDrawing):
+        from .cofdraw_repeat import repeated_drawing
+        try:
+            recipe = selected_recipe(request)
+            with lock:
+                svg, summary = repeated_drawing(recipe, request.repeats, request.size)
+            key = uuid.uuid4().hex
+            directory = outputs / key
+            directory.mkdir(parents=True)
+            (directory / f'{key}.svg').write_text(svg, encoding='utf8')
+            return {'summary': summary, 'svg': f'/api/drawing/exports/{key}/svg'}
+        except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     def scientific_result(result, operation='calculation', inputs=None):
         from . import __version__

@@ -32,6 +32,8 @@
     event.preventDefault();buttons[idx].click();buttons[idx].focus();
   });
   function workspace(visible){
+    $('space-workspace').hidden=true;
+    $('space-open').setAttribute('aria-pressed','false');
     $('science-dialog').hidden=!visible;
     document.querySelector('main.studio').hidden=visible;
     $('switch-space').textContent=visible?'2D drawing':'3D workspace';
