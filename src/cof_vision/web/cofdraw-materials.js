@@ -317,9 +317,7 @@
       return;
     }
     if(!name)return;
-    if(name==='monomer'||name==='bet')$('science-dialog').showModal();
-    else if(C.structure||C.finiteModel)$('science-dialog').showModal();
-    else $('open-science').click();
+    if($('science-dialog').hidden)$('open-science').click();
     C.tab(name);
     document.querySelector('[data-science-tab="'+name+'"]').focus();
   });

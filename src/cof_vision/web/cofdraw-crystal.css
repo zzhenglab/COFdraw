@@ -1,0 +1,40 @@
+#science-dialog.crystal-workspace {
+  position:static; display:block; margin:0 auto; width:100%; max-width:1800px; max-height:none;
+  border:0; border-radius:0; box-shadow:none; background:#f7faf9;
+}
+#science-dialog[hidden] { display:none }
+body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflow:auto }
+.canvas-panel { position:relative; --render-width:clamp(220px,20vw,310px) }
+.workspace-tools .canvas-appearance { position:static; display:block; width:auto; margin:0; padding:0; background:transparent; border:0 }
+.workspace-tools .appearance-options { position:static; border:0; padding:0; margin:0; background:transparent }
+.workspace-tools .appearance-options > summary { width:auto; min-height:30px; padding:6px 11px; border:1px solid #bdcec7; border-radius:5px; background:#fff; color:#275e51; font:600 12px "Segoe UI",sans-serif }
+.drawing-render-body { padding:12px; background:#fff; border:1px solid #cfddd7; border-radius:7px }
+@media(min-width:1010px){
+  .canvas-panel:has(#appearance-options[open]) { padding-right:calc(var(--render-width) + 30px) }
+  .drawing-render-body { position:absolute; right:10px; top:12px; width:var(--render-width); max-height:calc(100dvh - 125px); overflow:auto; z-index:2 }
+}
+@media(max-width:1009px){
+  .workspace-tools .canvas-appearance:has(details[open]) { flex-basis:100% }
+  .drawing-render-body { max-height:48vh; overflow:auto }
+}
+.crystal-workspace .dialog-header { display:flex; align-items:center; justify-content:space-between; padding:10px 22px; background:#f6f9f8 }
+.crystal-workspace .dialog-header h2 { font:600 18px "Segoe UI",sans-serif }
+.crystal-workspace .science-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(295px,30%); overflow:visible }
+.crystal-workspace .science-view { align-self:start; min-width:0; padding:14px 18px }
+.crystal-workspace .science-controls { border-left:1px solid #d3dfdb; max-height:calc(100dvh - 190px); overflow:auto; padding:12px 16px }
+.crystal-workspace #structure-canvas { height:clamp(320px,56vh,760px) }
+.crystal-workspace #render-panel { background:white; border:1px solid #d3dfdb; border-radius:7px; padding:10px 12px; margin-bottom:14px }
+#render-panel h3 { margin:0 0 8px; font-size:14px }
+#render-panel .render-choices,.render-pore { display:grid; grid-template-columns:1fr 1fr; gap:6px; align-items:center }
+#render-panel select { min-width:0; font-size:12px; padding:5px }
+#render-panel .viewer-inspection { margin:7px 0; flex-wrap:wrap }
+.render-pore { border-top:1px solid #dce5df; padding-top:7px }
+.render-pore label,.render-pore small { font-size:11px }
+.render-pore input[type=range] { width:100%; accent-color:#247b70 }
+#map-status,#render-panel details { grid-column:1/-1; font-size:11px; line-height:1.5; margin-top:5px }
+#map-status { color:#44645c }
+@media(max-width:760px) {
+  .crystal-workspace .science-workspace { grid-template-columns:minmax(0,1fr) }
+  .crystal-workspace .science-controls { max-height:none; border-left:0 }
+  .crystal-workspace #structure-canvas { height:330px }
+}

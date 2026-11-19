@@ -19,6 +19,19 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
 
+def test_visual_field_matches_descriptor_and_fractional_cell(client):
+    import base64
+    import numpy as np
+    r=client.post('/api/drawing/science/geometry',json={'structure':structure(),'include_map':True,'grid_spacing':1.}).json()
+    field=r['pore_map']
+    c=np.frombuffer(base64.b64decode(field['clearance_f32le']),dtype='<f4').reshape(field['shape'])
+    mask=np.unpackbits(np.frombuffer(base64.b64decode(field['connected_bits']),dtype='u1'),bitorder='little')[:c.size].reshape(c.shape).astype(bool)
+    assert field['cell']==structure()['cell'] and np.isfinite(c).all()
+    assert not mask[5,5,5] and mask[0,0,0]
+    assert np.all(c[mask]>=field['probe_radius']-1e-6)
+    assert mask.mean()==r['transport_accessible_probe_center_fraction']
+
+
 @pytest.fixture
 def client(tmp_path):
     with TestClient(create_desktop_app(tmp_path), raise_server_exceptions=False) as instance:

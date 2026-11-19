@@ -247,7 +247,7 @@ def _evaluate(distance, spacing, probe):
                              'maximum_periodic_rank': max((row['periodic_rank'] for row in components), default=0)}}
 
 
-def geometric_porosity(structure, *, probe_radius=1.82, grid_spacing=.6, surface_samples=64, refinement=False):
+def geometric_porosity(structure, *, probe_radius=1.82, grid_spacing=.6, surface_samples=64, refinement=False, include_map=False):
     """Level-1 deterministic periodic hard-sphere geometry with explicit bounds."""
     normalized = normalize_structure(structure)
     probe = _finite(probe_radius, 'probe_radius', 0, 5)
@@ -265,6 +265,16 @@ def geometric_porosity(structure, *, probe_radius=1.82, grid_spacing=.6, surface
     density = mass/AVOGADRO/(volume*1e-24)
     distance = _PeriodicDistances(np.asarray(normalized['cell']), np.asarray([atom['fractional'] for atom in atoms]), radii)
     grid, accessible, result = _evaluate(distance, spacing, probe)
+    if include_map:
+        import base64
+        # X, Y, Z fractional voxel centers, Z varying fastest. The mask is
+        # evaluated at full precision before serializing the display field.
+        result['pore_map'] = {
+            'shape': grid['shape'].tolist(), 'cell': distance.cell.tolist(),
+            'probe_radius': probe,
+            'clearance_f32le': base64.b64encode(grid['clearance'].astype('<f4').tobytes()).decode('ascii'),
+            'connected_bits': base64.b64encode(np.packbits(accessible, bitorder='little').tobytes()).decode('ascii'),
+        }
     warnings = ['Fixed, supplied periodic geometry and elemental hard spheres; not adsorption, BET, helium porosimetry or a relaxed-crystal prediction.',
                 'PLD is a conservative continuous-path grid estimate; LCD is a sampled lower estimate. Inspect their bounds before comparing structures.',
                 'Accessible volume means transport-connected probe-center volume, not probe-occupiable or experimental adsorption volume.',

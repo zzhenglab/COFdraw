@@ -1,5 +1,9 @@
 # Molecular and periodic structure calculations
 
+The 3D rendering panel can display an interpolated probe-center surface from the same periodic clearance field used for geometric porosity. The channel view keeps samples connected to a certified periodic winding path. Rendering samples at most 22 centers per axis and clips triangles in fractional c. The exported geometry report retains the full calculation grid when a map was requested. The surface represents one analyzed cell, including when additional display repeats are visible.
+
+The external-analysis controls export the active periodic coordinates as a CIF for [Crystal Builder](https://github.com/JulesOpp/Crystal-Builder) or as an executable notebook for [Mofography](https://mofography.github.io/mofography/quick_start.html). The notebook runs the upstream segmentation in an environment with its Rust backend installed. Its radii, pocket definition and resulting descriptors follow Mofography.
+
 COFdraw separates molecular conformers, explicitly periodic structures, finite drawing illustrations, hard-sphere geometry, classical adsorption simulations, and adsorption-data fitting. The result records the method, parameters, units, and limitations. A finite drawing never becomes a validated crystal merely by adding a cell around it.
 
 ## Monomer properties and conformers

@@ -126,6 +126,7 @@ class GeometryAnalysis(BaseModel):
     grid_spacing: float = Field(default=.6, ge=.1, le=3)
     surface_samples: int = Field(default=64, ge=16, le=256)
     refinement: bool = False
+    include_map: bool = False
 
     @model_validator(mode='before')
     @classmethod
@@ -854,7 +855,10 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             from .cofdraw_porosity import geometric_porosity
             with lock:
                 result = geometric_porosity(**request.model_dump())
-            return scientific_result(result, 'geometry', request.model_dump())
+            inputs=request.model_dump()
+            if 'include_map' not in request.model_fields_set:
+                inputs.pop('include_map')
+            return scientific_result(result, 'geometry', inputs)
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
 

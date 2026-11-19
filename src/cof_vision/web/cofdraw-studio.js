@@ -31,17 +31,30 @@
     const idx=event.key==='Home'?0:event.key==='End'?buttons.length-1:(i+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
     event.preventDefault();buttons[idx].click();buttons[idx].focus();
   });
+  function workspace(visible){
+    $('science-dialog').hidden=!visible;
+    document.querySelector('main.studio').hidden=visible;
+    $('switch-space').textContent=visible?'2D drawing':'3D workspace';
+    $('switch-space').setAttribute('aria-pressed',String(visible));
+    window.scrollTo(0,0);
+    if(visible)requestAnimationFrame(()=>viewer.draw());
+  }
   $('open-science').addEventListener('click',()=>{
-    $('science-dialog').showModal();
-    tab('model');
-    if(origin!=='current-periodic'){
+    workspace(true);
+    if(!currentStructure&&!origin&&!scienceBusy){
+      tab('model');
+      if(!drawingReady()){
+        $('structure-source').value='periodic';sourceMode();
+        return;
+      }
       $('structure-source').value='drawing';
       sourceMode();
-      if(drawingReady()) generateCurrentCell(true);
+      generateCurrentCell(true);
     }
     requestAnimationFrame(()=>viewer.draw());
   });
-  $('close-science').addEventListener('click',()=>$('science-dialog').close());
+  $('close-science').addEventListener('click',()=>{workspace(false);$('switch-space').focus();});
+  $('switch-space').addEventListener('click',()=>$('science-dialog').hidden?$('open-science').click():$('close-science').click());
   function metric(container,label,value){const row=document.createElement('div');row.className='metric-card';const title=document.createElement('span'),number=document.createElement('strong');title.textContent=label;number.textContent=value;row.append(title,number);container.append(row);}
   function note(container,text,warning=false){if(!text)return;const p=document.createElement('p');p.className=`metric-note${warning?' warning':''}`;p.textContent=text;container.append(p);}
   function details(container,data){const el=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');summary.textContent='Method, units, and diagnostics';pre.textContent=JSON.stringify(data,null,2);el.append(summary,pre);container.append(el);}
@@ -133,7 +146,12 @@
   let crystalTemplates=[];
   function templateNote(){const item=crystalTemplates.find(t=>t.id===$('crystal-template').value);$('crystal-template-note').textContent=item?.description||'';}
   $('crystal-template').addEventListener('change',()=>{templateNote();invalidate('Periodic template changed. Generate it to replace the displayed model.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
-  async function loadScience(){try{const data=await S.api('science/library');crystalTemplates=data.templates||[];$('crystal-template').replaceChildren();for(const t of crystalTemplates){const o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('crystal-template').append(o);}$('crystal-template').value=crystalTemplates.some(t=>t.id==='dia-imine')?'dia-imine':crystalTemplates[0]?.id;templateNote();}catch(e){status(e.message,true);}}
+  async function loadScience(){try{const data=await S.api('science/library');crystalTemplates=data.templates||[];$('crystal-template').replaceChildren();for(const t of crystalTemplates){const o=document.createElement('option');o.value=t.id;o.textContent=t.label;$('crystal-template').append(o);}$('crystal-template').value=crystalTemplates.some(t=>t.id==='dia-imine')?'dia-imine':crystalTemplates[0]?.id;templateNote();
+    if(new URLSearchParams(location.search).get('workspace')==='crystal'&&!currentStructure&&!origin){
+      workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
+      $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
+    }
+  }catch(e){status(e.message,true);}}
   $('build-crystal').addEventListener('click',()=>work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);status('Periodic model generated. This template is independent of the active 2D drawing.');}));
   $('import-cif').addEventListener('click',()=>$('cif-file').click());
   $('cif-file').addEventListener('change',e=>{const file=e.target.files[0];if(file){basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;invalidate('Importing a periodic CIF…');work(async api=>{if(file.size>2000000)throw new Error('CIF limit is 2 MB.');const r=await api('science/model',{cif_text:await file.text(),repeats:repeats()});basePeriodic={result:r,title:file.name};hypothesis=null;$('network-comparison').hidden=true;display(r,file.name);status('CIF imported. Cell parameters, symmetry, and occupancies were checked.');});}e.target.value='';});
@@ -146,7 +164,7 @@
     if(!currentStructure||currentStructure.periodic!==true)throw new Error('Generate a periodic model or import a CIF first. Finite drawing layers are not a periodic pore model.');
     const spacing=Number($('pore-samples').value),r=await api('science/geometry',{
       structure:currentStructure,probe_radius:Number($('probe-radius').value),grid_spacing:spacing,
-      surface_samples:spacing>=.9?32:spacing>=.6?64:128,refinement:$('pore-refinement').checked});
+      surface_samples:spacing>=.9?32:spacing>=.6?64:128,refinement:$('pore-refinement').checked,include_map:true});
     const el=$('porosity-results');el.replaceChildren();el.dataset.engine=r.engine;el.dataset.reportId=r.report_id||'';
     const range=pair=>Array.isArray(pair)&&pair.length===2?`${fmt(pair[0],2)} – ${fmt(pair[1],2)}`:'Unavailable';
     metric(el,'PLD · geometric bounds / Å',range(r.pld_bounds_angstrom));
@@ -167,7 +185,8 @@
     if(surface.available===false)note(el,surface.reason,true);
     if(r.convergence?.requested){if(r.convergence.performed){metric(el,'Refined PLD bounds / Å',range(r.convergence.refined.pld_bounds_angstrom));metric(el,'Refined LCD bounds / Å',range(r.convergence.refined.lcd_bounds_angstrom));note(el,`Second grid ${r.convergence.refined_grid_shape.join(' × ')}. Compare both results; a second grid alone does not establish convergence. Surface sampling is unchanged.`);}else note(el,r.convergence.reason||'A finer grid was unavailable.',true);}
     for(const warning of r.warnings||[])if(/coarsened|budget|No transport|no exposed surface|No explicit hydrogen/i.test(warning))note(el,warning,true);
-    details(el,r);
+    const {pore_map,...diagnostics}=r;
+    details(el,diagnostics);
     if(r.downloads?.json){const b=document.createElement('button');b.className='button outline';b.textContent='Save geometric-properties report';b.addEventListener('click',()=>S.saveExport(r.downloads.json,'json'));el.append(b);}
     window.dispatchEvent(new CustomEvent('cofdraw:geometry',{detail:r}));
     status('Geometric properties complete. Review diameter bounds, effective grid, and accessibility qualifications.');
@@ -214,8 +233,10 @@
           for(const [index,tip] of [[a,p],[b,q]])objects.push({kind:'bond',index,tip,mid,z:(tip.z+mid.z)/2});
         }
       }
+      window.COFdrawPores?.addFaces(objects,project,scale);
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
+        if(o.kind==='pore'){window.COFdrawPores.paint(c,o);continue;}
         const a=this.atoms[o.index],p=this.projected[o.index],base=color(a);
         const depth=(zmax-o.z)/Math.max(.01,zmax-zmin);
         if(o.kind==='bond'){

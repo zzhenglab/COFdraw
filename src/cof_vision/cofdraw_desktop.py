@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.9.3b1"
+VERSION = "0.9.3b2"
 STATIC = Path(__file__).with_name("web")
 
 
@@ -79,7 +79,7 @@ class DesktopBridge:
         import webview
         self._check()
         name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", str(suggested))[:160]
-        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb", ".csv", ".zip"}:
+        if Path(name).suffix.lower() not in {".png", ".svg", ".mol", ".sdf", ".cdxml", ".json", ".cif", ".xyz", ".pdb", ".csv", ".ipynb", ".zip"}:
             raise ValueError("Unsupported export extension")
         selected = self._window.create_file_dialog(webview.FileDialog.SAVE, save_filename=name)
         if not selected:
@@ -124,6 +124,7 @@ def main(argv=None):
     parser.add_argument("--status-file", type=Path)
     parser.add_argument("--smoke-window", action="store_true")
     parser.add_argument("--sketch-beta", action="store_true", help="Open the classic drawing workspace")
+    parser.add_argument("--structure-lab", action="store_true", help="Open the 3D workspace with the labelled HCB example")
     args = parser.parse_args(argv)
     home = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[3]
     data = (args.data_dir or home / "data").resolve()
@@ -163,7 +164,7 @@ def main(argv=None):
             raise RuntimeError("The local drawing service did not become ready")
         import webview
         bridge = DesktopBridge(origin)
-        page = origin + ("/?sketch=classic" if args.sketch_beta else "/")
+        page = origin + ("/?workspace=crystal" if args.structure_lab else "/?sketch=classic" if args.sketch_beta else "/")
         window = webview.create_window(f"COFdraw {VERSION}", page, js_api=bridge, width=1400, height=960, min_size=(980, 700), hidden=args.smoke_window, text_select=True, background_color="#f4f3ee")
         bridge._window = window
         status["status"] = "desktop_window"; write_status()
