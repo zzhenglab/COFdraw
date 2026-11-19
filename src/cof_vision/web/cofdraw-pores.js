@@ -2,10 +2,14 @@
 "use strict";
 (() => {
   const C=window.COFdrawScience,S=window.COFdrawStudio,$=id=>document.getElementById(id);
-  let field=null,mesh=null,polygons=[],report=null;
+  let field=null,mesh=null,tiles=[],report=null;
+  function repetitions(){
+    return field.cell.map((row,i)=>Math.max(1,Math.round(Math.hypot(...C.viewer.model.cell[i])/Math.hypot(...row))));
+  }
   const bytes=text=>Uint8Array.from(atob(text),ch=>ch.charCodeAt(0));
   function axis(n){
-    const count=Math.min(22,n),items=[[n-1,0,0]];
+    const cells=repetitions().reduce((a,b)=>a*b,1);
+    const count=Math.min(22,n,Math.max(6,Math.floor(44/Math.cbrt(cells)))),items=[[n-1,0,0]];
     for(let i=0;i<count;i++){
       const j=Math.round(i*(n-1)/(count-1));items.push([j,j,(j+.5)/n]);
     }
@@ -52,10 +56,14 @@
         }
       }
     }
-    return {vertices,faces,cell:field.cell,values,axes};
+    // The viewer uses CIF's conventional Cartesian orientation. The sampled
+    // field is fractional and can come from a differently oriented input cell.
+    const repeats=repetitions();
+    const cell=C.viewer.model.cell.map((row,i)=>row.map(v=>v/repeats[i]));
+    return {vertices,faces,cell,values,axes};
   }
   // Fill the open area in the moving section plane, including disconnected islands.
-  function cutPlane(cut,xyz){
+  function cutPlane(cut,xyz,polygons){
     const {axes,values}=mesh,[x,y,z]=axes;
     const k=z.findIndex(sample=>sample[2]>=cut)-1;
     if(k<0)return;
@@ -81,21 +89,26 @@
     }
   }
   function section(){
-    polygons=[];if(!mesh)return;
+    tiles=[];if(!mesh)return;
     const cut=Number($('pore-cut').value),{vertices,faces,cell}=mesh;
     const xyz=p=>cell[0].map((_,i)=>p[0]*cell[0][i]+p[1]*cell[1][i]+p[2]*cell[2][i]);
     const cart=vertices.map(xyz);
-    if(cut>0&&cut<1)cutPlane(cut,xyz);
-    for(const face of faces){
-      const poly=[];
-      for(let n=0;n<3;n++){
-        const a=face[n],b=face[(n+1)%3],za=vertices[a][2],zb=vertices[b][2];
-        if(za<=cut)poly.push(cart[a]);
-        if((za<cut&&zb>cut)||(za>cut&&zb<cut)){
-          const t=(cut-za)/(zb-za);poly.push(cart[a].map((v,k)=>v+t*(cart[b][k]-v)));
+    const [na,nb,nc]=repetitions(),height=cut*nc;
+    for(let k=0;k<Math.ceil(height);k++){
+      const top=Math.min(1,height-k),polygons=[];
+      if(k===Math.ceil(height)-1)cutPlane(top,xyz,polygons);
+      for(const face of faces){
+        const poly=[];
+        for(let n=0;n<3;n++){
+          const a=face[n],b=face[(n+1)%3],za=vertices[a][2],zb=vertices[b][2];
+          if(za<=top)poly.push(cart[a]);
+          if((za<top&&zb>top)||(za>top&&zb<top)){
+            const t=(top-za)/(zb-za);poly.push(cart[a].map((v,k)=>v+t*(cart[b][k]-v)));
+          }
         }
+        if(poly.length>=3)polygons.push(poly);
       }
-      if(poly.length>=3)polygons.push(poly);
+      for(let i=0;i<na;i++)for(let j=0;j<nb;j++)tiles.push({polygons,offset:xyz([i,j,k])});
     }
   }
   function update(){
@@ -104,12 +117,12 @@
     if(field){
       const text=isChannel?'Certified periodic channels':'All probe-center voids';
       $('map-status').textContent=text+' · '+field.probe_radius+' Å probe · '+field.shape.join(' × ')+' grid. '+
-        (mesh.faces.length?'Interpolated display surface in one cell.':'No interface resolved for this selection.');
+        (mesh.faces.length?'Mapped across the '+repetitions().join(' × ')+' displayed cells.':'No interface resolved for this selection.');
     }
     C.viewer.draw();
   }
   function reset(){
-    field=null;mesh=null;polygons=[];report=null;
+    field=null;mesh=null;tiles=[];report=null;
     const periodic=C.structure?.periodic===true;
     for(const id of ['map-pores','mof-notebook'])$(id).disabled=!periodic;
     $('builder-cif').disabled=!periodic||![...$('structure-exports').querySelectorAll('button')].some(b=>b.textContent==='CIF');
@@ -124,6 +137,9 @@
     $('pore-visible').disabled=false;$('pore-visible').checked=true;update();
   });
   $('map-pores').onclick=()=>{C.tab('porosity');$('calculate-pores').click();};
+  document.querySelector('[data-science-tab="porosity"]').addEventListener('click',()=>{
+    if(C.structure?.periodic&&!field)$('calculate-pores').click();
+  });
   $('render-toggle').onclick=()=>{
     const panel=$('render-panel');panel.hidden=!panel.hidden;$('render-toggle').setAttribute('aria-expanded',String(!panel.hidden));
   };
@@ -148,19 +164,22 @@
   $('pore-cut').oninput=()=>{section();C.viewer.draw();};
   for(const id of ['pore-alpha','pore-visible'])$(id).oninput=()=>C.viewer.draw();
   window.COFdrawPores={
-    get triangleCount(){return mesh?.faces.length||0;},get structureHash(){return report?.structure_sha256;},
+    get triangleCount(){return mesh?.faces.length||0;},get tileCount(){return tiles.length;},get structureHash(){return report?.structure_sha256;},
     addFaces(objects,project,scale){
       if(!$('pore-visible').checked||!mesh)return;
-      const projected=new Map(),channel=$('pore-layer').value==='connected',alpha=Number($('pore-alpha').value);
-      for(const polygon of polygons){
-        const p=polygon.map(v=>{if(!projected.has(v))projected.set(v,project(v));return projected.get(v);});
-        const a=p[0],b=p[1],c=p[2];
-        const ux=b.x-a.x,uy=b.y-a.y,uz=(b.z-a.z)*scale,vx=c.x-a.x,vy=c.y-a.y,vz=(c.z-a.z)*scale;
-        const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
-        if(Math.abs(nz)<.02)continue;
-        const light=Math.abs((-.35*nx-.52*ny+.78*nz)/(Math.hypot(nx,ny,nz)||1));
-        objects.push({kind:'pore',p,z:p.reduce((s,v)=>s+v.z,0)/p.length,alpha,
-          color:'hsl('+(channel?32:194)+' 57% '+Math.round(32+31*light)+'%)'});
+      const channel=$('pore-layer').value==='connected',alpha=Number($('pore-alpha').value);
+      for(const {polygons,offset} of tiles){
+        const projected=new Map();
+        for(const polygon of polygons){
+          const p=polygon.map(v=>{if(!projected.has(v))projected.set(v,project(v.map((x,i)=>x+offset[i])));return projected.get(v);});
+          const a=p[0],b=p[1],c=p[2];
+          const ux=b.x-a.x,uy=b.y-a.y,uz=(b.z-a.z)*scale,vx=c.x-a.x,vy=c.y-a.y,vz=(c.z-a.z)*scale;
+          const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
+          if(Math.abs(nz)<.02)continue;
+          const light=Math.abs((-.35*nx-.52*ny+.78*nz)/(Math.hypot(nx,ny,nz)||1));
+          objects.push({kind:'pore',p,z:p.reduce((s,v)=>s+v.z,0)/p.length,alpha,
+            color:'hsl('+(channel?32:194)+' 57% '+Math.round(32+31*light)+'%)'});
+        }
       }
     },
     paint(ctx,o){

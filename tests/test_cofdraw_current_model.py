@@ -11,6 +11,49 @@ from cof_vision.cofdraw_science import import_cif
 from cof_vision.cofdraw_stacking import periodic_stacking
 
 
+@pytest.mark.parametrize("stereotag", ["@", "@@"])
+def test_hth_periodic_cell_retains_all_side_chain_stereocentres(stereotag):
+    from rdkit import Chem
+    from cof_vision.cofdraw_chemistry import prepare_template
+    from cof_vision.cofdraw_periodic_build import build_periodic_layer
+
+    aldehyde = 'CCCCCCNC(=O)c1c(-c2ccc(C=O)cc2)c(C(=O)NCCCCCC)c(-c2ccc(C=O)cc2)c(C(=O)NCCCCCC)c1-c1ccc(C=O)cc1'
+    partner = 'C[C@H](O)COc1cc(C(=O)NN)c(OC[C@H](C)O)cc1C(=O)NN'.replace('@', stereotag)
+    recipe = prepare_template(aldehyde, partner, 'acylhydrazone', 'A', 'B', 6, 'hcb_3_2')
+    cell, validation = build_periodic_layer(recipe)
+    assert validation['short_contacts'] == 0 and validation['periodic_rank'] == 2
+    sites = cell['atoms']
+    assert len(sites) == 348
+    fragment = Chem.AddHs(Chem.MolFromSmiles(recipe['components']['B']['fragment_smiles']))
+    indices = [a.GetIdx() for a in fragment.GetAtoms() if a.GetAtomicNum()]
+    # Recover local tetrahedra across periodic faces directly from the exported sites.
+    basis = np.asarray(cell['cell'])
+    fractional = np.array([a['fractional'] for a in sites])
+    bond_images = {}
+    for bond in validation['periodic_bonds']:
+        i, j = bond['a'], bond['b']
+        bond_images[i, j] = np.array(bond['translation'])
+        bond_images[j, i] = -bond_images[i, j]
+    starts = [a for a, site in enumerate(sites) if site['component'] == 'B'][::len(indices)]
+    verified = 0
+    for start in starts:
+        for atom in fragment.GetAtoms():
+            if atom.GetChiralTag() == Chem.ChiralType.CHI_UNSPECIFIED:
+                continue
+            i = start + indices.index(atom.GetIdx())
+            probe = Chem.Mol(fragment)
+            conf = Chem.Conformer(probe.GetNumAtoms())
+            for neighbor in atom.GetNeighbors():
+                j = start + indices.index(neighbor.GetIdx())
+                vector = (fractional[j] + bond_images[i,j] - fractional[i]) @ basis
+                conf.SetAtomPosition(neighbor.GetIdx(), vector.tolist())
+            probe.AddConformer(conf)
+            Chem.AssignAtomChiralTagsFromStructure(probe)
+            assert probe.GetAtomWithIdx(atom.GetIdx()).GetChiralTag() == atom.GetChiralTag()
+            verified += 1
+    assert verified == 6
+
+
 def finite(elements=('C', 'O'), positions=((0,0,0), (1.4,0,0))):
     return {'periodic': False, 'atoms': [dict(element=e, x=x, y=y, z=z) for e,(x,y,z) in zip(elements, positions)],
             'bonds': [{'a':0,'b':1,'order':1}] if len(elements)>1 else []}

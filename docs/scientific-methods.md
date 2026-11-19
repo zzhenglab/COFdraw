@@ -1,6 +1,8 @@
 # Molecular and periodic structure calculations
 
-The 3D rendering panel can display an interpolated probe-center surface from the same periodic clearance field used for geometric porosity. The channel view keeps samples connected to a certified periodic winding path. Rendering samples at most 22 centers per axis and clips triangles in fractional c. The exported geometry report retains the full calculation grid when a map was requested. The surface represents one analyzed cell, including when additional display repeats are visible.
+The 3D rendering panel displays an interpolated probe-center surface from the periodic clearance field used for geometric porosity. The channel view keeps samples connected to a certified periodic winding path. Rendering samples at most 22 centers per axis and repeats the surface over the displayed supercell. The section slider clips the full supercell along fractional c and fills the opening in the section plane. The exported geometry report retains the full calculation grid of the unit cell.
+
+For tetrahedral stereochemistry, the planar-net builder embeds capped fragments with ETKDGv3, fixes junction positions during MMFF relaxation and checks the specified atom tags against the resulting coordinates. Placement uses proper 3D rotations. The assembled structure must pass the same periodic contact and intended-bond checks as other generated cells. Flexible substituents and the predicted layer spacing describe one starting conformation.
 
 The external-analysis controls export the active periodic coordinates as a CIF for [Crystal Builder](https://github.com/JulesOpp/Crystal-Builder) or as an executable notebook for [Mofography](https://mofography.github.io/mofography/quick_start.html). The notebook runs the upstream segmentation in an environment with its Rust backend installed. Its radii, pocket definition and resulting descriptors follow Mofography.
 

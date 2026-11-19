@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 from playwright.sync_api import expect, sync_playwright
 
 
@@ -24,7 +25,25 @@ def main():
         page = browser.new_page(viewport={"width": 1450, "height": 960})
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
-        page.goto(args.base_url.rstrip("/") + "/?workspace=crystal")
+        page.goto(args.base_url)
+        expect(page.locator("main.studio")).to_be_visible()
+        expect(page.locator("#science-dialog")).to_be_hidden()
+
+        def draw_pair(first, second):
+            page.locator("#preset-a").select_option(first)
+            page.locator("#preset-b").select_option(second)
+            expect(page.locator("#build")).to_be_enabled()
+            with page.expect_response("**/api/drawing/render", timeout=90000) as rendered:
+                page.locator("#build").click()
+            assert rendered.value.ok
+            with page.expect_response("**/api/drawing/science/build-periodic", timeout=90000) as model:
+                page.locator("#switch-space").click()
+            result = model.value.json()
+            assert result.get("available"), result.get("reason") or result.get("detail")
+            return result
+
+        result = draw_pair("dmtp", "tapb")
+        assert len(result["structure"]["atoms"]) == 150
         expect(page.locator("#map-pores")).to_be_enabled(timeout=30000)
         assert page.evaluate("window.COFdrawScience.structure.periodic")
         assert page.locator(":modal").count() == 0
@@ -38,6 +57,16 @@ def main():
         page.locator("#map-pores").click()
         expect(page.locator("#pore-visible")).to_be_checked(timeout=120000)
         assert page.evaluate("window.COFdrawPores.triangleCount > 0")
+        assert page.evaluate("window.COFdrawPores.tileCount") == 8
+        vertices = page.evaluate("""() => {
+            const faces=[];
+            COFdrawPores.addFaces(faces, ([x,y,z])=>({x,y,z}), 1);
+            return faces.flatMap(face=>face.p.map(p=>[p.x,p.y,p.z]));
+        }""")
+        display_cell = page.evaluate("COFdrawScience.viewer.model.cell")
+        fractional = np.array(vertices) @ np.linalg.inv(display_cell)
+        assert np.all(fractional >= -1e-8) and np.all(fractional <= 1+1e-8)
+        assert np.all(fractional.min(axis=0) < .3) and np.all(fractional.max(axis=0) > .7)
         signature = page.evaluate("COFdrawPores.structureHash")
         assert isinstance(signature, str) and len(signature) == 64
         visible = page.locator("#pore-visible")
@@ -83,6 +112,22 @@ def main():
         page.locator("#probe-radius").fill("2.1")
         assert page.evaluate("COFdrawPores.triangleCount") == 0
         assert not visible.is_checked()
+        page.locator("#switch-space").click()
+        result = draw_pair("cv_18fdac58ad343c87", "hth_s")
+        assert len(result["structure"]["atoms"]) == 348
+        assert result["cell_validation"]["short_contacts"] == 0
+        assert "Hth" in page.locator("#viewer-provenance").inner_text()
+        page.screenshot(path=str(args.output_dir / "hth-current-drawing.png"))
+        page.locator('[data-science-tab="model"]').click()
+        page.locator("#structure-source").select_option("periodic")
+        page.locator("#crystal-template").select_option("hcb-imine-aa")
+        with page.expect_response("**/api/drawing/science/model"):
+            page.locator("#build-crystal").click()
+        expect(page.locator("#viewer-provenance")).to_contain_text("Independent periodic model")
+        page.locator("#switch-space").click()
+        with page.expect_response("**/api/drawing/science/build-periodic"):
+            page.locator("#switch-space").click()
+        expect(page.locator("#viewer-provenance")).to_contain_text("Hth")
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.locator("#science-dialog").evaluate("e => e.scrollWidth <= e.clientWidth + 1")
         assert not errors, errors

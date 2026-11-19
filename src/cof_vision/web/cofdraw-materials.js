@@ -167,28 +167,20 @@
     });
     if(observations.length)element('text',{x:52,y:309,'font-size':11,fill:'#375e52'},'Measured peak ticks · violet: candidate center within tolerance · red: unmatched');
     if(comparison){
-      const axes=element('g',{'data-pattern-axes':'local'});
+      const ticks=svg.querySelectorAll('line[x1="48"], text[x="44"]');
       positionTraces=value=>{
-        const n=traces.length, total=525, panel=(total-12*(n-1))/n;
-        const width=total-(total-panel)*value, stride=(total-width)/(n-1);
-        const partial=value>0&&value<1, extra=(n-1)*16;
-        const label=value===0?'0 · Overlay':value===1?'1 · Side by side':value.toFixed(2);
-        $('pattern-separation-value').textContent=label;separation.setAttribute('aria-valuetext',label);
-        metadata.horizontal_separation=value;metadataNode.textContent=JSON.stringify(metadata);
-        sharedAxis.setAttribute('display',value?'none':'inline');axes.replaceChildren();
-        axisTitle.setAttribute('y',278+(partial?extra:0));legend.setAttribute('transform','translate(0 '+(partial?extra:0)+')');
-        svg.setAttribute('viewBox','0 0 600 '+(322+extra));
+        const n=traces.length, height=205, gap=6;
+        const amplitude=1-value*(1-(height-gap*(n-1))/(n*height));
+        const stride=(height-amplitude*height)/(n-1);
+        const label=value===0?'0 · Overlay':value===1?'1 · Stacked':value.toFixed(2);
+        $('pattern-separation-value').textContent=label;
+        separation.setAttribute('aria-valuetext',label);
+        metadata.vertical_separation=value;
+        metadataNode.textContent=JSON.stringify(metadata);
+        ticks.forEach(tick=>tick.setAttribute('visibility',value?'hidden':'visible'));
         traces.forEach((trace,i)=>{
-          const left=52+i*stride, y=235+(partial?i*16:0);
-          trace.setAttribute('transform',`translate(${left} 0) scale(${width/total} 1) translate(-52 0)`);
-          if(!value)return;
-          const color=colors[i%colors.length];
-          axes.append(element('path',{d:`M${left} ${y+3}v-3h${width}v3`,fill:'none',stroke:color}));
-          const divisions=width>220?4:2;
-          for(let j=0;j<=divisions;j++){
-            const x=left+width*j/divisions;
-            axes.append(element('text',{x,y:y+12,'text-anchor':j===0?'start':j===divisions?'end':'middle',fill:color,'font-size':10},(min+(max-min)*j/divisions).toFixed(1)));
-          }
+          const baseline=235-(n-1-i)*stride;
+          trace.setAttribute('transform',`translate(0 ${baseline}) scale(1 ${amplitude}) translate(0 -235)`);
         });
       };
       positionTraces(0);

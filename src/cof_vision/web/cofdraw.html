@@ -176,11 +176,13 @@
         <button data-tool="erase" title="Delete atom or bond" aria-pressed="false">Erase</button>
       </div>
       <svg id="monomer-canvas" viewBox="0 0 640 360" tabindex="0" role="application" aria-label="Monomer sketch canvas. Use drawing tools or enter SMILES below."></svg>
-      <aside id="classic-shelf" class="classic-only" aria-label="Building block templates">
+      <aside id="classic-shelf" class="classic-only" aria-label="Building block templates" hidden>
         <h3>Templates</h3>
-        <select id="classic-category" aria-label="Template collection"><option>Functional groups</option><option>Ring systems</option><option>Linkers and spacers</option><option>Protecting groups</option><option>COF monomers</option><option>Imported</option></select>
+        <select id="classic-category" aria-label="Template collection"><option>Ring systems</option><option>Functional groups</option><option>Bicyclics</option><option>Linkers and spacers</option><option>Protecting groups</option><option>COF monomers</option><option>Imported</option></select>
         <input id="classic-search" aria-label="Find a template" type="search" placeholder="Find a building block">
         <select id="classic-list" size="5" aria-label="Building block templates"></select>
+        <div id="classic-tiles" aria-label="Template gallery"></div>
+        <div class="template-paging"><button type="button" id="tiles-prev" aria-label="Previous templates">‹</button><output id="tiles-page"></output><button type="button" id="tiles-next" aria-label="Next templates">›</button></div>
         <svg id="classic-preview" viewBox="0 0 640 360" role="img" aria-label="Template preview. Click an atom to choose its attachment site or drag it onto the sheet."></svg>
         <label>Attach through <select id="classic-anchor" aria-label="Template attachment atom"></select></label>
         <button id="classic-place" class="button primary" type="button" aria-pressed="false">Place template</button>
@@ -191,13 +193,15 @@
         <nav class="classic-only classic-menus" aria-label="Drawing commands">
           <details><summary>File</summary><div><button type="button" data-command="sketch-import">Open MOL…</button><button type="button" data-command="classic-import">Import ChemDraw sheet…</button><button type="button" data-command="keep">Add drawing to shelf</button><button type="button" data-command="sketch-export">Save MOL…</button><button type="button" data-command="copy-smiles">Copy SMILES</button></div></details>
           <details><summary>Edit</summary><div><button type="button" data-command="sketch-undo">Undo</button><button type="button" data-command="sketch-redo">Redo</button><button type="button" data-command="all">Select all atoms</button><button type="button" data-command="delete">Delete selection</button></div></details>
+          <details><summary>View</summary><div><button type="button" data-command="classic-plus">Zoom in</button><button type="button" data-command="classic-minus">Zoom out</button><button type="button" data-command="classic-fit">Fit drawing</button><button type="button" data-command="classic-templates">Template palette</button></div></details>
           <details><summary>Structure</summary><div><button type="button" data-command="sketch-clean">Clean up structure</button><button type="button" data-command="rotate">Rotate selection 15°</button><button type="button" data-command="sketch-elements">Periodic table…</button><button type="button" data-command="sketch-solubility">Screen solubility…</button></div></details>
         </nav>
         <button id="sketch-undo" class="text-button" title="Ctrl+Z">Undo</button>
         <button id="sketch-redo" class="text-button" title="Ctrl+Shift+Z">Redo</button>
         <button id="sketch-clear" class="text-button">Clear</button>
         <button id="sketch-clean" class="text-button" title="Ctrl+Shift+K" aria-keyshortcuts="Control+Shift+K Meta+Shift+K">Clean layout</button>
-        <span class="classic-only classic-zoom"><button type="button" id="classic-minus" aria-label="Zoom out">−</button><button type="button" id="classic-fit">Fit</button><button type="button" id="classic-plus" aria-label="Zoom in">+</button></span>
+        <button id="classic-templates" class="classic-only" type="button" aria-controls="classic-shelf" aria-expanded="false">Templates ▾</button>
+        <span class="classic-only classic-zoom"><button type="button" id="classic-minus" aria-label="Zoom out">−</button><select id="classic-zoom-level" aria-label="Drawing zoom"><option value="current">100%</option><option>50%</option><option>100%</option><option>150%</option><option>200%</option><option>400%</option></select><button type="button" id="classic-fit">Fit</button><button type="button" id="classic-plus" aria-label="Zoom in">+</button></span>
         <label>Atom charge <input id="atom-charge" type="number" min="-4" max="8" step="1" value="0" disabled></label>
       </div>
       <div id="sketch-message" class="sketch-message" role="status" aria-live="polite"></div>
@@ -238,9 +242,9 @@
     </section><section id="pattern-view" class="science-view" hidden aria-labelledby="pattern-title">
       <div class="viewer-toolbar"><h3 id="pattern-title">Powder diffraction</h3><button id="return-to-model" class="button outline">View structure</button><button id="save-pattern-svg" class="button outline">Save plot SVG</button></div>
       <p id="pattern-source" class="viewer-provenance"></p><div id="pattern-spacing" hidden>
-        <label for="pattern-separation">Horizontal separation</label>
+        <label for="pattern-separation">Vertical separation</label>
         <input id="pattern-separation" type="range" min="0" max="1" step="0.01" value="0">
-        <output for="pattern-separation" id="pattern-separation-value">0 ? Overlay</output>
+        <output for="pattern-separation" id="pattern-separation-value">0 · Overlay</output>
       </div><div id="pxrd-plot"></div>
     </section><section class="science-controls"><section id="render-panel" aria-label="Rendering settings"><h3>Rendering</h3><div class="render-choices"><select id="viewer-preset" aria-label="3D view preset"><option value="">View preset…</option><option value="pore">Pore face · space filling</option><option value="layers">Layer profile · ball &amp; stick</option><option value="oblique">Oblique · skeletal overlay</option></select><select id="viewer-mode" aria-label="3D representation"><option value="ballstick">Ball &amp; stick</option><option value="halfspace">Half space filling</option><option value="spacefill">Space filling</option><option value="wireframe">Skeletal</option><option value="mixed">Mixed spheres + skeletal</option></select><select id="viewer-color" aria-label="3D coloring"><option value="element">Elements</option><option value="component">Building blocks</option><option value="layer">Layers</option><option value="network">Networks / components</option></select><button id="viewer-reset" class="text-button">Reset view</button></div><div class="viewer-inspection"><label>View along <select id="viewer-axis"><option value="free">Free rotation</option><option value="a">a axis</option><option value="b">b axis</option><option value="c">c axis</option></select></label><label><input type="checkbox" id="viewer-hide-h"> Hide hydrogens</label><button id="show-atom-table" class="text-button">Atom coordinates</button></div>
       <div class="render-pore"><label for="pore-layer">Pore surface</label><select id="pore-layer"><option value="all">All probe-center voids</option><option value="connected">Certified channels</option></select>

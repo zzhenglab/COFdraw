@@ -365,6 +365,9 @@ class MonomerSketcher {
   }
   node(name, attrs = {}, text) { const e = document.createElementNS("http://www.w3.org/2000/svg", name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); if (text !== undefined) e.textContent = text; return e; }
   draw() {
+    if(this.classicMode&&this.lastDrawnScale!==this.scale){
+      this.lastDrawnScale=this.scale;this.svg.dispatchEvent(new Event("sketchzoom"));
+    }
     const s = this.svg; s.replaceChildren();
     if(this.tool.startsWith("ring") && this.hover?.kind==="bond"){
       const edge=this.graph.bonds[this.hover.index], points=this.fusedRingPoints(edge,this.tool==="ring5"?5:6);

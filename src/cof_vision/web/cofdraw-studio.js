@@ -41,10 +41,12 @@
   }
   $('open-science').addEventListener('click',()=>{
     workspace(true);
-    if(!currentStructure&&!origin&&!scienceBusy){
+    const activeDrawing=drawingReady();
+    const otherModel=activeDrawing&&($('structure-source').value!=='drawing'||origin==='monomer');
+    if(otherModel||(!currentStructure&&!origin&&!scienceBusy)){
       tab('model');
-      if(!drawingReady()){
-        $('structure-source').value='periodic';sourceMode();
+      if(!activeDrawing){
+        $('structure-source').value='drawing';sourceMode();
         return;
       }
       $('structure-source').value='drawing';
@@ -86,7 +88,7 @@
     $('current-cell-result').textContent=message;
     $('current-cell-result').hidden=!message;
   }
-  function generateCurrentCell(useFiniteFallback=false){
+  function generateCurrentCell(useFiniteFallback=true){
     return work(async api=>{
       const value=$('current-cell-spacing').value;
       const result=await api('science/build-periodic',{
@@ -127,10 +129,10 @@
       $('structure-source').value='drawing';
       sourceMode();
     }
-    return generateCurrentCell(false);
+    return generateCurrentCell();
   }
   $('structure-source').addEventListener('change',sourceMode);
-  $('build-current-cell').addEventListener('click',()=>generateCurrentCell(false));
+  $('build-current-cell').addEventListener('click',()=>generateCurrentCell());
   $('current-cell-spacing').addEventListener('input',()=>{
     currentLayer=null;
     invalidate('Layer spacing changed. Build the CIF again.',origin==='current-periodic');

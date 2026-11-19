@@ -117,7 +117,8 @@ def main():
             delayed=[]
             def delay_pores(route):delayed.append((route,route.fetch()))
             page.route('**/api/drawing/science/geometry',delay_pores)
-            page.locator('[data-science-tab="porosity"]').click();page.locator('#pore-samples').select_option('0.9');page.locator('#calculate-pores').click()
+            page.locator('#pore-samples').evaluate("e=>{e.value='0.9';e.dispatchEvent(new Event('input'))}")
+            page.locator('[data-science-tab="porosity"]').click()
             for _ in range(50):
                 if delayed:break
                 page.wait_for_timeout(100)

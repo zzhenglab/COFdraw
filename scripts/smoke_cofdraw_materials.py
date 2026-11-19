@@ -64,7 +64,7 @@ def main():
    assert page.locator('#pxrd-plot [data-series-label]').count()==5
    slider=page.locator('#pattern-separation')
    slider.focus();page.keyboard.press('End')
-   assert slider.input_value()=='1' and page.locator('#pxrd-plot [data-pattern-axes] path').count()==5
+   assert slider.input_value()=='1' and page.locator('#pxrd-plot [data-trace]').count()==5
    page.screenshot(path=str(out/'cofdraw-finite-stacking-patterns.png'))
    checks.append('Five finite stacking patterns compare the same drawing under chosen transforms')
    page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .build-cif-from-drawing').click()
@@ -151,9 +151,9 @@ def main():
    assert 'explicit periodic AA' in page.locator('#pxrd-results').inner_text()
    assert slider.input_value()=='0'
    paths=page.locator('#pxrd-plot [data-trace]')
-   bounds="paths => paths.map(p=>{const r=p.getBoundingClientRect();return [r.left,r.right]})"
+   bounds="paths => paths.map(p=>{const r=p.getBoundingClientRect();return [r.top,r.bottom]})"
    overlay=paths.evaluate_all(bounds)
-   assert all(abs(x-overlay[0][0])<1 for x,_ in overlay)
+   assert all(abs(bottom-overlay[0][1])<1 for _,bottom in overlay)
    originals=paths.evaluate_all("paths=>paths.map(p=>p.getAttribute('d'))")
    slider.fill('0.5')
    middle=paths.evaluate_all(bounds)
@@ -163,9 +163,9 @@ def main():
    assert all(right<split[i+1][0] for i,(_,right) in enumerate(split[:-1]))
    assert originals==paths.evaluate_all("paths=>paths.map(p=>p.getAttribute('d'))")
    with page.expect_download() as separated:page.locator('#save-pattern-svg').click()
-   split_svg=out/'stacking-side-by-side.svg';separated.value.save_as(split_svg)
+   split_svg=out/'stacking-vertical.svg';separated.value.save_as(split_svg)
    saved=json.loads(ET.parse(split_svg).getroot().find('{http://www.w3.org/2000/svg}metadata').text)
-   assert saved['horizontal_separation']==1 and len(saved['series'])==4
+   assert saved['vertical_separation']==1 and len(saved['series'])==4
    page.screenshot(path=str(out/'cofdraw-periodic-stacking-pxrd.png'))
    slider.focus();page.keyboard.press('Home');assert slider.input_value()=='0'
    assert paths.evaluate_all(bounds)==overlay
@@ -173,7 +173,7 @@ def main():
    assert slider.is_hidden() and page.locator('#viewer-title').inner_text().startswith('AB')
    page.locator('#compare-pxrd-stacks').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('4 stacking patterns compared')",timeout=120000)
-   checks.append('Horizontal separation preserves angles and exports all panels; comparing again from AB uses the parent layer')
+   checks.append('Vertical separation preserves angles and exports the stacked traces; comparing again from AB uses the parent layer')
    checks.append('Four actual periodic stacking cells produce overlaid Bragg PXRD and individual report downloads')
    assert page.locator('[data-science-tab="knowledge"]').count()==0
    queried=page.request.post(base+'/api/drawing/science/query',data={'query':'Pyurea','record_types':['source'],'limit':20}).json()

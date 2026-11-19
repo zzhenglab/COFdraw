@@ -64,3 +64,29 @@
   #classic-shelf h3 { grid-column:1/-1 }
   .classic .sketch-secondary label { margin-left:0 }
 }
+.classic .sketch-body { display:flex; flex-direction:column; position:relative; background:#dbdddf }
+.classic .sketch-secondary { order:-3; display:flex; flex-wrap:wrap; align-items:center; gap:2px; padding:0 9px 3px }
+.classic .classic-menus { flex:0 0 100%; background:#fafafa; border-bottom:1px solid #d0d2d5; margin:0 -2px 2px }
+.classic .classic-menus summary { padding:3px 8px; font:12px "Segoe UI",sans-serif }
+.classic .classic-menus details div { z-index:8 }
+.classic .sketch-tools { order:-2; display:flex; flex-wrap:wrap; align-items:center; margin:0; padding:3px 12px; gap:2px; border:0; border-bottom:1px solid #c1c5c8; border-radius:0 }
+.classic .sketch-tools button { min-width:30px; height:28px }
+.classic .sketch-tools .tool-separator { height:18px; width:1px; margin:0 5px }
+.classic #monomer-canvas { width:calc(100% - 20px); height:clamp(260px,49vh,610px); margin:9px auto; border-color:#aab0b4; cursor:crosshair }
+.classic #classic-shelf { position:absolute; top:70px; left:14px; z-index:7; display:grid; grid-template-columns:1fr 1fr; align-content:start; width:min(380px,calc(100% - 28px)); max-height:min(440px,65vh); overflow:auto; gap:5px; padding:9px; border:1px solid #a6acb0; box-shadow:0 4px 12px #26313c30; background:#fafafa }
+#classic-shelf[hidden] { display:none!important }
+#classic-tiles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; grid-column:1/-1 }
+#classic-tiles button { min-width:0; background:white; border:1px solid #cbd0d5; padding:2px; font:11px "Segoe UI",sans-serif; color:#243746 }
+#classic-tiles button:hover,#classic-tiles button:focus { background:#dcefff; border-color:#679bd4 }
+#classic-tiles img { width:100%; height:37px; display:block; object-fit:contain }
+#classic-tiles span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+#classic-shelf #classic-list { display:none }
+#classic-shelf #classic-preview { height:60px }
+.template-paging { grid-column:1/-1; display:flex; align-items:center; justify-content:center; gap:8px; font-size:11px }
+.template-paging button { border:1px solid #c6cdd0; background:#fff; border-radius:2px }
+.classic .standard-tool-text { display:none }
+.chemical-glyph { width:19px; height:19px; vertical-align:middle }
+.classic .sketch-tools { align-self:stretch; background:#f1f2f3 }
+.classic .classic-zoom { align-items:center }
+#classic-zoom-level { width:77px; min-height:23px; padding:0 4px; border:1px solid #a7b1b7; border-radius:2px; background:white }
+#classic-tiles img { height:50px }

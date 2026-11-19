@@ -514,6 +514,7 @@ function sketchControls(){
   canvas.style.pointerEvents=sketchBusy?"none":"";
   canvas.setAttribute("aria-disabled",String(sketchBusy));
   $("atom-charge").disabled=sketchBusy||sketcher.selected?.kind!=="atom";
+  $("sketch-dialog").dispatchEvent(new Event("cofdraw:sketch-busy"));
 }
 const sketcher=new MonomerSketcher($("monomer-canvas"),()=>{
   if(!sketchHydrating){
@@ -534,6 +535,7 @@ function hydrateSketch(result){
 async function sketchRequest(payload){sketchBusy=true;sketchControls();try{const result=await api("monomer",payload);hydrateSketch(result);return result;}finally{sketchBusy=false;sketchControls();}}
 async function openSketch(block,libraryMonomer=null){
   activeBlock=block;
+  $("sketch-dialog").dispatchEvent(new Event("cofdraw:open-sketch"));
   $("sketch-title").textContent=libraryMonomer
     ? libraryMonomer.abbreviation||libraryMonomer.full_name||libraryMonomer.id
     : `Building block ${block.toUpperCase()} · ${$(`label-${block}`).value}`;

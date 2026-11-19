@@ -6,7 +6,8 @@ import math
 
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import rdForceFieldHelpers
+from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
+from rdkit.Geometry import Point3D
 
 from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core
 from .cofdraw_network import inspect_periodic_network
@@ -120,7 +121,59 @@ def _relieve_fragment(mol, ports, cap_element):
     return True
 
 
-def _block(component, general_tilt=0, cap_element=None):
+def _embedded_block(mol, ports, xy, seed, cap_element):
+    """Embed a capped fragment at its junctions, preserving specified stereocentres."""
+    capped = Chem.RWMol(mol)
+    fixed = {}
+    for dummy, endpoint in ports.values():
+        capped.ReplaceAtom(dummy, Chem.Atom(cap_element))
+        for i in (dummy, endpoint):
+            fixed[i] = Point3D(*xy[i], 0.)
+    capped = capped.GetMol()
+    Chem.SanitizeMol(capped)
+    capped = Chem.AddHs(capped)
+    settings = rdDistGeom.ETKDGv3()
+    settings.randomSeed = seed
+    settings.useRandomCoords = True
+    settings.maxIterations = 45
+    settings.SetCoordMap(fixed)
+    if rdDistGeom.EmbedMolecule(capped, settings) < 0:
+        raise ValueError('Could not embed the specified stereochemistry at the planar junctions.')
+    props = rdForceFieldHelpers.MMFFGetMoleculeProperties(capped)
+    ff = rdForceFieldHelpers.MMFFGetMoleculeForceField(capped, props) if props else None
+    if ff is None:
+        raise ValueError('The constrained fragment needs MMFF parameters.')
+    for i in fixed:
+        ff.AddFixedPoint(i)
+    ff.Initialize()
+    if ff.Minimize(maxIts=1200):
+        raise ValueError('Constrained 3D fragment relaxation did not converge.')
+    observed = Chem.Mol(capped)
+    Chem.AssignStereochemistryFrom3D(observed)
+    for atom in capped.GetAtoms():
+        tag = atom.GetChiralTag()
+        if tag != Chem.ChiralType.CHI_UNSPECIFIED and observed.GetAtomWithIdx(atom.GetIdx()).GetChiralTag() != tag:
+            raise ValueError('A generated fragment did not retain its assigned stereochemistry.')
+    # AddHs appends cap hydrogens as well. Map only hydrogens of real atoms.
+    product = Chem.AddHs(mol)
+    conf = Chem.Conformer(product.GetNumAtoms())
+    embedded = capped.GetConformer()
+    def added_hydrogens(graph, i):
+        return [a.GetIdx() for a in graph.GetAtomWithIdx(i).GetNeighbors()
+                    if a.GetIdx() >= mol.GetNumAtoms() and a.GetAtomicNum() == 1]
+    caps = {dummy for dummy, _ in ports.values()}
+    for i in range(mol.GetNumAtoms()):
+        conf.SetAtomPosition(i, embedded.GetAtomPosition(i))
+        if i in caps:
+            continue
+        for dest, src in zip(added_hydrogens(product, i), added_hydrogens(capped, i), strict=True):
+            conf.SetAtomPosition(dest, embedded.GetAtomPosition(src))
+    product.RemoveAllConformers()
+    product.AddConformer(conf)
+    return product
+
+
+def _block(component, general_tilt=0, cap_element=None, embed_seed=None):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     if mol is None or len(Chem.GetMolFrags(mol)) != 1:
         raise ValueError('Each reacted building block must be one connected molecule.')
@@ -128,9 +181,8 @@ def _block(component, general_tilt=0, cap_element=None):
             or a.GetNumRadicalElectrons() for a in mol.GetAtoms())
             or Chem.GetFormalCharge(mol)):
         raise ValueError('Automatic cells require neutral organic fragments containing H, B, C, N, O, F, Si, P, S, Cl, Br or I and no radicals.')
-    if any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()) or any(
-            b.GetStereo() not in (Chem.BondStereo.STEREONONE, Chem.BondStereo.STEREOANY) for b in mol.GetBonds()):
-        raise ValueError('Building blocks with specified stereochemistry need explicit 3D coordinates.')
+    if any(b.GetStereo() not in (Chem.BondStereo.STEREONONE, Chem.BondStereo.STEREOANY) for b in mol.GetBonds()):
+        raise ValueError('Building blocks with specified bond stereochemistry need explicit 3D coordinates.')
     core = free_base_porphyrin_core(mol)
     ports = _ports(mol)
     compute_2d_coords(mol, canonOrient=False, forceRDKit=True)
@@ -141,9 +193,9 @@ def _block(component, general_tilt=0, cap_element=None):
         conformer.SetAtomPosition(i, (float(x), float(y), 0.))
     # Port bonds remain in place during hydrogen addition, so a C=N port has
     # the same valence and H count as the actual inter-block C=N bond.
-    mol = Chem.AddHs(mol, addCoords=True)
-    tilted_rings = _tilt_phenyl_arms(mol, set(core), general_tilt)
-    if cap_element is not None and not _relieve_fragment(mol, ports, cap_element):
+    mol = _embedded_block(mol, ports, xy, embed_seed, cap_element) if embed_seed is not None else Chem.AddHs(mol, addCoords=True)
+    tilted_rings = 0 if embed_seed is not None else _tilt_phenyl_arms(mol, set(core), general_tilt)
+    if cap_element is not None and embed_seed is None and not _relieve_fragment(mol, ports, cap_element):
         raise ValueError('The restrained fragment geometry did not converge.')
     indices = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]
     index = {i: j for j, i in enumerate(indices)}
@@ -282,7 +334,8 @@ def _cell_atoms(blocks, edges, pose, spacing, order):
         offsets.append(len(atoms))
         xyz = block['xyz'].copy()
         xyz[:, :2] = _rotate(xyz[:, :2]*mirror[i], angles[i]) + centers[i]
-        xyz[:, 2] += spacing/2
+        # In-plane reversal must be a proper 3D rotation to preserve handedness.
+        xyz[:, 2] = xyz[:, 2]*mirror[i][1] + spacing/2
         fraction = xyz @ inverse
         wrap = np.floor(fraction + 1e-10).astype(int)
         wraps.append(wrap)
@@ -308,7 +361,16 @@ def build_periodic_layer(design, *, spacing=None):
         raise ValueError('The chosen connectivity has no automatic periodic cell builder.')
     components = design['components']
     block_types, reference, positions, edges = _net(template, {k: c['connectivity'] for k, c in components.items()})
-    unique = {k: {**_block(c), 'component': k} for k, c in components.items()}
+    chiral = any('@' in c['fragment_smiles'] for c in components.values())
+    initial_caps = {}
+    if chiral:
+        for key, component in components.items():
+            fragment = Chem.MolFromSmiles(component['fragment_smiles'])
+            ends = {fragment.GetAtomWithIdx(i).GetSymbol() for _, i in _ports(fragment).values()}
+            if len(ends) != 1:
+                raise ValueError('Stereospecific construction requires equivalent attachment elements on each monomer.')
+            initial_caps['B' if key == 'A' else 'A'] = ends.pop()
+    unique = {k: {**_block(c, embed_seed=2941 if chiral else None, cap_element=initial_caps.get(k)), 'component': k} for k, c in components.items()}
     blocks = [unique[k] for k in block_types]
     if sum(len(b['elements']) for b in blocks) > MAX_CELL_SITES:
         raise ValueError(f'Automatic cells are limited to {MAX_CELL_SITES} explicit sites.')
@@ -326,8 +388,10 @@ def build_periodic_layer(design, *, spacing=None):
     best = None
     long_bonds = any(e in {'Si', 'P', 'S', 'Cl', 'Br', 'I'} for block in blocks for e in block['elements'])
     methods = ('restrained_mmff94',) if long_bonds else ('rigid', 'phenyl_torsions', 'restrained_mmff94')
+    if chiral:
+        methods = ('junction_constrained_etkdg_mmff',)
     for method in methods:
-        if method != 'rigid':
+        if method in ('restrained_mmff94', 'phenyl_torsions'):
             if method == 'restrained_mmff94' and not all(cap_elements.values()):
                 continue
             try:
