@@ -74,8 +74,32 @@ def test_actual_api_match_is_revalidated_before_model_generation(tmp_path):
         assert automatic['structure']['atoms']==result['structure']['atoms']
 
 
+def test_exact_reported_ribbon_crystal_matches_the_pair_and_linkage(tmp_path):
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    from cof_vision.cofdraw_network import inspect_periodic_network
+    data=Path(__file__).resolve().parents[1]/'data/crystal-models'
+    shutil.copytree(data,tmp_path/'crystal-models')
+    model=json.loads((data/'manifest.json').read_text())['reported_models'][0]
+    a,b=model['precursor_match']['canonical_smiles']
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        for linkage in ('imine','secondary_amine'):
+            payload=dict(monomer_a=a,monomer_b=b,linkage=linkage,template_id='alternating_hexagon')
+            recipe=client.post('/api/drawing/prepare',json=payload).json()['recipe']
+            result=client.post('/api/drawing/science/build-periodic',json={'recipe':recipe}).json()
+            if linkage=='secondary_amine':
+                assert result['available'] is False
+                continue
+            s=result['structure']
+            assert s['provenance']['kind']=='reported_crystal'
+            assert Counter(a['element'] for a in s['atoms'])=={'C':320,'H':216,'N':32}
+            network=inspect_periodic_network(s)
+            assert network['dimensions']==[1] and not network['short_contacts']
+            assert model['citation_doi'] in client.get(result['downloads']['cif']).text
+
+
 @pytest.mark.parametrize('a,b,linkage,template,formula,joins', [
     ('tp','pa','beta_ketoenamine','hcb_3_2',{'C':36,'N':6,'O':6,'H':24},6),
+    ('tp','pa_so3h','beta_ketoenamine','hcb_3_2',{'C':36,'N':6,'O':15,'H':24,'S':3},6),
     ('ta','tapp','imine','sql_4_2',{'C':60,'N':8,'H':38},4),
 ])
 def test_builds_an_unbundled_current_cell_with_real_bonds_and_cif(tmp_path,a,b,linkage,template,formula,joins):

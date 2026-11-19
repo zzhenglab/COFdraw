@@ -23,7 +23,9 @@
     $('screen-current').disabled=!available;$('calculate-pxrd').disabled=!available;
     $('viewer-axis').disabled=!periodic;$('check-peaks').disabled=!periodic;
     $('check-peaks').title=periodic?'':'Build a periodic cell to check measured reflections.';
-    $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing');
+    const ribbon=C.structure?.provenance?.template==='cof-76';
+    $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing')||ribbon;
+    $('compare-pxrd-stacks').title=ribbon?'Layer stacking requires a sheet. COF-76 contains covalent ribbons.':'';
     $('screen-pores').disabled=!periodic;
     $('calculate-pores').disabled=!periodic;
     $('calculate-pxrd').textContent=periodic?'Calculate periodic PXRD':'Calculate finite scattering';
@@ -117,14 +119,23 @@
     try{await S.saveText('COFdraw-powder-pattern.svg',new XMLSerializer().serializeToString(svg),'image/svg+xml');}
     catch(error){C.status(error.message,true);}
   });
-  function drawPattern(profile,series=[],observations=[],report={}){
+  function drawPattern(profile,series=[],observations=[],report={},detail=false,selected=0,offset=0){
     positionTraces=null;
     const comparison=series.length>1;
     $('pattern-spacing').hidden=!comparison;
-    separation.value='0';
+    separation.value=String(offset);
     const root=$('pxrd-plot');root.replaceChildren();const ns='http://www.w3.org/2000/svg';
     const svg=document.createElementNS(ns,'svg');svg.setAttribute('role','img');
-    const xs=profile.two_theta_degrees,min=xs[0],max=xs.at(-1);
+    const xs=profile.two_theta_degrees,min=xs[0],end=xs.at(-1);
+    const limit=$('pattern-limit');
+    limit.min=String(Number((min+.1).toFixed(2)));limit.max=String(end);
+    if(!Number.isFinite(limit.valueAsNumber)||limit.valueAsNumber<=min)limit.value=String(Math.min(end,min+8));
+    const max=detail?Math.min(end,limit.valueAsNumber):end;
+    const redraw=(zoom,which=selected)=>drawPattern(profile,series,observations,report,zoom,which,Number(separation.value));
+    $('zoom-pattern').textContent=detail?'Full range':'Low-angle detail';
+    $('zoom-pattern').setAttribute('aria-pressed',String(detail));
+    $('zoom-pattern').onclick=()=>redraw(!detail);
+    limit.onchange=()=>{if(limit.reportValidity())redraw(true);};
     const point=(x,y)=>[(52+(x-min)/(max-min)*525).toFixed(2),(235-y/100*205).toFixed(2)];
     function element(tag,attrs,label){const el=document.createElementNS(ns,tag);for(const [key,value] of Object.entries(attrs))el.setAttribute(key,value);if(label!==undefined)el.textContent=label;svg.append(el);return el;}
     const title=C.structure?'Simulated powder diffraction':'Finite-cluster scattering';
@@ -138,6 +149,7 @@
     const metadata={source:provenance,operation:report.operation,parameters:report.parameters,
       model_sha256:report.structure_sha256,report_id:report.report_id,observed:observations.map(r=>r.observed_two_theta),
       series:series.map(r=>({label:r.label,report_id:r.result.report_id,structure_sha256:r.result.structure_sha256})),normalization:'Each curve normalized to 100'};
+    metadata.display_two_theta_degrees=[min,max];
     const metadataNode=element('metadata',{},JSON.stringify(metadata));
     element('text',{x:52,y:14,fill:'#254b43','font-size':12},title+' · λ '+$('xrd-wavelength').value+' Å');
     element('path',{d:'M52 20V235',fill:'none',stroke:'#9aafa6','stroke-width':1});
@@ -153,9 +165,9 @@
     element('text',{x:15,y:130,transform:'rotate(-90 15 130)','text-anchor':'middle',fill:'#375e52','font-size':12},'Relative intensity');
     const colors=['#217d70','#c66a46','#7165b5','#2d80b5','#ad5382'];
     const lines=series.length?series:[{profile}];
-    const traces=lines.map((row,index)=>element('path',{'data-trace':row.label||'current',d:row.profile.two_theta_degrees.map((x,i)=>(i?'L':'M')+point(x,row.profile.intensity[i]).join(',')).join(' '),fill:'none',stroke:colors[index%colors.length],'stroke-width':1.5,'stroke-linejoin':'round','vector-effect':'non-scaling-stroke'}));
+    const traces=lines.map((row,index)=>element('path',{'data-trace':row.label||'current',d:row.profile.two_theta_degrees.map((x,i)=>x<=max?(i?'L':'M')+point(x,row.profile.intensity[i]).join(','):'').join(' ').trim(),fill:'none',stroke:colors[index%colors.length],'stroke-width':1.5,'stroke-linejoin':'round','vector-effect':'non-scaling-stroke'}));
     for(const observation of observations){
-      if(observation.status==='outside range')continue;
+      if(observation.status==='outside range'||observation.observed_two_theta>max)continue;
       const x=point(observation.observed_two_theta,0)[0];
       const tick=element('line',{x1:x,x2:x,y1:223,y2:235,stroke:observation.status==='unmatched'?'#ae4833':'#4f548b','stroke-width':2});
       const title=document.createElementNS(ns,'title');title.textContent=observation.observed_two_theta+'° · '+observation.status;tick.append(title);
@@ -166,6 +178,35 @@
         element('text',{'data-series-label':row.label,x:x+20,y:309,'font-size':10,fill:'#375e52'},row.label));
     });
     if(observations.length)element('text',{x:52,y:309,'font-size':11,fill:'#375e52'},'Measured peak ticks · violet: candidate center within tolerance · red: unmatched');
+    const peakBox=$('pattern-peak-list');peakBox.hidden=!detail;
+    const markers=[];
+    if(detail){
+      const row=lines[selected],src=row.profile,data=row.result||report;
+      const entries=(data.peaks||src.two_theta_degrees.flatMap((x,i)=>{
+        const y=src.intensity[i];
+        return i>0&&i+1<src.intensity.length&&y>src.intensity[i-1]&&y>=src.intensity[i+1]?[{two_theta_degrees:x,intensity:y}]:[];
+      })).filter(p=>p.two_theta_degrees>=min&&p.two_theta_degrees<=max).sort((a,b)=>a.two_theta_degrees-b.two_theta_degrees);
+      const body=peakBox.querySelector('div');body.replaceChildren();
+      peakBox.open=true;
+      peakBox.querySelector('summary').textContent=(row.label?row.label+' · ':'')+entries.length+(data.peaks?' reflections':' profile maxima')+' in view';
+      if(comparison){
+        const select=document.createElement('select');select.setAttribute('aria-label','Inspect peaks for stacking');
+        lines.forEach((v,i)=>select.add(new Option(v.label,String(i))));select.value=String(selected);
+        select.onchange=()=>redraw(true,Number(select.value));body.append(select);
+      }
+      table(body,['Peak','2θ / °','Relative I',data.peaks?'h k l':'Type'],entries.map((p,i)=>[i+1,p.two_theta_degrees.toFixed(3),number(p.intensity,1),data.peaks?p.hkls.map(h=>h.join(' ')).join('; '):'Profile maximum']));
+      const labels=[];
+      for(const {p,num} of entries.map((p,i)=>({p,num:i+1})).sort((a,b)=>b.p.intensity-a.p.intensity)){
+        const x=Number(point(p.two_theta_degrees,0)[0]);
+        if(labels.some(v=>Math.abs(v-x)<32)||labels.length>=8)continue;
+        labels.push(x);
+        const idx=Math.max(0,Math.min(src.intensity.length-1,Math.round((p.two_theta_degrees-xs[0])/(xs[1]-xs[0]))));
+        const intensity=src.intensity[idx];
+        const mark=element('text',{x,y:Math.max(26,230-2.05*intensity),'text-anchor':'middle',fill:colors[selected],'font-size':10},String(num));
+        markers.push({mark,intensity});
+      }
+      metadata.peak_series=row.label||'current';metadataNode.textContent=JSON.stringify(metadata);
+    }
     if(comparison){
       const ticks=svg.querySelectorAll('line[x1="48"], text[x="44"]');
       positionTraces=value=>{
@@ -182,8 +223,9 @@
           const baseline=235-(n-1-i)*stride;
           trace.setAttribute('transform',`translate(0 ${baseline}) scale(1 ${amplitude}) translate(0 -235)`);
         });
+        markers.forEach(({mark,intensity})=>mark.setAttribute('y',Math.max(25,230-(n-1-selected)*stride-intensity*2.05*amplitude)));
       };
-      positionTraces(0);
+      positionTraces(offset);
     }
     root.append(svg);
     patternVisible=true;updatePatternView();

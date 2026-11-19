@@ -17,7 +17,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.9.3b3"
+VERSION = "0.9.3b4"
 
 
 def validate_synthesis_resources(directory=None):
@@ -151,7 +151,7 @@ def main():
     validate_catalog(staged / "data")
     crystal_data = data / "crystal-models"
     crystal_manifest = json.loads((crystal_data / "manifest.json").read_text("utf-8"))
-    for row in crystal_manifest["templates"]:
+    for row in crystal_manifest["templates"] + crystal_manifest.get("reported_models", []):
         crystal = (crystal_data / row["path"]).resolve()
         if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
             raise SystemExit("Periodic template hash mismatch")

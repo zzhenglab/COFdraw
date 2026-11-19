@@ -32,6 +32,17 @@ function constructionCheck(){
   }
   return templateCheck();
 }
+const recentTreatments=[];
+let liveDrawingTimer, selectionRevision=0;
+function queueDrawing(){
+  clearTimeout(liveDrawingTimer);
+  const pair=JSON.stringify([$("smiles-a").value,$("smiles-b").value]);
+  liveDrawingTimer=setTimeout(()=>{
+    if(pair!==JSON.stringify([$("smiles-a").value,$("smiles-b").value])||state.jsonPending||sourceMode())return;
+    if(state.busy){queueDrawing();return;}
+    if((state.inputsDirty||!state.recipe)&&!$("build").disabled)$("build").click();
+  },250);
+}
 function autoMatchChemistry(){
   if(!state.autoChemistry||sourceMode())return;
   const pair=checkedMonomers();if(!pair.a||!pair.b){$("chemistry-match").textContent='Choose both building blocks and wait for their structure checks.';return;}
@@ -40,7 +51,7 @@ function autoMatchChemistry(){
   if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
   populateLinkages(match.id);
   const template=templates().find(item=>item.id===match.template_id);
-  $("chemistry-match").textContent=`Auto: ${match.label} · ${template?.label||'compatible finite patch'}. ${match.swapped?'Your A/B choices stay in place; construction uses B for the first reactive role. ':''}${match.choice_count>1?`${match.choice_count} product choices are supported. `:''}Choose Manual to change the result. This is a drawing proposal, not a synthesis prediction.`;
+  $("chemistry-match").textContent=`${match.label} · ${template?.label||'finite patch'}`;
   return match.template_id;
 }
 function populateLinkages(desired=$("linkage").value){
@@ -125,7 +136,12 @@ async function api(path, payload) {
 function sync() {
   const source=sourceMode(),linkage=linkageInfo();
   $("chemistry-note").textContent=source?`${state.sourceId?'Source':'Recorded'} graph loaded. Change presentation or edit the recorded layout; change a precursor to start a new construction.`:linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
-  document.querySelector('.linkage-first').hidden=source;document.querySelector('.auto-chemistry').hidden=source;$("combination-search").disabled=state.busy;
+  const hideChoices=source||state.autoChemistry;
+  document.querySelector('.linkage-first').hidden=hideChoices;
+  document.querySelector('.chemistry-options').hidden=hideChoices;
+  for(const id of ['linkage-roles','template-description'])$(id).hidden=hideChoices;
+  document.querySelector('.template-scope').hidden=hideChoices;
+  $('chemistry-mode-field').hidden=source;$("combination-search").disabled=state.busy;
   if(source)$("chemistry-match").textContent="The recorded recipe supplies this graph directly; constructor compatibility does not apply.";
   else if($("chemistry-match").textContent.startsWith("The recorded recipe supplies"))$("chemistry-match").textContent="Linkages and connectivity update as you choose building blocks.";
   const blocked=!state.online||state.busy;
@@ -150,11 +166,11 @@ function sync() {
   document.querySelectorAll("#style-controls input,#style-controls select,#style-controls button").forEach(b=>b.disabled=blocked);
   $("apply-style-options").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
   for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","source-select","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
-  $("auto-chemistry").value=state.autoChemistry?'auto':'manual';$("auto-chemistry").disabled=state.busy;
+  $("auto-chemistry").checked=state.autoChemistry;$("auto-chemistry").disabled=state.busy;
   for(const id of ['linkage','linkage-search','template','pore'])$(id).disabled=state.busy||state.autoChemistry;
   $("linkage-mode-label").textContent=state.autoChemistry?'Linkage · Auto':'Linkage · Manual';
   $("template-mode-label").textContent=state.autoChemistry?'Connectivity · Auto':'Connectivity · Manual';
-  if(!source&&!state.autoChemistry)$("chemistry-match").textContent='Manual: choose the linkage and a compatible finite-patch template. Switch to Auto to match both from the checked monomers.';
+  if(!source&&!state.autoChemistry)$("chemistry-match").textContent='Choose a linkage and a connectivity template.';
   window.dispatchEvent(new CustomEvent('cofdraw:state'));
 }
 function removeIdentity() {
@@ -171,7 +187,7 @@ function removeIdentity() {
   Object.assign(state.recipe,{designed_variant:true,ground_truth:false,review_status:"user_design"});state.sourceId=null;state.sourceMetadata=null;
   updateIdentity();if(wasSource)refreshInspectors();
 }
-function markInputsChanged() { const wasSource=sourceMode();if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";if(wasSource)refreshChemistry();else{refreshInspectors();sync();} }
+function markInputsChanged() { selectionRevision++;const wasSource=sourceMode();if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";if(wasSource)refreshChemistry();else{refreshInspectors();sync();} }
 function syncJSON(){ $("recipe-json").value=state.recipe?JSON.stringify(state.recipe,null,2):"";state.jsonPending=false; }
 function validateRecipeShape(recipe) {
   if(recipe?.explicit_graph){if(!Array.isArray(recipe.explicit_graph.atoms)||!Array.isArray(recipe.explicit_graph.bonds))throw new Error("This source drawing needs explicit atoms and bonds.");return;}
@@ -213,7 +229,7 @@ async function validateMonomer(block,quiet=false){
 async function refreshMonomers(){const results=await Promise.allSettled([validateMonomer("a",true),validateMonomer("b",true)]);for(const r of results)if(r.status==="rejected")notice(r.reason.message,true);}
 function setCombination(preset){
   for(const block of ["a","b"]){$(`smiles-${block}`).value=preset[`monomer_${block}`];$(`label-${block}`).value=preset[`label_${block}`]||block.toUpperCase();$(`preset-${block}`).value="";}
-  $("linkage-search").value="";populateLinkages(preset.linkage);$("pore").value=preset.instances;markInputsChanged();const wanted=preset.template_id||templates().find(t=>t.instances===preset.instances&&(!t.linkages||t.linkages.includes(preset.linkage)))?.id;refreshChemistry(wanted);$("cof-preset").value=preset.id;updateIdentity();refreshMonomers();
+  $("linkage-search").value="";populateLinkages(preset.linkage);$("pore").value=preset.instances;markInputsChanged();const wanted=preset.template_id||templates().find(t=>t.instances===preset.instances&&(!t.linkages||t.linkages.includes(preset.linkage)))?.id;refreshChemistry(wanted);$("cof-preset").value=preset.id;updateIdentity();refreshMonomers().then(queueDrawing);
 }
 function showSourceMonomers(recipe,metadata){
   let components=Object.entries(recipe.components||{}).filter(([,c])=>c.monomer_smiles);
@@ -228,8 +244,10 @@ async function render(){
   if(!state.recipe||state.busy||state.inputsDirty||state.jsonPending)return;
   state.busy=true;sync();
   try{
+    const revision=selectionRevision,recipe=state.recipe;
     const wasRandom=state.style==="random",payload=state.sourceId?{source_recipe_id:state.sourceId}:{recipe:state.recipe};Object.assign(payload,{size:Number($("image-size").value),style_id:state.style});if(state.library?.style_controls)payload.style_options=state.styleOptions;if(state.seed!==null)payload.style_seed=state.seed;
-    const result=await api("render",payload);state.result=result;state.dirty=false;
+    if(wasRandom)payload.recent_styles=[...recentTreatments];
+    const result=await api("render",payload);if(revision!==selectionRevision||recipe!==state.recipe)return;state.result=result;state.dirty=false;
     if(!state.sourceId){for(const key of["design_cofex_notation","design_topology","selected_template"])state.recipe[key]=clone(result.audit[key]??null);syncJSON();}
     $("framework-image").src=`.${result.downloads.svg}`;$("framework-image").hidden=false;$("canvas-empty").classList.add("hidden");
     const audit=result.audit;$("drawing-summary").textContent=`${audit.building_block_instances} blocks · ${audit.atoms} atoms · ${audit.continuation_ports.length} outward ports · ${state.sourceId?"provisional source patch":"designed finite patch"}`;
@@ -237,31 +255,33 @@ async function render(){
     const exportNote=$("export-note"),exportAudit=audit.chemical_exports||{};
     exportNote.hidden=Boolean(result.downloads.cdxml);
     exportNote.textContent=result.downloads.cdxml?"":exportAudit.cdxml==="unavailable_in_this_rdkit_build"?"CDXML is unavailable in this local chemistry engine. Use MOL or SDF for chemical editing.":`CDXML was omitted${exportAudit.reason?`: ${exportAudit.reason}`:" because its export could not be validated"}. MOL and SDF remain available.`;
-    const chosen=audit.drawing_style;if(chosen){state.style=chosen.id||state.style;state.seed=chosen.seed??state.seed;state.resolvedStyleOptions=clone(chosen.options||{});if(wasRandom)state.styleOptions=clone(chosen.options||{});$("canvas-sheet").classList.toggle("transparent-preview",Boolean(chosen.options?.transparent_background));setStyleDescription();drawStyleControls();}
+    const chosen=audit.drawing_style;if(chosen){state.style=chosen.id||state.style;state.seed=chosen.seed??state.seed;state.resolvedStyleOptions=clone(chosen.options||{});if(wasRandom)state.styleOptions=clone(chosen.options||{});if(recentTreatments.at(-1)!==state.style){recentTreatments.push(state.style);if(recentTreatments.length>4)recentTreatments.shift();}$("canvas-sheet").classList.toggle("transparent-preview",Boolean(chosen.options?.transparent_background));setStyleDescription();drawStyleControls();}
     updateIdentity();window.dispatchEvent(new CustomEvent('cofdraw:rendered',{detail:result}));const review=state.sourceId?'':geometryReviewMessage(audit.layout_refinement);notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":review?`Drawing created. ${review}`:"Drawing ready. Inspect the connections and continuation ports before saving.");return result;
   }catch(error){notice(error.message,true);return null;}finally{state.busy=false;sync();}
 }
 $("build").addEventListener("click",async()=>{
+  clearTimeout(liveDrawingTimer);
   if(state.busy)return;state.busy=true;sync();
-  try{await Promise.all([validateMonomer("a",true),validateMonomer("b",true)]);const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
+  const revision=selectionRevision;
+  try{await Promise.all(["a","b"].map(b=>checkedMonomer(b)||validateMonomer(b,true)));const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);if(revision!==selectionRevision)return;acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
 });
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 function geometryReviewMessage(refinement){return refinement?.quality==='needs_review'?'Some linkage junctions still need geometry review. Inspect the connections and use Move / adjust or Clean bond geometry before saving.':'';}
 for(const block of ["a","b"]){
-  let validationTimer; $(`smiles-${block}`).addEventListener('input',()=>{clearTimeout(validationTimer);validationTimer=setTimeout(()=>{if($(`smiles-${block}`).value.trim()&&!state.busy)validateMonomer(block,true).catch(()=>{});},650);});
+  let validationTimer; $(`smiles-${block}`).addEventListener('input',()=>{clearTimeout(validationTimer);validationTimer=setTimeout(()=>{if($(`smiles-${block}`).value.trim()&&!state.busy)validateMonomer(block,true).then(queueDrawing).catch(()=>{});},650);});
   $(`smiles-${block}`).addEventListener("input",()=>{$(`formula-${block}`).textContent="Preview needs update";$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;delete state.monomers[block];$(`preset-${block}`).value="";markInputsChanged();refreshChemistry();});
   $(`label-${block}`).addEventListener("input",markInputsChanged);
-  $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;const choice=monomerChoice(item,block,checkedMonomer(block==='a'?'b':'a'));if(!choice.compatible){refreshPresetLists();notice(choice.reason,true);return;}$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;delete state.monomers[block];markInputsChanged();refreshChemistry();validateMonomer(block).catch(e=>notice(e.message,true));});
+  $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;const choice=monomerChoice(item,block,checkedMonomer(block==='a'?'b':'a'));if(!choice.compatible){refreshPresetLists();notice(choice.reason,true);return;}$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;delete state.monomers[block];markInputsChanged();refreshChemistry();validateMonomer(block).then(queueDrawing).catch(e=>notice(e.message,true));});
 }
 document.querySelectorAll(".validate-monomer").forEach(b=>b.addEventListener("click",()=>validateMonomer(b.dataset.block).catch(e=>notice(e.message,true))));
 $("combination-search").addEventListener("input",()=>refreshCombinations());
 $("cof-preset").addEventListener("change",()=>{
   const row=combinations.find(p=>p.id===$("cof-preset").value);
   if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
-  if(row){setCombination(row);notice("Starting pair loaded. Create a drawing to check its connections.");}
+  if(row){setCombination(row);notice("Checking the selected pair…");}
   else if(sourceMode()){markInputsChanged();refreshMonomers();}
 });
-$("auto-chemistry").addEventListener("change",()=>{state.autoChemistry=$("auto-chemistry").value==='auto';if(state.autoChemistry)markInputsChanged();refreshChemistry();});
+$("auto-chemistry").addEventListener("change",()=>{state.autoChemistry=$("auto-chemistry").checked;if(state.autoChemistry)markInputsChanged();refreshChemistry();if(state.autoChemistry)queueDrawing();});
 $("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry();updateIdentity();});
 $("linkage-search").addEventListener("input",()=>populateLinkages());
 $("pore").addEventListener("change",markInputsChanged);
@@ -477,7 +497,7 @@ async function applyLibraryItem(item=libraryItem()){
   if(!item||libraryView.busy||!libraryChoice(item).compatible)return;const target=$("library-target").value;
   if(target==="editor"){$("monomer-library-dialog").close();openSketch("a",item);return;}
   libraryView.busy=true;$("library-apply").disabled=true;$("library-edit").disabled=true;
-  try{$(`smiles-${target}`).value=item.smiles;$(`label-${target}`).value=item.abbreviation||item.label||item.id;delete state.monomers[target];markInputsChanged();await validateMonomer(target,true);refreshChemistry();notice(`Building block ${target.toUpperCase()} loaded from the monomer library.`);
+  try{$(`smiles-${target}`).value=item.smiles;$(`label-${target}`).value=item.abbreviation||item.label||item.id;delete state.monomers[target];markInputsChanged();await validateMonomer(target,true);refreshChemistry();queueDrawing();notice(`Building block ${target.toUpperCase()} loaded from the monomer library.`);
     if(target==="a"){$("library-target").value="b";$("library-search").value="";$("library-sites").value="all";$("library-show-all").checked=false;libraryView.selected=null;}else $("monomer-library-dialog").close();
   }catch(e){$("library-compatibility").textContent=e.message;$("library-compatibility").classList.add("unavailable");}finally{libraryView.busy=false;drawLibrary();}
 }
@@ -609,7 +629,7 @@ async function applySketch(){
   $(`smiles-${block}`).value=result.smiles;
   $(`preset-${block}`).value=known?.id||"";
   setPreview(block,result);markInputsChanged();$("sketch-dialog").close();
-  notice(`Building block ${block.toUpperCase()} updated · ${result.formula}. Create a drawing to apply it.`);
+  notice(`Building block ${block.toUpperCase()} updated · ${result.formula}. Updating drawing.`);queueDrawing();
 }
 $("sketch-use").addEventListener("click",()=>applySketch().catch(e=>sketchMessage(e.message,true)));
 $("sketch-cancel").addEventListener("click",()=>$("sketch-dialog").close());

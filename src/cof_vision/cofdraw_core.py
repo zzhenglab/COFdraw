@@ -298,13 +298,13 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
     return ET.tostring(root, encoding='unicode'), xy
 
 
-def render_styled(recipe, directory, size, style_id, seed=None, style_options=None, *, prepared_patch=None):
+def render_styled(recipe, directory, size, style_id, seed=None, style_options=None, *, prepared_patch=None, recent_styles=()):
     from .framework_drawing import build_patch, render_recipe
     if style_id == 'source':
         source_options = {key: recipe.get('source_style', {})[key] for key in ('abbreviation_mode','edge_style') if key in recipe.get('source_style', {})}
         source_options.update(style_options or {})
         style_options = source_options
-    style_id, seed, options = style_configuration(style_id, seed, style_options)
+    style_id, seed, options = style_configuration(style_id, seed, style_options, recent_styles)
     directory = Path(directory)
     # Custom SVG styles supply their own images; do not render and discard two
     # potentially expensive native macrocycle images first.

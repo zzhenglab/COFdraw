@@ -112,7 +112,7 @@ def main():
           # This legacy case checks fixed-linkage compatibility; automatic
           # switching is covered by smoke_cofdraw_studio.py.
           page.keyboard.press("Escape")
-          page.locator("#auto-chemistry").select_option("manual")
+          page.locator("#auto-chemistry").uncheck()
           page.locator("#open-monomer-library").click()
           page.locator("#library-sites").select_option("4")
           assert page.locator(".library-row").count()>0

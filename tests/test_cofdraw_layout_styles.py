@@ -10,8 +10,18 @@ from rdkit import Chem
 
 from cof_vision.cofdraw_core import render_styled
 from cof_vision.cofdraw_layout import clean_layout
-from cof_vision.cofdraw_styles import style_configuration
+from cof_vision.cofdraw_styles import STYLE_FAMILIES, style_configuration
 from cof_vision.framework_drawing import build_patch, linkage_fragment, VERSION
+
+
+def test_random_style_changes_depiction_even_with_repeated_seed():
+    history = ['stacked_slipped']
+    for seed in [42] * 10 + list(range(30)):
+        chosen, _, _ = style_configuration('random', seed, recent_styles=history)
+        assert STYLE_FAMILIES.get(chosen, chosen) not in {
+            STYLE_FAMILIES.get(s, s) for s in history[-4:]
+        }
+        history.append(chosen)
 
 
 def pore():

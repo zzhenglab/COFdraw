@@ -241,7 +241,7 @@ def main():
             page.unroute("**/api/drawing/render", quality_fixture)
             checks.append("Explicit audit-quality fixture shows linkage-review guidance and clears it after a regular result")
 
-            page.locator("#auto-chemistry").select_option("manual")
+            page.locator("#auto-chemistry").uncheck()
             page.locator("#linkage").select_option("imine")
             assert page.locator("#build").is_disabled()
             open_b()
@@ -259,7 +259,7 @@ def main():
             assert page.locator('#template option[value="sql_4_2"]').is_disabled()
             checks.append("Fixed linkage invalidates prior hydrazide B; tetrahedral A invalidates the planar template without assigning a false net")
 
-            page.locator("#auto-chemistry").select_option("auto")
+            page.locator("#auto-chemistry").check()
             page.locator("#preset-a").select_option("tapb")
             inspected("a")
             assert page.locator("#build").is_disabled()

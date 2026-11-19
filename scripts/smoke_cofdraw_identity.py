@@ -57,9 +57,9 @@ def main():
             page.goto(base)
             page.wait_for_function("window.COFdrawStudio?.state.online && !document.getElementById('build').disabled")
             page.locator("#mode-manual").click()
-            assert page.locator("#auto-chemistry").input_value() == "auto"
+            assert page.locator("#auto-chemistry").is_checked()
             assert page.locator("#linkage").is_disabled() and page.locator("#template").is_disabled()
-            assert "Auto:" in page.locator("#chemistry-match").inner_text()
+            assert "Imine" in page.locator("#chemistry-match").inner_text()
             assert page.locator("#identity-string").is_visible()
             assert page.locator("#identity-string").evaluate("el => !el.closest('details')")
             checks.append("Auto is the real initial mode; resolved choices are disabled and notation is not hidden in details")
@@ -76,7 +76,7 @@ def main():
             assert page.locator('#template option[value="hcb_3_3"]').is_disabled()
             checks.append("Auto reacts to real B and A graph changes: 3+3 to 3+2 to 4+2; incompatible connectivity remains disabled")
 
-            page.locator("#auto-chemistry").select_option("manual")
+            page.locator("#auto-chemistry").uncheck()
             assert page.locator("#linkage").is_enabled() and page.locator("#template").is_enabled()
             reference = next(key for key, row in library["linkages"].items() if row["supported"] is False)
             page.locator("#linkage").select_option(reference)
@@ -90,7 +90,7 @@ def main():
             assert page.locator("#template").input_value() == "alternating_hexagon"
             checks.append("Manual linkage and connectivity survive monomer revalidation")
 
-            page.locator("#auto-chemistry").select_option("auto")
+            page.locator("#auto-chemistry").check()
             assert page.locator("#linkage").input_value() == "imine"
             assert page.locator("#template").input_value() == "sql_4_2"
             assert page.locator("#linkage").is_disabled() and page.locator("#template").is_disabled()

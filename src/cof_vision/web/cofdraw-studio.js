@@ -57,6 +57,9 @@
   });
   $('close-science').addEventListener('click',()=>{workspace(false);$('switch-space').focus();});
   $('switch-space').addEventListener('click',()=>$('science-dialog').hidden?$('open-science').click():$('close-science').click());
+  window.addEventListener('cofdraw:rendered',()=>{
+    if(!$('science-dialog').hidden&&$('structure-source').value==='drawing'&&!origin&&!scienceBusy&&drawingReady())generateCurrentCell();
+  });
   function metric(container,label,value){const row=document.createElement('div');row.className='metric-card';const title=document.createElement('span'),number=document.createElement('strong');title.textContent=label;number.textContent=value;row.append(title,number);container.append(row);}
   function note(container,text,warning=false){if(!text)return;const p=document.createElement('p');p.className=`metric-note${warning?' warning':''}`;p.textContent=text;container.append(p);}
   function details(container,data){const el=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');summary.textContent='Method, units, and diagnostics';pre.textContent=JSON.stringify(data,null,2);el.append(summary,pre);container.append(el);}
@@ -104,8 +107,11 @@
         return;
       }
       currentLayer=result.structure;
-      display(result,'Current drawing · periodic AA','current-periodic');
-      cellNote(`CIF ready · ${result.structure.atoms.length} atoms per unit cell · ${fmt(result.structure.provenance.spacing_angstrom)} Å layer spacing`);
+      const provenance=result.structure.provenance;
+      const reported=provenance.kind==='reported_crystal';
+      display(result,reported?provenance.model_name+' · published ribbon packing':'Current drawing · periodic AA','current-periodic');
+      if(reported)$('viewer-provenance').textContent=drawingName()+' · published precursor match · DOI '+provenance.doi;
+      cellNote(reported?provenance.qualification:`CIF ready · ${result.structure.atoms.length} atoms per unit cell · ${fmt(provenance.spacing_angstrom)} Å layer spacing`);
       $('finite-view-options').open=false;
       status('Periodic model and CIF ready. PXRD and pore geometry are available.');
     });
@@ -162,11 +168,11 @@
   $('network-offsets').addEventListener('input',()=>{invalidate('Network offsets changed. Regenerate the hypothesis.');hypothesis=null;$('network-comparison').hidden=true;});
   for(const axis of ['a','b','c'])$(`repeat-${axis}`).addEventListener('input',()=>{invalidate('Cell repeats changed. Generate the model again.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
   $('calculate-monomer').addEventListener('click',()=>work(async api=>{const block=$('descriptor-block').value;const r=await api('science/monomer',{smiles:$(`smiles-${block}`).value.trim(),conformers:Number($('descriptor-conformers').value)});display(r,`Monomer ${$(`label-${block}`).value||block.toUpperCase()}`,'monomer');const el=$('monomer-results');report(el,r.descriptors,{molecular_weight_g_mol:'Molecular weight / g mol⁻¹',exact_mass_da:'Exact mass / Da',tpsa_angstrom2:'Topological polar surface / Å²',crippen_logp:'Crippen logP',hydrogen_bond_donors:'H-bond donors',hydrogen_bond_acceptors:'H-bond acceptors',rotatable_bonds:'Rotatable bonds',formal_charge:'Formal charge'});if(r.selected_conformer?.energy_kcal_mol!==null)metric(el,'Conformer energy / kcal mol⁻¹',fmt(r.selected_conformer?.energy_kcal_mol,3));note(el,`${r.method?.embedding||'ETKDG'} · ${r.method?.force_field||'No available force field'} · ${r.selected_conformer?.converged?'converged':'not converged'}`,!r.selected_conformer?.converged);for(const warning of r.warnings||[])note(el,warning);details(el,{method:r.method,conformers:r.conformers,partial_charges:r.partial_charges});status('Monomer descriptors calculated. Conformer energies are force-field values, not quantum orbital energies.');}));
-  $('calculate-pores').addEventListener('click',()=>work(async api=>{
+  $('calculate-pores').addEventListener('click',()=>work(async(api,check)=>{
     if(!currentStructure||currentStructure.periodic!==true)throw new Error('Generate a periodic model or import a CIF first. Finite drawing layers are not a periodic pore model.');
-    const spacing=Number($('pore-samples').value),r=await api('science/geometry',{
-      structure:currentStructure,probe_radius:Number($('probe-radius').value),grid_spacing:spacing,
-      surface_samples:spacing>=.9?32:spacing>=.6?64:128,refinement:$('pore-refinement').checked,include_map:true});
+    const r=await window.COFdrawPores.calculate();
+    check();
+    if(!r)return;
     const el=$('porosity-results');el.replaceChildren();el.dataset.engine=r.engine;el.dataset.reportId=r.report_id||'';
     const range=pair=>Array.isArray(pair)&&pair.length===2?`${fmt(pair[0],2)} – ${fmt(pair[1],2)}`:'Unavailable';
     metric(el,'PLD · geometric bounds / Å',range(r.pld_bounds_angstrom));

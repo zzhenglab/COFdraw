@@ -35,6 +35,7 @@ class RenderDrawing(BaseModel):
     size: int = Field(default=1600, ge=500, le=2400)
     style_id: str = Field(default="standard", max_length=80)
     style_seed: int | None = Field(default=None, ge=0, le=2147483647)
+    recent_styles: list[str] = Field(default_factory=list, max_length=4)
     style_options: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -606,7 +607,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             with lock:
                 prepared_patch = build_patch(recipe)
                 audit = render_styled(recipe, directory, request.size, request.style_id, request.style_seed, request.style_options,
-                                      prepared_patch=prepared_patch)
+                                      prepared_patch=prepared_patch, recent_styles=request.recent_styles)
                 # Export support is explicit; the underlying MOL remains available.
                 extra_formats = export_chemical_formats(directory, drawing_id, source_mol=prepared_patch[0])
             export_report = directory / f"{drawing_id}.chemical-export.json"
@@ -758,6 +759,21 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 except (ValueError, KeyError, TypeError) as exc:
                     return {'available': False, 'reason': str(exc)}
                 matches = {o['id'] for o in options['options']}
+                reported = next((entry for entry in manifest.get('reported_models', [])
+                    if entry['precursor_match']['linkage'] == recipe['linkage']
+                    and design[0]['selected_template']['id'] in entry['precursor_match']['drawing_template_ids']
+                    and sorted(entry['precursor_match']['canonical_smiles']) == design[1]), None)
+                if reported and request.layer_spacing is None:
+                    structure = load_crystal_template(reported, manifest)
+                    provenance = structure['provenance']
+                    provenance.update(kind='reported_crystal', generator='Powder-refined coordinates, SI Table S1',
+                                      doi=reported['citation_doi'], precursor_match=reported['precursor_match'])
+                    result = structure_exports(structure, repeats=tuple(request.repeats))
+                    result['exports']['cif'] = result['exports']['cif'].replace('data_COFdraw\n',
+                        f"data_COFdraw\n# {reported['model_name']}; DOI {reported['citation_doi']}; SI Table S1.\n", 1)
+                    result.update(available=True, scope=reported['description'],
+                                  cell_validation={'reported_model': reported['id'], 'source_sha256': reported['sha256']})
+                    return scientific_result(result, 'build-periodic', request.model_dump())
                 item = next((entry for entry in manifest['templates']
                              if entry['id'] in matches and entry['model_name'].endswith('-AA')), None)
                 if item and request.layer_spacing is None:

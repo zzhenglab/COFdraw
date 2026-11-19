@@ -71,7 +71,7 @@ ELEMENT_SCHEMES = {
 RANDOM_STYLES = (
     ('hetero_colors', ('classic', 'ink')),
     ('gradient_stack', ('lagoon', 'orchid', 'ember', 'jade')),
-    ('gradient_stack', ('ocean_coral', 'lavender_mint', 'purple_gold')),
+    ('half_space_stack', ('ocean_coral', 'lavender_mint', 'purple_gold')),
     ('sphere_cutaway', ('lagoon', 'orchid', 'jade', 'rose_slate')),
     ('pastel_blocks', ('lavender_mint', 'pastel', 'forest_berry', 'ember')),
     ('ring_fill', ('cobalt_citrus', 'orchid', 'jade', 'ocean_coral')),
@@ -79,8 +79,16 @@ RANDOM_STYLES = (
     ('glow_outline', ('sunlight', 'ocean_coral', 'lavender_mint')),
 )
 
+STYLE_FAMILIES = {
+    **dict.fromkeys(('standard', 'hetero_colors', 'red_blue', 'serif', 'bold_color',
+                     'mono_dashed', 'compact_labels', 'element_compact'), 'lines'),
+    **dict.fromkeys(('gradient_stack', 'half_space_stack', 'stacked_eclipsed', 'stacked_slipped'), 'layers'),
+    **dict.fromkeys(('node_highlight', 'pastel_blocks', 'cartoon_overlay'), 'block regions'),
+    **dict.fromkeys(('molecular_spheres', 'sphere_cutaway'), 'spheres'),
+}
 
-def style_configuration(style_id, seed=None, options=None):
+
+def style_configuration(style_id, seed=None, options=None, recent_styles=()):
     options=dict(options or {})
     allowed={"palette","font_family","font_scale","bond_scale","layer_count","layer_opacity","fill_opacity","edge_style","transparent_background","abbreviation_mode",
              "element_scheme", "hydrogen_labels", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
@@ -88,7 +96,9 @@ def style_configuration(style_id, seed=None, options=None):
     if style_id=="random":
         seed=random.SystemRandom().randrange(2**31) if seed is None else seed
         rng=random.Random(seed)
-        style_id, palettes = rng.choice(RANDOM_STYLES)
+        recent = {STYLE_FAMILIES.get(s,s) for s in recent_styles[-4:]}
+        choices = [row for row in RANDOM_STYLES if STYLE_FAMILIES.get(row[0], row[0]) not in recent]
+        style_id, palettes = rng.choice(choices)
         defaults={"palette":rng.choice(palettes),"font_scale":rng.choice([1.,1.05,1.1]),
                   "bond_scale":rng.choice([.95,1.1,1.25]),"fill_opacity":rng.choice([.16,.21,.27])}
         if style_id in ('gradient_stack','half_space_stack'):

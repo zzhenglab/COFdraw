@@ -120,6 +120,13 @@ def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,templ
     rule=LINKAGE_LIBRARY[linkage]
     components={key:{**linkage_fragment(smiles,linkage,role),"label":label}
                 for key,smiles,role,label in zip(("A","B"),(monomer_a,monomer_b),rule["roles"],(label_a,label_b))}
+    return _assemble_template(components, linkage, instances, template_id)
+
+
+def _assemble_template(components, linkage, instances, template_id):
+    rule=LINKAGE_LIBRARY[linkage]
+    monomer_a, monomer_b=(components[k]['monomer_smiles'] for k in ('A','B'))
+    label_a, label_b=(components[k]['label'] for k in ('A','B'))
     counts=[components[k]["connectivity"] for k in ("A","B")]
     if min(counts)<2: raise ValueError("Each component needs at least two compatible reactive sites")
     template=next((dict(t) for t in TEMPLATES if t["id"]==template_id),None)

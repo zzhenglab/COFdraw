@@ -2,6 +2,7 @@
 import argparse
 import json
 from pathlib import Path
+from urllib.parse import urljoin
 
 import numpy as np
 from playwright.sync_api import expect, sync_playwright
@@ -28,13 +29,40 @@ def main():
         page.goto(args.base_url)
         expect(page.locator("main.studio")).to_be_visible()
         expect(page.locator("#science-dialog")).to_be_hidden()
+        expect(page.locator("#framework-image")).to_be_visible(timeout=90000)
+        expect(page.locator("#auto-chemistry")).to_be_checked()
+        expect(page.locator("#linkage")).to_be_hidden()
+        page.locator("#auto-chemistry").uncheck()
+        expect(page.locator("#linkage")).to_be_visible()
+        with page.expect_response("**/api/drawing/render",timeout=90000):
+            page.locator("#auto-chemistry").check()
+
+        # Repeated clicks must change the depiction, including when palettes
+        # happen to be different on two members of the same style family.
+        families={"red_blue":"lines", "hetero_colors":"lines", "standard":"lines",
+                  "gradient_stack":"layers", "half_space_stack":"layers"}
+        history=["lines"]
+        graph=None
+        for i in range(6):
+            with page.expect_response("**/api/drawing/render",timeout=90000) as rendered:
+                page.locator("#random-style").click()
+            result=rendered.value.json()
+            audit=result["audit"]
+            chosen=audit["drawing_style"]["id"]
+            assert graph is None or graph==audit["fragment_serialization_sha256"]
+            graph=audit["fragment_serialization_sha256"]
+            family=families.get(chosen,chosen)
+            assert family not in history[-4:], (history,chosen)
+            history.append(family)
+            png=page.request.get(urljoin(args.base_url,result["downloads"]["png"]))
+            assert png.ok
+            (args.output_dir/f"style-{i+1}-{chosen}.png").write_bytes(png.body())
+        print("Six successive random treatments:",", ".join(history[1:]),flush=True)
 
         def draw_pair(first, second):
             page.locator("#preset-a").select_option(first)
-            page.locator("#preset-b").select_option(second)
-            expect(page.locator("#build")).to_be_enabled()
             with page.expect_response("**/api/drawing/render", timeout=90000) as rendered:
-                page.locator("#build").click()
+                page.locator("#preset-b").select_option(second)
             assert rendered.value.ok
             with page.expect_response("**/api/drawing/science/build-periodic", timeout=90000) as model:
                 page.locator("#switch-space").click()
@@ -54,7 +82,6 @@ def main():
         page.locator("#render-toggle").click()
         assert not panel.is_visible()
         page.locator("#render-toggle").click()
-        page.locator("#map-pores").click()
         expect(page.locator("#pore-visible")).to_be_checked(timeout=120000)
         assert page.evaluate("window.COFdrawPores.triangleCount > 0")
         assert page.evaluate("window.COFdrawPores.tileCount") == 8
@@ -99,6 +126,20 @@ def main():
         download.value.save_as(cif_path)
         assert "_atom_site_fract_x" in cif_path.read_text("utf8")
 
+        page.locator('[data-science-tab="pxrd"]').click()
+        page.locator("#xrd-max").fill("20")
+        page.locator("#compare-pxrd-stacks").click()
+        expect(page.locator("#pattern-spacing")).to_be_visible(timeout=120000)
+        page.locator("#pattern-separation").fill("1")
+        page.locator("#zoom-pattern").click()
+        page.locator("#pattern-limit").fill("8")
+        page.locator("#pattern-limit").press("Enter")
+        expect(page.locator("#pattern-peak-list tr").nth(1)).to_be_visible()
+        assert page.locator("#pattern-separation").input_value()=="1"
+        rows=page.locator("#pattern-peak-list tr").all()[1:]
+        assert all(float(row.locator("td").nth(1).inner_text())<=8 for row in rows)
+        page.screenshot(path=str(args.output_dir/"low-angle-stacking.png"))
+
         page.locator("#switch-space").click()
         assert not panel.is_visible()
         drawer = page.locator("#appearance-options > summary")
@@ -109,9 +150,18 @@ def main():
         drawer.click()
         page.locator("#switch-space").click()
         assert page.evaluate("COFdrawPores.structureHash") == signature
+        page.locator('[data-science-tab="porosity"]').click()
         page.locator("#probe-radius").fill("2.1")
         assert page.evaluate("COFdrawPores.triangleCount") == 0
         assert not visible.is_checked()
+        page.locator("#switch-space").click()
+        result=draw_pair("tfppy","tapa")
+        expect(page.locator("#viewer-title")).to_contain_text("COF-76")
+        assert result["structure"]["provenance"]["kind"]=="reported_crystal"
+        expect(page.locator("#pore-visible")).to_be_checked(timeout=120000)
+        assert page.evaluate("COFdrawPores.triangleCount > 0")
+        assert page.evaluate("COFdrawPores.structureHash")!=signature
+        page.screenshot(path=str(args.output_dir/"cof-76-ribbon.png"))
         page.locator("#switch-space").click()
         result = draw_pair("cv_18fdac58ad343c87", "hth_s")
         assert len(result["structure"]["atoms"]) == 348

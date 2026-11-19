@@ -14,8 +14,8 @@ def _graph(smiles):
 
 def validated_design(recipe):
     """Recover the declared chemistry and confirm its finite template incidence."""
-    from .cofdraw_chemistry import design_signature, prepare_template
-    from .framework_drawing import linkage_fragment
+    from .cofdraw_chemistry import design_signature, _assemble_template
+    from .framework_drawing import linkage_fragment, _ports, LINKAGE_LIBRARY
 
     selected=recipe.get('selected_template') or {}
     if recipe.get('explicit_graph') is not None:
@@ -26,12 +26,29 @@ def validated_design(recipe):
     if len(components)!=2:
         raise ValueError('Periodic construction requires two complete declared precursors.')
     precursors=sorted(_graph(c.get('monomer_smiles')) for c in components)
-    for component in components:
+    checked={}
+    for key,role in zip(('A','B'),LINKAGE_LIBRARY[recipe['linkage']]['roles']):
+        component=recipe['components'][key]
+        if component['role']!=role:
+            raise ValueError('Drawing components differ from the selected linkage roles')
         expected=linkage_fragment(component['monomer_smiles'],recipe['linkage'],component['role'])
         if _graph(expected['fragment_smiles'])!=_graph(component['fragment_smiles']):
-            raise ValueError('Edited product fragments do not match the declared precursor transform')
-    fresh=prepare_template(recipe['components']['A']['monomer_smiles'],recipe['components']['B']['monomer_smiles'],
-                           recipe['linkage'],'A','B',6,selected['id'])
+            # Port IDs follow input atom order. Older designs retain the canonical
+            # precursor, which can regenerate the same sites with different IDs.
+            actual=Chem.MolFromSmiles(component['fragment_smiles'])
+            reference=Chem.MolFromSmiles(expected['fragment_smiles'])
+            if set(_ports(actual))!=set(_ports(reference)):
+                raise ValueError('Edited attachment sites do not match the declared precursor transform')
+            for mol in (actual,reference):
+                for atom in mol.GetAtoms():
+                    if atom.GetAtomicNum()==0:
+                        atom.SetAtomMapNum(0)
+            if Chem.MolToSmiles(actual)!=Chem.MolToSmiles(reference):
+                raise ValueError('Edited product fragments do not match the declared precursor transform')
+        checked[key]={**expected,'fragment_smiles':component['fragment_smiles'],'label':key}
+    fresh=_assemble_template(checked,recipe['linkage'],6,selected['id'])
+    if fresh['selected_template'] is None:
+        raise ValueError('Unknown periodic connectivity template')
 
     def normalized_signature(value):
         value=deepcopy(value)

@@ -173,5 +173,26 @@
     "path": "precursor-mapping.audit.json",
     "sha256": "97b08fe051457ceedf26d7018f30d1f9a5eca52888f2e03e4dbd07989e4d95e1"
   },
-  "matched_model_generator": "scripts/generate_matched_crystal_templates.py"
+  "matched_model_generator": "scripts/generate_matched_crystal_templates.py",
+  "reported_models": [
+    {
+      "id": "cof-76",
+      "label": "COF-76 \u00b7 reported ribbon crystal",
+      "model_name": "COF-76",
+      "path": "cof-76.cif",
+      "sha256": "49c55f7e91fa31375c2fe409387771738c6ceecb6a4bc0d29e83398fa839a365",
+      "citation_doi": "10.1021/jacs.9b13971",
+      "description": "Reported COF-76 ribbon packing, powder-refined in Ima2. TFPPy:TAPA = 1:2 with free amino groups. The finite drawing does not establish this arrangement.",
+      "precursor_match": {
+        "canonical_smiles": [
+          "O=Cc1ccc(-c2cc(-c3ccc(C=O)cc3)c3ccc4c(-c5ccc(C=O)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c54)cc1",
+          "Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+        ],
+        "linkage": "imine",
+        "drawing_template_ids": [
+          "alternating_hexagon"
+        ]
+      }
+    }
+  ]
 }

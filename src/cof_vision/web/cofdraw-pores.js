@@ -121,7 +121,33 @@
     }
     C.viewer.draw();
   }
-  function reset(){
+  let lastStructure, lastSettings='', pending=null;
+  function settings(){return [$('probe-radius').value,$('pore-samples').value,$('pore-refinement').checked].join('|');}
+  async function calculate(){
+    const structure=C.structure,key=settings();
+    if(!structure?.periodic)return null;
+    if(report&&structure===lastStructure&&key===lastSettings)return report;
+    if(!pending){
+      const spacing=Number($('pore-samples').value);
+      $('map-status').textContent='Calculating pore surface…';
+      pending=S.api('science/geometry',{structure,probe_radius:Number($('probe-radius').value),grid_spacing:spacing,
+        surface_samples:spacing>=.9?32:spacing>=.6?64:128,refinement:$('pore-refinement').checked,include_map:true});
+    }
+    const request=pending;
+    try{
+      const result=await request;
+      if(structure!==C.structure||key!==settings()||request!==pending&&result!==report)return null;
+      if(result!==report){field=result.pore_map;report=result;$('pore-visible').disabled=false;$('pore-visible').checked=true;update();}
+      return result;
+    }catch(e){
+      if(request!==pending)return null;
+      $('map-status').textContent='Pore map unavailable. '+e.message;throw e;
+    }finally{if(request===pending)pending=null;}
+  }
+  function reset(event){
+    const changed=C.structure!==lastStructure;
+    if(!changed&&settings()===lastSettings)return;
+    lastStructure=C.structure;lastSettings=settings();pending=null;
     field=null;mesh=null;tiles=[];report=null;
     const periodic=C.structure?.periodic===true;
     for(const id of ['map-pores','mof-notebook'])$(id).disabled=!periodic;
@@ -129,16 +155,12 @@
     $('pore-visible').checked=false;$('pore-visible').disabled=true;
     $('map-status').textContent=periodic?'Calculate the surface for this cell.':'Choose or generate a periodic model to map its pores.';
     C.viewer.draw();
+    if(periodic&&changed)calculate().catch(()=>{});
   }
   window.addEventListener('cofdraw:structure',reset);
-  window.addEventListener('cofdraw:geometry',e=>{
-    if(!e.detail.pore_map||!C.structure?.periodic)return;
-    field=e.detail.pore_map;report=e.detail;
-    $('pore-visible').disabled=false;$('pore-visible').checked=true;update();
-  });
   $('map-pores').onclick=()=>{C.tab('porosity');$('calculate-pores').click();};
   document.querySelector('[data-science-tab="porosity"]').addEventListener('click',()=>{
-    if(C.structure?.periodic&&!field)$('calculate-pores').click();
+    if(C.structure?.periodic&&!$('porosity-results').childElementCount)$('calculate-pores').click();
   });
   $('render-toggle').onclick=()=>{
     const panel=$('render-panel');panel.hidden=!panel.hidden;$('render-toggle').setAttribute('aria-expanded',String(!panel.hidden));
@@ -164,6 +186,7 @@
   $('pore-cut').oninput=()=>{section();C.viewer.draw();};
   for(const id of ['pore-alpha','pore-visible'])$(id).oninput=()=>C.viewer.draw();
   window.COFdrawPores={
+    calculate,
     get triangleCount(){return mesh?.faces.length||0;},get tileCount(){return tiles.length;},get structureHash(){return report?.structure_sha256;},
     addFaces(objects,project,scale){
       if(!$('pore-visible').checked||!mesh)return;

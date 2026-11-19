@@ -160,3 +160,7 @@ This is a transparent fit of a **user-selected interval**, not a complete automa
 ## Validation coverage
 
 Tests check a real chiral monomer's descriptor formula, conformer reproducibility, stereochemical SDF roundtrip, explicit nonconvergence, CIF symmetry and special positions, supercell atom/volume counts, fixed-column PDB coordinates, rejection of unresolved occupancy/symmetry, and triclinic distances against wide explicit image enumeration. A single sphere in a large cubic cell supplies analytic void-volume, surface-area, density, and unit-conversion targets; a small cell checks self-image occlusion. Separate voxel fixtures distinguish an isolated pocket from a wrapping channel. Synthetic BET data with known monolayer capacity and C verify the fit and m²/g conversion. These are numerical/software checks, not validation against experimental COF adsorption data.
+
+## Published ribbon packing for TFPPy and TAPA
+
+For this exact precursor pair, the imine linkage and the generic alternating patch, the 3D workspace can load the reported COF-76 crystal. The coordinates come from supporting information Table S1, with Ima2 symmetry expanded on import. The reported 1:2 precursor ratio leaves free amino groups on the ribbons. Pore geometry and PXRD use this published packing. The finite sketch alone does not specify the crystal. [Nguyen, Gropp and Yaghi, JACS](https://doi.org/10.1021/jacs.9b13971)
