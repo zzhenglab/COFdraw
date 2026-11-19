@@ -77,6 +77,8 @@ For an edited recipe, prepare a full render request containing `{"recipe": {...}
 
 ### Geometry review
 
+`half_space_stack` places shaded half-size van der Waals spheres behind the flat chemical drawing. These back layers illustrate stacking from the drawing coordinates. For coordinate-based views, use a periodic model or imported CIF in the 3D viewer. The `element_compact` style uses jewel-tone element colors and compact hydrogen labels. Set `style_options.hydrogen_labels` to `show` or `compact` independently. Compact labels omit H on neutral, nonaromatic N, O, P and S where stereochemistry permits. The chemical export retains the same atoms and bonds.
+
 New `/prepare` designs use `bond_angle_pose_v2`: proper rotations and translations of rigid monomer fragments, with alternative planar connection-side choices only where stereochemistry is unspecified. Ring shapes and internal atom distances remain fixed. Explicitly stereospecified fragments use the conservative spacing path and request review. This is a depiction operation; a small angle error does not establish a physically stable or synthesizable COF.
 
 Read `audit.layout_refinement.quality`, `final_max_junction_angle_deviation_degrees`, and `max_join_length_fraction_error`. The `regular` result requires junction deviation at most 15 degrees, join-length error at most 12%, and no detected atom overlaps or proper nonincident bond crossings. `audit.layout_diagnostics` contains the individual angle measurements, bond ratios, overlap pairs and crossing pairs. These diagnostics do not cover every possible label collision or all forms of segment overlap. Report a `needs_review` result, inspect the image, and use manual adjustment or a different construction where appropriate.

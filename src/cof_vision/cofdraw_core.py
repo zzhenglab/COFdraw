@@ -186,8 +186,9 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
     symmetric_depiction_rings(draw_mol)
     drawer = rdMolDraw2D.MolDraw2DSVG(size, size)
     opt = drawer.drawOptions()
-    opt.useBWAtomPalette(); opt.padding = .16 if style_id == 'gradient_stack' else .10
-    if style_id == 'gradient_stack':
+    layered_front = style_id in ('gradient_stack','half_space_stack')
+    opt.useBWAtomPalette(); opt.padding = .16 if layered_front else .10
+    if layered_front:
         drawer.SetOffset(0, -round(size*.07))
     opt.bondLineWidth = (2.8 if style_id == 'bold_color' else 2.)*options['bond_scale']
     opt.minFontSize = round(12*options['font_scale']); opt.maxFontSize = round(30*options['font_scale'])
@@ -202,6 +203,13 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
     opt.prepareMolsBeforeDrawing = False; opt.clearBackground = False
     # Built-in font files keep exports portable; system families remain in the
     # style metadata and schematic labels without a host-specific file path.
+    if options['hydrogen_labels'] == 'compact':
+        for old in kept:
+            atom = mol.GetAtomWithIdx(old)
+            if (atom.GetAtomicNum() in (7, 8, 15, 16) and atom.GetTotalNumHs() and
+                    not (atom.GetFormalCharge() or atom.GetIsotope() or atom.GetNumRadicalElectrons()
+                         or atom.GetIsAromatic() or atom.GetAtomMapNum() or atom.GetChiralTag())):
+                opt.atomLabels[old_to_new[old]] = atom.GetSymbol()
     for group in rules.get('collapsed_groups', []):
         old = graph_keys.index(group['anchor'])
         opt.atomLabels[old_to_new[old]] = group['label']

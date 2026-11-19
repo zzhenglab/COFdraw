@@ -76,12 +76,17 @@ def test_chemical_styles_share_geometry_and_color_native_carbon_joins(tmp_path):
     original, _ = build_patch(recipe)
     original_xyz = original.GetConformer().GetPositions()
     graph_exports = []
-    for style in ('standard', 'red_blue', 'glow_outline', 'pastel_blocks', 'stacked_slipped', 'molecular_spheres'):
+    for style in ('standard', 'red_blue', 'glow_outline', 'pastel_blocks', 'stacked_slipped', 'molecular_spheres','half_space_stack','element_compact'):
         out = tmp_path/style
         audit = render_styled(recipe, out, 650, style)
         assert np.allclose(audit['drawing_style']['layout']['atom_coordinates'], original_xyz[:, :2])
         graph_exports.append((out/'layout-fixture.mol').read_bytes())
         assert (out/'layout-fixture.png').read_bytes().startswith(b'\x89PNG')
+        if style == 'half_space_stack':
+            svg = ET.parse(out/'layout-fixture.svg').getroot()
+            assert len(svg.findall('.//{*}use')) == audit['drawing_style']['options']['layer_count']-1
+            assert svg.find(".//*[@id='half-space-sheet']") is not None
+            assert audit['drawing_style']['layout']['display_projection'] is False
         if style == 'red_blue':
             svg = ET.parse(out/'layout-fixture.svg').getroot()
             joins = [p for p in svg.iter() if p.get('data-vertex-atom') is not None]

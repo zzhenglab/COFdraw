@@ -1,8 +1,8 @@
 {
   "schema_version": "cofdraw-current-portable-bundle-1",
-  "created_at_utc": "2026-11-18T17:51:52.192391+00:00",
+  "created_at_utc": "2026-11-19T13:53:32.570130+00:00",
   "catalog": "catalog/current.json",
-  "catalog_sha256": "dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499",
+  "catalog_sha256": "96be461c3d36a4a470b5effd50a42206b859b2e95822ce450b581691c30d9ab6",
   "registry": "registry.json",
   "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "files": [
@@ -13,13 +13,13 @@
     },
     {
       "path": "catalog/current.audit.json",
-      "sha256": "76977f73b2f1f666168d1ed82fab8c4d11cce87d7000ed2d9d4960b4ac91d248",
-      "bytes": 1057
+      "sha256": "7d6e27d8494b54ff5febcc499635eaed56feb4957204a53a6ce262101c147777",
+      "bytes": 1155
     },
     {
       "path": "catalog/current.json",
-      "sha256": "dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499",
-      "bytes": 714446
+      "sha256": "96be461c3d36a4a470b5effd50a42206b859b2e95822ce450b581691c30d9ab6",
+      "bytes": 1190369
     },
     {
       "path": "catalog/history/05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0.audit.json",
@@ -80,6 +80,16 @@
       "path": "catalog/history/c6a6751240dad4bc1f1f15e9e9a2a2527bccbd0cd2e798e10f84c3c730b5bb89.json",
       "sha256": "c6a6751240dad4bc1f1f15e9e9a2a2527bccbd0cd2e798e10f84c3c730b5bb89",
       "bytes": 249186
+    },
+    {
+      "path": "catalog/history/dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499.audit.json",
+      "sha256": "76977f73b2f1f666168d1ed82fab8c4d11cce87d7000ed2d9d4960b4ac91d248",
+      "bytes": 1057
+    },
+    {
+      "path": "catalog/history/dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499.json",
+      "sha256": "dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499",
+      "bytes": 714446
     },
     {
       "path": "catalog/history/e1ee00ce2af590ad44af4e5d02f97b22318d6891b4983b72bd62aaaa726cf574.audit.json",

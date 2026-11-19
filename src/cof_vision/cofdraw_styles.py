@@ -36,6 +36,7 @@ STYLES=[
     {"id":"serif","label":"Serif chemical labels","description":"Serif labels, fine lines and transverse edge cuts.","category":"chemical"},
     {"id":"compact_labels","label":"Condensed substituents","description":"OCH3, OEt and SO3H aliases bound to their exact atoms.","category":"chemical"},
     {"id":"hetero_colors","label":"Colored heteroatoms","description":"Blue nitrogen and red oxygen labels on black bonds.","category":"chemical"},
+    {"id":"element_compact","label":"Element colors · compact labels","description":"Jewel-tone heteroatoms with inferable functional-group H labels hidden.","category":"chemical"},
     {"id":"node_highlight","label":"Building-block highlights","description":"Translucent colored envelopes behind full chemical structures.","category":"chemical"},
     {"id":"ring_fill","label":"Filled aromatic rings","description":"Soft colored fills inside small aromatic rings.","category":"chemical"},
     {"id":"pore_fill","label":"Filled pore","description":"A translucent pore interior beneath a chemical outline.","category":"chemical"},
@@ -52,6 +53,7 @@ STYLES=[
      "flat_foreground":True,"design_reference":"https://www.sciencedirect.com/science/article/pii/S2451929423003662"},
     {"id":"sphere_cutaway","label":"Spheres and bonds","description":"Shaded atoms fade into a fully readable chemical drawing.","category":"layered",
      "flat_foreground":True,"design_reference":"https://doi.org/10.1021/jacs.5c01990"},
+    {"id":"half_space_stack","label":"Half-space-filling layers","description":"A sharp chemical drawing over translucent layers of shaded atoms at half van der Waals radius.","category":"layered","flat_foreground":True},
 ]
 for row in STYLES:
     row["preview_kind"]=row["id"]
@@ -81,7 +83,7 @@ RANDOM_STYLES = (
 def style_configuration(style_id, seed=None, options=None):
     options=dict(options or {})
     allowed={"palette","font_family","font_scale","bond_scale","layer_count","layer_opacity","fill_opacity","edge_style","transparent_background","abbreviation_mode",
-             "element_scheme", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
+             "element_scheme", "hydrogen_labels", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
     if set(options)-allowed: raise ValueError("Unknown style options: "+", ".join(sorted(set(options)-allowed)))
     if style_id=="random":
         seed=random.SystemRandom().randrange(2**31) if seed is None else seed
@@ -89,7 +91,7 @@ def style_configuration(style_id, seed=None, options=None):
         style_id, palettes = rng.choice(RANDOM_STYLES)
         defaults={"palette":rng.choice(palettes),"font_scale":rng.choice([1.,1.05,1.1]),
                   "bond_scale":rng.choice([.95,1.1,1.25]),"fill_opacity":rng.choice([.16,.21,.27])}
-        if style_id=='gradient_stack':
+        if style_id in ('gradient_stack','half_space_stack'):
             defaults.update(layer_count=rng.choice([3,4,5]), layer_spacing=rng.choice([.038,.044,.05]),
                             layer_opacity=rng.choice([.46,.55,.64]), projection_tilt=rng.choice([37,44,50]))
         elif style_id=='sphere_cutaway':
@@ -100,7 +102,7 @@ def style_configuration(style_id, seed=None, options=None):
     defaults={"palette":"classic","font_family":"Times New Roman" if style_id=="serif" else "Arial","font_scale":1.,"bond_scale":1.,
               "layer_count":3,"layer_opacity":.24,"fill_opacity":.18,"edge_style":"dashed" if style_id=="mono_dashed" else "crossbar" if style_id=="serif" else "wavy_cross",
               "transparent_background":False,"abbreviation_mode":"condensed" if style_id=="compact_labels" else "explicit"}
-    defaults.update(element_scheme="style_default", custom_palette=None, highlight_width=1., glow_strength=.55,
+    defaults.update(element_scheme="style_default", hydrogen_labels="show", custom_palette=None, highlight_width=1., glow_strength=.55,
                     layer_spacing=.04, projection_tilt=35., sphere_scale=1.)
     if style_id in ('pastel_blocks', 'cartoon_overlay'):
         defaults['palette'] = 'lavender_mint'
@@ -109,11 +111,15 @@ def style_configuration(style_id, seed=None, options=None):
     elif style_id in ('stacked_eclipsed', 'stacked_slipped', 'perspective'):
         defaults['palette'] = 'ocean_coral'
         defaults['layer_opacity'] = .38
-    elif style_id == 'gradient_stack':
+    elif style_id in ('gradient_stack','half_space_stack'):
         defaults.update(palette='lagoon', layer_count=5, layer_spacing=.044, layer_opacity=.56, projection_tilt=43.)
+    elif style_id == 'element_compact':
+        defaults.update(element_scheme='jewel',hydrogen_labels='compact')
     elif style_id == 'sphere_cutaway':
         defaults.update(palette='orchid', sphere_scale=1.)
     defaults.update(options)
+    if defaults["hydrogen_labels"] not in ("show","compact"):
+        raise ValueError("Choose show or compact for functional-group H labels")
     if defaults["element_scheme"] not in ("style_default", *ELEMENT_SCHEMES):
         raise ValueError("Choose a supported atom color scheme")
     if defaults["palette"] not in PALETTES or defaults["font_family"] not in FONTS: raise ValueError("Choose a supported palette and font")
@@ -163,7 +169,7 @@ def _mix(first, second, fraction):
     return '#'+''.join(f'{value:02x}' for value in channels)
 
 
-def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options):
+def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options, sphere_sheet=None):
     paths = ' '.join(_segments(mol, xy, real_only=True))
     if not paths:
         return
@@ -185,16 +191,19 @@ def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options):
     for k in range(count,0,-1):
         weight = k/count
         name = f'depth-ramp-{k}'
+        layer = ET.SubElement(sheets,tag('g'),{'data-illustrative-layer':str(k),
+            'transform':f'translate({center[0]+k*spacing*.24},{center[1]+k*spacing}) '
+                        f'skewX({skew}) scale(.97,{vertical}) translate({-center[0]},{-center[1]})',
+            'opacity':str(options['layer_opacity']*(1-.24*weight))})
+        if sphere_sheet is not None:
+            ET.SubElement(layer,tag('use'),{'{http://www.w3.org/1999/xlink}href':'#'+sphere_sheet})
+            continue
         gradient = ET.SubElement(defs,tag('linearGradient'),{'id':name,'gradientUnits':'userSpaceOnUse',
             'x1':str(size*.19),'y1':str(size*.23),'x2':str(size*.84),'y2':str(size*.83)})
         for stop, color in (('0%',_mix(palette[0], '#ffffff', .16+.22*weight)),
                             ('55%', _mix(palette[1], '#ffffff', .17)),
                             ('100%', _mix(palette[-1], '#ffffff', .20))):
             ET.SubElement(gradient,tag('stop'),{'offset':stop,'stop-color':color})
-        layer = ET.SubElement(sheets,tag('g'),{'data-illustrative-layer':str(k),
-            'transform':f'translate({center[0]+k*spacing*.24},{center[1]+k*spacing}) '
-                        f'skewX({skew}) scale(.97,{vertical}) translate({-center[0]},{-center[1]})',
-            'opacity':str(options['layer_opacity']*(1-.24*weight))})
         base = {'d':paths,'fill':'none','stroke-linecap':'round','stroke-linejoin':'round'}
         ET.SubElement(layer,tag('path'),{**base,'stroke':_mix(palette[0],'#253342',.48),
             'stroke-width':str(bond*.68),'transform':f'translate(0,{bond*.086})'})
@@ -202,7 +211,8 @@ def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options):
         ET.SubElement(layer,tag('path'),{**base,'stroke':f'url(#{name})','stroke-width':str(bond*.65)})
 
 
-def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False):
+def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False, half_space=False):
+    from rdkit import Chem
     atom_colors={6:'#6c8190',7:'#476fcd',8:'#db5d59',16:'#d3ac41',5:'#c99a7d',9:'#61b887',17:'#61b887'}
     atom_colors.update(ELEMENT_SCHEMES.get(options.get("element_scheme"), {}))
     for color in sorted(set(atom_colors.values())|set(colors.values())):
@@ -210,15 +220,17 @@ def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=F
         for stop, shade in (('0%','#ffffff'),('35%',color),('100%',_mix(color,'#22313b',.72))):
             ET.SubElement(gradient,tag('stop'),{'offset':stop,'stop-color':shade})
     spheres=ET.Element(tag('g'),{'data-layer':'illustrative-spheres','data-coordinate-scope':'Illustrative shaded atoms on drawing coordinates'})
-    ET.SubElement(spheres,tag('path'),{'d':' '.join(_segments(mol,xy,real_only=cutaway)),
+    ET.SubElement(spheres,tag('path'),{'d':' '.join(_segments(mol,xy,real_only=cutaway or half_space)),
         'stroke':'#91a5ad','stroke-width':str(bond*(.27 if cutaway else .16)),'stroke-linecap':'round','fill':'none'})
     for i,atom in enumerate(mol.GetAtoms()):
         p=xy[i]; atomic=atom.GetAtomicNum()
-        if not atomic and cutaway:
+        if not atomic and (cutaway or half_space):
             continue
         component=colors[audit['atom_origin'][i]['component']]
         color=component if cutaway and atomic==6 else atom_colors.get(atomic,component)
         radius=bond*(.43 if cutaway else .22 if atomic==6 else .26)*options['sphere_scale']
+        if half_space:
+            radius = .5 * Chem.GetPeriodicTable().GetRvdw(atomic) * bond / 1.4 * options['sphere_scale']
         attrs={'cx':str(p[0]),'cy':str(p[1]),'r':str(radius),'stroke':color,'stroke-width':'.5','data-atom':str(i)}
         if atomic:
             attrs['fill']='url(#sphere-'+color[1:]+')'
@@ -264,8 +276,14 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
     fills=source_style.get('component_fills',{})
     lengths=[np.linalg.norm(np.asarray(xy)[b.GetBeginAtomIdx()]-np.asarray(xy)[b.GetEndAtomIdx()]) for b in mol.GetBonds()]
     bond_length=float(np.median(lengths)) if lengths else size*.04
-    if style_id=='gradient_stack':
-        _gradient_layers(tag,defs,root,mol,xy,palette,bond_length,size,options)
+    if style_id in ('gradient_stack','half_space_stack'):
+        sheet_id = None
+        if style_id == 'half_space_stack':
+            sheet_id = 'half-space-sheet'
+            sheet = _sphere_layer(tag,defs,mol,xy,colors,audit,bond_length,options,half_space=True)
+            sheet.set('id',sheet_id)
+            defs.append(sheet)
+        _gradient_layers(tag,defs,root,mol,xy,palette,bond_length,size,options,sheet_id)
     halo=source_style.get('halo')
     if style_id=='glow_outline' or halo:
         blur=ET.SubElement(defs,tag('filter'),{'id':'molecular-glow','x':'-30%','y':'-30%','width':'160%','height':'160%'})

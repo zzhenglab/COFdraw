@@ -21,7 +21,7 @@
       if(id==='porosity-model-state'&&!periodic&&available&&C.origin==='drawing'){const b=text('button','Measure this drawing’s pore','button outline');b.id='measure-current-finite-pore';b.addEventListener('click',()=>C.work(async api=>{const result=await api('science/measure',C.drawingRequest()),target=$('porosity-results');target.replaceChildren();C.metric(target,'Drawing-plane opening / Å',number(result.diameter_angstrom,2));C.metric(target,'Drawing-plane opening / nm',number(result.diameter_angstrom/10,2));C.note(target,result.scope);C.note(target,'This estimates one opening in the drawing plane. PLD, LCD, density and periodic pore volume require an explicit periodic structure.');downloads(target,result);C.details(target,result);C.status('Measured the current drawing’s opening without a CIF.');}));root.append(b);}
     }
     $('screen-current').disabled=!available;$('calculate-pxrd').disabled=!available;
-    $('check-peaks').disabled=!periodic;
+    $('viewer-axis').disabled=!periodic;$('check-peaks').disabled=!periodic;
     $('check-peaks').title=periodic?'':'Build a periodic cell to check measured reflections.';
     $('compare-pxrd-stacks').disabled=!available||(!periodic&&C.origin!=='drawing');
     $('screen-pores').disabled=!periodic;

@@ -84,6 +84,24 @@ def main():
    page.locator('#viewer-axis').select_option('c');page.locator('#viewer-hide-h').check();page.locator('#show-atom-table').click()
    assert page.locator('#atom-table-panel tr').count()==67
    page.locator('#show-atom-table').click();checks.append('Lattice-axis view, hydrogen visibility and fractional atom table')
+   canvas=page.locator('#structure-canvas')
+   canvas.scroll_into_view_if_needed()
+   point=page.evaluate("""() => {
+     const v=window.COFdrawScience.viewer, r=document.getElementById('structure-canvas').getBoundingClientRect();
+     const i=v.atoms.findIndex((a,i)=>a.element!=='H' && v.projected[i].x>20 && v.projected[i].x<r.width-20
+       && v.projected[i].y>20 && v.projected[i].y<r.height-20);
+     return {x:v.projected[i].x,y:v.projected[i].y};
+   }""")
+   page.locator('#viewer-measure').check()
+   canvas.click(position=point);canvas.click(position=point)
+   assert 'different atom' in page.locator('#viewer-distance').inner_text()
+   page.locator('#viewer-measure').uncheck()
+   assert page.locator('#viewer-distance').inner_text()==''
+   canvas.scroll_into_view_if_needed();box=canvas.bounding_box()
+   page.mouse.move(box['x']+point['x'],box['y']+point['y']);page.mouse.down()
+   page.mouse.move(box['x']+point['x']+15,box['y']+point['y']+12,steps=3);page.mouse.up()
+   assert page.locator('#viewer-axis').input_value()=='free'
+   checks.append('Dragging clears the lattice axis and distance measurement requires two distinct atoms')
    page.locator('[data-science-tab="inspect"]').click();page.locator('#screen-pores').check();page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Structure check complete')")
    assert '2D' in page.locator('#inspection-results').inner_text()

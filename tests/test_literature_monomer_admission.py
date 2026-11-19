@@ -132,7 +132,13 @@ def test_exact_additive_history_and_manifest_bindings(catalog, rows):
     assert len({row['canonical_smiles'] for row in SELECTED.values()}) == 37
     assert set(audit['added_ids']) == set(SELECTED)
     assert set(prior) == {r['id'] for r in baseline['monomer_presets']} | set(SELECTED)
-    assert set(rows) - set(prior) == set(catalog['recent_monomer_update']['added_ids']) == {'dhp_cho4', 'hapt', 'hbc_la12'}
+    old_sha = read(DATA / 'catalog/current.audit.json')['previous_catalog_sha256']
+    old_path = DATA/'catalog/history'/(old_sha+'.json')
+    assert digest(old_path) == old_sha
+    previous_rows = {r['id']:r for r in read(old_path)['monomer_presets']}
+    assert set(previous_rows) - set(prior) == set(catalog['recent_monomer_update']['added_ids']) == {'dhp_cho4', 'hapt', 'hbc_la12'}
+    assert set(rows) - set(previous_rows) == set(catalog['cofvision_census']['added_ids'])
+    assert all(rows[k] == v for k,v in previous_rows.items())
     for identifier, previous in prior.items():
         assert rows[identifier] == previous
     for old in baseline['monomer_presets']:

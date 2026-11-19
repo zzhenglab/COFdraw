@@ -56,6 +56,8 @@ LINKAGE_ALIASES = {
 }
 STYLE_ALIASES = {
     "gradient_stack": ["gradient layers", "fading layers", "stacked gradient"],
+    "half_space_stack": ["half space filling", "half-space-filling layers", "half-space filling"],
+    "element_compact": ["compact hydrogen labels", "compact heteroatom labels"],
     "sphere_cutaway": ["space filling cutaway", "space-filling cutaway", "spheres over skeletal"],
     "standard": ["standard", "standard chemical drawing", "black bonds", "plain chemical drawing"],
     "source": ["source style", "original colors", "original colours", "source colors", "source colours"],
@@ -206,7 +208,7 @@ def _find(text, rows, kind, blocked=()):
     for row in rows:
         for alias in row["aliases"]:
             value = _normal(alias)
-            if not value:
+            if not value or (kind == "monomer" and value.isdecimal()):
                 continue
             for found in re.finditer(r"(?<![\w])" + re.escape(value) + r"(?![\w])", text, re.I):
                 span = found.span()

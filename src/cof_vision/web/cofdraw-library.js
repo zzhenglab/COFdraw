@@ -130,6 +130,15 @@
   }
   function startingCombinations(library) {
     const blocks=library.monomer_presets||[], byId=new Map(blocks.map(b=>[b.id,b]));
+    const abbreviationCounts=new Map();
+    for(const block of blocks){
+      const key=(block.abbreviation||'').toLowerCase();
+      abbreviationCounts.set(key,(abbreviationCounts.get(key)||0)+1);
+    }
+    function pairName(block){
+      return abbreviationCounts.get((block.abbreviation||'').toLowerCase())>1
+        ? displayName(block) : block.abbreviation||block.id;
+    }
     const sources=new Map((library.source_recipes||[]).map(s=>[s.recipe_id,s]));
     const searchText=(...parts)=>{
       const terms=parts.flat(Infinity).filter(Boolean).join(' ').toLowerCase();
@@ -165,7 +174,7 @@
       occupied.add(key);
       const [left,right]=plan.swapped?[b,a]:[a,b];
       const labelA=left.abbreviation||left.id, labelB=right.abbreviation||right.id;
-      const label=labelA+' + '+labelB;
+      const label=pairName(left)+' + '+pairName(right);
       generated.push({id:'pair:'+left.id+':'+right.id+':'+plan.id,label,label_a:labelA,label_b:labelB,
         monomer_a:left.smiles,monomer_b:right.smiles,linkage:plan.id,template_id:template.id,instances:template.instances,
         group:(template.id==='chain_2_2'?'Open-chain designs · ':'Matched pairs · ')+plan.label,

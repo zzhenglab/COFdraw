@@ -28,11 +28,15 @@ def test_catalog_and_science_library_score_all_actual_monomers_with_same_support
     library = client.get("/api/drawing/library").json()
     report = client.get("/api/drawing/science/synthesis-library").json()
     rows = {r["id"]: r for r in report["monomers"]}
-    assert report["count"] == report["available_count"] == len(library["monomer_presets"])
+    assert report["count"] == len(library["monomer_presets"])
+    assert report["available_count"] == sum(r["synthetic_accessibility"]["available"] for r in rows.values())
     for monomer in library["monomer_presets"]:
         score = monomer["synthetic_accessibility"]
         assert score == rows[monomer["id"]]["synthetic_accessibility"]
-        assert score["available"] and 1 <= score["score"] <= 10
+        if score["available"]:
+            assert 1 <= score["score"] <= 10
+        else:
+            assert score["reason_code"] == "unsupported_elements" and score["score"] is None
         assert score["canonical_smiles"] == synthetic_accessibility(monomer["smiles"])["canonical_smiles"]
     # Having a score must not promote reference-only boronate chemistry.
     assert library["linkages"]["boronate_ester"]["supported"] is False

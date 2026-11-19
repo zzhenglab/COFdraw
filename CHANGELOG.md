@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+- Added 126 finite building blocks from COFvision inventory 0109, with source figures identified by DOI, page and crop hash.
+- Added translucent half-space-filling back layers, a half-space-filling 3D view, and element-colored drawings with selectable functional-group hydrogen labels.
+- Free rotation and reset update the axis menu. Atom measurements require two distinct atoms and clear when measurement mode is switched off.
+
 ## 0.9.1
 
 - Drag the horizontal separation slider to move from overlaid stacking patterns to individual 2θ axes. The exported SVG keeps the chosen layout.

@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .drawing_api import create_drawing_router
 
-VERSION = "0.9.1"
+VERSION = "0.9.2"
 STATIC = Path(__file__).with_name("web")
 
 

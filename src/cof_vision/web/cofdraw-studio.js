@@ -195,7 +195,7 @@
     const n=parseInt(hex.slice(1),16);
     return 'rgb('+[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v+(target-v)*fraction)).join(',')+')';
   }
-  const viewer={model:null,atoms:[],bonds:[],theta:-.3,phi:.6,zoom:1,selected:[],projected:[],set(model){this.model=model;this.atoms=(model.atoms||[]).map((a,i)=>({...a,index:i,x:a.x??a.position?.[0]??a.cartesian?.[0]??0,y:a.y??a.position?.[1]??a.cartesian?.[1]??0,z:a.z??a.position?.[2]??a.cartesian?.[2]??0}));this.selected=[];$('viewer-distance').textContent='';$('viewer-legend').replaceChildren();this.zoom=1;this.bonds=Array.isArray(model.bonds)&&!(model.periodic===true&&model.bonds.length===0)?model.bonds.map(b=>Array.isArray(b)?b:[b.a,b.b]):this.inferBonds();this.draw();},inferBonds(){const bins=new Map(),bond=[],width=3;for(let i=0;i<this.atoms.length;i++){const a=this.atoms[i],base=[a.x,a.y,a.z].map(x=>Math.floor(x/width));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){const key=[base[0]+x,base[1]+y,base[2]+z].join(',');for(const j of bins.get(key)||[]){const b=this.atoms[j];if(a.network!==undefined&&b.network!==undefined&&a.network!==b.network)continue;if(a.layer!==undefined&&b.layer!==undefined&&a.layer!==b.layer)continue;const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),cut=1.18*((radii[a.element]||.8)+(radii[b.element]||.8));if(distance>.35&&distance<cut)bond.push([i,j]);}}const key=base.join(',');if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);}return bond;},draw(){const canvas=$('structure-canvas'),rect=canvas.getBoundingClientRect();if(rect.width<1)return;const dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#f8fbfa';c.fillRect(0,0,w,h);if(!this.atoms.length){c.fillStyle='#91a59b';c.font='14px Segoe UI';c.textAlign='center';c.fillText('Your 3D structure will appear here',w/2,h/2);return;}const coords=this.atoms.map(a=>[a.x,a.y,a.z]),lo=[0,1,2].map(k=>Math.min(...coords.map(p=>p[k]))),hi=[0,1,2].map(k=>Math.max(...coords.map(p=>p[k]))),center=lo.map((v,k)=>(v+hi[k])/2);const rotate=p=>{const x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],x1=x*Math.cos(this.theta)+z*Math.sin(this.theta),z1=-x*Math.sin(this.theta)+z*Math.cos(this.theta);return {x:x1,y:y*Math.cos(this.phi)-z1*Math.sin(this.phi),z:y*Math.sin(this.phi)+z1*Math.cos(this.phi)};};const rotated=coords.map(rotate),xs=rotated.map(p=>p.x),ys=rotated.map(p=>p.y),xlo=Math.min(...xs),xhi=Math.max(...xs),ylo=Math.min(...ys),yhi=Math.max(...ys),scale=Math.min(w*.82/(xhi-xlo+4),h*.82/(yhi-ylo+4))*this.zoom;const project=p=>{const r=rotate(p);return {x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale,z:r.z};};this.projected=coords.map(project);const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
+  const viewer={model:null,atoms:[],bonds:[],theta:-.3,phi:.6,zoom:1,selected:[],projected:[],set(model){this.model=model;this.projected=[];this.atoms=(model.atoms||[]).map((a,i)=>({...a,index:i,x:a.x??a.position?.[0]??a.cartesian?.[0]??0,y:a.y??a.position?.[1]??a.cartesian?.[1]??0,z:a.z??a.position?.[2]??a.cartesian?.[2]??0}));this.selected=[];$('viewer-distance').textContent='';$('viewer-legend').replaceChildren();this.zoom=1;this.bonds=Array.isArray(model.bonds)&&!(model.periodic===true&&model.bonds.length===0)?model.bonds.map(b=>Array.isArray(b)?b:[b.a,b.b]):this.inferBonds();this.draw();},inferBonds(){const bins=new Map(),bond=[],width=3;for(let i=0;i<this.atoms.length;i++){const a=this.atoms[i],base=[a.x,a.y,a.z].map(x=>Math.floor(x/width));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){const key=[base[0]+x,base[1]+y,base[2]+z].join(',');for(const j of bins.get(key)||[]){const b=this.atoms[j];if(a.network!==undefined&&b.network!==undefined&&a.network!==b.network)continue;if(a.layer!==undefined&&b.layer!==undefined&&a.layer!==b.layer)continue;const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),cut=1.18*((radii[a.element]||.8)+(radii[b.element]||.8));if(distance>.35&&distance<cut)bond.push([i,j]);}}const key=base.join(',');if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);}return bond;},draw(){const canvas=$('structure-canvas'),rect=canvas.getBoundingClientRect();if(rect.width<1)return;const dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#f8fbfa';c.fillRect(0,0,w,h);if(!this.atoms.length){c.fillStyle='#91a59b';c.font='14px Segoe UI';c.textAlign='center';c.fillText('Your 3D structure will appear here',w/2,h/2);return;}const coords=this.atoms.map(a=>[a.x,a.y,a.z]),lo=[0,1,2].map(k=>Math.min(...coords.map(p=>p[k]))),hi=[0,1,2].map(k=>Math.max(...coords.map(p=>p[k]))),center=lo.map((v,k)=>(v+hi[k])/2);const rotate=p=>{const x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],x1=x*Math.cos(this.theta)+z*Math.sin(this.theta),z1=-x*Math.sin(this.theta)+z*Math.cos(this.theta);return {x:x1,y:y*Math.cos(this.phi)-z1*Math.sin(this.phi),z:y*Math.sin(this.phi)+z1*Math.cos(this.phi)};};const rotated=coords.map(rotate),xs=rotated.map(p=>p.x),ys=rotated.map(p=>p.y),xlo=Math.min(...xs),xhi=Math.max(...xs),ylo=Math.min(...ys),yhi=Math.max(...ys),scale=Math.min(w*.82/(xhi-xlo+4),h*.82/(yhi-ylo+4))*this.zoom;const project=p=>{const r=rotate(p);return {x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale,z:r.z};};this.projected=coords.map(project);const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
       const layers=new Map();
       if(mode==='mixed')this.atoms.forEach((a,i)=>{
         if(a.layer===undefined)return;
@@ -224,7 +224,7 @@
           c.beginPath();c.moveTo(o.tip.x,o.tip.y);c.lineTo(o.mid.x,o.mid.y);c.stroke();
         }else{
           const skeletal=mode==='wireframe'||mode==='mixed'&&!featured(a);
-          const r=skeletal?Math.max(.85,scale*.06):Math.max(1.2,scale*(vdw[a.element]||1.7)*(mode==='ballstick'?.25:1));
+          const r=skeletal?Math.max(.85,scale*.06):Math.max(1.2,scale*(vdw[a.element]||1.7)*(mode==='ballstick'?.25:mode==='halfspace'?.5:1));
           c.globalAlpha=1;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);
           if(skeletal){c.fillStyle=base;}
           else{
@@ -247,7 +247,52 @@
     $('viewer-axis').value='free';viewer.zoom=1;viewer.selected=[];$('viewer-distance').textContent='';
     viewer.draw();$('viewer-preset').value='';
   });
-  let rotation=null;const canvas=$('structure-canvas');canvas.addEventListener('pointerdown',e=>{rotation={x:e.clientX,y:e.clientY,moved:0};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!rotation)return;const dx=e.clientX-rotation.x,dy=e.clientY-rotation.y;viewer.theta+=dx*.008;viewer.phi+=dy*.008;rotation.moved+=Math.abs(dx)+Math.abs(dy);rotation.x=e.clientX;rotation.y=e.clientY;viewer.draw();});canvas.addEventListener('pointerup',e=>{if(rotation&&rotation.moved<6&&$('viewer-measure').checked){const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let best=-1,dist=15;viewer.projected.forEach((p,i)=>{if(viewer.hideHydrogen&&viewer.atoms[i].element==='H')return;const d=Math.hypot(p.x-x,p.y-y);if(d<dist){best=i;dist=d;}});if(best>=0){if(viewer.selected.length===2)viewer.selected=[];viewer.selected.push(best);if(viewer.selected.length===2){const [a,b]=viewer.selected.map(i=>viewer.atoms[i]);$('viewer-distance').textContent=`${a.element}${a.index+1} ↔ ${b.element}${b.index+1}: ${fmt(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),3)} Å · distance between displayed coordinates`;}else $('viewer-distance').textContent='Select a second atom.';viewer.draw();}}rotation=null;});canvas.addEventListener('pointercancel',()=>rotation=null);canvas.addEventListener('wheel',e=>{e.preventDefault();viewer.zoom=Math.max(.3,Math.min(4,viewer.zoom*Math.exp(-e.deltaY*.001)));viewer.draw();},{passive:false});$('viewer-mode').addEventListener('change',()=>viewer.draw());$('viewer-color').addEventListener('change',()=>viewer.draw());$('viewer-reset').addEventListener('click',()=>{viewer.theta=-.3;viewer.phi=.6;viewer.zoom=1;viewer.draw();});new ResizeObserver(()=>viewer.draw()).observe(canvas);
+  let rotation=null;
+  const canvas=$('structure-canvas');
+  function clearDistance(){
+    viewer.selected=[];$('viewer-distance').textContent='';viewer.draw();
+  }
+  $('viewer-measure').addEventListener('change',clearDistance);
+  canvas.addEventListener('pointerdown',event=>{
+    if(rotation||event.button!==0)return;
+    rotation={pointer:event.pointerId,x:event.clientX,y:event.clientY,moved:0};
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove',event=>{
+    if(rotation?.pointer!==event.pointerId)return;
+    const dx=event.clientX-rotation.x,dy=event.clientY-rotation.y;
+    if(dx||dy)$('viewer-axis').value='free';
+    viewer.theta+=dx*.008;viewer.phi+=dy*.008;rotation.moved+=Math.abs(dx)+Math.abs(dy);
+    rotation.x=event.clientX;rotation.y=event.clientY;viewer.draw();
+  });
+  canvas.addEventListener('pointerup',event=>{
+    if(rotation?.pointer!==event.pointerId)return;
+    const click=rotation.moved<6;rotation=null;
+    if(!click||!$('viewer-measure').checked)return;
+    const rect=canvas.getBoundingClientRect(), x=event.clientX-rect.left,y=event.clientY-rect.top;
+    let best=-1,dist=15;
+    viewer.projected.forEach((p,i)=>{
+      if(viewer.hideHydrogen&&viewer.atoms[i].element==='H')return;
+      const d=Math.hypot(p.x-x,p.y-y);
+      if(d<dist-.05||(best>=0&&Math.abs(d-dist)<=.05&&p.z>viewer.projected[best].z)){best=i;dist=d;}
+    });
+    if(best<0)return;
+    if(viewer.selected.length===2)viewer.selected=[];
+    if(viewer.selected[0]===best){$('viewer-distance').textContent='Choose a different atom.';return;}
+    viewer.selected.push(best);
+    if(viewer.selected.length===2){
+      const [a,b]=viewer.selected.map(i=>viewer.atoms[i]);
+      const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
+      $('viewer-distance').textContent=(a.isotope||'')+a.element+(a.index+1)+' ↔ '+(b.isotope||'')+b.element+(b.index+1)+': '+fmt(distance,3)+' Å · distance between displayed coordinates';
+    }else $('viewer-distance').textContent='Select a second atom.';
+    viewer.draw();
+  });
+  canvas.addEventListener('lostpointercapture',e=>{if(rotation?.pointer===e.pointerId)rotation=null;});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();viewer.zoom=Math.max(.3,Math.min(4,viewer.zoom*Math.exp(-e.deltaY*.001)));viewer.draw();},{passive:false});
+  $('viewer-mode').addEventListener('change',()=>viewer.draw());
+  $('viewer-color').addEventListener('change',()=>viewer.draw());
+  $('viewer-reset').addEventListener('click',()=>{viewer.theta=-.3;viewer.phi=.6;viewer.zoom=1;$('viewer-axis').value='free';clearDistance();});
+  new ResizeObserver(()=>viewer.draw()).observe(canvas);
 
   // Edit the exact displayed coordinates; graph connectivity is not rewritten.
   function remember(){if(!S.state.recipe)return;geometryHistory.push({recipe:copy(S.state.recipe),sourceId:S.state.sourceId,metadata:copy(S.state.sourceMetadata)});if(geometryHistory.length>20)geometryHistory.shift();$('undo-geometry').disabled=false;}

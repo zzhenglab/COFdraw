@@ -64,19 +64,22 @@ def main():
 
             library = page.request.get(base + "/api/drawing/library").json()
             report = page.request.get(base + "/api/drawing/science/synthesis-library").json()
-            assert report["count"] == report["available_count"] >= 121
+            assert report["count"] == len(library["monomer_presets"])
+            assert report["available_count"] == sum(m["synthetic_accessibility"]["available"] for m in library["monomer_presets"])
             page.locator("#open-monomer-library").click()
             assert page.locator("#library-list .library-row").count() == report["count"]
             for row in library["monomer_presets"]:
                 score = row["synthetic_accessibility"]
-                assert score["available"] and score["fragment_table_verified"]
-                assert page.locator(f'#library-list .library-row[data-id="{row["id"]}"] [data-sa-score]').inner_text() == f'SA Score {score["score"]:.2f} / 10'
+                if score["available"]:
+                    assert score["fragment_table_verified"]
+                label=f'SA Score {score["score"]:.2f} / 10' if score["available"] else 'SA Score unavailable'
+                assert page.locator(f'#library-list .library-row[data-id="{row["id"]}"] [data-sa-score]').inner_text() == label
             page.locator("#library-guide > summary").click()
             assert "not a synthesis route" in page.locator("#library-guide").inner_text()
             page.locator("#library-guide > summary").click()
             page.screenshot(path=str(output / "monomer-score-library.png"))
             page.locator('[aria-label="Close monomer library"]').click()
-            checks.append("All81 catalog cards show their actual API scores with a heuristic scope note")
+            checks.append("Every catalog card shows its score or the unavailable state for out-of-scope elements")
 
             page.locator("#appearance-options > summary").click()
             page.locator("#image-size").select_option("1000")

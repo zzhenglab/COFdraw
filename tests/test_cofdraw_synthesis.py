@@ -7,6 +7,7 @@ import shutil
 import socket
 
 import pytest
+from rdkit import Chem
 from rdkit.Contrib.SA_Score import sascorer
 
 from cof_vision import cofdraw_synthesis as synthesis
@@ -77,9 +78,16 @@ def test_all_catalog_monomers_score_offline_and_keep_qualified_reference_entries
     monkeypatch.setattr(socket, "create_connection", no_network)
     rows = deepcopy(CATALOG["monomer_presets"])
     result = synthesis.catalog_scores(rows)
-    assert result["count"] == result["available_count"] == len(rows)
+    assert result["count"] == len(rows)
+    assert result["available_count"] == sum(r["synthetic_accessibility"]["available"] for r in result["monomers"])
     assert {r["id"] for r in result["monomers"]} == {r["id"] for r in rows}
-    assert all(1 <= r["synthetic_accessibility"]["score"] <= 10 for r in result["monomers"])
+    for row in result["monomers"]:
+        score = row["synthetic_accessibility"]
+        if score["available"]:
+            assert 1 <= score["score"] <= 10
+        else:
+            assert score["score"] is None and score["reason_code"] == "unsupported_elements"
+            assert any(a.GetAtomicNum() not in synthesis.ALLOWED_ELEMENTS for a in Chem.MolFromSmiles(row["smiles"]).GetAtoms())
     original = {r["id"]: r for r in rows}
     for row in result["monomers"]:
         assert row["smiles"] == original[row["id"]]["smiles"]

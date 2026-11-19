@@ -77,12 +77,12 @@ def main():
                 positions=page.evaluate('window.COFdrawScience.viewer.atoms.map(a=>[a.x,a.y,a.z])')
                 assert positions!=initial
                 assert page.locator('#patch-stacking').input_value()==mode
-            for mode in ['ballstick','spacefill','wireframe','mixed']:
+            for mode in ['ballstick','halfspace','spacefill','wireframe','mixed']:
                 page.locator('#viewer-mode').select_option(mode)
                 for color in ['element','component','layer']:page.locator('#viewer-color').select_option(color)
             assert 'Layer 3' in page.locator('#viewer-legend').inner_text()
             page.screenshot(path=str(output/'stacking-comparison.png'))
-            checks.append('Five actual stacking calculations are selectable; four rendering styles and element/block/layer coloring use supplied groups')
+            checks.append('Five stacking calculations, including half-space-filling views, support element, block and layer coloring')
             page.locator('#patch-spacing').fill('4.2')
             assert page.evaluate('window.COFdrawScience.viewer.atoms.length')==0
             assert page.locator('#structure-exports button').count()==0

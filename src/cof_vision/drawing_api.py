@@ -399,7 +399,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
-                "style_controls": {"element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
+                "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": monomers,
