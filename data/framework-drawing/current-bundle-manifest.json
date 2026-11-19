@@ -1,8 +1,8 @@
 {
   "schema_version": "cofdraw-current-portable-bundle-1",
-  "created_at_utc": "2026-11-19T13:53:32.570130+00:00",
+  "created_at_utc": "2026-11-19T14:08:26.006738+00:00",
   "catalog": "catalog/current.json",
-  "catalog_sha256": "96be461c3d36a4a470b5effd50a42206b859b2e95822ce450b581691c30d9ab6",
+  "catalog_sha256": "721700c0115cf0ad0d4954b5a3aef8426beb6cfebbea4aff5af33f4ae58cfb7a",
   "registry": "registry.json",
   "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "files": [
@@ -13,13 +13,13 @@
     },
     {
       "path": "catalog/current.audit.json",
-      "sha256": "7d6e27d8494b54ff5febcc499635eaed56feb4957204a53a6ce262101c147777",
+      "sha256": "b7fef12b10700d944df658bf462e90567d1bfad6cf932b9c32a4e8d7c6c0150b",
       "bytes": 1155
     },
     {
       "path": "catalog/current.json",
-      "sha256": "96be461c3d36a4a470b5effd50a42206b859b2e95822ce450b581691c30d9ab6",
-      "bytes": 1190369
+      "sha256": "721700c0115cf0ad0d4954b5a3aef8426beb6cfebbea4aff5af33f4ae58cfb7a",
+      "bytes": 1198017
     },
     {
       "path": "catalog/history/05f190c93835e687797f6ce3011a2879a6884275aa2e28ef2c26ff0e745993f0.audit.json",
