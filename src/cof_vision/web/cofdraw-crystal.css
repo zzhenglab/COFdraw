@@ -38,3 +38,12 @@ body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflo
   .crystal-workspace .science-controls { max-height:none; border-left:0 }
   .crystal-workspace #structure-canvas { height:330px }
 }
+
+#display-settings { border-top:1px solid #dce5df; padding:6px 0 }
+#display-settings summary { cursor:pointer; font-weight:600 }
+#display-cells { border:0; margin:6px 0 0; padding:0 }
+.cell-counts,.camera-controls { display:flex; gap:12px; margin:4px 0 }
+.cell-counts label,.camera-controls label { flex:1; min-width:0 }
+.cell-counts select { width:70% }
+.camera-controls input { width:100%; accent-color:#247b70 }
+.camera-controls output { float:right; font-variant-numeric:tabular-nums }

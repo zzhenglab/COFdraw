@@ -64,6 +64,7 @@ LINKAGE_ALIASES = {
 }
 STYLE_ALIASES = {
     "gradient_stack": ["gradient layers", "fading layers", "stacked gradient"],
+    "pore_perspective": ["through the pore", "pore perspective", "look down the channel"],
     "half_space_stack": ["half space filling", "half-space-filling layers", "half-space filling"],
     "element_compact": ["compact hydrogen labels", "compact heteroatom labels"],
     "sphere_cutaway": ["space filling cutaway", "space-filling cutaway", "spheres over skeletal"],

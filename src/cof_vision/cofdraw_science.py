@@ -428,7 +428,7 @@ def _cell_parameters(cell):
     return [*map(float, lengths), *angles]
 
 
-def structure_exports(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
+def _display_geometry(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
     normalized = normalize_structure(structure)
     if len(repeats) != 3:
         raise ValueError("Repeat counts need three integers")
@@ -459,6 +459,36 @@ def structure_exports(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
                 viewer_atom['charge'] = source['charge']
             atoms.append(viewer_atom)
             fractions.append(fractional)
+    # Keep the verified image shift when connecting adjacent copies. A bond
+    # crossing the outside of the displayed supercell terminates at its edge.
+    viewer_bonds = []
+    if periodic_bonds:
+        n_sites = len(normalized["atoms"])
+        for image in itertools.product(*(range(n) for n in repeats)):
+            offset = ((image[0]*repeats[1] + image[1])*repeats[2] + image[2])*n_sites
+            for bond in periodic_bonds:
+                other = [i + t for i, t in zip(image, bond["translation"])]
+                if all(0 <= i < n for i, n in zip(other, repeats)):
+                    neighbor = ((other[0]*repeats[1] + other[1])*repeats[2] + other[2])*n_sites
+                    viewer_bonds.append([offset + bond["a"], neighbor + bond["b"]])
+    viewer = {"atoms": atoms, "bonds": viewer_bonds, "cell": supercell.tolist(), "periodic": True,
+              "bounds": _bounds([[a[k] for k in ("x", "y", "z")] for a in atoms]), "units": "angstrom"}
+    return normalized, repeats, viewer, fractions
+
+
+def periodic_view(structure, repeats, *, periodic_bonds=None, color_networks=False):
+    normalized, repeats, viewer, _ = _display_geometry(structure, repeats, periodic_bonds=periodic_bonds)
+    if color_networks:
+        from .cofdraw_network import label_periodic_networks
+        label_periodic_networks(viewer, normalized, repeats, periodic_bonds)
+    return viewer
+
+
+def structure_exports(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
+    normalized, repeats, viewer, fractions = _display_geometry(structure, repeats, periodic_bonds=periodic_bonds)
+    atoms = viewer["atoms"]
+    supercell = np.asarray(viewer["cell"])
+    count = len(atoms)
     params = _cell_parameters(supercell)
     cif = "data_COFdraw\n# Explicit full-cell geometry; no new experimental identity assigned.\n"
     cif += "".join(f"_cell_{name} {number:.9f}\n" for name, number in zip(("length_a", "length_b", "length_c", "angle_alpha", "angle_beta", "angle_gamma"), params))
@@ -494,21 +524,8 @@ def structure_exports(structure, repeats=(1, 1, 1), *, periodic_bonds=None):
     if np.min(positions) < -999.999 or np.max(positions) > 9999.999:
         exports.pop("pdb", None)
         warnings.append("PDB omitted because Cartesian coordinates exceed its fixed-column field width; use CIF or extended XYZ.")
-    # Keep the verified image shift when connecting adjacent copies. A bond
-    # crossing the outside of the displayed supercell terminates at its edge.
-    viewer_bonds = []
-    if periodic_bonds:
-        n_sites = len(normalized["atoms"])
-        for image in itertools.product(*(range(n) for n in repeats)):
-            offset = ((image[0]*repeats[1] + image[1])*repeats[2] + image[2])*n_sites
-            for bond in periodic_bonds:
-                other = [i + t for i, t in zip(image, bond["translation"])]
-                if all(0 <= i < n for i, n in zip(other, repeats)):
-                    neighbor = ((other[0]*repeats[1] + other[1])*repeats[2] + other[2])*n_sites
-                    viewer_bonds.append([offset + bond["a"], neighbor + bond["b"]])
     return {"kind": "explicit_periodic_structure", "structure": normalized, "repeats": repeats,
-            "viewer": {"atoms": atoms, "bonds": viewer_bonds, "cell": supercell.tolist(), "periodic": True,
-                       "bounds": _bounds(positions), "units": "angstrom"}, "exports": exports, "warnings": warnings}
+            "viewer": viewer, "exports": exports, "warnings": warnings}
 
 
 class _PeriodicDistances:

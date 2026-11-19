@@ -53,6 +53,7 @@ STYLES=[
      "flat_foreground":True,"design_reference":"https://www.sciencedirect.com/science/article/pii/S2451929423003662"},
     {"id":"sphere_cutaway","label":"Spheres and bonds","description":"Shaded atoms fade into a fully readable chemical drawing.","category":"layered",
      "flat_foreground":True,"design_reference":"https://doi.org/10.1021/jacs.5c01990"},
+    {"id":"pore_perspective","label":"Through the pore","description":"Look into a channel of translucent, shaded atoms beneath the chemical drawing.","category":"layered","flat_foreground":True},
     {"id":"half_space_stack","label":"Half-space-filling layers","description":"A sharp chemical drawing over translucent layers of shaded atoms at half van der Waals radius.","category":"layered","flat_foreground":True},
 ]
 for row in STYLES:
@@ -82,7 +83,7 @@ RANDOM_STYLES = (
 STYLE_FAMILIES = {
     **dict.fromkeys(('standard', 'hetero_colors', 'red_blue', 'serif', 'bold_color',
                      'mono_dashed', 'compact_labels', 'element_compact'), 'lines'),
-    **dict.fromkeys(('gradient_stack', 'half_space_stack', 'stacked_eclipsed', 'stacked_slipped'), 'layers'),
+    **dict.fromkeys(('gradient_stack', 'half_space_stack', 'pore_perspective', 'stacked_eclipsed', 'stacked_slipped'), 'layers'),
     **dict.fromkeys(('node_highlight', 'pastel_blocks', 'cartoon_overlay'), 'block regions'),
     **dict.fromkeys(('molecular_spheres', 'sphere_cutaway'), 'spheres'),
 }
@@ -123,6 +124,9 @@ def style_configuration(style_id, seed=None, options=None, recent_styles=()):
         defaults['layer_opacity'] = .38
     elif style_id in ('gradient_stack','half_space_stack'):
         defaults.update(palette='lagoon', layer_count=5, layer_spacing=.044, layer_opacity=.56, projection_tilt=43.)
+    elif style_id == 'pore_perspective':
+        defaults.update(palette='cobalt_citrus', layer_count=5, layer_spacing=.04, layer_opacity=.64,
+                        projection_tilt=12., transparent_background=True)
     elif style_id == 'element_compact':
         defaults.update(element_scheme='jewel',hydrogen_labels='compact')
     elif style_id == 'sphere_cutaway':
@@ -221,7 +225,7 @@ def _gradient_layers(tag, defs, root, mol, xy, palette, bond, size, options, sph
         ET.SubElement(layer,tag('path'),{**base,'stroke':f'url(#{name})','stroke-width':str(bond*.65)})
 
 
-def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False, half_space=False):
+def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=False, half_space=False, component_carbon=False):
     from rdkit import Chem
     atom_colors={6:'#6c8190',7:'#476fcd',8:'#db5d59',16:'#d3ac41',5:'#c99a7d',9:'#61b887',17:'#61b887'}
     atom_colors.update(ELEMENT_SCHEMES.get(options.get("element_scheme"), {}))
@@ -237,7 +241,7 @@ def _sphere_layer(tag, defs, mol, xy, colors, audit, bond, options, *, cutaway=F
         if not atomic and (cutaway or half_space):
             continue
         component=colors[audit['atom_origin'][i]['component']]
-        color=component if cutaway and atomic==6 else atom_colors.get(atomic,component)
+        color=component if (cutaway or component_carbon) and atomic==6 else atom_colors.get(atomic,component)
         radius=bond*(.43 if cutaway else .22 if atomic==6 else .26)*options['sphere_scale']
         if half_space:
             radius = .5 * Chem.GetPeriodicTable().GetRvdw(atomic) * bond / 1.4 * options['sphere_scale']
@@ -294,6 +298,26 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
             sheet.set('id',sheet_id)
             defs.append(sheet)
         _gradient_layers(tag,defs,root,mol,xy,palette,bond_length,size,options,sheet_id)
+    if style_id == 'pore_perspective':
+        sheet = _sphere_layer(tag, defs, mol, xy, colors, audit, bond_length, options,
+                              half_space=True, component_carbon=True)
+        sheet.set('id', 'perspective-atoms')
+        defs.append(sheet)
+        # Parallel sheets seen by a pinhole camera shrink about a common vanishing point.
+        # Keep the front-plane coordinates intact for the chemical drawing and picking.
+        center = (xy.min(0)+xy.max(0))/2
+        tilt = math.radians(options['projection_tilt'])
+        focus = center + size*math.sin(tilt)*np.array([.24, -.16])
+        stack = ET.SubElement(root, tag('g'), {'data-layer':'pore-perspective'})
+        count = options['layer_count']
+        for depth in reversed(range(count)):
+            factor = 1/(1+depth*options['layer_spacing']*2.8)
+            opacity = options['layer_opacity']*(1-.55*depth/(count-1)) if depth else .23
+            ET.SubElement(stack, tag('use'), {
+                '{http://www.w3.org/1999/xlink}href':'#perspective-atoms',
+                'data-illustrative-layer':str(depth), 'opacity':str(opacity),
+                'transform':f'translate({focus[0]:.3f},{focus[1]:.3f}) scale({factor:.6f}) '
+                            f'translate({-focus[0]:.3f},{-focus[1]:.3f})'})
     halo=source_style.get('halo')
     if style_id=='glow_outline' or halo:
         blur=ET.SubElement(defs,tag('filter'),{'id':'molecular-glow','x':'-30%','y':'-30%','width':'160%','height':'160%'})

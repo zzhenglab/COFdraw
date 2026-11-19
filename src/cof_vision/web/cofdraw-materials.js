@@ -361,7 +361,7 @@
     if(!name)return;
     if($('science-dialog').hidden)$('open-science').click();
     C.tab(name);
-    document.querySelector('[data-science-tab="'+name+'"]').focus();
+    (name==='inspect'?$('science-inspect').querySelector('summary'):document.querySelector('[data-science-tab="'+name+'"]')).focus();
   });
   syncModelState();
 })();

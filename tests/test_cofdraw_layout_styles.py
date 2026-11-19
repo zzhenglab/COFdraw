@@ -86,7 +86,7 @@ def test_chemical_styles_share_geometry_and_color_native_carbon_joins(tmp_path):
     original, _ = build_patch(recipe)
     original_xyz = original.GetConformer().GetPositions()
     graph_exports = []
-    for style in ('standard', 'red_blue', 'glow_outline', 'pastel_blocks', 'stacked_slipped', 'molecular_spheres','half_space_stack','element_compact'):
+    for style in ('standard', 'red_blue', 'glow_outline', 'pastel_blocks', 'stacked_slipped', 'molecular_spheres','half_space_stack','pore_perspective','element_compact'):
         out = tmp_path/style
         audit = render_styled(recipe, out, 650, style)
         assert np.allclose(audit['drawing_style']['layout']['atom_coordinates'], original_xyz[:, :2])
@@ -97,6 +97,14 @@ def test_chemical_styles_share_geometry_and_color_native_carbon_joins(tmp_path):
             assert len(svg.findall('.//{*}use')) == audit['drawing_style']['options']['layer_count']-1
             assert svg.find(".//*[@id='half-space-sheet']") is not None
             assert audit['drawing_style']['layout']['display_projection'] is False
+        if style == 'pore_perspective':
+            import re
+            from PIL import Image
+            svg = ET.parse(out/'layout-fixture.svg').getroot()
+            layers = svg.findall(".//*[@data-layer='pore-perspective']/{*}use")
+            scales = [float(re.search(r'scale\(([^)]+)', el.get('transform'))[1]) for el in layers]
+            assert len(scales) == 5 and all(a < b for a,b in zip(scales, scales[1:])) and scales[-1] == 1
+            assert Image.open(out/'layout-fixture.png').getpixel((0, 0))[-1] == 0
         if style == 'red_blue':
             svg = ET.parse(out/'layout-fixture.svg').getroot()
             joins = [p for p in svg.iter() if p.get('data-vertex-atom') is not None]

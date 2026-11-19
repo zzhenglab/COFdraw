@@ -16,14 +16,14 @@
     $('current-drawing-label').textContent=valid?drawingName():'Create or apply a drawing to generate its model.';
     for(const id of ['build-current-cell','build-patch-3d','compare-stacks']) $(id).disabled=!valid;
   }
-  function invalidate(message,clearViewer=true){revision++;activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');if(clearViewer){currentStructure=null;origin=null;viewer.set({atoms:[],bonds:[]});$('structure-exports').replaceChildren();$('structure-warnings').replaceChildren();$('structure-scope').textContent=message||'';$('viewer-title').textContent='Ready for a new structure';$('viewer-provenance').textContent=message||'';}for(const id of ['porosity-results','monomer-results'])$(id).replaceChildren();window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:{invalidated:true}}));if(message)status(message);syncSource();}
+  function invalidate(message,clearViewer=true){revision++;activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');if(clearViewer){syncDisplayCells(null);currentStructure=null;origin=null;viewer.set({atoms:[],bonds:[]});$('structure-exports').replaceChildren();$('structure-warnings').replaceChildren();$('structure-scope').textContent=message||'';$('viewer-title').textContent='Ready for a new structure';$('viewer-provenance').textContent=message||'';}for(const id of ['porosity-results','monomer-results'])$(id).replaceChildren();window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:{invalidated:true}}));if(message)status(message);syncSource();}
   async function work(task){
     if(scienceBusy)return;const job={revision};activeJob=job;scienceBusy=true;document.querySelector('.science-controls').classList.add('science-busy');status('Calculating locally…');
     const check=()=>{if(activeJob!==job||revision!==job.revision){const e=new Error('An outdated result was discarded.');e.name='ObsoleteScienceResult';throw e;}};
     const api=async(path,payload)=>{check();const result=await S.api(path,payload);check();return result;};
     try{await task(api,check);}catch(e){if(e.name!=='ObsoleteScienceResult'&&activeJob===job)status(e.message,true);}finally{if(activeJob===job){activeJob=null;scienceBusy=false;document.querySelector('.science-controls').classList.remove('science-busy');syncSource();}}
   }
-  function tab(name){document.querySelectorAll('[data-science-tab]').forEach(b=>{const active=b.dataset.scienceTab===name;b.setAttribute('aria-selected',String(active));b.setAttribute('aria-controls','science-'+b.dataset.scienceTab);b.tabIndex=active?0:-1;});document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();window.dispatchEvent(new Event("cofdraw:science-tab"));}
+  function tab(name){if(name==='inspect'){name='model';$('science-inspect').open=true;}document.querySelectorAll('[data-science-tab]').forEach(b=>{const active=b.dataset.scienceTab===name;b.setAttribute('aria-selected',String(active));b.setAttribute('aria-controls','science-'+b.dataset.scienceTab);b.tabIndex=active?0:-1;});document.querySelectorAll('.science-pane').forEach(p=>p.hidden=p.id!==`science-${name}`);viewer.draw();window.dispatchEvent(new Event("cofdraw:science-tab"));}
   document.querySelectorAll('[data-science-tab]').forEach(b=>b.addEventListener('click',()=>tab(b.dataset.scienceTab)));
   document.querySelector('.science-tabs').addEventListener('keydown',event=>{
     const buttons=[...event.currentTarget.querySelectorAll('[role=tab]')], i=buttons.indexOf(event.target);
@@ -40,7 +40,7 @@
     if(visible)requestAnimationFrame(()=>viewer.draw());
   }
   $('open-science').addEventListener('click',()=>{
-    workspace(true);
+    workspace(true);tab('model');
     const activeDrawing=drawingReady();
     const otherModel=activeDrawing&&($('structure-source').value!=='drawing'||origin==='monomer');
     if(otherModel||(!currentStructure&&!origin&&!scienceBusy)){
@@ -74,6 +74,7 @@
       $('viewer-color').value='element';automaticNetworkColor=false;
     }
     comparisonParent=parentLayer;
+    syncDisplayCells(result);
     currentStructure=result.structure||null;origin=kind;viewer.set(result.viewer||{atoms:[],bonds:[]});$('viewer-title').textContent=title;
     const provenance = currentStructure?.provenance;
     $('viewer-provenance').textContent=kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='current-periodic'?`${drawingName()} · unrelaxed periodic cell`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration hypothesis':'Independent periodic model / imported CIF';
@@ -86,6 +87,36 @@
     if(result.viewer?.periodic===true&&!(result.viewer.bonds?.length))note($('structure-warnings'),'Viewer sticks are inferred from distances; they do not assign bond orders or validate the periodic network.');
     $('porosity-results').replaceChildren();exportsFor(result);window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:result}));
   }
+  let displayedReport=null, displayedCounts=[1,1,1], repeatRevision=0;
+  const cellSelects=['a','b','c'].map(axis=>$('display-'+axis));
+  function showCounts(){
+    cellSelects.forEach((select,i)=>select.value=String(displayedCounts[i]));
+  }
+  function syncDisplayCells(result){
+    repeatRevision++;
+    displayedReport=result?.viewer?.periodic?result.report_id:null;
+    displayedCounts=result?.repeats||[1,1,1];
+    showCounts();
+    $('display-cells').disabled=!displayedReport;
+    $('cell-view-status').textContent=displayedReport?'Display only · calculations use the source cell.':'Available for periodic structures.';
+  }
+  async function changeCells(){
+    const job=++repeatRevision, counts=cellSelects.map(select=>Number(select.value));
+    if(!displayedReport)return;
+    $('cell-view-status').textContent='Updating displayed cells…';
+    try{
+      const result=await S.api('science/reports/'+displayedReport+'/view',{repeats:counts});
+      if(job!==repeatRevision)return;
+      displayedCounts=result.repeats;
+      viewer.set(result.viewer,true);
+      window.dispatchEvent(new Event('cofdraw:display-cells'));
+      $('cell-view-status').textContent=counts.join(' × ')+' cells · '+viewer.atoms.length+' atoms displayed.';
+    }catch(error){
+      if(job!==repeatRevision)return;
+      showCounts();$('cell-view-status').textContent=error.message;
+    }
+  }
+  cellSelects.forEach(select=>select.addEventListener('change',changeCells));
   function drawingRequest(){if(!S.state.recipe)throw new Error('Create or open a drawing first.');if(S.state.inputsDirty||S.state.jsonPending)throw new Error('Apply your input changes first.');return S.state.sourceId?{source_recipe_id:S.state.sourceId}:{recipe:copy(S.state.recipe)};}
   const repeats=()=>['a','b','c'].map(x=>Number($(`repeat-${x}`).value));
   function patchRequest(stacking=$('patch-stacking').value){return {...drawingRequest(),layers:Number($('patch-layers').value),layer_spacing:Number($('patch-spacing').value),stacking,slip:[Number($('patch-slip-x').value),Number($('patch-slip-y').value)],twist_degrees:Number($('patch-twist').value)};}
@@ -245,7 +276,22 @@
     const n=parseInt(hex.slice(1),16);
     return 'rgb('+[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v+(target-v)*fraction)).join(',')+')';
   }
-  const viewer={model:null,atoms:[],bonds:[],theta:-.3,phi:.6,zoom:1,selected:[],projected:[],set(model){this.model=model;this.projected=[];this.atoms=(model.atoms||[]).map((a,i)=>({...a,index:i,x:a.x??a.position?.[0]??a.cartesian?.[0]??0,y:a.y??a.position?.[1]??a.cartesian?.[1]??0,z:a.z??a.position?.[2]??a.cartesian?.[2]??0}));this.selected=[];$('viewer-distance').textContent='';$('viewer-legend').replaceChildren();this.zoom=1;this.bonds=Array.isArray(model.bonds)&&!(model.periodic===true&&model.bonds.length===0)?model.bonds.map(b=>Array.isArray(b)?b:[b.a,b.b]):this.inferBonds();this.draw();},inferBonds(){const bins=new Map(),bond=[],width=3;for(let i=0;i<this.atoms.length;i++){const a=this.atoms[i],base=[a.x,a.y,a.z].map(x=>Math.floor(x/width));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){const key=[base[0]+x,base[1]+y,base[2]+z].join(',');for(const j of bins.get(key)||[]){const b=this.atoms[j];if(a.network!==undefined&&b.network!==undefined&&a.network!==b.network)continue;if(a.layer!==undefined&&b.layer!==undefined&&a.layer!==b.layer)continue;const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),cut=1.18*((radii[a.element]||.8)+(radii[b.element]||.8));if(distance>.35&&distance<cut)bond.push([i,j]);}}const key=base.join(',');if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);}return bond;},draw(){const canvas=$('structure-canvas'),rect=canvas.getBoundingClientRect();if(rect.width<1)return;const dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#f8fbfa';c.fillRect(0,0,w,h);if(!this.atoms.length){c.fillStyle='#91a59b';c.font='14px Segoe UI';c.textAlign='center';c.fillText('Your 3D structure will appear here',w/2,h/2);return;}const coords=this.atoms.map(a=>[a.x,a.y,a.z]),lo=[0,1,2].map(k=>Math.min(...coords.map(p=>p[k]))),hi=[0,1,2].map(k=>Math.max(...coords.map(p=>p[k]))),center=lo.map((v,k)=>(v+hi[k])/2);const rotate=p=>{const x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],x1=x*Math.cos(this.theta)+z*Math.sin(this.theta),z1=-x*Math.sin(this.theta)+z*Math.cos(this.theta);return {x:x1,y:y*Math.cos(this.phi)-z1*Math.sin(this.phi),z:y*Math.sin(this.phi)+z1*Math.cos(this.phi)};};const rotated=coords.map(rotate),xs=rotated.map(p=>p.x),ys=rotated.map(p=>p.y),xlo=Math.min(...xs),xhi=Math.max(...xs),ylo=Math.min(...ys),yhi=Math.max(...ys),scale=Math.min(w*.82/(xhi-xlo+4),h*.82/(yhi-ylo+4))*this.zoom;const project=p=>{const r=rotate(p);return {x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale,z:r.z};};this.projected=coords.map(project);const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
+  const viewer={model:null,atoms:[],bonds:[],theta:-.3,phi:.6,zoom:1,selected:[],projected:[],set(model,retainZoom=false){this.model=model;this.projected=[];this.atoms=(model.atoms||[]).map((a,i)=>({...a,index:i,x:a.x??a.position?.[0]??a.cartesian?.[0]??0,y:a.y??a.position?.[1]??a.cartesian?.[1]??0,z:a.z??a.position?.[2]??a.cartesian?.[2]??0}));this.selected=[];$('viewer-distance').textContent='';$('viewer-legend').replaceChildren();if(!retainZoom)this.zoom=1;this.bonds=Array.isArray(model.bonds)&&!(model.periodic===true&&model.bonds.length===0)?model.bonds.map(b=>Array.isArray(b)?b:[b.a,b.b]):this.inferBonds();this.draw();},inferBonds(){const bins=new Map(),bond=[],width=3;for(let i=0;i<this.atoms.length;i++){const a=this.atoms[i],base=[a.x,a.y,a.z].map(x=>Math.floor(x/width));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){const key=[base[0]+x,base[1]+y,base[2]+z].join(',');for(const j of bins.get(key)||[]){const b=this.atoms[j];if(a.network!==undefined&&b.network!==undefined&&a.network!==b.network)continue;if(a.layer!==undefined&&b.layer!==undefined&&a.layer!==b.layer)continue;const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),cut=1.18*((radii[a.element]||.8)+(radii[b.element]||.8));if(distance>.35&&distance<cut)bond.push([i,j]);}}const key=base.join(',');if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);}return bond;},draw(){const canvas=$('structure-canvas'),rect=canvas.getBoundingClientRect();if(rect.width<1)return;const dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#f8fbfa';c.fillRect(0,0,w,h);if(!this.atoms.length){c.fillStyle='#91a59b';c.font='14px Segoe UI';c.textAlign='center';c.fillText('Your 3D structure will appear here',w/2,h/2);return;}const coords=this.atoms.map(a=>[a.x,a.y,a.z]),lo=[0,1,2].map(k=>Math.min(...coords.map(p=>p[k]))),hi=[0,1,2].map(k=>Math.max(...coords.map(p=>p[k]))),center=lo.map((v,k)=>(v+hi[k])/2);const rotate=p=>{const x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],x1=x*Math.cos(this.theta)+z*Math.sin(this.theta),z1=-x*Math.sin(this.theta)+z*Math.cos(this.theta);return {x:x1,y:y*Math.cos(this.phi)-z1*Math.sin(this.phi),z:y*Math.sin(this.phi)+z1*Math.cos(this.phi)};};
+      const rotated=coords.map(rotate);
+      const extent=Math.max(1,Math.hypot(...hi.map((v,k)=>v-lo[k]))/2);
+      const perspective=Number($('camera-perspective').value)*.006/extent;
+      const fading=Number($('camera-fade').value)*.008;
+      function camera(r){
+        const factor=1/Math.max(.25,1-perspective*r.z);
+        return {x:r.x*factor,y:r.y*factor,z:r.z,factor};
+      }
+      const plane=rotated.map(camera),xs=plane.map(p=>p.x),ys=plane.map(p=>p.y);
+      const xlo=Math.min(...xs),xhi=Math.max(...xs),ylo=Math.min(...ys),yhi=Math.max(...ys);
+      const scale=Math.min(w*.82/(xhi-xlo+4),h*.82/(yhi-ylo+4))*this.zoom;
+      const screen=r=>({...r,x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale});
+      const project=p=>screen(camera(rotate(p)));
+      this.projected=plane.map(screen);
+      const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
       const layers=new Map();
       if(mode==='mixed')this.atoms.forEach((a,i)=>{
         if(a.layer===undefined)return;
@@ -267,17 +313,19 @@
       window.COFdrawPores?.addFaces(objects,project,scale);
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
-        if(o.kind==='pore'){window.COFdrawPores.paint(c,o);continue;}
+        const depth=Math.max(0,Math.min(1,(zmax-o.z)/Math.max(.01,zmax-zmin)));
+        const visibility=1-fading*depth;
+        if(o.kind==='pore'){window.COFdrawPores.paint(c,o,visibility);continue;}
         const a=this.atoms[o.index],p=this.projected[o.index],base=color(a);
-        const depth=(zmax-o.z)/Math.max(.01,zmax-zmin);
+        const localScale=scale*p.factor;
         if(o.kind==='bond'){
-          const width=mode==='ballstick'?Math.max(1.15,scale*.17):Math.max(.85,scale*.075);
-          c.lineWidth=width;c.lineCap='round';c.strokeStyle=base;c.globalAlpha=1-.30*depth;
+          const width=mode==='ballstick'?Math.max(1.15,localScale*.17):Math.max(.85,localScale*.075);
+          c.lineWidth=width;c.lineCap='round';c.strokeStyle=base;c.globalAlpha=(1-.30*depth)*visibility;
           c.beginPath();c.moveTo(o.tip.x,o.tip.y);c.lineTo(o.mid.x,o.mid.y);c.stroke();
         }else{
           const skeletal=mode==='wireframe'||mode==='mixed'&&!featured(a);
-          const r=skeletal?Math.max(.85,scale*.06):Math.max(1.2,scale*(vdw[a.element]||1.7)*(mode==='ballstick'?.25:mode==='halfspace'?.5:1));
-          c.globalAlpha=1;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);
+          const r=skeletal?Math.max(.85,localScale*.06):Math.max(1.2,localScale*(vdw[a.element]||1.7)*(mode==='ballstick'?.25:mode==='halfspace'?.5:1));
+          c.globalAlpha=visibility;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);
           if(skeletal){c.fillStyle=base;}
           else{
             const g=c.createRadialGradient(p.x-r*.34,p.y-r*.38,r*.03,p.x,p.y,r*1.07);
@@ -347,9 +395,16 @@
   });
   canvas.addEventListener('lostpointercapture',e=>{if(rotation?.pointer===e.pointerId)rotation=null;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();viewer.zoom=Math.max(.3,Math.min(4,viewer.zoom*Math.exp(-e.deltaY*.001)));viewer.draw();},{passive:false});
+  function updateCamera(){
+    for(const id of ['camera-fade','camera-perspective']){
+      document.querySelector('output[for="'+id+'"]').value=$(id).value+'%';
+    }
+    viewer.draw();
+  }
+  for(const id of ['camera-fade','camera-perspective'])$(id).addEventListener('input',updateCamera);
   $('viewer-mode').addEventListener('change',()=>viewer.draw());
   $('viewer-color').addEventListener('change',()=>viewer.draw());
-  $('viewer-reset').addEventListener('click',()=>{viewer.theta=-.3;viewer.phi=.6;viewer.zoom=1;$('viewer-axis').value='free';clearDistance();});
+  $('viewer-reset').addEventListener('click',()=>{$('camera-perspective').value=0;$('camera-fade').value=0;updateCamera();viewer.theta=-.3;viewer.phi=.6;viewer.zoom=1;$('viewer-axis').value='free';clearDistance();});
   new ResizeObserver(()=>viewer.draw()).observe(canvas);
 
   // Edit the exact displayed coordinates; graph connectivity is not rewritten.

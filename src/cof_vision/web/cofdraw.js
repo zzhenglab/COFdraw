@@ -349,7 +349,9 @@ function styleIcon(style){
   const span=document.createElement("span");span.className="style-icon";span.setAttribute("aria-hidden","true");const svg=node("svg",{viewBox:"0 0 56 48",fill:"none"});
   const kind=style.preview_kind||style.id,layered=style.category==="layered"||/stack|layer|3d/.test(kind),schematic=style.category==="schematic"||/cartoon|schematic/.test(kind);
   const colored=/color|red|blue|highlight|filled/.test(kind),color=colored?"#527ba1":"#647c68",points="28,7 44,16 44,34 28,43 12,34 12,16";
-  if(kind==='gradient_stack'||kind==='half_space_stack'){
+  if(kind==='pore_perspective'){
+    for(const factor of [.50,.66,.82])svg.append(node('polygon',{points,transform:`translate(28 25) scale(${factor}) translate(-28 -25)`,stroke:'#7791b5','stroke-width':2}));
+  }else if(kind==='gradient_stack'||kind==='half_space_stack'){
     for(const [depth,shade] of [[3,'#74a7a9'],[2,'#9ababa'],[1,'#b6d0c5']]){
       svg.append(node('polygon',{points,transform:`translate(${depth},${depth*2-2}) scale(.96,.88)`,stroke:shade,'stroke-width':2}));
     }
@@ -378,10 +380,11 @@ const styleOptionDefaults={hydrogen_labels:"show",element_scheme:"style_default"
 function drawStyleControls(){
   const spec=state.library?.style_controls,root=$("style-control-fields");$("style-controls").hidden=!spec;if(!spec)return;root.replaceChildren();
   const styleDefaults=state.style==='element_compact'?{element_scheme:'jewel',hydrogen_labels:'compact'}:
+    state.style==='pore_perspective'?{layer_count:5,layer_spacing:.04,layer_opacity:.64,projection_tilt:12,palette:'cobalt_citrus',transparent_background:true}:
     state.style==='half_space_stack'||state.style==='gradient_stack'?{layer_count:5,layer_spacing:.044,layer_opacity:.56,projection_tilt:43,palette:'lagoon'}:{};
   const current={...styleOptionDefaults,...styleDefaults,...state.resolvedStyleOptions,...state.styleOptions};
-  const hasLayers=['stacked_eclipsed','stacked_slipped','gradient_stack','half_space_stack'].includes(state.style);
-  const hasSpheres=['molecular_spheres','sphere_cutaway','half_space_stack'].includes(state.style);
+  const hasLayers=['stacked_eclipsed','stacked_slipped','gradient_stack','half_space_stack','pore_perspective'].includes(state.style);
+  const hasSpheres=['molecular_spheres','sphere_cutaway','half_space_stack','pore_perspective'].includes(state.style);
   const lists=[['palette','Color palette',spec.palettes||[]],['element_scheme','Atom colors',spec.element_schemes||['style_default']],['hydrogen_labels','Functional-group H',spec.hydrogen_labels||['show','compact']],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
   const names={show:'Show H labels',compact:'Hide inferable H labels',style_default:"Style default",conventional:"Conventional elements",deep_ink:"Deep ink",jewel:"Jewel tones",classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   function changed(key,value){state.styleOptions[key]=value;if(state.recipe)state.dirty=true;sync();}

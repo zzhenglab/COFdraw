@@ -73,6 +73,11 @@ class ModelDrawing(BaseModel):
     recipe_match: RenderDrawing | None = None
 
 
+class DisplayCells(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    repeats: list[Annotated[int, Field(ge=1, le=4, strict=True)]] = Field(min_length=3, max_length=3)
+
+
 class Patch3D(RenderDrawing):
     layers: int = Field(default=3, ge=1, le=6)
     layer_spacing: float = Field(default=3.4, ge=2.5, le=12, allow_inf_nan=False)
@@ -716,7 +721,9 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         from .cofdraw_network import inspect_periodic_network, label_periodic_networks
         network=inspect_periodic_network(structure)
         result=structure_exports(structure,tuple(repeats),periodic_bonds=network['edges'])
-        if 3 in network['dimensions']:
+        result['display_edges'] = network['edges']
+        result['color_periodic_networks'] = 3 in network['dimensions']
+        if result['color_periodic_networks']:
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
         result['scope']=item['description']
         credit='; '.join(str(item[k]) for k in ('model_name','citation_doi','data_doi','attribution','license') if k in item)
@@ -984,6 +991,22 @@ def create_drawing_router(data_root: Path) -> APIRouter:
         data=stored_report(report_id)
         if data is None:raise HTTPException(404,'Scientific report not found or unreadable')
         return data
+
+    @router.post('/science/reports/{report_id}/view')
+    def repeat_view(report_id: str, request: DisplayCells):
+        from .cofdraw_science import periodic_view
+        report = stored_report(report_id)
+        if report is None:
+            raise HTTPException(404, 'Structure report was not found')
+        if not report.get('structure', {}).get('periodic') or not report.get('viewer', {}).get('periodic'):
+            raise HTTPException(422, 'Display cells require a periodic structure')
+        edges = report.get('display_edges', report.get('cell_validation', {}).get('periodic_bonds'))
+        try:
+            viewer = periodic_view(report['structure'], request.repeats, periodic_bonds=edges,
+                                   color_networks=bool(report.get('color_periodic_networks')))
+            return {'viewer': viewer, 'repeats': request.repeats}
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @router.post('/science/inspect')
     def inspect_structure(request: StructureInspection):

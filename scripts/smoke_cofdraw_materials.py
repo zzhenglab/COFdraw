@@ -25,6 +25,10 @@ def main():
    exe=next(x for x in [Path(r'C:\Program Files\Google\Chrome\Application\chrome.exe'),Path(r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe')] if x.is_file())
    browser=p.chromium.launch(executable_path=str(exe),headless=True);page=browser.new_page(viewport={'width':1600,'height':1100},bypass_csp=True);page.set_default_timeout(30000)
    page.on('pageerror',lambda e:errors.append(str(e)))
+   def quick_check():
+    page.locator('[data-science-tab="model"]').click()
+    box=page.locator('#science-inspect')
+    if not box.evaluate('el=>el.open'):box.locator('summary').click()
    page.goto(base);page.wait_for_function('window.COFdrawScience && window.COFdrawStudio.state.online')
    page.locator('#mode-manual').click();page.locator('#build').click()
    page.wait_for_function('window.COFdrawStudio.state.result && !window.COFdrawStudio.state.busy')
@@ -40,7 +44,7 @@ def main():
    page.locator('#finite-view-options > summary').click()
    page.locator('#build-patch-3d').click()
    page.wait_for_function('window.COFdrawScience.finiteModel && !document.querySelector(".science-controls").classList.contains("science-busy")')
-   page.locator('[data-science-tab="inspect"]').click();page.locator('#screen-current').click()
+   quick_check();page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Checked the displayed finite')")
    assert 'Displayed atom inventory' in page.locator('#inspection-results').inner_text()
    assert page.locator('#screen-pores').is_disabled()
@@ -67,12 +71,12 @@ def main():
    assert slider.input_value()=='1' and page.locator('#pxrd-plot [data-trace]').count()==5
    page.screenshot(path=str(out/'cofdraw-finite-stacking-patterns.png'))
    checks.append('Five finite stacking patterns compare the same drawing under chosen transforms')
-   page.locator('[data-science-tab="inspect"]').click();page.locator('#inspect-model-state .build-cif-from-drawing').click()
+   quick_check();page.locator('#inspect-model-state .build-cif-from-drawing').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model and CIF ready')")
    assert page.evaluate('window.COFdrawScience.structure.atoms.length')==57
    assert page.evaluate('window.COFdrawScience.viewer.bonds.length')>0
    assert 'unrelaxed periodic cell' in page.locator('#viewer-provenance').inner_text()
-   page.locator('[data-science-tab="inspect"]').click()
+   quick_check()
    page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Structure check complete')")
    assert '2D' in page.locator('#inspection-results').inner_text()
@@ -80,7 +84,7 @@ def main():
    page.locator('[data-science-tab="model"]').click();page.locator('#structure-source').select_option('periodic')
    assert page.locator('#pxrd-plot svg').count()==0
    page.locator('#crystal-template').select_option('hcb-imine-aa');page.locator('#build-crystal').click()
-   page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model generated')")
+   page.wait_for_function("COFdrawScience.structure?.periodic && !document.querySelector('.science-busy')")
    page.locator('#viewer-axis').select_option('c');page.locator('#viewer-hide-h').check();page.locator('#show-atom-table').click()
    assert page.locator('#atom-table-panel tr').count()==67
    page.locator('#show-atom-table').click();checks.append('Lattice-axis view, hydrogen visibility and fractional atom table')
@@ -102,7 +106,7 @@ def main():
    page.mouse.move(box['x']+point['x']+15,box['y']+point['y']+12,steps=3);page.mouse.up()
    assert page.locator('#viewer-axis').input_value()=='free'
    checks.append('Dragging clears the lattice axis and distance measurement requires two distinct atoms')
-   page.locator('[data-science-tab="inspect"]').click();page.locator('#screen-pores').check();page.locator('#screen-current').click()
+   quick_check();page.locator('#screen-pores').check();page.locator('#screen-current').click()
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Structure check complete')")
    assert '2D' in page.locator('#inspection-results').inner_text()
    assert page.locator('#inspection-results .metric-card').count()>=9
@@ -191,7 +195,7 @@ def main():
    page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Generate a periodic model')")
    assert page.evaluate('window.COFdrawScience.structure===null')
    checks.append('A failed replacement CIF import clears the previous frame and network-copy parent')
-   page.set_viewport_size({'width':390,'height':844});page.locator('[data-science-tab="inspect"]').click()
+   page.set_viewport_size({'width':390,'height':844});quick_check()
    assert page.locator('#science-dialog').evaluate('e=>e.scrollWidth<=e.clientWidth+1');checks.append('Materials tools fit390px viewport without horizontal overflow')
    assert not errors,errors;browser.close()
  except Exception as exc:failure=f'{type(exc).__name__}: {exc}';raise

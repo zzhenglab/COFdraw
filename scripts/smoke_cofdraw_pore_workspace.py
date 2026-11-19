@@ -96,6 +96,22 @@ def main():
         assert np.all(fractional.min(axis=0) < .3) and np.all(fractional.max(axis=0) > .7)
         signature = page.evaluate("COFdrawPores.structureHash")
         assert isinstance(signature, str) and len(signature) == 64
+        assert page.locator('[data-science-tab]').evaluate_all("els=>els.slice(0,2).map(e=>e.dataset.scienceTab)") == ["monomer", "model"]
+        expect(page.locator('[data-science-tab="model"]')).to_have_attribute('aria-selected','true')
+        expect(page.locator('#science-model #science-inspect summary')).to_be_visible()
+        page.locator("#display-settings summary").click()
+        page.locator("#display-a").select_option("1")
+        expect(page.locator("#cell-view-status")).to_contain_text("600 atoms displayed")
+        assert page.evaluate("COFdrawPores.tileCount") == 4
+        assert page.evaluate("COFdrawPores.structureHash") == signature
+        page.locator("#display-a").select_option("2")
+        expect(page.locator("#cell-view-status")).to_contain_text("1200 atoms displayed")
+        assert page.evaluate("COFdrawPores.tileCount") == 8
+        page.locator("#camera-perspective").focus()
+        page.keyboard.press("End")
+        assert page.evaluate("COFdrawScience.viewer.projected.some(p=>p.factor>1.01)")
+        page.locator("#viewer-reset").click()
+        page.locator("#display-settings summary").click()
         visible = page.locator("#pore-visible")
         assert visible.is_checked()
         full = canvas.evaluate("e => e.toDataURL()")
@@ -110,7 +126,7 @@ def main():
         assert canvas.evaluate("e => e.toDataURL()") != connected
         page.screenshot(path=str(args.output_dir / "channel-section.png"))
 
-        page.locator("#render-panel details summary").click()
+        page.locator("#render-panel summary").filter(has_text="External analysis").click()
         with page.expect_download() as download:
             page.locator("#mof-notebook").click()
         notebook_path = args.output_dir / "analysis.ipynb"

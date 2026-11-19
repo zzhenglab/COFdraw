@@ -158,6 +158,7 @@
     if(periodic&&changed)calculate().catch(()=>{});
   }
   window.addEventListener('cofdraw:structure',reset);
+  window.addEventListener('cofdraw:display-cells',update);
   $('map-pores').onclick=()=>{C.tab('porosity');$('calculate-pores').click();};
   document.querySelector('[data-science-tab="porosity"]').addEventListener('click',()=>{
     if(C.structure?.periodic&&!$('porosity-results').childElementCount)$('calculate-pores').click();
@@ -205,9 +206,9 @@
         }
       }
     },
-    paint(ctx,o){
+    paint(ctx,o,visibility=1){
       const p=o.p;
-      ctx.fillStyle=o.color;ctx.globalAlpha=o.alpha;
+      ctx.fillStyle=o.color;ctx.globalAlpha=o.alpha*visibility;
       ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(const v of p.slice(1))ctx.lineTo(v.x,v.y);ctx.closePath();ctx.fill();
     }
   };
