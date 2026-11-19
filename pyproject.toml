@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cofdraw"
-version = "0.9.3b9"
+version = "0.9.3"
 description = "Offline Windows drawing studio for finite COF pore patches and monomers"
 readme = "README.md"
 requires-python = ">=3.11"

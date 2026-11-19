@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
 
@@ -364,6 +364,25 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     lock = threading.Lock()
     from .cofdraw_adsorption import create_adsorption_router
     router.include_router(create_adsorption_router(outputs))
+
+    @router.get('/space/blocks/{block}.svg')
+    def space_block(block: int):
+        from .cofdraw_family_screen import block_svg
+        try:
+            return Response(block_svg(block),media_type='image/svg+xml',headers={'Cache-Control':'private, max-age=3600'})
+        except KeyError as exc:
+            raise HTTPException(404,'Unknown building block') from exc
+
+    @router.post('/space/export/{family}')
+    def space_export(family: str):
+        from .cofdraw_family_screen import export_family, screen
+        if family not in screen()['families']:
+            raise HTTPException(404,'No screened pairs in this family')
+        key=uuid.uuid4().hex
+        directory=outputs/key
+        directory.mkdir(parents=True)
+        export_family(family,directory/(key+'.zip'))
+        return {'url':f'/api/drawing/exports/{key}/zip'}
 
     def source_records():
         if not registry.is_file():

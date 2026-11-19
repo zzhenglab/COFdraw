@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3
+
+- Explore linkage families, DOI-linked precursor pairs and their chemical structures. Open compatible pairs in the drawing studio or export a family screening batch.
+- Compare ideal repeat chemistry across 79,064 family–pair combinations and geometric properties for 190 periodic models, including 143 screened hypothetical AA cells. Electronic and adsorption targets carry explicit pending flags.
+- Draw connected repeat units and self-condensed or sequence-defined mixed-linker pores. Explore the active structure in the integrated 3D workspace.
+
 ## 0.9.2
 
 - Added 128 finite building blocks from COFvision inventory 0110, with source figures identified by DOI, page and crop hash.

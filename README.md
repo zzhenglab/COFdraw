@@ -24,6 +24,8 @@ Describe a COF, review its building blocks, and draw. Explore 3D structures and 
 
 ## Download and run
 
+In **Explore COF chemical space**, open a linkage to inspect literature pairs, browse hypothetical candidates and export screening data with available CIFs.
+
 1. Download **[COFdraw-Windows.zip](https://github.com/zzhenglab/COFdraw/releases/latest/download/COFdraw-Windows.zip)** from the latest release.
 2. Extract the **entire ZIP** into a writable folder.
 3. Open **`COFdraw.exe`** inside the extracted `COFdraw` folder.
