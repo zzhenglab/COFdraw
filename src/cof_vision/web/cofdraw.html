@@ -252,25 +252,36 @@
     <p id="repeat-message" role="status"></p><img id="repeat-image" alt="Finite chemical drawing with continuation sites">
   </dialog>
   <section id="space-workspace" class="space-workspace" aria-labelledby="space-title" hidden>
-    <div class="space-head"><h1 id="space-title">Explore COF chemical space</h1><button class="button outline" id="space-back">Back to 2D drawing</button></div>
     <p id="space-status" role="status"></p>
     <div id="space-content" hidden>
+      <div id="space-overview">
+        <header class="space-head"><h1 id="space-title">Explore COF chemical space</h1><button class="button outline" id="space-back">Back to 2D drawing</button></header>
+        <div class="space-overview-plots">
       <article class="space-map"><div class="space-row"><div><h2>Composition map</h2><p id="space-map-summary"></p></div>
         <div class="space-map-tools"><input type="search" id="space-search" placeholder="COF name, linker or DOI" aria-label="Search the composition map"><button class="button outline" id="space-minus" aria-label="Zoom out of composition map">−</button><button class="button outline" id="space-plus" aria-label="Zoom into composition map">+</button><button class="button outline" id="space-fit">Fit</button></div></div>
-        <svg class="plot" id="space-map" viewBox="0 0 920 290" aria-label="Interactive t-SNE map of indexed COF precursor compositions"></svg>
+        <svg class="plot" id="space-map" viewBox="0 0 550 270" aria-label="Interactive t-SNE map of indexed COF precursor compositions"></svg>
         <div class="space-row"><div id="space-colors" class="space-legend"></div><select id="space-hit" aria-label="Inspect a mapped composition"></select></div>
         <div id="space-point-detail" class="space-detail" hidden></div>
-        <details><summary>How to read the map</summary><p>One point groups records with the same precursor graphs and indexed linkage. Nearby points share local chemical features. Global distances and axis directions have no physical units. Drag to pan, scroll to zoom, or search to inspect coincident points. Coordinates use t-SNE on mean radius-2 Morgan fingerprints and the linkage class, after PCA (48 components, perplexity 30, seed 42).</p></details>
+        <details><summary>How to read the map</summary><p>One point groups records with the same precursor graphs and indexed linkage. Nearby points share local chemical features. Global distances and axis directions have no physical units. Use the zoom buttons, drag with a mouse to pan, or search to inspect overlapping points. Coordinates use t-SNE on mean radius-2 Morgan fingerprints and the linkage class, after PCA (48 components, perplexity 30, seed 42).</p></details>
       </article>
-      <section class="space-families"><div class="space-row"><h2>Linkage families</h2><select id="space-family-menu" aria-label="Jump to linkage family"></select></div><p>Ranked by indexed compositions. Each miniature shows a representative bond motif.</p><div id="space-families" aria-label="Choose linkage family"></div></section>
-      <div class="space-grid"><article><div class="space-row"><h2 id="space-heat-title">Building-block pairs</h2><button class="button outline" id="space-map-family">View on map</button></div><div id="space-metrics" class="space-metrics"></div>
+<article><h2>Crystal model properties</h2><p id="space-model-count"></p>
+        <label>Plot against density <select id="space-property"><option value="void">Void fraction (%)</option><option value="diameter">Largest sampled cavity diameter (Å)</option></select></label>
+        <svg class="plot space-prop" id="space-scatter" viewBox="0 0 430 270" aria-label="CIF property scatter plot"></svg><select id="space-model" aria-label="Inspect crystal model"></select><div id="space-model-detail" class="space-detail"></div>
+        <p>Density uses the listed atoms. Void fraction uses hard-sphere van der Waals radii and up to 2,048 seeded samples per CIF. The largest sampled cavity diameter is a lower bound. These geometric calculations are independent of the linkage filter.</p></article>
+        </div>
+        <section class="space-families" aria-labelledby="space-gallery-heading"><header class="space-row"><div><h2 id="space-gallery-heading">Linkage families</h2><p>Explore precursor pairs and reported COFs by linkage.</p></div><select id="space-family-menu" aria-label="Open linkage family"><option value="">Jump to a linkage&hellip;</option></select></header><div id="space-families"></div></section>
+      </div>
+      <section id="space-family-page" hidden aria-labelledby="space-family-heading">
+        <nav class="space-detail-nav"><button class="button outline" id="space-family-back">&larr; Back to linkage families</button><button class="text-button" id="space-map-family">View family on map</button></nav>
+        <header class="space-family-intro"><div><h1 id="space-family-heading" tabindex="-1"></h1><p id="space-family-note"></p><p id="space-family-coverage"></p></div><div id="space-family-figure"></div></header>
+        <div class="space-grid"><article><div class="space-row"><h2 id="space-heat-title">Building-block pairs</h2></div><div id="space-metrics" class="space-metrics"></div>
         <div class="space-legend"><span><i class="reported"></i>Reported and eligible</span><span><i class="outside"></i>Reported only</span><span><i class="eligible"></i>Eligible only</span><span><i></i>No match in index</span></div>
         <div id="space-matrix" class="space-matrix"></div><div id="space-pickers" class="space-picker"></div><div id="space-pair-detail" class="space-detail"></div>
         <p>Axes rank linkers by distinct indexed binary compositions. Eligibility includes chain and pore drawing templates. Reports require an exact precursor set and indexed linkage in a DOI record unflagged for trial or failure. An empty cell can still have a report outside this index.</p>
-      </article><article><h2>Crystal model properties</h2><p id="space-model-count"></p>
-        <label>Plot against density <select id="space-property"><option value="void">Void fraction (%)</option><option value="diameter">Largest sampled cavity diameter (Å)</option></select></label>
-        <svg class="plot space-prop" id="space-scatter" viewBox="0 0 430 270" aria-label="CIF property scatter plot"></svg><select id="space-model" aria-label="Inspect crystal model"></select><div id="space-model-detail" class="space-detail"></div>
-        <p>Density uses the listed atoms. Void fraction uses hard-sphere van der Waals radii and up to 2,048 seeded samples per CIF. The largest sampled cavity diameter is a lower bound. These geometric calculations are independent of the linkage filter.</p></article></div>
+      </article>
+          <article class="space-reports"><h2>Reported compositions</h2><label for="space-reports-search">Find by COF name, linker or DOI</label><input type="search" id="space-reports-search"><div id="space-reports-count" role="status"></div><ul id="space-reports-list"></ul><button class="button outline" id="space-more-reports">Show more</button></article>
+        </div>
+      </section>
     </div>
   </section>
   <section id="science-dialog" class="science-dialog crystal-workspace" aria-label="3D structure workspace" hidden>

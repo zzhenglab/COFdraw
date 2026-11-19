@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
-from rdkit.Chem.Draw import rdMolDraw2D
+from linkage_schemes import illustration
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from threadpoolctl import threadpool_limits
@@ -72,13 +72,10 @@ def canonical(smiles):
     return Chem.MolToSmiles(mol)
 
 
-def motif(smiles):
-    mol = Chem.MolFromSmiles(smiles)
-    draw = rdMolDraw2D.MolDraw2DSVG(180, 70)
-    draw.drawOptions().clearBackground = False
-    rdMolDraw2D.PrepareAndDrawMolecule(draw, mol)
-    draw.FinishDrawing()
-    return "<svg" + draw.GetDrawingText().split("<svg", 1)[1]
+def family_art(key):
+    label, smiles = FAMILIES[key]
+    svg, note = illustration(key, label, smiles)
+    return {"name": label, "svg": svg, "illustration_note": note}
 
 
 def main():
@@ -130,8 +127,7 @@ def main():
         a, b = sorted(int(row[k]) for k in ("block 1 ID", "block 2 ID"))
         for key in row["all supported linkages"].split(";"):
             eligible[ALIASES.get(key, key)].add(a*stride+b)
-    families = {k: {"name": label, "svg": motif(smiles), "eligible": sorted(eligible[k])}
-                for k, (label, smiles) in FAMILIES.items()}
+    families = {k: {**family_art(k), "eligible": sorted(eligible[k])} for k in FAMILIES}
     models = ROOT / "data/crystal-models"
     manifest = json.loads((models / "manifest.json").read_text("utf8"))
     properties = []

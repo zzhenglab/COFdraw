@@ -59,19 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const pairCode=(a,b)=>Math.min(a,b)*data.stride+Math.max(a,b);
   function openPoint(point) {
     selectedPoint=point;
+    tip.hidden=true;
     const panel=$('space-point-detail'); panel.hidden=false;
     panel.replaceChildren(element('strong',data.families[point.f].name+' · '+point.ids.map(label).join(' + ')));
     refs(panel,point);$('space-hit').value=String(point.i);
     drawPoints();
   }
   const map=$('space-map');
+  const bounds=map.viewBox.baseVal;
   function drawPoints() {
     map.replaceChildren();
     const group=svg('g',{}); map.append(group);
     for(const p of shownPoints) {
-      const x=460+(p.xy[0]-base.x)*base.scale*zoom+pan[0], y=145-(p.xy[1]-base.y)*base.scale*zoom+pan[1];
-      if(x < -5 || x>925 || y < -5 || y>295)continue;
-      const dot=svg('circle',{cx:x,cy:y,r:p===selectedPoint?5:3.2,fill:colors[p.f],opacity:p===selectedPoint?1:.78,class:'space-point',stroke:p===selectedPoint?'#13292f':'none'});
+      const x=bounds.width/2+(p.xy[0]-base.x)*base.scale*zoom+pan[0], y=bounds.height/2-(p.xy[1]-base.y)*base.scale*zoom+pan[1];
+      if(x < -5 || x>bounds.width+5 || y < -5 || y>bounds.height+5)continue;
+      const dot=svg('circle',{cx:x,cy:y,r:p===selectedPoint?5:2.6,fill:colors[p.f],opacity:p===selectedPoint?1:.78,class:'space-point',stroke:p===selectedPoint?'#13292f':'none'});
       hover(dot,p.refs[0][0]+' · '+data.families[p.f].name+' · '+p.refs[0][1]);
       dot.addEventListener('click',()=>{if(!moved)openPoint(p);});group.append(dot);
     }
@@ -88,25 +90,75 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const pointer=e=>{const p=map.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(map.getScreenCTM().inverse());};
   let start, moved=false;
-  map.addEventListener('pointerdown',e=>{const p=pointer(e);start=[p.x,p.y,pan[0],pan[1]];moved=false;});
+  map.addEventListener('pointerdown',e=>{moved=false;start=null;if(e.pointerType!=='mouse'||e.button!==0)return;const p=pointer(e);start=[p.x,p.y,pan[0],pan[1]];});
   map.addEventListener('pointermove',e=>{if(!start||!e.buttons)return;const p=pointer(e),dx=p.x-start[0],dy=p.y-start[1];if(Math.hypot(dx,dy)<3&&!moved)return;moved=true;map.setPointerCapture(e.pointerId);pan=[start[2]+dx,start[3]+dy];tip.hidden=true;drawPoints();});
   window.addEventListener('pointerup',()=>start=null);
-  function magnify(factor,x=460,y=145){const next=Math.max(.6,Math.min(12,zoom*factor)),ratio=next/zoom;pan=[(x-460)*(1-ratio)+pan[0]*ratio,(y-145)*(1-ratio)+pan[1]*ratio];zoom=next;tip.hidden=true;drawPoints();}
-  map.addEventListener('wheel',e=>{if(!data)return;e.preventDefault();const p=pointer(e);magnify(e.deltaY<0?1.18:1/1.18,p.x,p.y);},{passive:false});
+  map.addEventListener('pointercancel',()=>start=null);
+  function magnify(factor){const next=Math.max(.6,Math.min(12,zoom*factor)),ratio=next/zoom;pan=pan.map(v=>v*ratio);zoom=next;tip.hidden=true;drawPoints();}
   $('space-plus').onclick=()=>magnify(1.5);$('space-minus').onclick=()=>magnify(1/1.5);$('space-fit').onclick=()=>{zoom=1;pan=[0,0];drawPoints();};
   $('space-search').oninput=()=>{mapFamily=null;filterPoints();};
   $('space-hit').onchange=e=>{if(e.target.value!=='')openPoint(data.points[+e.target.value]);else{selectedPoint=null;$('space-point-detail').hidden=true;drawPoints();}};
-  $('space-map-family').onclick=()=>{mapFamily=family;$('space-search').value=data.families[family].name;zoom=1;pan=[0,0];filterPoints();$('space-search').scrollIntoView({block:'center'});$('space-search').focus({preventScroll:true});};
+  let galleryScroll=0, galleryFocus=null, reportLimit=6, returnToMap=false, enteredFromGallery=false;
+  function figure(key){
+    const img=new DOMParser().parseFromString(data.families[key].svg,'image/svg+xml').documentElement;
+    img.setAttribute('aria-hidden','true');
+    return document.importNode(img,true);
+  }
+  function renderReports(){
+    const query=$('space-reports-search').value.trim().toLowerCase();
+    const matches=index[family].filter(p=>!query||p.search.includes(query));
+    const root=$('space-reports-list');root.replaceChildren();
+    for(const point of matches.slice(0,reportLimit)){
+      const item=element('li'),matched=point.refs.filter(ref=>query&&ref.join(' ').toLowerCase().includes(query));
+      const ordered=matched.length?[...matched,...point.refs.filter(r=>!matched.includes(r))]:point.refs;
+      item.append(element('strong',ordered[0][0]),element('p',point.ids.map(label).join(' + ')));
+      const extra=element('details'),summary=element('summary',ordered.length===1?'Source record':'Source records ('+ordered.length+')');
+      extra.append(summary);refs(extra,{refs:ordered});item.append(extra);root.append(item);
+    }
+    $('space-reports-count').textContent=matches.length?Math.min(reportLimit,matches.length)+' of '+matches.length.toLocaleString()+' compositions':'No matching compositions in the index.';
+    $('space-more-reports').hidden=matches.length<=reportLimit;
+  }
+  $('space-more-reports').onclick=()=>{reportLimit+=12;renderReports();};
+  $('space-reports-search').oninput=()=>{reportLimit=6;renderReports();};
+  function detail(key){
+    family=key;tip.hidden=true;
+    const f=data.families[key];$('space-family-heading').textContent=f.name;
+    $('space-family-note').textContent=f.illustration_note;
+    const points=index[key], papers=new Set(points.flatMap(p=>p.refs.map(r=>r[1])));
+    $('space-family-coverage').textContent=points.length.toLocaleString()+' indexed compositions · '+papers.size.toLocaleString()+' DOIs';
+    $('space-family-figure').replaceChildren(figure(key));
+    $('space-overview').hidden=true;$('space-family-page').hidden=false;
+    $('space-reports-search').value='';reportLimit=6;
+    renderMatrix();renderReports();$('space-family-heading').focus({preventScroll:true});window.scrollTo(0,0);
+  }
+  function overview(){
+    tip.hidden=true;$('space-overview').hidden=false;$('space-family-page').hidden=true;$('space-family-menu').value='';
+    if(returnToMap){
+      mapFamily=family;$('space-search').value=data.families[family].name;zoom=1;pan=[0,0];filterPoints();
+      window.scrollTo(0,0);$('space-search').focus({preventScroll:true});returnToMap=false;
+    }else{window.scrollTo(0,galleryScroll);galleryFocus?.focus({preventScroll:true});}
+  }
+  function openFamily(key,origin){
+    galleryScroll=window.scrollY;galleryFocus=origin;
+    enteredFromGallery=true;history.pushState({cofLinkage:key},'','#linkage/'+encodeURIComponent(key));detail(key);
+  }
+  function leaveFamily(){
+    if(enteredFromGallery&&history.state?.cofLinkage)history.back();
+    else {history.replaceState(null,'','#chemical-space');overview();}
+  }
+  $('space-family-back').onclick=leaveFamily;
+  $('space-map-family').onclick=()=>{returnToMap=true;leaveFamily();};
   function familyCards() {
     const root=$('space-families');root.replaceChildren();
     for(const key of ranked) {
-      const f=data.families[key], b=element('button');b.className='space-family';b.setAttribute('aria-pressed',String(key===family));
-      const img=new DOMParser().parseFromString(f.svg,'image/svg+xml').documentElement;
-      img.setAttribute('aria-hidden','true');b.append(document.importNode(img,true),element('strong',f.name),element('small',index[key].length+' compositions'));
+      const f=data.families[key], b=element('button');b.className='space-family';
+      const meta=element('small',index[key].length+' indexed');meta.title='Indexed compositions';
+      const caption=element('span');caption.className='space-card-caption';caption.append(element('strong',f.name),meta);
+      b.append(figure(key),caption);
       $('space-family-menu').add(new Option(f.name,key));
-      b.onclick=()=>{family=key;$('space-family-menu').value=key;for(const button of root.children)button.setAttribute('aria-pressed',String(button===b));renderMatrix();};root.append(b);
+      b.onclick=()=>openFamily(key,b);root.append(b);
     }
-    $('space-family-menu').onchange=e=>{const b=root.children[ranked.indexOf(e.target.value)];b.click();root.scrollLeft=b.offsetLeft-root.firstElementChild.offsetLeft;};
+    $('space-family-menu').onchange=e=>{if(e.target.value)openFamily(e.target.value,e.target);};
   }
   function orient(a,b) {
     // The polar partner occupies the same axis throughout a functional-class matrix.
@@ -132,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     for(const p of pairs)track(p.ids,1);
     for(const key of f.eligible)track([Math.floor(key/data.stride),key%data.stride],0);
     views=counts.map(m=>Array.from(m.keys()).sort((a,b)=>m.get(b)-m.get(a)||label(a).localeCompare(label(b))||a-b));
-    $('space-heat-title').textContent=f.name+' · building-block pairs';
+    $('space-heat-title').textContent='Building-block pairs';
     const metrics=$('space-metrics');metrics.replaceChildren();
     const screened=f.eligible.length>0;
     for(const [n,title] of [[screened?f.eligible.length:'—',screened?'eligible pairs':'eligibility unscreened'],[pairs.length,'reported pairs'],[screened?pairs.filter(p=>linking.eligible.has(pairCode(...p.ids))).length:'—','reported and eligible']]){
@@ -180,18 +232,36 @@ document.addEventListener('DOMContentLoaded', () => {
     colors=Object.fromEntries(ranked.map((k,i)=>[k,colorList[Math.min(i,colorList.length-1)]]));
     const colorsBox=$('space-colors');ranked.slice(0,7).concat(['other']).forEach(k=>{const spot=element('span'),chip=element('i');chip.style.background=colors[k]||colorList.at(-1);spot.append(chip,document.createTextNode(data.families[k]?.name||'Other'));colorsBox.append(spot);});
     const xs=data.points.map(p=>p.xy[0]),ys=data.points.map(p=>p.xy[1]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
-    base={x:(xmin+xmax)/2,y:(ymin+ymax)/2,scale:Math.min(880/Math.max(1,xmax-xmin),266/Math.max(1,ymax-ymin))};
-    $('space-content').hidden=false;$('space-status').textContent='';filterPoints();familyCards();renderMatrix();
+    base={x:(xmin+xmax)/2,y:(ymin+ymax)/2,scale:Math.min((bounds.width-32)/Math.max(1,xmax-xmin),(bounds.height-20)/Math.max(1,ymax-ymin))};
+    $('space-content').hidden=false;$('space-status').textContent='';filterPoints();familyCards();
     for(const r of data.properties)$('space-model').add(new Option(r.name+' · '+r.id,r.id));
     $('space-model-count').textContent=data.properties.length+' bundled CIFs · precomputed geometric screening';scatter();
   }
   $('space-property').onchange=scatter;$('space-model').onchange=scatter;
-  function back(){ $('space-workspace').hidden=true;$('space-open').setAttribute('aria-pressed','false');document.querySelector('main.studio').hidden=false;tip.hidden=true; }
+  function clearRoute(){
+    tip.hidden=true;returnToMap=false;
+    if(location.hash==='#chemical-space'||location.hash.startsWith('#linkage/'))history.replaceState(null,'',location.pathname+location.search);
+  }
+  function back(){clearRoute();$('space-workspace').hidden=true;$('space-open').setAttribute('aria-pressed','false');document.querySelector('main.studio').hidden=false; }
+  window.addEventListener('cofdraw:leave-explorer',clearRoute);
   $('space-back').onclick=()=>{back();$('space-open').focus();};
-  $('space-open').onclick=async()=>{
-    if(!$('space-workspace').hidden){back();return;}
+  async function openExplorer(hash){
     if(!$('science-dialog').hidden)$('close-science').click();
     document.querySelector('main.studio').hidden=true;$('space-workspace').hidden=false;$('space-open').setAttribute('aria-pressed','true');window.scrollTo(0,0);
     if(!loading){$('space-status').textContent='Loading the chemical-space inventory…'; loading=load().catch(e=>{$('space-status').textContent=e.message;loading=null;});}await loading;
+    if(!data||$('space-workspace').hidden)return;
+    const key=ranked.find(k=>hash==='#linkage/'+encodeURIComponent(k));
+    if(key){detail(key);return;}
+    history.replaceState(null,'','#chemical-space');overview();
+  }
+  $('space-open').onclick=()=>{
+    if(!$('space-workspace').hidden){back();return;}
+    galleryFocus=null;galleryScroll=0;enteredFromGallery=false;openExplorer('#chemical-space');
   };
+  function route(){
+    const hash=location.hash;
+    if(hash==='#chemical-space'||hash.startsWith('#linkage/'))openExplorer(hash);
+    else if(!$('space-workspace').hidden)back();
+  }
+  window.addEventListener('popstate',route);route();
 });

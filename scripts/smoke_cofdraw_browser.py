@@ -21,7 +21,7 @@ def main():
     candidates=[args.browser] if args.browser else [Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")]
     executable=next((p for p in candidates if p and p.is_file()),None)
     if executable is None: raise RuntimeError("An installed Chrome or Edge browser is required.")
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import expect, sync_playwright
     server=worker=None
     if args.base_url:
       base_url=args.base_url.rstrip("/")
@@ -61,6 +61,20 @@ def main():
           return rendered
         page.goto(f"{base_url}/cofdraw.html")
         page.get_by_text("Local chemistry engine · ready",exact=True).wait_for()
+        page.locator("#space-open").click()
+        card = page.locator(".space-family").first
+        card.wait_for()
+        page.locator("#space-map").hover()
+        page.mouse.wheel(0, 480)
+        expect(page.locator("#space-title")).not_to_be_in_viewport()
+        card.click()
+        page.locator("#space-family-page").wait_for()
+        assert page.locator("#space-overview").is_hidden()
+        page.locator("#space-family-back").click()
+        page.locator("#space-overview").wait_for()
+        assert card.evaluate("e => document.activeElement === e")
+        page.locator("#space-back").click()
+        checks.append("Composition map allows page scrolling and linkage Back restores gallery focus")
         page.locator('#mode-manual').click()
         page.locator('#appearance-options').evaluate('e=>e.open=true')
         assert page.locator('.identity-summary').is_visible()

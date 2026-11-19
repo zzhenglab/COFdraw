@@ -32,6 +32,7 @@
     event.preventDefault();buttons[idx].click();buttons[idx].focus();
   });
   function workspace(visible){
+    if(!$('space-workspace').hidden)window.dispatchEvent(new Event('cofdraw:leave-explorer'));
     $('space-workspace').hidden=true;
     $('space-open').setAttribute('aria-pressed','false');
     $('science-dialog').hidden=!visible;
