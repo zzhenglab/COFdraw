@@ -6,12 +6,13 @@
   <title>COFdraw — Chemical drawing studio</title>
   <link rel="icon" type="image/png" href="./cofdraw-logo.png"><link rel="stylesheet" href="./cofdraw.css"><link rel="stylesheet" href="./cofdraw-studio.css"><link rel="stylesheet" href="./cofdraw-materials.css"><link rel="stylesheet" href="./cofdraw-describe.css"><link rel="stylesheet" href="./cofdraw-identity.css"><link rel="stylesheet" href="./cofdraw-picker.css"><link rel="stylesheet" href="./cofdraw-workspace.css"><link rel="stylesheet" href="./cofdraw-chat.css">
   <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
+  <link rel="stylesheet" href="./cofdraw-classic.css">
 </head>
 <body data-start-mode="manual">
   <header class="appbar">
     <a class="brand" href="./cofdraw.html" aria-label="COFdraw home"><img class="brand-logo" src="./cofdraw-logo.png" alt="" width="56" height="48"><span>COF<span class="light">draw</span><small>CHEMICAL DRAWING STUDIO</small></span></a>
     <div class="app-state"><span id="engine-dot" class="status-dot"></span><span id="engine-status">Connecting to local engine</span></div>
-    <div class="file-actions"><select id="tool-jump" aria-label="Open a tool">
+    <div class="file-actions"><button id="launch-classic" class="button outline">Sketch beta</button><select id="tool-jump" aria-label="Open a tool">
       <option value="">Tools…</option><optgroup label="Building blocks"><option value="library">Monomer library</option><option value="sketch-a">Sketch block A</option><option value="sketch-b">Sketch block B</option><option value="balance">Reagent balance</option><option value="monomer">Monomer descriptors</option></optgroup>
       <optgroup label="Structure and characterization"><option value="model">3D structure</option><option value="inspect">Structure check</option><option value="pxrd">Powder diffraction</option><option value="porosity">Pore geometry</option><option value="adsorption">Gas adsorption</option><option value="bet">BET fit</option></optgroup></select><button id="open-project" class="button quiet">Open project</button><button id="save-project" class="button outline" disabled>Save project</button><button id="help-button" class="icon-button" aria-label="Drawing help">?</button></div>
     <input id="project-file" type="file" accept=".json,application/json" hidden>
@@ -149,6 +150,7 @@
   <dialog id="sketch-dialog" class="sketch-dialog">
     <form method="dialog" class="dialog-header">
       <div><p class="eyebrow">MONOMER EDITOR</p><h2 id="sketch-title">Building block A</h2></div>
+      <button id="classic-switch" type="button" class="button outline" aria-pressed="false">Try classic layout</button>
       <button class="icon-button" aria-label="Close monomer editor">&times;</button>
     </form>
     <div class="sketch-body">
@@ -161,6 +163,8 @@
         <button data-tool="ring-aromatic" title="Benzene ring" aria-label="Benzene ring" aria-pressed="false"><svg class="ring-glyph" viewBox="0 0 22 22" aria-hidden="true"><path d="M6 2 16 2 21 11 16 20 6 20 1 11Z M7 5H15 M17 10 14 16 M6 16 3.5 11"/></svg></button>
         <button data-tool="ring6" title="Six-membered ring" aria-label="Six-membered ring" aria-pressed="false"><svg class="ring-glyph" viewBox="0 0 22 22" aria-hidden="true"><path d="M6 2 16 2 21 11 16 20 6 20 1 11Z"/></svg></button>
         <button data-tool="ring5" title="Five-membered ring" aria-label="Five-membered ring" aria-pressed="false"><svg class="ring-glyph" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 1 21 8 17 20 5 20 1 8Z"/></svg></button>
+        <button data-tool="chain" class="classic-only" title="Drag an alkyl chain" aria-label="Zigzag chain" aria-pressed="false">╱╲</button>
+        <button data-tool="pan" class="classic-only" title="Pan drawing sheet" aria-label="Pan sheet" aria-pressed="false">✥</button>
         <span class="tool-separator"></span>
         <button data-tool="atom" data-value="C" aria-pressed="false">C</button>
         <button data-tool="atom" data-value="N" aria-pressed="false">N</button>
@@ -170,11 +174,28 @@
         <button data-tool="erase" title="Delete atom or bond" aria-pressed="false">Erase</button>
       </div>
       <svg id="monomer-canvas" viewBox="0 0 640 360" tabindex="0" role="application" aria-label="Monomer sketch canvas. Use drawing tools or enter SMILES below."></svg>
+      <aside id="classic-shelf" class="classic-only" aria-label="Building block templates">
+        <h3>Templates</h3>
+        <select id="classic-category" aria-label="Template collection"><option>Functional groups</option><option>Ring systems</option><option>Linkers and spacers</option><option>Protecting groups</option><option>COF monomers</option><option>Imported</option></select>
+        <input id="classic-search" aria-label="Find a template" type="search" placeholder="Find a building block">
+        <select id="classic-list" size="5" aria-label="Building block templates"></select>
+        <svg id="classic-preview" viewBox="0 0 640 360" role="img" aria-label="Template preview. Click an atom to choose its attachment site or drag it onto the sheet."></svg>
+        <label>Attach through <select id="classic-anchor" aria-label="Template attachment atom"></select></label>
+        <button id="classic-place" class="button primary" type="button" aria-pressed="false">Place template</button>
+        <button id="classic-import" class="text-button" type="button">Import ChemDraw sheet…</button>
+        <input type="file" id="classic-file" accept=".cdxml,.ctp,.cdx" hidden>
+      </aside>
       <div class="sketch-secondary">
+        <nav class="classic-only classic-menus" aria-label="Drawing commands">
+          <details><summary>File</summary><div><button type="button" data-command="sketch-import">Open MOL…</button><button type="button" data-command="classic-import">Import ChemDraw sheet…</button><button type="button" data-command="keep">Add drawing to shelf</button><button type="button" data-command="sketch-export">Save MOL…</button><button type="button" data-command="copy-smiles">Copy SMILES</button></div></details>
+          <details><summary>Edit</summary><div><button type="button" data-command="sketch-undo">Undo</button><button type="button" data-command="sketch-redo">Redo</button><button type="button" data-command="all">Select all atoms</button><button type="button" data-command="delete">Delete selection</button></div></details>
+          <details><summary>Structure</summary><div><button type="button" data-command="sketch-clean">Clean up structure</button><button type="button" data-command="rotate">Rotate selection 15°</button><button type="button" data-command="sketch-elements">Periodic table…</button><button type="button" data-command="sketch-solubility">Screen solubility…</button></div></details>
+        </nav>
         <button id="sketch-undo" class="text-button" title="Ctrl+Z">Undo</button>
         <button id="sketch-redo" class="text-button" title="Ctrl+Shift+Z">Redo</button>
         <button id="sketch-clear" class="text-button">Clear</button>
         <button id="sketch-clean" class="text-button" title="Ctrl+Shift+K" aria-keyshortcuts="Control+Shift+K Meta+Shift+K">Clean layout</button>
+        <span class="classic-only classic-zoom"><button type="button" id="classic-minus" aria-label="Zoom out">−</button><button type="button" id="classic-fit">Fit</button><button type="button" id="classic-plus" aria-label="Zoom in">+</button></span>
         <label>Atom charge <input id="atom-charge" type="number" min="-4" max="8" step="1" value="0" disabled></label>
       </div>
       <div id="sketch-message" class="sketch-message" role="status" aria-live="polite"></div>
@@ -192,7 +213,7 @@
         <input id="mol-file" type="file" accept=".mol,.sdf,chemical/x-mdl-molfile" hidden><span id="sketch-formula"></span>
       </div>
     </div>
-    <div class="dialog-footer"><button id="sketch-cancel" class="button quiet">Cancel</button><button id="sketch-use" class="button primary">Use this building block</button></div>
+    <div class="dialog-footer"><button id="sketch-cancel" class="button quiet">Cancel</button><button id="classic-partner" class="classic-only button outline">Apply &amp; edit partner</button><button id="classic-build" class="classic-only button outline">Apply &amp; draw COF</button><button id="sketch-use" class="button primary">Use this building block</button></div>
   </dialog>
   <dialog id="element-dialog" class="sketch-dialog" aria-labelledby="element-title">
     <form method="dialog" class="dialog-header"><h2 id="element-title">Periodic table</h2><button class="icon-button" aria-label="Close periodic table">&times;</button></form>
@@ -286,4 +307,5 @@
       <div id="solubility-exports" class="sketch-imports"></div>
     </div>
   </dialog>
+  <script src="./cofdraw-classic.js" defer></script>
 </body></html>

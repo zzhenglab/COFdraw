@@ -45,6 +45,9 @@ class MonomerSketcher {
     const key = event.key.toLowerCase();
     if (this.drag) { if (key === "escape") { event.preventDefault(); this.cancelDrag(); } return; }
     if (event.ctrlKey || event.metaKey) {
+      if(key==="a" && this.classicMode){
+        event.preventDefault();this.selectAll();return;
+      }
       if (key === "z" || key === "y") {
         event.preventDefault();
         if (key === "y" || event.shiftKey) this.redo();
@@ -53,7 +56,7 @@ class MonomerSketcher {
       return;
     }
     if (event.altKey) return;
-    if (key === "delete" || key === "backspace") { event.preventDefault(); this.selected=this.hover||this.selected; this.removeSelected(); }
+    if (key === "delete" || key === "backspace") { event.preventDefault(); if(this.selected?.kind!=="group")this.selected=this.hover||this.selected; this.removeSelected(); }
     else if (key === "+" || key === "-") {
       const target=this.hover||this.selected;
       if(target?.kind==="atom"){event.preventDefault();this.selected=target;this.charge((this.graph.atoms[target.index].charge||0)+(key==="+"?1:-1));}
@@ -74,6 +77,7 @@ class MonomerSketcher {
   cancelDrag() {
     if (!this.drag) return;
     if (this.drag.previous) this.graph = this.drag.previous;
+    if (this.drag.kind === "pan") this.center = this.drag.center;
     this.drag = null; this.draw();
   }
   fit() {
@@ -128,7 +132,18 @@ class MonomerSketcher {
     this.changed();
   }
   deleteAtom(index) { this.graph.atoms.splice(index, 1); this.graph.bonds = this.graph.bonds.filter(b => b.a !== index && b.b !== index).map(b => ({...b, a: b.a > index ? b.a - 1 : b.a, b: b.b > index ? b.b - 1 : b.b})); }
-  removeSelected() { if (!this.selected) return; this.connectivityEditable(); this.remember(); if (this.selected.kind === "atom") this.deleteAtom(this.selected.index); else this.graph.bonds.splice(this.selected.index, 1); this.selected = null; this.hover = null; this.changed(); }
+  selectAll(){
+    this.setTool("select");this.selected={kind:"group",indices:this.graph.atoms.map((_,i)=>i)};this.draw();
+  }
+  removeSelected() {
+    if (!this.selected) return;
+    this.connectivityEditable();this.remember();
+    if(this.selected.kind==="group"){
+      for(const i of [...this.selected.indices].sort((a,b)=>b-a))this.deleteAtom(i);
+    }else if(this.selected.kind==="atom")this.deleteAtom(this.selected.index);
+    else this.graph.bonds.splice(this.selected.index,1);
+    this.selected=null;this.hover=null;this.changed();
+  }
   charge(value) { if (this.selected?.kind !== "atom") return false; this.remember(); this.graph.atoms[this.selected.index].charge = Math.max(-4, Math.min(8, Number(value))); this.changed(); return true; }
   ring(p, existing, count, aromatic) {
     if (this.graph.atoms.length + count - (existing >= 0 ? 1 : 0) > 300) throw new Error("The editor limit is 300 atoms.");
@@ -201,9 +216,18 @@ class MonomerSketcher {
     return bond >= 0 ? {kind: "bond", index: bond} : null;
   }
   down(event) {
-    if (event.button !== 0) return; event.preventDefault(); this.svg.focus();
+    if (event.button !== 0 || this.drag || this.svg.getAttribute("aria-disabled")==="true") return; event.preventDefault(); this.svg.focus();
     const p = this.position(event), atom = this.atomAt(p), bond = atom < 0 ? this.bondAt(p) : -1;
+    if (this.tool === "pan") {
+      this.drag={kind:"pan",origin:p,center:[...this.center]};
+      this.svg.setPointerCapture(event.pointerId); return;
+    }
     if (this.tool !== "select") this.connectivityEditable();
+    if (this.tool === "chain") {
+      const start=atom<0?p:this.graph.atoms[atom];
+      this.drag={kind:"chain",start,atom,points:[this.endAt(start,this.openAngle(atom))]};
+      this.svg.setPointerCapture(event.pointerId);this.draw();return;
+    }
     if (this.tool.startsWith("ring")) {
       const count=this.tool==="ring5"?5:6, aromatic=this.tool==="ring-aromatic";
       if(bond>=0)this.fuseRing(bond,count,aromatic);else this.ring(p,atom,count,aromatic);
@@ -212,6 +236,14 @@ class MonomerSketcher {
     if (this.tool === "erase") { this.selected = this.hit(p); this.removeSelected(); return; }
     if (this.tool === "atom") { this.placeElement(p, atom); return; }
     if (this.tool === "select") {
+      if(this.classicMode&&atom<0&&bond<0){
+        this.selected=null;this.drag={kind:"box",start:p,end:p};
+        this.svg.setPointerCapture(event.pointerId);this.draw();return;
+      }
+      if(this.classicMode&&atom>=0&&this.selected?.kind==="group"&&this.selected.indices.includes(atom)){
+        this.drag={kind:"group",start:p,previous:this.exportGraph(),indices:this.selected.indices};
+        this.svg.setPointerCapture(event.pointerId);return;
+      }
       this.selected = this.hit(p);
       if (atom >= 0) {
         const a = this.graph.atoms[atom];
@@ -238,6 +270,28 @@ class MonomerSketcher {
       const atom = this.graph.atoms[drag.atom];
       atom.x = p.x + drag.dx; atom.y = p.y + drag.dy; this.draw(); return;
     }
+    if (drag.kind === "pan") {
+      this.center=[this.center[0]+drag.origin.x-p.x,this.center[1]+drag.origin.y-p.y];
+      this.draw();return;
+    }
+    if(drag.kind==="box"){drag.end=p;this.draw();return;}
+    if(drag.kind==="group"){
+      for(const i of drag.indices){
+        const before=drag.previous.atoms[i],atom=this.graph.atoms[i];
+        atom.x=before.x+p.x-drag.start.x;atom.y=before.y+p.y-drag.start.y;
+      }
+      this.draw();return;
+    }
+    if (drag.kind === "chain") {
+      const dx=p.x-drag.start.x,dy=p.y-drag.start.y;
+      const angle=Math.round(Math.atan2(dy,dx)/(Math.PI/6))*Math.PI/6;
+      const count=Math.min(32,Math.max(1,Math.round(Math.hypot(dx,dy)/(1.5*Math.cos(Math.PI/6)))));
+      let tip=drag.start;drag.points=[];
+      for(let i=0;i<count;i++){
+        tip=this.endAt(tip,angle+(i%2===0?Math.PI/6:-Math.PI/6));drag.points.push(tip);
+      }
+      this.draw();return;
+    }
     const target = this.atomAt(p), length = Math.hypot(p.x - drag.start.x, p.y - drag.start.y);
     drag.target = target === drag.atom ? -1 : target;
     if (drag.target >= 0) drag.end = {...this.graph.atoms[drag.target]};
@@ -253,6 +307,27 @@ class MonomerSketcher {
     if (!this.drag) return; const drag = this.drag;
     if (this.svg.hasPointerCapture(event.pointerId)) this.svg.releasePointerCapture(event.pointerId);
     this.drag = null;
+    if (drag.kind === "pan") return;
+    if(drag.kind==="box"){
+      const {start,end}=drag,indices=[];
+      this.graph.atoms.forEach((a,i)=>{
+        if((a.x-start.x)*(a.x-end.x)<=0&&(a.y-start.y)*(a.y-end.y)<=0)indices.push(i);
+      });
+      this.selected=indices.length?{kind:"group",indices}:null;this.draw();return;
+    }
+    if(drag.kind==="group"){
+      if(drag.indices.some(i=>Math.hypot(this.graph.atoms[i].x-drag.previous.atoms[i].x,this.graph.atoms[i].y-drag.previous.atoms[i].y)>.001)){
+        this.remember(drag.previous);this.changed();
+      }else this.draw();
+      return;
+    }
+    if (drag.kind === "chain") {
+      if(this.graph.atoms.length+Number(drag.atom<0)+drag.points.length>300)throw new Error("The editor limit is 300 atoms.");
+      this.remember();
+      let last=drag.atom<0?this.addAtom(drag.start):drag.atom;
+      for(const point of drag.points){const next=this.addAtom(point);this.addBond(last,next,1);last=next;}
+      this.selected={kind:"atom",index:last};this.changed();return;
+    }
     if (drag.kind === "move") {
       const before = drag.previous.atoms[drag.atom], after = this.graph.atoms[drag.atom];
       if (Math.hypot(before.x - after.x, before.y - after.y) < .001) { this.graph = drag.previous; this.draw(); return; }
@@ -323,7 +398,7 @@ class MonomerSketcher {
       offsets.forEach((o,j) => s.append(this.node("line",{x1:a[0]+nx*o,y1:a[1]+ny*o,x2:c[0]+nx*o,y2:c[1]+ny*o,stroke:"#243c3a","stroke-width":1.8,"stroke-linecap":"round",...(b.order===1.5&&j===1?{"stroke-dasharray":"4 3"}:{})})));
     });
     this.graph.atoms.forEach((atom,index) => {
-      const [x,y] = this.screen(atom), selected = this.selected?.kind === "atom" && this.selected.index === index;
+      const [x,y] = this.screen(atom), selected = this.selected?.kind === "group" ? this.selected.indices.includes(index) : this.selected?.kind === "atom" && this.selected.index === index;
       if (selected) s.append(this.node("circle",{cx:x,cy:y,r:12,fill:"#d9f1e8",stroke:"#2b8770"}));
       else if (this.hover?.kind === "atom" && this.hover.index === index) s.append(this.node("circle",{cx:x,cy:y,r:12,class:"sketch-atom-hover"}));
       const degree = neighbors[index].length;
@@ -334,6 +409,14 @@ class MonomerSketcher {
       } else if (selected) s.append(this.node("circle",{cx:x,cy:y,r:2.5,fill:"#206b56"}));
     });
     if (this.drag?.kind === "bond") { const a=this.screen(this.drag.start),b=this.screen(this.drag.end); s.append(this.node("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:"#31a483","stroke-width":2,"stroke-dasharray":"5 4"})); }
+    if(this.drag?.kind==="box"){
+      const [x,y]=this.screen(this.drag.start),[u,v]=this.screen(this.drag.end);
+      s.append(this.node("rect",{x:Math.min(x,u),y:Math.min(y,v),width:Math.abs(u-x),height:Math.abs(v-y),fill:"#2376ae18",stroke:"#4686ac","stroke-dasharray":"4 3"}));
+    }
+    if(this.drag?.kind==="chain"){
+      const points=[this.drag.start,...this.drag.points].map(p=>this.screen(p).join(",")).join(" ");
+      s.append(this.node("polyline",{points,fill:"none",stroke:"#258473","stroke-width":2,"stroke-dasharray":"5 3"}));
+    }
     this.onSelect(this.selected?.kind === "atom" ? this.graph.atoms[this.selected.index] : null);
   }
 }

@@ -52,6 +52,14 @@ class MonomerDrawing(BaseModel):
     clean_layout: bool = False
 
 
+class TemplateSheet(BaseModel):
+    cdxml: str = Field(min_length=1, max_length=500000)
+
+
+class BinaryTemplateSheet(BaseModel):
+    content_base64: str = Field(min_length=1, max_length=666668)
+
+
 class LayoutDrawing(RenderDrawing):
     operation: Literal['clean'] = 'clean'
 
@@ -517,6 +525,39 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             result['synthetic_accessibility'] = synthetic_accessibility(result['smiles'])
             return result
         except (ValueError, KeyError, TypeError, RuntimeError, IndexError, OverflowError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @router.get("/templates/installed")
+    def installed_template_collections():
+        from .cofdraw_template_sheet import installed_sheets
+        return {"collections": list(installed_sheets())}
+
+    @router.get("/templates/installed/{name}")
+    def installed_templates(name: str):
+        from .cofdraw_template_sheet import installed_sheets, read_binary_templates
+        source = installed_sheets().get(name)
+        if source is None:
+            raise HTTPException(404, 'This ChemDraw collection is unavailable.')
+        try:
+            return read_binary_templates(source.read_bytes())
+        except (ValueError, RuntimeError, OSError) as exc:
+            raise HTTPException(422, 'The installed molecular palette could not be read.') from exc
+
+    @router.post("/templates/binary")
+    def import_binary_templates(request: BinaryTemplateSheet):
+        import base64
+        from .cofdraw_template_sheet import read_binary_templates
+        try:
+            return read_binary_templates(base64.b64decode(request.content_base64, validate=True))
+        except (ValueError, RuntimeError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @router.post("/templates/cdxml")
+    def import_template_sheet(request: TemplateSheet):
+        from .cofdraw_template_sheet import read_templates
+        try:
+            return read_templates(request.cdxml)
+        except (ValueError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
     @router.post("/prepare")

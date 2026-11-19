@@ -1,0 +1,66 @@
+#sketch-dialog:not(.classic) .classic-only { display:none }
+#classic-switch { margin-left:auto }
+#sketch-dialog.classic {
+  width:min(1260px,97vw); max-width:97vw; max-height:96dvh;
+  border:1px solid #9ba8b0; border-radius:7px; color:#213238;
+  --sheet-line:#c5cdd2; --chrome:#f1f3f5;
+}
+.classic .dialog-header { background:#e9edf0; gap:12px; padding:10px 16px }
+.classic .dialog-header h2 { font-size:16px }
+.classic .dialog-header .eyebrow { color:#576972; letter-spacing:.09em }
+.classic .sketch-body {
+  display:grid; grid-template-columns:84px minmax(0,1fr) 230px; gap:0;
+  align-items:stretch; padding:0; background:#e2e6e9;
+}
+.classic .sketch-secondary { grid-area:1/1/2/-1; display:flex; flex-wrap:wrap; align-items:center; margin:0; padding:5px 12px; gap:6px; background:var(--chrome); border-bottom:1px solid var(--sheet-line) }
+.classic .sketch-secondary label { margin-left:auto }
+.classic-menus { display:flex; align-items:center; gap:2px; border-right:1px solid var(--sheet-line); padding-right:6px }
+.classic-menus details { position:relative }
+.classic-menus summary { list-style:none; padding:5px 8px; border-radius:2px }
+.classic-menus summary::-webkit-details-marker { display:none }
+.classic-menus details[open] summary,.classic-menus summary:hover { background:#d9e5ee }
+.classic-menus details div { position:absolute; left:0; top:100%; z-index:5; min-width:170px; padding:4px; background:white; border:1px solid var(--sheet-line); box-shadow:0 3px 9px #21323824 }
+.classic-menus details button { display:block; text-align:left; width:100%; padding:6px; border:0; background:white; color:#263941 }
+.classic-menus details button:hover { background:#e2edf5 }
+.classic-zoom { display:inline-flex; border-left:1px solid var(--sheet-line); padding-left:8px; gap:1px }
+.classic-zoom button { border:none; background:transparent; color:#314650; min-width:28px }
+.classic .sketch-tools {
+  grid-area:2/1; align-self:start; display:grid; grid-template-columns:repeat(2,1fr);
+  margin:10px 0 10px 8px; gap:2px; padding:4px; background:var(--chrome); border:1px solid var(--sheet-line); border-radius:4px;
+}
+.classic .sketch-tools button { min-width:0; height:30px; padding:2px; border:1px solid transparent; border-radius:2px; background:transparent; color:#25333c; font-size:15px }
+.classic .sketch-tools button[data-tool="bond"] { font-family:Arial,sans-serif; font-size:20px; font-weight:500 }
+.classic .sketch-tools .tool-separator { height:1px; width:100%; background:var(--sheet-line); grid-column:1/-1 }
+.classic .sketch-tools #sketch-elements { grid-column:1/-1 }
+.classic .sketch-tools #sketch-elements,.classic .sketch-tools [data-tool="erase"],.classic .sketch-tools [data-tool="select"] { font-size:11px }
+.classic .sketch-tools button.active,.classic #classic-place[aria-pressed="true"] { background:#cbe2f6; color:#143e63; border-color:#7caacd }
+.classic .sketch-tools button:hover,.classic-zoom button:hover { background:#e0e9ef }
+.classic #monomer-canvas {
+  grid-area:2/2; width:calc(100% - 20px); height:clamp(300px,49vh,580px); min-height:0;
+  align-self:center; margin:10px; background:white; border:1px solid #c2cbd0; border-radius:1px;
+  box-shadow:0 2px 5px #22374320; touch-action:none;
+}
+.classic #monomer-canvas[data-tool="pan"] { cursor:grab }
+.classic #monomer-canvas.placing,.classic #monomer-canvas[data-tool="chain"] { cursor:crosshair }
+#classic-shelf { grid-area:2/3; background:#f8f9fa; border-left:1px solid var(--sheet-line); display:flex; flex-direction:column; gap:6px; padding:10px }
+#classic-shelf h3 { font-size:13px; margin:0 }
+#classic-shelf input,#classic-shelf select { font-size:12px; width:100%; padding:5px 6px; border-radius:3px }
+#classic-shelf .button { min-height:30px; padding:5px 8px }
+#classic-shelf label { display:flex; align-items:center; gap:6px; font-size:11px; color:#44545e }
+#classic-shelf label select { flex:1; min-width:0 }
+#classic-list { min-height:68px }
+#classic-preview { width:100%; height:clamp(86px,13vh,145px); border:1px solid var(--sheet-line); background:white; cursor:crosshair }
+.classic .sketch-body > .sketch-message,.classic .sketch-body > .field,.classic .sketch-body > .sketch-shortcuts,.classic .sketch-body > .sketch-imports { grid-column:1/-1; padding:4px 14px; margin:0; background:#f8f9fa }
+.classic .sketch-body > .sketch-message { background:#eff4f8; border-top:1px solid var(--sheet-line); min-height:25px }
+.classic .sketch-body > .field { display:flex; align-items:center; flex-direction:row; gap:8px }
+.classic #sketch-smiles { height:32px; min-height:32px; padding:6px; font-family:monospace }
+.classic .dialog-footer { padding:8px 14px }
+.classic .dialog-footer #sketch-cancel { margin-right:auto }
+@media(max-width:560px){.classic .dialog-footer {flex-wrap:wrap}}
+@media(max-width:760px) {
+  .classic .sketch-body { grid-template-columns:76px minmax(0,1fr) }
+  .classic #monomer-canvas { height:270px }
+  #classic-shelf { grid-area:3/1/4/-1; display:grid; grid-template-columns:1fr 1fr; align-items:center }
+  #classic-shelf h3 { grid-column:1/-1 }
+  .classic .sketch-secondary label { margin-left:0 }
+}

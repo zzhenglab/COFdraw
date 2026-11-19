@@ -598,7 +598,18 @@ $("sketch-solubility").addEventListener("click",async()=>{
   }catch(e){sketchMessage(e.message,true);}
 });
 $("sketch-export").addEventListener("click",async()=>{try{const r=await checkedSketch();await saveText(`COFdraw-monomer-${activeBlock.toUpperCase()}.mol`,r.molblock,"chemical/x-mdl-molfile");}catch(e){sketchMessage(e.message,true);}});
-$("sketch-use").addEventListener("click",async()=>{try{const result=await checkedSketch();$(`smiles-${activeBlock}`).value=result.smiles;$(`preset-${activeBlock}`).value="";setPreview(activeBlock,result);markInputsChanged();$("sketch-dialog").close();notice(`Building block ${activeBlock.toUpperCase()} updated · ${result.formula}. Create a drawing to apply it.`);}catch(e){sketchMessage(e.message,true);}});
+async function applySketch(){
+  const result=await checkedSketch(), block=activeBlock;
+  const known=(state.library?.monomer_presets||[]).find(item=>item.canonical_smiles===result.smiles);
+  const previous=checkedMonomer(block);
+  if(known)$(`label-${block}`).value=known.abbreviation||known.full_name||known.id;
+  else if(previous?.smiles!==result.smiles)$(`label-${block}`).value="Custom "+block.toUpperCase();
+  $(`smiles-${block}`).value=result.smiles;
+  $(`preset-${block}`).value=known?.id||"";
+  setPreview(block,result);markInputsChanged();$("sketch-dialog").close();
+  notice(`Building block ${block.toUpperCase()} updated · ${result.formula}. Create a drawing to apply it.`);
+}
+$("sketch-use").addEventListener("click",()=>applySketch().catch(e=>sketchMessage(e.message,true)));
 $("sketch-cancel").addEventListener("click",()=>$("sketch-dialog").close());
 
 async function applyDescriptionPlan(plan){
