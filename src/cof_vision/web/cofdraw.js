@@ -11,17 +11,85 @@ function sourceMode(){return Boolean((state.sourceId||state.recipe?.explicit_gra
 function linkageInfo(){return state.library?.linkages?.[$("linkage").value]||{};}
 function templates(){const value=state.library?.templates;return Array.isArray(value)?value:value?Object.entries(value).map(([id,t])=>({id,...t})):[];}
 function selectedTemplate(){return templates().find(t=>t.id===$("template").value);}
-function checkedMonomer(block){const value=state.monomers[block];return value?.input===$(`smiles-${block}`).value.trim()?value:null;}
+function checkedMonomer(block){
+  const value=state.monomers[block];
+  if(!value||value.input!==$('smiles-'+block).value.trim())return null;
+  const named=state.library?.monomer_presets?.find(row=>row.canonical_smiles===value.smiles);
+  return named?{...value,binary_roles:named.binary_roles,binary_eligible:named.binary_eligible,canonical_smiles:value.smiles}:value;
+}
 function checkedMonomers(){return {a:checkedMonomer("a"),b:checkedMonomer("b")};}
 function engineOrder(){const pair=checkedMonomers(),match=sourceMode()?null:L.compatibleLinkages(state.library||{},pair.a,pair.b).find(row=>row.id===$("linkage").value);return match?.swapped?['b','a']:['a','b'];}
 function templateCheck(template=selectedTemplate()){if(!template)return {compatible:true};const order=engineOrder(),check=L.templateCompatibility(template,$("linkage").value,{a:checkedMonomer(order[0]),b:checkedMonomer(order[1])},state.library||{});if(order[0]==='b'&&check.reason)check.reason=check.reason.replace(/Block ([AB])/g,(_,block)=>`Block ${block==='A'?'B':'A'}`);return check;}
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
 function monomerChoice(item,block,other){
+  if(block!=='editor'&&item.binary_eligible===false)return {compatible:false,reason:item.qualification||'Outside the supported pair constructor.'};
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
   if(!state.autoChemistry&&block!=='editor'&&other){const pair=block==='a'?[item,other]:[other,item],match=L.compatibleLinkages(state.library||{},...pair).find(row=>row.id===$("linkage").value);if(match)return {compatible:true,reason:`Compatible with this partner for ${match.label}. Your A/B choices stay in place; construction assigns the reactive roles.`};}
   return state.autoChemistry?L.automaticChoice(state.library||{},item,block,other):L.monomerChoice(state.library||{},item,$("linkage").value,block,other);
 }
+function assemblyMode(){return $('assembly-count').value;}
+function multi(){return assemblyMode()!=='2';}
+function fillAssembly(saved=null){
+  const count=assemblyMode(), mixed=count==='3', rows=state.library?.monomer_presets||[];
+  $('binary-fields').hidden=multi();$('assembly-fields').hidden=!multi();
+  $('mixed-fields').hidden=!mixed;
+  if(!multi())return;
+  const one=rows.filter(r=>r.assembly_roles?.self_imine);
+  const countFor=(r,role)=>r.assembly_roles?.[role]||0;
+  const nodes=rows.filter(r=>!r.assembly_roles?.self_imine&&!r.geometry_hint?.startsWith('tetrahedral')&&['aryl_aldehyde','primary_arylamine'].some(k=>[3,4].includes(countFor(r,k))));
+  function choose(key,values,fallback){
+    const select=$('assembly-'+key), previous=saved?.monomer_ids?.['abc'.indexOf(key)]||select.value;
+    select.replaceChildren(...values.map(r=>option(r.id,L.displayName(r))));
+    select.value=[previous,fallback,values[0]?.id].find(id=>values.some(r=>r.id===id))||'';
+    return values.find(r=>r.id===select.value);
+  }
+  $('assembly-a-label').textContent=mixed?'Node A':'Aminoaldehyde';
+  const node=choose('a',mixed?nodes:one,mixed?'tapb':'bfbapy');
+  if(!node)return;
+  if(mixed){
+    const nodeAmine=countFor(node,'primary_arylamine')>=3;
+    const other=nodeAmine?'aryl_aldehyde':'primary_arylamine';
+    const links=rows.filter(r=>r.id!==node.id&&!r.assembly_roles?.self_imine&&countFor(r,other)===2);
+    const b=choose('b',links,nodeAmine?'ta':'pa');
+    choose('c',links.filter(r=>r.canonical_smiles!==b?.canonical_smiles),nodeAmine?'bpda_cho':'benzidine');
+    const n=countFor(node,nodeAmine?'primary_arylamine':'aryl_aldehyde')===3?6:4, pattern=$('assembly-pattern');
+    if(saved)pattern.value=saved.linker_sequence;
+    else if(pattern.dataset.length!==String(n))pattern.value='BC'.repeat(n/2);
+    pattern.dataset.length=String(n);
+    $('sequence-note').textContent='Enter '+n+' edges, e.g. '+('BC'.repeat(n/2))+' or '+('B'.repeat(n/2)+'C'.repeat(n/2))+'.';
+  }
+  $('assembly-note').textContent=mixed?'Imine · one local arrangement. A feed ratio alone does not fix the pore sequence.':
+    node.self_activation?'Self-condensed imine · four-corner pore after removal of two '+node.self_activation+' protecting groups.':
+    node.assembly_roles.aryl_aldehyde===2?'Self-condensed imine · four-corner pore design.':'Self-condensed imine · head-to-tail chain.';
+}
+function assemblyReady(){
+  if(!$('assembly-a').value)return false;
+  if(assemblyMode()==='1')return true;
+  const p=$('assembly-pattern');
+  return Boolean($('assembly-b').value&&$('assembly-c').value&&p.value.length===Number(p.dataset.length)&&/^[BC]+$/.test(p.value)&&p.value.includes('B')&&p.value.includes('C'));
+}
+function restoreAssembly(recipe){
+  const saved=recipe?.assembly;
+  $('assembly-count').value=saved?String(saved.monomer_ids.length):'2';
+  fillAssembly(saved);
+  const descriptor=$('descriptor-block'),previous=descriptor.value;
+  const keys=saved?Object.keys(recipe.components):['A','B'];
+  descriptor.replaceChildren(...keys.map(k=>option(k.toLowerCase(),saved?recipe.components[k].label:'Building block '+k)));
+  if(keys.includes(previous.toUpperCase()))descriptor.value=previous;
+}
+function selectedDescriptor(){
+  const block=$('descriptor-block').value, comp=state.recipe?.assembly&&state.recipe.components[block.toUpperCase()];
+  return comp?{label:comp.label,smiles:comp.monomer_smiles}:{label:$('label-'+block).value,smiles:$('smiles-'+block).value.trim()};
+}
+function assemblyChanged(){
+  clearTimeout(liveDrawingTimer);selectionRevision++;
+  state.inputsDirty=true;state.dirty=true;state.sourceId=null;state.sourceMetadata=null;
+  fillAssembly();sync();updateIdentity();queueDrawing();
+}
+for(const id of ['assembly-count','assembly-a','assembly-b','assembly-c'])$(id).addEventListener('change',assemblyChanged);
+$('assembly-pattern').addEventListener('input',()=>{$('assembly-pattern').value=$('assembly-pattern').value.toUpperCase();assemblyChanged();});
+$('assembly-build').onclick=()=>$('build').click();
 function constructionCheck(){
   if(!checkedMonomer('a')||!checkedMonomer('b'))return {compatible:false,reason:'Choose both building blocks and wait for their structure checks before creating a drawing.'};
   const info=linkageInfo();
@@ -68,6 +136,7 @@ function refreshPresetLists(){
   if(!state.library)return;
   for(const block of["a","b"]){const select=$(`preset-${block}`);select.replaceChildren(option("","Custom / pasted structure"));
     for(const item of state.library.monomer_presets||[]){
+      if(item.binary_eligible===false)continue;
       const choice=monomerChoice(item,block,checkedMonomer(block==="a"?"b":"a")),selected=item.smiles===$(`smiles-${block}`).value.trim();
       if(block==='b'&&$("smiles-a").value.trim()&&!choice.compatible&&!selected)continue;
       const o=option(item.id,`${L.displayName(item)}${choice.compatible?"":" — unavailable"}`);o.disabled=!choice.compatible;o.title=choice.reason;select.append(o);
@@ -187,10 +256,16 @@ function sync() {
   const blocked=!state.online||state.busy;
   const construction=constructionCheck();
   $("build").disabled=blocked||source||!construction.compatible||(templates().length>0&&!selectedTemplate());$("build").title=source?'The recorded graph is already loaded.':construction.compatible?'Create the selected finite chemical patch.':construction.reason; $("random-style").disabled=blocked;
+  if(multi()){
+    $("build").disabled=blocked||!assemblyReady();
+    $("build").title=assemblyReady()?'Draw the selected arrangement.':'Choose valid monomers and an explicit linker order.';
+  }
+  $("assembly-build").disabled=$("build").disabled;
+  for(const id of ['assembly-count','assembly-a','assembly-b','assembly-c','assembly-pattern'])$(id).disabled=blocked;
   $("build-from-canvas").disabled=$("build").disabled;
   $("build-from-canvas").title=$("build").title;
   $("load-source").disabled=blocked||!$("source-select").value;
-  $("save-project").disabled=!state.recipe||state.busy||state.jsonPending;
+  $("save-project").disabled=!state.recipe||state.busy||state.jsonPending||(multi()&&state.inputsDirty);
   $("render-changes").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
   $("apply-recipe").disabled=blocked;
   $("render-busy").classList.toggle("hidden",!state.busy);
@@ -234,7 +309,7 @@ function validateRecipeShape(recipe) {
   if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>24)throw new Error("A recipe needs components, 3–24 instances, and explicit connections.");
   for(const item of recipe.instances)if(!recipe.components[item.component]||!Array.isArray(item.layout_position)||item.layout_position.length!==2||item.layout_position.some(x=>typeof x!=="number"||!Number.isFinite(x)||Math.abs(x)>200))throw new Error("Each block needs a component and finite x/y coordinates between −200 and 200.");
 }
-function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
+function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);restoreAssembly(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
 function updateIdentity(){
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
   const key=state.sourceId?(metadata.cofex_id||audit?.cofex_id||state.recipe?.cofex_id):null;
@@ -246,7 +321,7 @@ function updateIdentity(){
   const topology=audit?audit.design_topology:state.recipe?.design_topology,template=pending?selectedTemplate():audit?audit.selected_template:state.recipe?.selected_template;$("identity-template").textContent=state.sourceId?"Source-visible finite patch":template?.label||(typeof topology==="object"?(topology?.label||topology?.template_id||topology?.name):topology)||"Explicit editable connections";
   const cat=notation?.match(/\sCOFex\.[^.\s]+\.(cat[^;\s]+);/)?.[1]||metadata.catenation||null;
   $("identity-cat").textContent=cat?(state.sourceId?`${cat} · source convention; not independently verified`:`${cat} · design assumption; observed interpenetration unknown`):'Unknown · no catenation assignment';
-  $("identity-note").textContent=state.inputsDirty?'Inputs changed. Create a drawing to update its notation and explicit connectivity.':state.sourceId?(notation?'Full source precursor SMILES and recorded COFex suffix. Provisional finite patch; unknown net codes and unverified catenation remain qualified.':'This source has no complete COFex assignment. Its recorded graph and source provenance are retained; missing identities are not inferred.'):notation?'Full design precursor SMILES with the chosen template and assumed cat0. These are design choices, not an observed material identity or a periodic crystal.':'Choose monomers and create a drawing to obtain a qualified design notation.';
+  $("identity-note").textContent=state.recipe?.assembly&&!state.inputsDirty?state.recipe.assembly.scope:state.inputsDirty?'Inputs changed. Create a drawing to update its notation and explicit connectivity.':state.sourceId?(notation?'Full source precursor SMILES and recorded COFex suffix. Provisional finite patch; unknown net codes and unverified catenation remain qualified.':'This source has no complete COFex assignment. Its recorded graph and source provenance are retained; missing identities are not inferred.'):notation?'Full design precursor SMILES with the chosen template and assumed cat0. These are design choices, not an observed material identity or a periodic crystal.':'Choose monomers and create a drawing to obtain a qualified design notation.';
   $("copy-identity").disabled=!state.recipe||state.inputsDirty||state.jsonPending;
 }
 async function saveText(name,text,type="application/json"){
@@ -303,7 +378,15 @@ $("build").addEventListener("click",async()=>{
   clearTimeout(liveDrawingTimer);
   if(state.busy)return;state.busy=true;sync();
   const revision=selectionRevision;
-  try{await Promise.all(["a","b"].map(b=>checkedMonomer(b)||validateMonomer(b,true)));const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);if(revision!==selectionRevision)return;acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
+  try{
+    if(multi()){
+      const mixed=assemblyMode()==='3';
+      const payload={monomer_ids:(mixed?['a','b','c']:['a']).map(k=>$('assembly-'+k).value),linker_sequence:mixed?$('assembly-pattern').value:''};
+      const result=await api('prepare/assembly',payload);
+      if(revision!==selectionRevision)return;
+      acceptRecipe(result.recipe,null,null,true);state.busy=false;await render();return;
+    }
+    await Promise.all(["a","b"].map(b=>checkedMonomer(b)||validateMonomer(b,true)));const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);if(revision!==selectionRevision)return;acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
 });
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 function geometryReviewMessage(refinement){return refinement?.quality==='needs_review'?'Some linkage junctions still need geometry review. Inspect the connections and use Move / adjust or Clean bond geometry before saving.':'';}
@@ -451,7 +534,7 @@ $("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;c
 for(const type of["pointerup","pointercancel"])$("layout-canvas").addEventListener(type,()=>{if(dragged!==null){dragged=null;syncJSON();drawLayoutTable();}});
 $("recipe-json").addEventListener("input",()=>{state.jsonPending=true;state.dirty=true;sync();});
 $("apply-recipe").addEventListener("click",()=>{try{const input=$("recipe-json").value;if(input.length>200000)throw new Error("Recipe limit is 200 kB.");const value=JSON.parse(input);acceptRecipe(value.recipe||value);notice("Recipe applied as a designed variant. Render to check its chemistry and connections.");}catch(e){notice(e.message,true);}});
-$("save-project").addEventListener("click",()=>{const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,monomers:["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
+$("save-project").addEventListener("click",()=>{const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,monomers:state.recipe?.assembly?Object.values(state.recipe.components).map(c=>({label:c.label,smiles:c.monomer_smiles})):["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
 $("open-project").addEventListener("click",()=>$("project-file").click());
 $("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());state.autoChemistry=value.chemistry_mode==="auto";acceptRecipe(value.recipe||value);if(value.format==="cofdraw-project"&&Array.isArray(value.monomers)){for(const[block,entry]of[["a",value.monomers[0]],["b",value.monomers[1]]])if(entry){$(`label-${block}`).value=String(entry.label||block.toUpperCase()).slice(0,100);$(`smiles-${block}`).value=String(entry.smiles||"").slice(0,4000);}$("linkage-search").value="";populateLinkages(state.library?.linkages?.[value.linkage]?value.linkage:"imine");$("pore").value=[6,12].includes(value.instances)?value.instances:6;refreshChemistry(value.template_id||value.recipe?.template_id);state.style=state.library?.styles.some(s=>s.id===value.style_id)?value.style_id:"standard";state.seed=Number.isInteger(value.style_seed)?value.style_seed:null;state.styleOptions=value.style_options&&typeof value.style_options==="object"&&!Array.isArray(value.style_options)?clone(value.style_options):{};state.resolvedStyleOptions={};$("image-size").value=[1000,1600,2400].includes(value.image_size)?value.image_size:1600;state.inputsDirty=Boolean(value.inputs_changed_since_recipe);}else showSourceMonomers(state.recipe);$("cof-preset").value="custom";setStyleDescription();drawStyleControls();refreshMonomers();sync();notice("Project opened as an editable design. Source records are reloaded separately from the audited library.");}catch(error){notice(error.message,true);}finally{e.target.value="";}});
 $("copy-identity").addEventListener("click",async()=>{
@@ -527,11 +610,12 @@ async function selectLibraryItem(id,expand=true){
 }
 function drawLibrary(){
   const target=$("library-target").value,partnerView=target==='b'&&Boolean($("smiles-a").value.trim()),showAll=$("library-show-all").checked;
-  const searched=L.searchMonomers(state.library?.monomer_presets||[],$("library-search").value,$("library-sites").value),rows=partnerView&&!showAll?searched.filter(item=>libraryChoice(item).compatible):searched;
+  const visibleCatalog=(state.library?.monomer_presets||[]).filter(r=>r.catalog_use!=="synthetic_intermediate");
+  const searched=L.searchMonomers(visibleCatalog,$("library-search").value,$("library-sites").value),rows=partnerView&&!showAll?searched.filter(item=>libraryChoice(item).compatible):searched;
   $("library-show-all-field").hidden=!partnerView;$("library-target").disabled=libraryView.busy;
   updateLibraryPair(target);
   $("library-context").textContent=target==="editor"?"Browse any monomer to edit or export on its own.":partnerView?(!checkedMonomer('a')?"Check A's structure before choosing a partner.":showAll?`All monomers shown. Unavailable partners for ${libraryCurrent('a').name} are disabled.`:`Choose a compatible B for ${libraryCurrent('a').name}. ${state.autoChemistry?'Chemistry matches automatically.':`Linkage: ${linkageInfo().label||$("linkage").value}.`}`):target==="b"?"Choose A first to narrow this list to compatible partners.":"Choose A, then select a compatible partner B.";
-  $("library-count").textContent=`${rows.length} ${partnerView&&!showAll?'compatible ':''}of ${state.library?.monomer_presets?.length||0} monomers`;
+  $("library-count").textContent=`${rows.length} ${partnerView&&!showAll?'compatible ':''}of ${visibleCatalog.length} monomers`;
   const list=$("library-list");libraryView.observer?.disconnect();list.replaceChildren();list.scrollTop=0;
   const byId=new Map(rows.map(item=>[item.id,item]));
   libraryView.observer="IntersectionObserver" in window?new IntersectionObserver(entries=>{
@@ -731,5 +815,5 @@ async function initialize(){
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
-window.COFdrawStudio={state,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage};
+window.COFdrawStudio={state,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage};
 initialize();

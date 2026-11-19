@@ -18,6 +18,8 @@ def validated_design(recipe):
     from .framework_drawing import linkage_fragment, _ports, LINKAGE_LIBRARY
 
     selected=recipe.get('selected_template') or {}
+    if recipe.get('assembly'):
+        raise ValueError('This design specifies a local arrangement. A periodic CIF requires independent lattice and connectivity information.')
     if recipe.get('explicit_graph') is not None:
         raise ValueError('This explicit atom graph needs a declared periodic connectivity or a corresponding CIF.')
     if not selected.get('id') or recipe.get('design_template_signature')!=design_signature(recipe):

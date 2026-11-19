@@ -28,6 +28,12 @@ class PrepareDrawing(BaseModel):
     template_id: str | None = Field(default=None, max_length=80)
 
 
+class AssemblyDrawing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    monomer_ids: list[Annotated[str, Field(min_length=1,max_length=150)]] = Field(min_length=1,max_length=3)
+    linker_sequence: str = Field(default="",max_length=6,pattern="^[BC]*$")
+
+
 class RenderDrawing(BaseModel):
     model_config = ConfigDict(extra="forbid")
     recipe: dict | None = None
@@ -569,6 +575,26 @@ def create_drawing_router(data_root: Path) -> APIRouter:
             return read_templates(request.cdxml)
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
+
+    @router.post("/prepare/assembly")
+    def prepare_assembly(request: AssemblyDrawing):
+        from .cofdraw_assembly import assemble
+        try:
+            rows = {r['id']:r for r in decorated_monomers(
+                [r for r in catalog_monomers(read_catalog(root)) if r['id'] in request.monomer_ids])}
+            if any(k not in rows for k in request.monomer_ids):
+                raise ValueError('Choose a recognized library entry.')
+            if len(request.monomer_ids)==1 and request.linker_sequence:
+                raise ValueError('A self-condensing design has no mixed-linker sequence.')
+            recipe = assemble([rows[k] for k in request.monomer_ids],request.linker_sequence)
+            recipe.update(schema_version=VERSION,recipe_id='designed-assembly',designed_variant=True,ground_truth=False,
+                          review_status='user_design',layout_refinement='bond_angle_pose_v2',design_note=recipe['assembly']['scope'])
+            recipe['design_template_signature']=design_signature(recipe)
+            refresh_design_identity(recipe)
+            validate_recipe(recipe)
+            return {'recipe':recipe,'status':'designed_variant','limits':recipe['design_note']}
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise HTTPException(422,str(exc)) from exc
 
     @router.post("/prepare")
     def prepare(request: PrepareDrawing):

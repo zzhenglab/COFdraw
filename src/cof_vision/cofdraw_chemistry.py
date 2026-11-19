@@ -4,6 +4,7 @@ import math
 import re
 import hashlib
 import json
+from functools import lru_cache
 import numpy as np
 from rdkit import Chem
 from .cofdraw_depiction import compute_2d_coords
@@ -31,7 +32,7 @@ for template in TEMPLATES:
 def inspect_monomer(smiles):
     mol=Chem.MolFromSmiles(smiles)
     if mol is None: raise ValueError("Invalid monomer SMILES")
-    patterns={"aryl_aldehyde":"[c][CH1](=[O])", "primary_arylamine":"[c][NH2]",
+    patterns={"aryl_aldehyde":"[c][CH1](=[O])", "primary_arylamine":"[c][NX3;H2;+0]",
               "aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS,
               "acylhydrazide":"[NX3;H2]-[NX3;H1]-[CX3](=[OX1])",
               "boronic_acid":"[B]([OH1])[OH1]", "nitrile":"[C]#[N]"}
@@ -71,7 +72,29 @@ def decorated_monomers(rows):
     for row in rows:
         try:
             metadata=inspect_monomer(row["smiles"])
-            output.append({**row,**metadata,"catalog_reactive_groups":row.get("reactive_groups", []),
+            mol = Chem.MolFromSmiles(row['smiles'])
+            complete = len(Chem.GetMolFrags(mol)) == 1 and all(a.GetAtomicNum() and not a.GetAtomMapNum() for a in mol.GetAtoms())
+            eligible = complete and not str(row.get('catalog_use','')).startswith('reference_only') and row.get('automatic_prepare_supported') is not False and not row.get('annotation_only')
+            candidates = []
+            if eligible and not row.get('self_activation'):
+                for entry in metadata['compatible_roles']:
+                    if entry['reactive_sites'] < 2:
+                        continue
+                    try:
+                        fragment = linkage_fragment(row['smiles'], entry['linkage'], entry['role'])
+                    except (ValueError, RuntimeError):
+                        continue
+                    if fragment['connectivity'] == entry['reactive_sites']:
+                        fragment_atoms = Chem.MolFromSmiles(fragment['fragment_smiles']).GetNumAtoms()
+                        candidates.append({**entry,'fragment_atoms':fragment_atoms})
+            groups = {g['kind']:g['count'] for g in metadata['functionality']}
+            aldehydes, amines = groups.get('aryl_aldehyde',0), groups.get('primary_arylamine',0)
+            self_imine = complete and row.get('catalog_use') != 'synthetic_intermediate' and (bool(row.get('self_activation')) or aldehydes == amines and amines in (1,2))
+            roles = {k:next((e['reactive_sites'] for e in candidates if e['linkage']=='imine' and e['role']==k),0)
+                     for k in ('aryl_aldehyde','primary_arylamine')}
+            output.append({**row,**metadata,'binary_eligible':bool(candidates),'binary_roles':candidates,
+                           'canonical_smiles':canonical(row['smiles']), 'assembly_roles':{**roles,'self_imine':self_imine},
+                           "catalog_reactive_groups":row.get("reactive_groups", []),
                            "abbreviation":row.get("abbreviation") or row.get("id", ""),
                            "full_name":row.get("full_name") or row.get("label", ""),
                            "geometry_hint":row.get("geometry_hint") or metadata["geometry_hint"]})
@@ -80,22 +103,28 @@ def decorated_monomers(rows):
     return output
 
 def best_port_pair(component, angle):
-    mol=Chem.MolFromSmiles(component["fragment_smiles"]); compute_2d_coords(mol)
+    roles = tuple((s["port"],s["site_role"]) for s in component.get("reactive_sites",[]) if "site_role" in s)
+    error,incoming,outgoing,actual = _port_fit(component["fragment_smiles"], angle, roles)
+    return incoming,outgoing,{"target_angle":angle,"depicted_site_angle":actual,"absolute_angle_difference":error,
+                              "basis":"Closest pair in a monomer 2D drawing; inspect incidence before assigning source identity."}
+
+@lru_cache(maxsize=1024)
+def _port_fit(fragment_smiles, angle, site_roles):
+    mol=Chem.MolFromSmiles(fragment_smiles); compute_2d_coords(mol)
     xy=np.asarray(mol.GetConformer().GetPositions())[:,:2]
     center=xy[[a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]].mean(0)
     ports=_ports(mol); candidates=[]
+    roles = dict(site_roles)
     for incoming,(i,_) in ports.items():
         for outgoing,(j,_) in ports.items():
-            if incoming==outgoing: continue
+            if incoming==outgoing or roles and (roles[incoming],roles[outgoing])!=("amine","aldehyde"): continue
             left,right=xy[i]-center,xy[j]-center
             scale=np.linalg.norm(left)*np.linalg.norm(right)
             if scale<1e-10: continue
             actual=math.degrees(math.acos(float(np.clip(np.dot(left,right)/scale,-1,1))))
             candidates.append((abs(actual-angle),incoming,outgoing,actual))
     if not candidates: raise ValueError("Cannot orient the selected reactive sites")
-    error,incoming,outgoing,actual=min(candidates)
-    return incoming,outgoing,{"target_angle":angle,"depicted_site_angle":actual,"absolute_angle_difference":error,
-                              "basis":"Closest pair in a monomer 2D drawing; inspect incidence before assigning source identity."}
+    return min(candidates)
 
 def design_signature(recipe):
     value={"components":{k:{f:c.get(f) for f in ("fragment_smiles","monomer_smiles","role")} for k,c in recipe["components"].items()},
@@ -104,6 +133,10 @@ def design_signature(recipe):
     return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
 def refresh_design_identity(recipe):
+    if recipe.get('assembly'):
+        recipe.update(selected_template=None,design_topology=None,design_cofex_notation=None,
+                      design_identity_qualification='Local assembly. Periodic connectivity and catenation are unspecified.')
+        return
     selected=recipe.get("selected_template") or {}
     matched=recipe.get("design_template_signature")==design_signature(recipe)
     known=next((t for t in TEMPLATES if t["id"]==selected.get("id")),None) if matched else None

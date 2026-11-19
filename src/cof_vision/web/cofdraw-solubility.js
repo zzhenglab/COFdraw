@@ -152,7 +152,7 @@
     },
   };
   $("descriptor-solubility").addEventListener("click", () => {
-    const block = $("descriptor-block").value;
-    window.COFdrawSolubility.open($(`smiles-${block}`).value.trim(), $(`label-${block}`).value || `Building block ${block.toUpperCase()}`);
+    const monomer = window.COFdrawStudio.selectedDescriptor();
+    window.COFdrawSolubility.open(monomer.smiles, monomer.label);
   });
 })();

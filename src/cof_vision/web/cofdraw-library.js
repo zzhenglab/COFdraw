@@ -13,7 +13,8 @@
   }
   function roleEvidence(item, linkage, role) {
     if (!item || !role) return null;
-    const rows = list(item.compatible_roles);
+    if(item.binary_eligible===false)return {compatible:false,reason:"Outside the supported two-monomer construction rules."};
+    const rows = list(item.binary_roles || item.compatible_roles);
     const match = rows.find(row => row.linkage === linkage && row.role === role);
     if (match) {
       const count = match.reactive_sites ?? match.count;
@@ -51,6 +52,8 @@
       const count = reactiveCount(monomers[block], linkage, role);
       if (count !== null && Array.isArray(allowed) && !allowed.includes(count)) return {compatible: false, reason: `Block ${block.toUpperCase()} has ${count} reactive sites; this template requires ${allowed.join(" or ")}.`};
     }
+    const sizes=['a','b'].map(block=>roleEvidence(monomers[block],linkage,roleFor(library,linkage,block))?.fragment_atoms);
+    if(sizes.every(Number.isInteger)&&sizes.reduce((a,b)=>a+b)*template.instances/2>1000)return {compatible:false,reason:'This patch exceeds the 1,000-atom drawing limit.'};
     const pairs = template.allow_pairs || template.required_functionalities?.allow_pairs;
     const a = reactiveCount(monomers.a, linkage, roleFor(library, linkage, "a"));
     const b = reactiveCount(monomers.b, linkage, roleFor(library, linkage, "b"));
@@ -92,7 +95,8 @@
     return {compatible:true,reason:`Supplies ${label}. Attachment incidence and the selected template are checked during construction.`};
   }
   function compatibleLinkages(library, a, b) {
-    if (!a || !b) return [];
+    if (!a || !b || a.binary_eligible===false || b.binary_eligible===false) return [];
+    if(a.canonical_smiles && a.canonical_smiles===b.canonical_smiles)return [];
     const raw=library.templates, templates=Array.isArray(raw)?raw:Object.values(raw||{}), results=[];
     for (const [id, rule] of Object.entries(library.linkages||{})) {
       if (rule.supported!==true || !Array.isArray(rule.roles) || rule.roles.length!==2) continue;
@@ -114,7 +118,7 @@
     const pair=block==='a'?[item,other]:[other,item], choices=compatibleLinkages(library,...pair);
     if(choices.length) return {compatible:true,reason:`Compatible with this partner: ${choices.map(c=>c.label).join(', ')}. Chemistry and connectivity update when selected.`};
     if(block==='b'&&other)return {compatible:false,reason:'No implemented linkage and connectivity template connects this monomer with building block A. Choose a different partner or inspect it in the single-monomer editor.'};
-    const supported=list(item.compatible_roles).some(r=>library.linkages?.[r.linkage]?.supported===true&&r.compatible!==false&&(r.reactive_sites??r.count)>=2);
+    const supported=item.binary_eligible!==false&&list(item.binary_roles||item.compatible_roles).some(r=>library.linkages?.[r.linkage]?.supported===true&&r.compatible!==false&&(r.reactive_sites??r.count)>=2);
     return {compatible:supported,reason:supported?'Choose this monomer, then a compatible partner. Available chemistry will update automatically.':'No implemented transform for this monomer yet; use the single-monomer editor or import a reviewed source drawing.'};
   }
   function automaticPlan(library,a,b,preferred=null) {
@@ -153,6 +157,7 @@
       const a=byId.get(preset.monomer_a_id), b=byId.get(preset.monomer_b_id);
       const named=nameFor.get(pairKey(preset.monomer_a_id,preset.monomer_b_id,preset.linkage));
       const name=sources.get(preset.source_recipe_id)?.literature_name||named?.name;
+      if(a&&b&&!compatibleLinkages(library,a,b).some(c=>c.id===preset.linkage&&(!preset.template_id||c.templates.includes(preset.template_id))))continue;
       const pair=preset.label_a+' + '+preset.label_b;
       const label=name?name+' · '+pair:preset.label;
       rows.push({...preset,label,group:name?'Named starting pairs':'Catalog designs',
@@ -166,7 +171,7 @@
     }
     for(const named of nameFor.values()){
       const a=byId.get(named.a),b=byId.get(named.b),template=templates.get(named.template_id);
-      if(!a||!b||!template)continue;
+      if(!a||!b||!template||!compatibleLinkages(library,a,b).some(c=>c.id===named.linkage&&c.templates.includes(template.id)))continue;
       const key=pairKey(a.canonical_smiles||a.smiles,b.canonical_smiles||b.smiles,named.linkage);
       if(occupied.has(key))continue;
       occupied.add(key);
@@ -175,7 +180,7 @@
         monomer_a:a.smiles,monomer_b:b.smiles,linkage:named.linkage,template_id:template.id,instances:template.instances,
         search:searchText(label,named.linkage,names(a),names(b),named.doi)});
     }
-    const reactive=blocks.filter(b=>b.compatible_roles?.length&&!b.catalog_use?.startsWith('reference_only'));
+    const reactive=blocks.filter(b=>b.binary_eligible!==false&&!b.assembly_roles?.self_imine&&b.compatible_roles?.length&&!b.catalog_use?.startsWith('reference_only'));
     const generated=[];
     for(let i=0;i<reactive.length;i++)for(let j=i+1;j<reactive.length;j++){
       const a=reactive[i], b=reactive[j], sa=a.canonical_smiles||a.smiles, sb=b.canonical_smiles||b.smiles;

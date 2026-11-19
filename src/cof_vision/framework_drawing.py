@@ -30,7 +30,7 @@ LINKAGE_LIBRARY = {
     "imine": {
         "version": 1, "status": "implemented_scoped",
         "roles": ["aryl_aldehyde", "primary_arylamine"],
-        "site_smarts": {"aryl_aldehyde": "[c][CH1](=[O])", "primary_arylamine": "[c][NH2]"},
+        "site_smarts": {"aryl_aldehyde": "[c][CH1](=[O])", "primary_arylamine": "[c][NX3;H2;+0]"},
         "join_bond_order": 2,
         "bond_changes": "Remove aldehyde O; connect aldehyde C to amine N with C=N. Condensation water is not part of the polymer patch.",
         "limits": "Aryl aldehydes and primary arylamines only; source ring incidence required; E/Z is not assigned by geometry.",
@@ -38,7 +38,7 @@ LINKAGE_LIBRARY = {
     "beta_ketoenamine": {
         "version": 1, "status": "implemented_scoped",
         "roles": ["tp_trialdehyde", "primary_arylamine"],
-        "site_smarts": {"tp_trialdehyde": "exact canonical Tp graph", "primary_arylamine": "[c][NH2]"},
+        "site_smarts": {"tp_trialdehyde": "exact canonical Tp graph", "primary_arylamine": "[c][NX3;H2;+0]"},
         "join_bond_order": 1,
         "bond_changes": "Tp OH sites become C=O; aldehyde carbon becomes exocyclic =CH-NH-Ar; six-membered Tp ring bonds become single.",
         "limits": "Exact unsubstituted Tp plus primary arylamines; keto tautomer must be source supported. Mixed keto/enol and partial conversion require explicit recipes.",
@@ -85,17 +85,21 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
     they must not be interpreted as a canonical numbering across input SMILES.
     This is a conditional construction rule, not a reaction feasibility claim.
     """
-    if linkage not in LINKAGE_LIBRARY or role not in LINKAGE_LIBRARY[linkage]["roles"]:
+    if linkage not in LINKAGE_LIBRARY or (role not in LINKAGE_LIBRARY[linkage]["roles"] and (linkage,role)!=("imine","self_imine")):
         raise ValueError("Unsupported linkage/role combination")
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
         raise ValueError("Invalid monomer SMILES")
     if any(a.GetAtomMapNum() for a in mol.GetAtoms()):
         raise ValueError("Monomer atom maps must be absent; ports use their own map namespace")
+    if role == "hydrazine" and canonical(smiles) != canonical("NN"):
+        raise ValueError("The azine construction rule requires exact neutral hydrazine")
+    if len(Chem.GetMolFrags(mol)) != 1 or any(a.GetAtomicNum()==0 for a in mol.GetAtoms()):
+        raise ValueError("Choose one connected precursor with no attachment placeholders")
     rw = Chem.RWMol(mol)
     sites, removed = [], []
     if role == "primary_arylamine":
-        sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NH2]"))]
+        sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NX3;H2;+0]"))]
     elif role == "aryl_hydroxylamine":
         for _, nitrogen, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts(ARYL_HYDROXYLAMINE_SMARTS)):
             sites.append(nitrogen)
@@ -108,12 +112,16 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
     elif role == "acylhydrazide":
         sites = [hit[0] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[NX3;H2]-[NX3;H1]-[CX3](=[OX1])"))]
     elif role == "hydrazine":
-        if canonical(smiles) != canonical("NN"):
-            raise ValueError("The azine construction rule requires exact neutral hydrazine")
         sites = [a.GetIdx() for a in mol.GetAtoms()]
-    elif role == "aryl_aldehyde":
+    elif role in ("aryl_aldehyde","self_imine"):
         for _, carbon, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][CH1](=[O])")):
             sites.append(carbon); removed.append(oxygen)
+        if role == "self_imine":
+            aldehydes = set(sites)
+            amines = [n for _, n in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NH2;+0]"))]
+            if len(aldehydes) != len(amines) or len(amines) not in (1,2):
+                raise ValueError("Choose a balanced aminoaldehyde with one or two of each free group")
+            sites.extend(amines)
     elif role == "tp_trialdehyde":
         if canonical(smiles) != canonical(TP):
             raise ValueError("This ketoenamine rule supports exact Tp only")
@@ -144,6 +152,8 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
         index = rw.AddAtom(dummy)
         rw.AddBond(atom_id, index, Chem.BondType.DOUBLE if order == 2 else Chem.BondType.SINGLE)
         site_records.append({"port": port, "monomer_atom_index": atom_id, "join_bond_order": order})
+        if role == "self_imine":
+            site_records[-1]["site_role"] = "aldehyde" if atom_id in aldehydes else "amine"
     for atom_id in sorted(set(removed), reverse=True):
         rw.RemoveAtom(atom_id)
     result = rw.GetMol()

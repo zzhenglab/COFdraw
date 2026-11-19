@@ -88,3 +88,10 @@ When comparing a reconstruction with a supplied original, bind the original crop
 Each helper invocation requires a new output directory. `library.json` preserves catalog selection context. A render creates `result.json`, `drawing.svg`, `drawing.png`, `drawing.mol`, and any returned optional formats, including the JSON recipe/audit bundle. `artifacts.json` records file sizes and SHA-256 hashes. `server-output.log` and `runtime-data/cofdraw.log` are local diagnostics.
 
 The response `audit` records the graph scope, drawing status, monomers, template, style, and chemical export diagnostics. Check this before describing an output. CDXML export may be unavailable; only advertise formats present in `downloads`. A successful API response is a software check, not independent verification of the chemistry.
+# Single-precursor and mixed-linker designs
+
+POST to `/api/drawing/prepare/assembly` with `{"monomer_ids":["bfbapy"]}` for a self-condensed imine design. A free aromatic aminoaldehyde with one group of each kind yields a head-to-tail chain. Two groups of each kind permit a four-corner pore design. In the returned fragment, each port records its reactive role.
+
+For a mixed-linker design, send `{"monomer_ids":["tapb","ta","bpda_cho"],"linker_sequence":"BBBCCC"}`. A is the node and B and C are distinct complementary ditopic linkers. Supply four edges for a tetratopic node or six for a tritopic node. Both letters must occur. Use the returned recipe with the standard render endpoint. The sequence describes one finite pore. Bulk disorder, pore populations and periodic properties require independent structural information.
+
+The library provides `binary_eligible` and `binary_roles` for pair construction and `assembly_roles` for single- and three-precursor designs. Numbered source labels remain in `aliases`. Entries with `catalog_use: synthetic_intermediate` remain traceable through the API.

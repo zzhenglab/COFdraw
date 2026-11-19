@@ -316,7 +316,7 @@
   $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
   const balanceDialog=$('balance-dialog');
   let balanceRevision=0;
-  function balanceAvailable(){return !sourceMode() && Boolean(checkedMonomer('a') && checkedMonomer('b'));}
+  function balanceAvailable(){return !multi()&&!sourceMode() && Boolean(checkedMonomer('a') && checkedMonomer('b'));}
   function clearBalance(){
     balanceRevision++;$('balance-results').replaceChildren();$('balance-status').textContent='';
     $('calculate-balance').disabled=!balanceAvailable();

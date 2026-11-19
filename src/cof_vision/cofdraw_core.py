@@ -51,6 +51,7 @@ def read_catalog(data_root: Path) -> dict:
 
 
 def catalog_monomers(catalog):
+    from .cofdraw_catalog_review import reviewed_row
     occurrences = catalog.get("recent_monomer_update", {}).get("additional_occurrences", {})
     rows = []
     for monomer in catalog.get("monomer_presets", MONOMERS):
@@ -62,7 +63,7 @@ def catalog_monomers(catalog):
                 "source_dois": sorted({*monomer.get("source_dois", []), *(e["source_doi"] for e in extra)}),
                 "source_evidence": [*monomer.get("source_evidence", []), *extra],
             }
-        rows.append(monomer)
+        rows.append(reviewed_row(monomer))
     return rows
 
 
