@@ -67,7 +67,8 @@ def catalog_monomers(catalog):
             }
         rows.append(reviewed_row(monomer))
     seen = {row['id'] for row in rows}
-    rows.extend(row for row in [*additional_precursors(),TPDA] if row['id'] not in seen)
+    from .cofdraw_starters import tpb_precursors
+    rows.extend(row for row in [*additional_precursors(),TPDA,*tpb_precursors()] if row['id'] not in seen)
     return rows
 
 

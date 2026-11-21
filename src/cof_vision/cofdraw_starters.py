@@ -28,8 +28,36 @@ PHASES = {
     # JACS (2017), DOI 10.1021/jacs.7b04141. Both nets are structural models.
     "curated-16250N3": ("pts", ["tapm","tfppy"], "reference"),
     "curated-17163N3": ("pts", ["tapm","por_cho"], "reference"),
+    "curated-19240N3": ("pts", ["tapm","tpb_h"], "reference"),
+    "curated-19241N3": ("pts", ["tapm","tpb_me"], "reference"),
+    "curated-19242N3": ("pts", ["tapm","tpb_f"], "reference"),
+    "curated-21270N3": ("pts", ["tapm","tpb_ome"], "reference"),
+    "curated-21271N3": ("ljh", ["tapm","tpb_ph"], "reference"),
 }
 
+def tpb_precursors():
+    # The groups occupy the two remaining positions on the central benzene.
+    formylphenyl="(-c2ccc(C=O)cc2)"
+    substitutions=[("H","", "hydrogen"),("Me","(C)","methyl"),("F","(F)","fluoro"),
+                   ("OMe","(OC)","methoxy"),("Ph","(-c2ccccc2)","phenyl")]
+    rows=[]
+    for code,branch,name in substitutions:
+        label="TPB-"+code
+        doi="10.1021/jacs.1c03042" if code in ("OMe","Ph") else "10.1002/anie.201905591"
+        smiles="c1"+branch+"c"+formylphenyl+"c"+formylphenyl+"c"+branch+"c"+formylphenyl+"c1-c1ccc(C=O)cc1"
+        rows.append(dict(id="tpb_"+code.lower(),label=label,abbreviation=label,smiles=smiles,
+            full_name="1,2,4,5-Tetrakis(4-formylphenyl)benzene" if code=="H" else
+            "3,6-Di"+name+"-1,2,4,5-tetrakis(4-formylphenyl)benzene",
+            geometry_hint="planar_four_arm",source_dois=[doi],literature_names=["3D-TPB-COF-"+code]))
+    return rows
+
+
+REFERENCE_NETWORKS = {
+    "curated-07010N3":1, "curated-07011N3":1, "curated-07012N3":1, "curated-07013N3":1,
+    "curated-16250N3":2, "curated-17163N3":2,
+    "curated-19240N3":5, "curated-19241N3":5, "curated-19242N3":5,
+    "curated-21270N3":5, "curated-21271N3":1,
+}
 
 def crystal_starters(catalog):
     rows = [*catalog.get('reported_models',[]), *catalog.get('curated_models',[]),
@@ -41,6 +69,11 @@ def crystal_starters(catalog):
             row['starter'] = dict(net=net,monomer_ids=ids,kind=kind,common_name=row['model_name'],
                                   doi=row['citation_doi'],linkage='boroxine' if len(ids)==1 else
                                   'boronate_ester' if net in ('ctn','bor') else 'imine')
+            if row['id'] in REFERENCE_NETWORKS:
+                note = {"curated-16250N3":"The paper proposes two interpenetrating nets. The bundled coordinate graph resolves one network.",
+                        "curated-21271N3":"One self-penetrated ljh net; no second independent net."}.get(row['id'])
+                row['cofex_phase']=dict(monomer_ids=ids,net=net,network_count=REFERENCE_NETWORKS[row['id']],
+                                        linkage=row['starter']['linkage'],qualification=note)
         elif row.get('linker_label') or row['id']=='dia-imine':
             row['starter'] = dict(net='dia',monomer_ids=row.get('monomer_ids') or ['tapm','ta'],kind='generated')
     return [dict(id=key,model_name=name or '',network_dimension=3,

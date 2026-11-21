@@ -254,8 +254,6 @@ function crystalStarts(){
     rows.push({id:'crystal:'+row.id,crystal:true,net,reference,commonName,label,precursors:p.monomer_ids,
       search:[label,row.label,row.model_name,net,p.doi,...p.monomer_ids,reference?'reference CIF':'generated design'].filter(Boolean).join(' ')});
   }
-  if(periodicLinkage(checkedMonomer('a'),checkedMonomer('b'))||window.COFdrawCrystalDesign?.active)
-    rows.push({id:'crystal:custom-dia',label:'Build a periodic framework from this pair',crystal:true,net:'dia / lon'});
   return rows;
 }
 function closeSuggestions(){
@@ -290,7 +288,7 @@ function refreshCombinations(force=false,desired=null){
   const binary=combinations.filter(row=>row.source||row.assembly||(linkage?row.linkage===linkage:row.linkage!=='secondary_amine'));
   const {visible,matches}=L.starterSections([...binary,...crystalStarts()],state.library||{},query,current);
   const fragment=document.createDocumentFragment();
-  fragment.append(option('custom','Custom monomers'));
+  fragment.append(option(current==='crystal:custom-dia'?current:'custom','Custom monomers'));
   for(const [name,rows] of visible){
     const group=document.createElement('optgroup');group.label=name;
     for(const row of rows)group.append(option(row.id,row.label));
@@ -366,8 +364,6 @@ function sync() {
   periodic.dataset.net=matched?.starter?.kind==='generated'?matched.starter.net:'dia';
   periodic.textContent=ref?'View '+matched.starter.net+' reference · '+matched.starter.common_name:
     matched?.starter?.kind==='generated'?'Build '+matched.starter.net+' design · '+matched.starter.common_name+' precursors':'Build a 3D framework from this pair';
-  const customOption=$('cof-preset').querySelector('option[value="crystal:custom-dia"]');
-  if(customOption)customOption.hidden=!eligible&&!crystal?.active;
   if((eligible||ref)&&!state.recipe)$('build').disabled=blocked;
   if(crystal?.active){
     $('build').disabled=blocked||!$('smiles-a').value.trim()||!$('smiles-b').value.trim();
@@ -386,7 +382,7 @@ function sync() {
   $("scope-badge").classList.toggle("source",Boolean(state.sourceId));
   document.querySelector(".canvas-panel").classList.toggle("is-dirty",state.dirty);
   $("dirty-status").textContent=state.inputsDirty?"Monomers changed · create a new drawing":state.jsonPending?"Apply the edited recipe":state.dirty?"Changes awaiting render":"";
-  document.querySelectorAll("#exports button").forEach(b=>b.disabled=!state.result||state.dirty||state.busy);
+  document.querySelectorAll("#exports button").forEach(b=>b.disabled=crystal?.active?!crystal.visible:!state.result||state.dirty||state.busy);
   document.querySelectorAll(".style-choice").forEach(b=>{b.disabled=blocked;b.classList.toggle("selected",b.dataset.style===state.style);b.setAttribute("aria-pressed",String(b.dataset.style===state.style));});
   document.querySelectorAll(".sketch-open,.validate-monomer").forEach(b=>b.disabled=blocked);
   document.querySelectorAll(".library-open,#open-monomer-library,#new-monomer").forEach(b=>b.disabled=blocked);
@@ -434,6 +430,7 @@ function validateRecipeShape(recipe) {
 }
 function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);restoreAssembly(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
 function updateIdentity(){
+  if(window.COFdrawCrystalDesign?.active)return;
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
   const key=state.sourceId?(metadata.cofex_id||audit?.cofex_id||state.recipe?.cofex_id):null;
   const notation=state.inputsDirty||state.jsonPending?null:state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.design_cofex_notation||state.recipe?.design_cofex_notation||audit?.drawing_cofex?.compact);

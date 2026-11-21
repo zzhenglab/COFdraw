@@ -138,6 +138,18 @@ def reference_framework(structure, edges, limit=4):
     rejected=set()
     while len(loops)<=limit:
         n=len(loops)
+        if n>1:
+            faces=[np.array([(centers[i]+[x,y,z])@cell for i,x,y,z in loop]) for loop in loops]
+            normals=np.array([np.linalg.svd(p-p.mean(0))[2][-1] for p in faces])
+            edges_xyz=np.concatenate([np.roll(p,-1,axis=0)-p for p in faces])
+            unit=edges_xyz/np.maximum(np.linalg.norm(edges_xyz,axis=1)[:,None],1.e-8)
+            k=np.arange(256)+.5
+            z=1-2*k/256
+            r=np.sqrt(1-z*z)
+            cameras=np.column_stack((r*np.cos(k*2.399963),r*np.sin(k*2.399963),z))
+            exposure=np.abs(normals@cameras.T)
+            shortening=np.sqrt(np.maximum(0,1-(unit@cameras.T)**2))
+            direction=cameras[np.argmax(exposure.min(0)+.65*shortening.min(0)+.18*exposure.mean(0))].tolist()
         patches[n]=dict(circuits=n,site_images=[[i,[x,y,z]] for i,x,y,z in sorted(site_images)],direction=direction)
         patches[n]["junction_loops"]=[[(centers[i]+[x,y,z]).tolist() for i,x,y,z in loop] for loop in loops]
         if n==limit:break

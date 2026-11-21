@@ -9,7 +9,7 @@
     <label class="field"><span>Gas or mixture</span><select id="ads-gas"><option>CO2</option><option>N2</option><option>CH4</option><option>H2</option><option>Ar</option><option value="CO2,N2">CO₂ / N₂</option><option value="CO2,CH4">CO₂ / CH₄</option></select></label>
     <label id="ads-fraction-field" class="field" hidden><span>CO₂ gas-phase mole fraction</span><input id="ads-fraction" type="number" value="0.15" min="0.001" max="0.999" step="0.01"></label>
     <div class="input-row"><label class="field"><span>Temperature / K</span><input id="ads-temperature" type="number" value="298.15" min="20" max="600" step="0.1"></label><label class="field"><span>Pressures / bar</span><input id="ads-pressures" value="0.1, 1" aria-label="Pressure points in bar, separated by commas"></label></div>
-    <label class="field"><span>Framework partial charges</span><select id="ads-charges"><option value="cif">Use complete supplied CIF charges</option><option value="zero">Explicit uncharged-framework approximation</option></select></label>
+    <label class="field"><span>Framework partial charges</span><select id="ads-charges"><option value="zero">Explicit uncharged-framework approximation</option><option value="cif">Use complete supplied CIF charges</option></select></label>
     <label class="auto-chemistry"><input id="ads-heat" type="checkbox" checked> Estimate zero-loading heat (three Widom runs)</label>
     <details><summary>Sampling and reservoir</summary>
       <p class="small-note">Default runs are short screening runs. Increase sampling and compare independent seeds before interpreting material trends.</p>

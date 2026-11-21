@@ -24,7 +24,7 @@
   ].map(([id,label,category,description])=>({id,label,category,description,preview_kind:id}));
   let restoredReference=false, comparing=false;
   function availableStyles(){
-    return restoredReference?styles.filter(s=>!['reticular_blocks','red_blue'].includes(s.id)):styles;
+    return restoredReference&&!report?.chemical_junction_svg?styles.filter(s=>!['reticular_blocks','red_blue'].includes(s.id)):styles;
   }
   function clearImage(){
     if(visible?.url)URL.revokeObjectURL(visible.url);
@@ -32,7 +32,7 @@
     window.dispatchEvent(new Event('cofdraw:crystalviewclear'));
   }
   function clearPicture(){
-    poreText='';poreRequest++;$('crystal-layout').replaceChildren();
+    poreText='';poreRequest++;$('crystal-layout').replaceChildren();$('crystal-projection').hidden=true;
     job++;report=null;preparedCells=null;cache.clear();comparing=false;clearImage();
     $('crystal-drawing-view').replaceChildren();$('representation-note').hidden=true;
   }
@@ -43,6 +43,8 @@
     if(patchStyle){Object.assign(studio.state,patchStyle);patchStyle=null;}
     $('canvas-title').textContent='Framework canvas';$('canvas-sheet').classList.remove('transparent-preview');
     $('extent-bar').hidden=true;$('canvas-empty').classList.remove('hidden');studio.refreshStyles();
+    const customEntry=$('cof-preset').querySelector('option[value="crystal:custom-dia"]');
+    if(customEntry)customEntry.value='custom';
     if($('cof-preset').value.startsWith('crystal:'))$('cof-preset').value='custom';
     $('crystal-template').querySelector('option[value="custom-dia"]')?.remove();
     if(lab.origin==='catalog-design')lab.invalidateCrystalDesign('');
@@ -101,19 +103,21 @@
     const {style,styleOptions:opt,library}=studio.state;
     const colors=opt.custom_palette||library?.style_controls?.palette_colors?.[opt.palette]||['#2768b0','#bd741e'];
     const depthFade=style.startsWith('reticular_')||style==='depth_ink', wash=depthFade||style==='ring_fill';
-    const blockInk=['reticular_blocks','red_blue','bold_color'].includes(style);
+    const junction=$('crystal-drawing-view').value==='Framework drawing'&&count===1&&Boolean(report?.chemical_junction_svg);
+    const blockInk=['reticular_blocks','red_blue','bold_color'].includes(style)||(junction&&style==='reticular_depth');
     const elementInk={jewel:{N:'#5944a6',O:'#c64059',F:'#10857d',S:'#ab7213'},conventional:{N:'#245bd1',O:'#d82c2c',F:'#268a4b',S:'#b18d0c'},deep_ink:{N:'#244487',O:'#ad3540',F:'#207458',S:'#946c09'}}[opt.element_scheme]||{};
     if(wash)svg.querySelectorAll('[data-ring-washes]').forEach(g=>g.removeAttribute('display'));
     const parentWidth=Number(svg.querySelector('g[stroke-width]')?.getAttribute('stroke-width'))||1.65;
     for(const mark of svg.querySelectorAll('[data-depth]')){
       const block=mark.dataset.block, ink=style==='depth_ink'?colors[Number(mark.dataset.depth)<.48?1:0]:block==='A'?colors[0]:block==='B'?colors[1]||colors[0]:null;
-      const visible=depthFade?.19+.81/(1+Math.exp(-9*(Number(mark.dataset.depth)-.48))):1;
+      const floor=junction?.60:.19;
+      const visible=depthFade?floor+(1-floor)/(1+Math.exp(-9*(Number(mark.dataset.depth)-.48))):1;
       if(mark.localName==='polygon'){
         mark.setAttribute('fill',ink&&style!=='reticular_depth'?ink:opt.palette||opt.custom_palette?colors[0]:'#abbad8');
         mark.setAttribute('opacity',((opt.fill_opacity??.35)*visible).toFixed(3));
       }else if(mark.localName==='g'){
         mark.setAttribute('opacity',visible.toFixed(3));
-        if((blockInk||style==='depth_ink')&&ink)mark.setAttribute('stroke',ink);
+        if((blockInk||style==='depth_ink')&&ink){mark.setAttribute('stroke',ink);mark.setAttribute('color',ink);}
         mark.setAttribute('stroke-width',parentWidth*(opt.bond_scale||1)*(style==='bold_color'?1.65:1));
       }else if(mark.localName==='path'){
         mark.setAttribute('stroke-opacity',visible.toFixed(3));
@@ -126,7 +130,7 @@
         if(opt.font_scale)mark.setAttribute('font-size',opt.font_scale*Number(mark.getAttribute('font-size')||mark.parentNode.getAttribute('font-size')||14));
         if((opt.hydrogen_labels||(style==='element_compact'?'compact':'show'))==='compact')mark.textContent=mark.textContent.replace(/^(N|O|S)H$/,'$1');
         const color=elementInk[mark.textContent[0]];
-        if(color)mark.setAttribute('fill',color);
+        if(color||blockInk&&ink)mark.setAttribute('fill',color||ink);
       }
     }
     svg.setAttribute('data-circuit-count',count);svg.setAttribute('data-drawing-style',style);
@@ -148,8 +152,27 @@
   }
   function drawGeometry(source){
     const svg=$('crystal-layout');svg.replaceChildren();
+    const junction=usesJunction(), knobs=$('crystal-projection');
+    if(!['Framework drawing','Projected circuit'].includes($('crystal-drawing-view').value)){knobs.hidden=true;return;}
+    knobs.hidden=!junction&&!source.junction_loops?.length;
+    const adjust=$('crystal-angle');
+    $('crystal-angle-label').textContent=junction?'Tetrahedral arm spread':'Circuit tilt';
+    adjust.min=junction?-24:-45;adjust.max=junction?24:45;
+    adjust.value=junction?armSpread:tilt;
+    $('crystal-angle-value').textContent=adjust.value+'°';
+    if(junction){
+      for(let k=0;k<4;k++){
+        const angle=(12+k*90+(-1)**k*armSpread)*Math.PI/180;
+        const x=160+68*Math.cos(angle),y=90-68*Math.sin(angle);
+        add('line',{x1:160,y1:90,x2:x,y2:y,stroke:'#407077','stroke-width':3,opacity:k===2?.45:1});
+        add('circle',{cx:x,cy:y,r:4,fill:'#295861'});
+      }
+      add('circle',{cx:160,cy:90,r:6,fill:'#295861'});
+      return;
+    }
     if(!source.junction_loops?.length)return;
-    const n=source.direction,axis=Math.abs(n[2])<.85?[0,0,1]:[1,0,0];
+    const n=source.direction,axis=[0,0,0];
+    axis[n.map(Math.abs).indexOf(Math.min(...n.map(Math.abs)))]=1;
     const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
     const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
     const u=cross(axis,n),v=cross(n,u),cell=report.structure.cell;
@@ -165,29 +188,37 @@
     for(const [p,q] of edges){const [x1,y1]=pos(p),[x2,y2]=pos(q);add('line',{x1,y1,x2,y2,stroke:'#407077','stroke-width':2,opacity:.25+.75*((p[2]+q[2])/2-bounds[2][0])/(bounds[2][1]-bounds[2][0]||1)});}
     for(const p of points){const [cx,cy]=pos(p);add('circle',{cx,cy,r:3.5,fill:'#295861'});}
   }
+  let armSpread=0,tilt=0;
+  function usesJunction(){return count===1&&$('crystal-drawing-view').value==='Framework drawing'&&Boolean(report?.chemical_junction_svg);}
+  $('crystal-angle').oninput=e=>{$('crystal-angle-value').textContent=e.target.value+'°';};
+  $('crystal-angle').onchange=e=>{if(usesJunction())armSpread=Number(e.target.value);else tilt=Number(e.target.value);drawView();};
+  $('crystal-angle-reset').onclick=()=>{if(usesJunction())armSpread=0;else tilt=0;drawView();};
   function circuitOptions(){
     const type=$('crystal-drawing-view').value;
     const traced=['Framework drawing','Projected circuit'].includes(type),counts=traced?(report.circuit_extents||[1]):[1];
-    window.COFdrawExtent?.setCrystalOptions(counts.map(n=>({value:String(n),label:traced?n+(n===1?' circuit':' connected circuits'):type==='Linker detail'?'One fragment':'Displayed cells'})),String(count),n=>drawView(Number(n)));
+    window.COFdrawExtent?.setCrystalOptions(counts.map(n=>({value:String(n),label:n===1&&type==='Framework drawing'&&report.chemical_junction_svg?'Tetrahedral junction':traced?n+(n===1?' circuit':' connected circuits'):type==='Linker detail'?'One fragment':'Displayed cells'})),String(count),n=>drawView(Number(n)));
   }
   async function drawView(n=count){
     if(!report)return;
     const token=++job, model=report, type=$('crystal-drawing-view').value;
     count=['Framework drawing','Projected circuit'].includes(type)&&model.circuit_extents?.includes(n)?n:1;
     clearImage();$('canvas-empty').classList.add('hidden');circuitOptions();
-    let source=cache.get(count),text='',caption='';
+    const key=[count,usesJunction()?armSpread:0,usesJunction()?0:tilt].join('/');
+    let source=cache.get(key),text='',caption='';
     try{
-      if(!source&&!model.circuit_extents?.length)source={};
+      if(!source&&!model.circuit_extents?.length&&!model.chemical_junction_svg)source={};
       if(!source){
         $('drawing-summary').textContent='Tracing neighboring circuits…';
-        source=studio.api('science/reports/'+model.report_id+'/circuits/'+count,{});
-        cache.set(count,source);
+        source=studio.api('science/reports/'+model.report_id+'/circuits/'+count,{arm_spread:usesJunction()?armSpread:0,tilt:usesJunction()?0:tilt});
+        if(cache.size>=12)cache.delete(cache.keys().next().value);
+        cache.set(key,source);
       }
       source=await source;
       if(token!==job||model!==report)return;
       drawGeometry(source);
       if(type==='Framework drawing'){
-        text=source.scheme_svg||source.projection_svg;caption=source.scheme_svg?'Bond-line geometry · crystal depth':'Cartesian projection';
+        text=source.junction_svg||source.scheme_svg||source.projection_svg;
+        caption=source.junction_svg?'Tetrahedral junction · four connected arms':source.scheme_svg?'Bond-line geometry · crystal depth':'Cartesian projection';
       }else if(type==='Projected circuit'){text=source.projection_svg;caption='Cartesian projection · actual atomic coordinates';}
       else if(type==='Chemical drawing + periodic network'){text=window.COFdrawChemicalNetworkFigure(model,preparedCells);caption='Bond-line drawing and the corresponding repeated crystal';}
       else if(type==='Periodic packing'){text=window.COFdrawChemicalNetworkFigure(model,preparedCells,true);caption='Periodic bonds in the selected crystal';}
@@ -207,7 +238,7 @@
       studio.sync();window.dispatchEvent(new CustomEvent('cofdraw:crystalviewready',{detail:visible}));
     }catch(error){
       if(token!==job||report!==model)return;
-      cache.delete(count);$('drawing-summary').textContent=error.message;studio.sync();
+      cache.delete(key);$('drawing-summary').textContent=error.message;studio.sync();
     }
   }
   async function saveFigure(ext){
@@ -249,6 +280,8 @@
   function startCustom(){
     id=custom;edit=null;failure='';restoredReference=false;clearTimeout(timer);revision++;clearPicture();
     for(const control of ['dia-linkage','dia-net-count','reticular-net'])$(control).closest('label').hidden=false;
+    const customEntry=$('cof-preset').querySelector('option[value="custom"]');
+    if(customEntry)customEntry.value='crystal:'+custom;
     $('cof-preset').value='crystal:'+custom;$('compare-crystal-reference').hidden=true;
     $('canvas-title').textContent=[precursor('a').label||'A',precursor('b').label||'B'].join(' + ');
     const nets=+$('dia-net-count').value;
@@ -297,6 +330,7 @@
   async function select(key,modification=null,restoreReference=false){
     if(key===custom){id=custom;enterDrawing();startCustom();studio.setCrystalMonomers();await build();return;}
     const row=entries.get(key);if(!row)return;
+    count=1;armSpread=0;tilt=0;preferredView='Framework drawing';
     const preset=row.starter;
     restoreReference=restoreReference||preset?.kind==='reference';
     clearTimeout(timer);const token=++revision;
@@ -338,7 +372,7 @@
         }
         if(token!==revision)return;
       }
-      if(result.chemical_circuit_svg)choices.push('Framework drawing');
+      if(result.chemical_junction_svg||result.chemical_circuit_svg)choices.push('Framework drawing');
       if(result.chemical_circuit_svg)choices.push('Projected circuit');
       if(cells&&result.chemical_framework_svg)choices.push('Chemical drawing + periodic network');
       if(cells?.viewer?.bonds?.length)choices.push('Periodic packing');
@@ -404,6 +438,8 @@
       throw new Error('Unknown crystal model or linker modification in this project.');
     else await select(project.template_id,project.linker_edit??null,project.version===1||project.reference_only===true);
     if(report){
+      armSpread=Number.isInteger(project.arm_spread)&&Math.abs(project.arm_spread)<=24?project.arm_spread:0;
+      tilt=Number.isInteger(project.tilt)&&Math.abs(project.tilt)<=45?project.tilt:0;
       const legacy={'Depth fade · ink and ring wash':'reticular_depth','Depth fade · two building blocks':'reticular_blocks'};
       studio.state.style=availableStyles().some(s=>s.id===project.style)?project.style:legacy[project.view]||'reticular_depth';
       studio.state.styleOptions=project.style_options&&typeof project.style_options==='object'?project.style_options:{};
@@ -414,7 +450,7 @@
     }
   }
   function save(){
-    if(report)studio.saveText('COFdraw-crystal-project.json',JSON.stringify({format:'cofdraw-crystal-project',reaction_scheme:window.COFdrawScheme?.snapshot(),
+    if(report)studio.saveText('COFdraw-crystal-project.json',JSON.stringify({format:'cofdraw-crystal-project',arm_spread:armSpread,tilt,reaction_scheme:window.COFdrawScheme?.snapshot(),
       version:2,circuits:count,style:studio.state.style,style_options:studio.state.styleOptions,template_id:id,linker_edit:edit,reference_only:restoredReference,...(id===custom?{monomers:['a','b'].map(precursor),linkage:$('dia-linkage').value,network_count:+$('dia-net-count').value,topology:$('reticular-net').value}:{}),view:$('crystal-drawing-view').value},null,2)).catch(e=>studio.notice(e.message,true));
   }
   async function selectInViewer(key,modification=null){

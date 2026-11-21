@@ -103,8 +103,8 @@ def main():
         with page.expect_download() as faded:
             page.locator('#exports').get_by_role('button',name='SVG',exact=True).click()
         drawing=ElementTree.parse(faded.value.path()).getroot()
-        marks=[float(n.attrib['opacity']) for n in drawing.iter() if 'data-depth' in n.attrib]
-        assert min(marks)<.25 and max(marks)>.95
+        marks=[float(n.attrib['opacity']) for n in drawing.findall('.//{*}g') if 'data-depth' in n.attrib]
+        assert .59<=min(marks)<.7 and max(marks)>.95
         screenshot('COF-300-depth-drawing.png')
         page.click('.canvas-panel .scheme-toggle')
         for n in [1,2,3]:

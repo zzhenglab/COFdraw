@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.2
+
+- Open tetraaryl 3D frameworks on a four-arm junction. Drawing extent expands to connected chairs. Geometry adjusts the junction spread or the circuit camera and saves the projection with the project.
+- Use a common molecular bond scale across front and rear chairs. Reference CIF schemes retain open aromatic rings and offer a separate Cartesian projection.
+- Five TPB reference starters and eleven additional phase-specific COFex assignments cover boron and imine frameworks. Adsorption jobs default to the explicit uncharged-framework approximation.
+
 ## 0.10.1
 
 - Measure periodic cavity bounds on the drawing canvas. Tetrahedral chair projections now trace front and rear faces of a common cage, with a junction graph under Geometry.

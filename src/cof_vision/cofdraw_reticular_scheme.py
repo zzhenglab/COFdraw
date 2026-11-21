@@ -113,6 +113,57 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
         for i,p in polygon.items():centers.setdefault(i,p)
     # Reconcile all shared junctions before rigidly posing their molecular linkers.
     # Length constraints use lengths of the chemically drawn fragments themselves.
+    if projected is not None:
+        # The camera locates the front and rear chairs, but a nearly end-on
+        # arm can shrink a phenyl group to a dot. Fit schematic junctions to
+        # natural linker spans with a soft restraint on their projected positions.
+        keys=sorted(centers)
+        indices={key:i for i,key in enumerate(keys)}
+        ends=np.array([[indices[a],indices[b]] for a,b in layouts])
+        spans=np.array([np.linalg.norm(p[b]-p[a]) for (a,b),p in layouts.items()])
+        original=np.array([centers[key] for key in keys])
+        original-=original.mean(axis=0)
+        observed=np.linalg.norm(original[ends[:,0]]-original[ends[:,1]],axis=1)
+        original*=np.median(spans/np.maximum(observed,.01))
+        xy=original.copy()
+        tether=.33
+        identity=np.eye(xy.size)
+        rows=np.arange(len(ends))
+        turns=[]
+        for center in range(len(keys)):
+            adjacent=[b if a==center else a for a,b in ends if center in (a,b)]
+            turns.extend((a,center,b) for i,a in enumerate(adjacent) for b in adjacent[:i])
+        left,mid,right=np.array(turns).T
+        angle_weight=.8*np.median(spans)
+        for _ in range(36):
+            delta=xy[ends[:,0]]-xy[ends[:,1]]
+            lengths=np.linalg.norm(delta,axis=1)
+            directions=delta/np.maximum(lengths[:,None],1e-8)
+            jac=np.zeros((len(ends),len(keys),2))
+            jac[rows,ends[:,0]]=directions
+            jac[rows,ends[:,1]]=-directions
+            jac=jac.reshape(len(ends),-1)
+            # Leave room for the aromatic rings on the arms around a junction.
+            p,q=xy[left]-xy[mid],xy[right]-xy[mid]
+            lp=np.maximum(np.linalg.norm(p,axis=1)[:,None],1e-8)
+            lq=np.maximum(np.linalg.norm(q,axis=1)[:,None],1e-8)
+            u,v=p/lp,q/lq
+            dot=(u*v).sum(1)
+            active=dot>math.cos(math.radians(78))
+            angle=np.maximum(0,dot-math.cos(math.radians(78)))*angle_weight
+            dl=angle_weight*(v-dot[:,None]*u)/lp*active[:,None]
+            dr=angle_weight*(u-dot[:,None]*v)/lq*active[:,None]
+            aj=np.zeros((len(turns),len(keys),2))
+            turn_ids=np.arange(len(turns))
+            aj[turn_ids,left]=dl
+            aj[turn_ids,right]=dr
+            aj[turn_ids,mid]=-dl-dr
+            jac=np.vstack([jac,aj.reshape(len(turns),-1)])
+            gradient=jac.T@np.r_[lengths-spans,angle]+tether**2*(xy-original).ravel()
+            step=np.linalg.solve(jac.T@jac+(tether**2+.1)*identity,gradient).reshape(-1,2)
+            xy-=step
+            if np.max(np.abs(step))<1e-5:break
+        centers=dict(zip(keys,xy))
     error=0.
     for _ in range(0 if projected is not None else 150):
         error=0.
@@ -127,13 +178,46 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
         if error<1e-6:break
     if error>.02:raise ValueError("Adjacent molecular circuits could not be flattened without stretching bonds")
     positions={}
+    poses={}
     for (a,b),coords in layouts.items():
         if projected is not None:
             # Foreshorten an entire molecular arm uniformly in the oblique
             # view. Every aromatic ring retains its internal bond angles.
             ratio=np.linalg.norm(centers[b]-centers[a])/np.linalg.norm(coords[b]-coords[a])
             coords={i:p*ratio for i,p in coords.items()}
-        positions.update(rotate_to(coords,coords[a],coords[b]-coords[a],centers[b]-centers[a],centers[a]))
+        layout=rotate_to(coords,coords[a],coords[b]-coords[a],centers[b]-centers[a],centers[a])
+        if projected is not None:
+            axis=centers[b]-centers[a]
+            axis/=max(np.linalg.norm(axis),1e-8)
+            mirror=2*np.outer(axis,axis)-np.eye(2)
+            reverse={i:centers[a]+mirror@(p-centers[a]) for i,p in layout.items()}
+            poses[a,b]=[layout,reverse]
+        positions.update(layout)
+    if poses:
+        # Either planar orientation of a conventionally drawn arm can meet the
+        # same junctions. Choose orientations together so adjacent aryls clear.
+        clouds={edge:[np.array([p for i,p in pose.items() if i not in edge]) for pose in pair]
+                for edge,pair in poses.items()}
+        costs={}
+        for n,e in enumerate(poses):
+            for f in list(poses)[:n]:
+                score=np.zeros((2,2))
+                for a,p in enumerate(clouds[e]):
+                    for b,q in enumerate(clouds[f]):
+                        dist=np.linalg.norm(p[:,None,:]-q[None,:,:],axis=2)
+                        score[a,b]=np.maximum(2.15-dist,0).sum()
+                costs[e,f]=score
+                costs[f,e]=score.T
+        flips={e:0 for e in poses}
+        for _ in range(6):
+            changed=False
+            for e in poses:
+                energies=sum((costs[e,f][:,k] for f,k in flips.items() if f!=e),np.zeros(2))
+                if energies[1-flips[e]]<energies[flips[e]]-1e-6:
+                    flips[e]=1-flips[e]
+                    changed=True
+            if not changed:break
+        for edge,k in flips.items():positions.update(poses[edge][k])
     # Keep both outgoing branches on the exterior. Each fragment has its own
     # conventional bond angles and ring coordinates and receives only a rotation.
     outside=set(range(mol.GetNumAtoms()))-set(positions)
@@ -199,6 +283,82 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
     return vector_art(mol,positions,depths,blocks)
 
 
+def junction_scheme(mol, center, blocks, spread=0):
+    """Draw complete arms at the same bond scale with a front/back convention."""
+    mol=Chem.Mol(mol)
+    arms=sorted(a.GetIdx() for a in mol.GetAtomWithIdx(center).GetNeighbors())
+    positions={center:np.zeros(2)}
+    depths=np.full(mol.GetNumAtoms(),.7)
+    for k,first in enumerate(arms):
+        members={center,first}
+        pending=[first]
+        while pending:
+            for other in mol.GetAtomWithIdx(pending.pop()).GetNeighbors():
+                j=other.GetIdx()
+                if j not in members:
+                    members.add(j)
+                    pending.append(j)
+        if len(members.intersection(arms))!=1:
+            raise ValueError("Junction arms reconnect within this fragment")
+        coords=fragment_layout(mol,members)
+        angle=math.radians(12+90*k+(-1)**k*spread)
+        target=np.array([math.cos(angle),math.sin(angle)])
+        positions.update(rotate_to(coords,coords[center],coords[first]-coords[center],target,np.zeros(2)))
+        for j in members-{center}:
+            depths[j]=(.94,.72,.38,.72)[k]
+        if k in (0,2):
+            bond=mol.GetBondBetweenAtoms(center,first)
+            bond.SetProp("junctionDepth","front" if k==0 else "rear")
+            bond.SetIntProp("junctionCenter",center)
+    return vector_art(mol,positions,depths,blocks)
+
+
+def reference_scheme(mol, xyz, blocks, rings):
+    """Keep fused aromatic rings readable in a projection of a reference CIF."""
+    mol=Chem.Mol(mol)
+    xy=xyz[:,:2].copy()
+    groups=[]
+    for ring in rings:
+        if not all(mol.GetAtomWithIdx(i).GetIsAromatic() for i in ring):continue
+        merged=set(ring)
+        for group in groups.copy():
+            if group & merged:
+                merged.update(group)
+                groups.remove(group)
+        groups.append(merged)
+    constraints={}
+    for group in groups:
+        ids=sorted(group)
+        layout=fragment_layout(mol,ids)
+        local=np.array([layout[i] for i in ids])
+        local-=local.mean(0)
+        points=xy[ids]
+        u,_,vt=np.linalg.svd(local.T@(points-points.mean(0)))
+        xy[ids]=local@(u@vt)+points.mean(0)
+        for i in ids:
+            near=[a.GetIdx() for a in mol.GetAtomWithIdx(i).GetNeighbors() if a.GetIdx() in group]
+            for j in near:
+                for k in [i,*near]:
+                    if k!=j:constraints[tuple(sorted((k,j)))]=np.linalg.norm(layout[k]-layout[j])
+    for bond in mol.GetBonds():
+        a,b=sorted((bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()))
+        constraints.setdefault((a,b),np.linalg.norm(xyz[a]-xyz[b]))
+    ends=np.array(list(constraints));lengths=np.array(list(constraints.values()))
+    # Simultaneous distance relaxation prevents the locally opened rings
+    # from leaving a long bond at their attachment to the rest of the net.
+    original=xy.copy()
+    degree=np.bincount(ends.ravel(),minlength=len(xy)).clip(1)
+    for _ in range(80):
+        d=xy[ends[:,0]]-xy[ends[:,1]]
+        dist=np.linalg.norm(d,axis=1)
+        correction=d*((lengths-dist)/np.maximum(dist,1e-7))[:,None]
+        update=np.zeros_like(xy)
+        np.add.at(update,ends[:,0],correction)
+        np.add.at(update,ends[:,1],-correction)
+        xy+=.72*update/degree[:,None]+.035*(original-xy)
+    return vector_art(mol,dict(enumerate(xy)),xyz[:,2],blocks)
+
+
 def vector_art(mol,positions,depths=None,blocks=None):
     pts=np.array([positions[i] for i in range(mol.GetNumAtoms())])
     # Use a fixed bond scale so exports retain consistent strokes and labels.
@@ -239,7 +399,15 @@ def vector_art(mol,positions,depths=None,blocks=None):
         if size<.01:continue
         group=ET.SubElement(bonds,"g",attrib=attributes([i,j]))
         normal=np.array([-d[1],d[0]])/size
-        if not mol.GetAtomWithIdx(i).GetAtomicNum() or not mol.GetAtomWithIdx(j).GetAtomicNum():
+        if b.HasProp("junctionDepth"):
+            tip,end=(p,q) if i==b.GetIntProp("junctionCenter") else (q,p)
+            if b.GetProp("junctionDepth")=="front":
+                ET.SubElement(group,"path",d="M"+point(tip)+" L"+point(end+normal*2.5)+" L"+point(end-normal*2.5)+" Z",fill="currentColor",stroke="none")
+            else:
+                for t in np.linspace(.14,.96,7):
+                    mid=tip+(end-tip)*t
+                    line(mid-normal*2.5*t,mid+normal*2.5*t)
+        elif not mol.GetAtomWithIdx(i).GetAtomicNum() or not mol.GetAtomWithIdx(j).GetAtomicNum():
             end,start=(q,p) if mol.GetAtomWithIdx(i).GetAtomicNum() else (p,q)
             stem=start+(end-start)*.65
             line(start,stem)

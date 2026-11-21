@@ -55,7 +55,75 @@ def _circuit_svg(mol, coordinates, elements, ports, blocks, rings):
     return ET.tostring(root,encoding="unicode")
 
 
-def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
+def junction_patch(structure, edges):
+    """One tetraaryl junction plus its directly reacted neighbors, in lattice images."""
+    atoms = structure["atoms"]
+    graph = [[] for _ in atoms]
+    for edge in edges:
+        i, j, t = edge["a"], edge["b"], edge["translation"]
+        if "H" not in (atoms[i]["element"], atoms[j]["element"]):
+            graph[i].append((j, *t))
+            graph[j].append((i, *(-v for v in t)))
+    root = next((i for i, near in enumerate(graph)
+                 if atoms[i]["element"] in ("C", "Si") and len(near) == 4
+                 and all(atoms[j]["element"] == "C" and len(graph[j]) == 3 for j, *_ in near)), None)
+    if root is None:
+        return None
+    assigned = all(a.get("component") in ("A", "B") for a in atoms)
+    @lru_cache(None)
+    def boundary(i, j):
+        if assigned:
+            return atoms[i]["component"] != atoms[j]["component"]
+        elements = {atoms[i]["element"], atoms[j]["element"]}
+        if elements == {"C", "B"}:
+            return True
+        if elements == {"C", "N"}:
+            carbon, nitrogen = (i,j) if atoms[i]["element"] == "C" else (j,i)
+            if len(graph[carbon]) != 2 or len(graph[nitrogen]) != 2:
+                return False
+            # Pyridine and pyrrole C-N contacts belong to a small ring.
+            # Only an exocyclic CH=N bond can separate imine residues.
+            front={k for k,*_ in graph[carbon] if k!=nitrogen}
+            seen={carbon}
+            for _ in range(5):
+                if nitrogen in front:return False
+                seen.update(front)
+                front={neighbor for atom in front for neighbor,*_ in graph[atom]}-seen
+            return True
+        return False
+    center = (root, 0, 0, 0)
+    distance = {center: 0}
+    queue = deque([center])
+    while queue:
+        site = queue.popleft()
+        i,x,y,z = site
+        for j,u,v,w in graph[i]:
+            other = (j,x+u,y+v,z+w)
+            cost = distance[site] + int(boundary(i,j))
+            if cost <= 1 and cost < distance.get(other, 2):
+                distance[other] = cost
+                queue.append(other)
+        if len(distance) > 450:
+            return None
+    if 1 not in distance.values():
+        return None
+    # End at the aryl single bond before the next imine so a wavy single
+    # continuation never replaces a known C=N double bond.
+    trim=[]
+    for site,cost in distance.items():
+        if cost!=1:continue
+        i,x,y,z=site
+        near=[(j,x+u,y+v,z+w) for j,u,v,w in graph[i]]
+        if len(near)!=2:continue
+        outside=[v for v in near if v not in distance]
+        if len(outside)==1 and {atoms[i]['element'],atoms[outside[0][0]]['element']}=={'C','N'}:
+            trim.append(site)
+    for site in trim:del distance[site]
+    return {"center": center, "site_images": [[i,[x,y,z]] for i,x,y,z in sorted(distance)],
+            "outer_sites": [s for s,cost in distance.items() if cost], "direction": [0.,0.,1.]}
+
+
+def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread=0):
     """Depict an unwrapped, connected local chemical graph with continuation ports."""
     from rdkit import Chem
     from rdkit.Chem import rdDepictor
@@ -184,6 +252,13 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
                 if order==1.5:
                     bond.GetBeginAtom().SetIsAromatic(True)
                     bond.GetEndAtom().SetIsAromatic(True)
+    if circuit and "center" in circuit:
+        from .cofdraw_reticular_scheme import junction_scheme
+        i,*image = circuit["center"]
+        outer = {tuple(s) for s in circuit["outer_sites"]}
+        single_feed=structure.get("provenance",{}).get("drawing_cofex",{}).get("linkage")=="boroxine"
+        blocks = [atoms[j].get("component") or ("B" if (j,*t) in outer and not single_feed else "A") for j,t in positions]
+        return junction_scheme(mol, ids[i,tuple(image)], blocks, arm_spread)
     if scheme and circuit and circuit.get("backbone"):
         from .cofdraw_reticular_scheme import draw_scheme
         def index(site):
@@ -211,7 +286,11 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
         horizontal/=np.linalg.norm(horizontal)
         vertical=np.cross(normal,horizontal)
         coords=np.array([(np.array(atoms[i]["fractional"])+image)@structure["cell"] for i,image in positions])
-        return _circuit_svg(mol, coords@np.array([horizontal,vertical,normal]).T,
+        projected=coords@np.array([horizontal,vertical,normal]).T
+        if scheme:
+            from .cofdraw_reticular_scheme import reference_scheme
+            return reference_scheme(mol,projected,[atoms[i].get("component","") for i,_ in positions],rings)
+        return _circuit_svg(mol, projected,
                             [elements[i] for i,_ in ordered],len(ordered),[atoms[i].get("component","") for i,_ in positions],rings)
     else:
         rdDepictor.Compute2DCoords(mol, canonOrient=True)
@@ -345,13 +424,16 @@ def _chair_patch(ring, first, count, cell):
     for loop in loops:
         arms=[[move(v,a) for v in neighbors(a)[b]] for a,b in zip(loop,loop[1:]+loop[:1])]
         sites.update(loop)
+        for node in loop:
+            sites.update(move(v,node) for v in ring.get("junction_caps",{}).get(str(node[0]),[]))
         for arm in arms:sites.update(arm)
         rings.append(dict(backbone=loop,linkers=arms))
     # View between the normals of the front and rear faces. A face-on
     # projection of the first chair can hide a whole rear linker behind it.
     faces=[np.array([xyz(v) for v in loop]) for loop in loops]
     normals=np.array([np.linalg.svd(f-f.mean(0))[2][-1] for f in faces])
-    vertices=np.array([xyz(v) for v in sorted({v for loop in loops for v in loop})])
+    vertex_ids=sorted({v for loop in loops for v in loop})
+    vertices=np.array([xyz(v) for v in vertex_ids])
     i,j=np.triu_indices(len(vertices),1)
     delta=vertices[i]-vertices[j]
     length=max(np.linalg.norm(faces[0][1]-faces[0][0]),1.)
@@ -360,7 +442,32 @@ def _chair_patch(ring, first, count, cell):
     cameras=np.column_stack((r*np.cos(k*2.399963),r*np.sin(k*2.399963),z))
     gaps=np.sqrt(np.maximum((delta*delta).sum(1)[:,None]-(delta@cameras.T)**2,0))/length
     exposure=np.abs(normals@cameras.T)
-    scores=exposure.min(0)+.6*np.minimum(gaps.min(0),.5)+.15*exposure.mean(0)
+    # Check angular separation at branch points as well as vertex distances.
+    # Distinct endpoints may still project their phenyl groups on top of each other.
+    cosine=np.full(len(cameras),-1.)
+    for center in {v for edge in used for v in edge}:
+        rays=[xyz(b if a==center else a)-xyz(center) for a,b in used if a==center or b==center]
+        for i,left in enumerate(rays):
+            for right in rays[:i]:
+                lz,rz=cameras@left,cameras@right
+                lengths=np.sqrt(np.maximum((left@left-lz**2)*(right@right-rz**2),1e-10))
+                cosine=np.maximum(cosine,(left@right-lz*rz)/lengths)
+    clearance=np.arccos(np.clip(cosine,-1,1))
+    arm_span=np.ones(len(cameras))
+    edge_clearance=np.ones(len(cameras))
+    for a,b in used:
+        d=xyz(b)-xyz(a)
+        dz=cameras@d
+        span=np.maximum(d@d-dz**2,1e-9)
+        arm_span=np.minimum(arm_span,np.sqrt(span/(d@d)))
+        points=np.array([xyz(v)-xyz(a) for v in vertex_ids if v not in (a,b)])
+        pz=points@cameras.T
+        along=points@d
+        t=np.clip((along[:,None]-pz*dz)/span,0,1)
+        squared=(points*points).sum(1)[:,None]-pz**2-2*t*(along[:,None]-pz*dz)+t**2*span
+        edge_clearance=np.minimum(edge_clearance,np.sqrt(np.maximum(0,squared)).min(0)/length)
+    scores=(exposure.min(0)+.6*np.minimum(gaps.min(0),.5)+.15*exposure.mean(0)
+            +.9*np.minimum(clearance,1.25)+2*np.minimum(arm_span,.74)+2*np.minimum(edge_clearance,.43))
     view=cameras[scores.argmax()]
     if view@normal<0:view=-view
     return {**rings[0],"rings":rings,"circuits":count,"direction":view.tolist(),
@@ -589,6 +696,14 @@ def crystal_details(structure, edges):
             details["ring"]["site_images"] = [[i,[x,y,z]] for i,x,y,z in sorted(atoms)]
             details["ring"]["backbone"]=loop[:-1]
             details["ring"]["junction_arms"]={str(i):[[end,sorted(arm)] for end,arm in arms((i,0,0,0)).items()] for i in site_ids}
+            caps={}
+            for i in site_ids:
+                crop=front={(i,0,0,0)}
+                for _ in range(4):
+                    front={q for p in front for q in neighbors(p)}-crop
+                    crop=crop|front
+                caps[str(i)]=sorted(crop)
+            details["ring"]["junction_caps"]=caps
             details["ring"]["junction_fractional"]={str(i):sites[i]["fractional"] for i in site_ids}
             details["ring"]["linkers"]=[sorted(arms(a)[b]) for a,b in zip(loop,loop[1:])]
             ring_index={site:i for i,site in enumerate(sorted(atoms))}

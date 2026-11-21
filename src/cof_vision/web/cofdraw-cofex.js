@@ -58,9 +58,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       $('identity-heading').textContent=record?.scope==='source'?'Source COFex record':'Design COFex record';
       $('identity-linkage').textContent=record?.linkage?.replaceAll('_',' ')||'Unassigned';
       $('identity-template').textContent=record?.net||provenance?.net||'Unassigned';
-      $('identity-key').textContent=record?.id||'Unassigned';
+      $('identity-key').textContent=record?.id||(record?'Precursor notation available':'Unassigned');
       $('identity-cat').textContent=record?.compact?.match(/\.(cat\d+)(?:;|$)/)?.[1]||'Unassigned';
-      $('identity-note').textContent=record?.scope==='source'?'Recorded crystal phase. '+(record.doi?'DOI '+record.doi:''):'Generated periodic design from the selected precursors and network count.';
+      $('identity-note').textContent=record?.scope==='source'?['Reported phase.',record.qualification,record.doi?'DOI '+record.doi:''].filter(Boolean).join(' '):record?'Generated periodic design from the selected precursors and network count.':'A phase-specific precursor assignment is unavailable.';
       $('copy-identity').disabled=!record;
     }
     const current=Boolean(science?.structure||science?.finiteModel);

@@ -75,6 +75,21 @@ def test_diamond_phase_counts_and_reference_paste(client):
     assert [m['label'] for m in settings['monomers']]==['TAPM','TA']
 
 
+@pytest.mark.parametrize('model,code',[('curated-07011N3','ctn.cat0'),('curated-16250N3','pts.cat2'),
+                                       ('curated-21270N3','pts.cat5'),('curated-21271N3','ljh.cat0')])
+def test_reference_junction_and_copy_full_record(client,model,code):
+    report=post(client,'science/model',dict(template_id=model,repeats=[1,1,1]))
+    provenance=report['structure']['provenance']
+    assert 'COFex.'+code+';' in provenance['drawing_cofex']['text']
+    matched=post(client,'cofex/resolve',dict(text=json.dumps(provenance)))['choices']
+    assert any(p.get('crystal_project',{}).get('template_id')==model for p in matched)
+    endpoint=f"science/reports/{report['report_id']}/circuits/1"
+    base=post(client,endpoint,{})
+    edited=post(client,endpoint,{'arm_spread':16})
+    assert edited['junction_svg']!=base['junction_svg']==report['chemical_junction_svg']
+    assert edited['projection_svg']==base['projection_svg']
+
+
 @pytest.mark.parametrize('text',[
     '  ', 'C..N COFex.dia.cat2', 'C.C.C.C COFex.hcb.cat0', 'C.[*:1] COFex.sql.cat0',
     'C.N COFex.lon.cat0;COFdraw/1?mode=crystal&order=0%2C0&link=imine',

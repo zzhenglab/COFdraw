@@ -33,7 +33,7 @@ class AdsorptionRequest(BaseModel):
     widom_cycles: int = Field(default=2000, ge=100, le=100000)
     calculate_heat: bool = True
     seed: int = Field(default=42137, ge=1, le=2147483000)
-    charge_mode: Literal['cif', 'zero'] = 'cif'
+    charge_mode: Literal['cif', 'zero'] = 'zero'
     fugacity_coefficients: list[Annotated[float, Field(ge=1e-6, le=10)]] | None = Field(default=None, min_length=1, max_length=3)
 
     @model_validator(mode='after')

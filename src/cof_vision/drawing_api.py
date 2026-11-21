@@ -100,6 +100,12 @@ class ModelDrawing(BaseModel):
     linker_edit: Literal['aryl_f'] | None = None
 
 
+class CrystalDrawingView(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    arm_spread: int = Field(0, ge=-24, le=24)
+    tilt: int = Field(0, ge=-45, le=45)
+
+
 class DisplayCells(BaseModel):
     model_config = ConfigDict(extra='forbid')
     repeats: list[Annotated[int, Field(ge=1, le=4, strict=True)]] = Field(min_length=3, max_length=3)
@@ -472,7 +478,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 legacy = json.loads(text)
                 if not isinstance(legacy,dict):
                     raise ValueError('Paste a COFex notation or a copied COFex record.')
-                text = next((value for field in ('drawing_cofex','cofex_notation','design_cofex_notation','cofex_id')
+                entry=legacy.get('drawing_cofex')
+                text = entry['text'] if isinstance(entry,dict) and isinstance(entry.get('text'),str) else next((value for field in ('drawing_cofex','cofex_notation','design_cofex_notation','cofex_id')
                              if isinstance(value:=legacy.get(field),str) and value), '')
                 if not text:
                     raise ValueError('The copied record contains no assigned COFex notation.')
@@ -986,10 +993,17 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         result['color_periodic_networks'] = 3 in network['dimensions']
         if result['color_periodic_networks']:
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
-            from .cofdraw_crystal_figures import adjacent_circuits, chemical_drawing, crystal_details
+            from .cofdraw_crystal_figures import adjacent_circuits, chemical_drawing, crystal_details, junction_patch
             result['crystal_details'] = crystal_details(structure, network['edges'])
             if item is not None or structure['provenance'].get('kind') in ('linker_design','monomer_dia_design'):
                 result['chemical_drawing_svg'] = chemical_drawing(structure, network['edges'])
+                star = junction_patch(structure, network['edges'])
+                if star:
+                    try:
+                        result['chemical_junction_svg'] = chemical_drawing(structure,network['edges'],circuit=star)
+                        result['junction_patch'] = star
+                    except ValueError as exc:
+                        result.setdefault('warnings',[]).append(str(exc))
                 circuit = result['crystal_details'].get('ring')
                 if circuit:
                     result['chemical_circuit_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit)
@@ -1008,6 +1022,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                         result['reference_circuit_patches']={str(n):patch for n,patch in patches.items()}
                         result['circuit_extents']=sorted(patches)
                         result['chemical_circuit_svg']=chemical_drawing(structure,network['edges'],circuit=patches[1])
+                        result['chemical_framework_svg']=result.get('chemical_junction_svg') or chemical_drawing(structure,network['edges'],circuit=patches[1],scheme=True)
                     if topology:
                         result['crystal_details']['periodic_topology']=topology
         if item is None:
@@ -1323,23 +1338,35 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         return data
 
     @router.post('/science/reports/{report_id}/circuits/{count}')
-    def crystal_circuits(report_id: str, count: int):
+    def crystal_circuits(report_id: str, count: int, view: CrystalDrawingView = CrystalDrawingView()):
         from .cofdraw_crystal_figures import adjacent_circuits,chemical_drawing
         report=stored_report(report_id)
         if report is None:raise HTTPException(404,'Structure report was not found')
         ring=report.get('crystal_details',{}).get('ring')
         patch=report.get('reference_circuit_patches',{}).get(str(count))
-        if not ring and not patch:raise HTTPException(422,'No connected circuit of this extent was traced in this crystal')
+        star=report.get('junction_patch') if count==1 else None
+        if not ring and not patch and not star:raise HTTPException(422,'No connected circuit of this extent was traced in this crystal')
         try:
             structure=report['structure']
-            template=patch or adjacent_circuits(ring,structure['cell'],count)
-            if not template:raise ValueError('These circuits do not share an assigned periodic edge')
             edges=report['display_edges']
             if report.get('cell_validation',{}).get('periodic_bonds'):
                 structure={**structure,'chemical_bonds':report['cell_validation']['periodic_bonds']}
+            junction=report.get('chemical_junction_svg') if star else None
+            if star and view.arm_spread:
+                junction=chemical_drawing(structure,edges,circuit=star,arm_spread=view.arm_spread)
+            template=patch or (adjacent_circuits(ring,structure['cell'],count) if ring else None)
+            if not template:
+                if junction:return {'count':1,'junction_svg':junction,'junction_loops':[]}
+                raise ValueError('These circuits do not share an assigned periodic edge')
+            if view.tilt:
+                import numpy as np
+                normal=np.asarray(template['direction'])
+                tangent=np.cross(normal,np.eye(3)[np.argmin(np.abs(normal))])
+                angle=math.radians(view.tilt)
+                template={**template,'direction':(normal*math.cos(angle)+tangent/np.linalg.norm(tangent)*math.sin(angle)).tolist()}
             projected=chemical_drawing(structure,edges,circuit=template)
             scheme=None
-            if template.get('backbone'):
+            if template.get('backbone') or patch:
                 try:scheme=chemical_drawing(structure,edges,circuit=template,scheme=True)
                 except ValueError:pass
             loops=template.get('junction_loops')
@@ -1347,7 +1374,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 loops=[[[f+t for f,t in zip(structure['atoms'][i]['fractional'],shift)] for i,*shift in r['backbone']]
                        for r in template.get('rings',[template])]
             return {'count':count,'sites':len(template['site_images']),'scheme_svg':scheme,'projection_svg':projected,
-                    'junction_loops':loops,'direction':template['direction']}
+                    'junction_svg':junction,'junction_loops':loops,'direction':template['direction']}
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/reports/{report_id}/view')

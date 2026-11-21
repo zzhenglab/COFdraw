@@ -107,6 +107,12 @@ def test_generated_circuit_preserves_linker_substitution_and_block_views():
         loops=[{tuple(sorted((a,b))) for a,b in zip(r["backbone"],r["backbone"][1:]+r["backbone"][:1])} for r in patch["rings"]]
         assert all(any(bonds & earlier for earlier in loops[:i]) for i,bonds in enumerate(loops) if i)
         figure=ET.fromstring(chemical_drawing(model,edges,circuit=patch,scheme=True))
+        if n==2:
+            sizes=[]
+            for polygon in figure.findall(".//s:polygon",ns):
+                coords=np.array([p.split(",") for p in polygon.get("points").split()],dtype=float)
+                if len(coords)==6:sizes.append(np.linalg.norm(coords-np.roll(coords,1,axis=0),axis=1).mean())
+            assert len(sizes)>12 and max(sizes)/min(sizes)<1.25
         assert all(a.get('data-block') in ('','A','B') for a in figure.iter() if 'data-depth' in a.attrib)
         expected_f=sum(model["atoms"][i]["element"]=="F" for i,_ in sites)
         assert sum(t.text=="F" for t in figure.findall(".//s:text",ns))==expected_f

@@ -57,6 +57,7 @@ def test_query_is_deterministic_paginates_and_unknown_query_has_no_invented_answ
     assert first == query_catalog(DATA, "", ["monomer"], limit=7)
     catalog = json.loads((DATA / "framework-drawing/catalog/current.json").read_text(encoding="utf-8"))
     expected_ids = {row["id"] for row in catalog["monomer_presets"]} | {"bfbaeb", "bfbaepy", "tpda_terphenyl"}
+    expected_ids.update({"tpb_h","tpb_me","tpb_f","tpb_ome","tpb_ph"})
     assert first["matched_count"] == len(expected_ids)
     assert first["next_offset"] == 7
     assert not {r["id"] for r in first["records"]} & {r["id"] for r in second["records"]}

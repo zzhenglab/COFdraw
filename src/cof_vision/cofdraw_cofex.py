@@ -34,9 +34,11 @@ def phase_record(item, catalog_rows):
     if any(key not in by_id for key in phase['monomer_ids']):
         return None
     joined = '.'.join(sorted(canonical(by_id[key]) for key in phase['monomer_ids']))
-    text = joined + f" COFex.{phase['net']}.cat{phase['network_count']};{item['model_name']}"
+    count=phase['network_count']
+    text = joined + f" COFex.{phase['net']}.cat{0 if count==1 else count};{item['model_name']}"
     return {'text':text, 'compact':text, 'scope':'source', 'doi':item['citation_doi'],
-            'net':phase['net'], 'network_count':phase['network_count'], 'linkage':phase['linkage']}
+            'net':phase['net'], 'network_count':count, 'linkage':phase['linkage'],
+            'qualification':phase.get('qualification')}
 
 
 def recipe_record(recipe, metadata=None, source=False):

@@ -50,6 +50,7 @@ def test_jobs_run_distinct_widom_and_pressure_stages_and_preserve_provenance(tmp
         job = manager.start({'structure': {}, 'gases': ['CO2','N2'], 'mole_fractions':[.2,.8]})
         result = await_job(manager, job['job_id'])
         assert result['status'] == 'complete', result
+        assert result['result']['inputs']['charge_mode']=='zero'
         assert result['completed_stages'] == result['total_stages'] == 5
         directory = tmp_path/job['job_id']
         inputs = [json.loads(p.read_text()) for p in directory.glob('*/engine-input.json')]
