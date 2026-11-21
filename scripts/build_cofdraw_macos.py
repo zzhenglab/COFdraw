@@ -43,6 +43,25 @@ def main():
             "--add-data", f"{work / 'data'}:data", "--add-data", f"{notices}:notices",
         ])
         app = work / "dist/COFdraw.app"
+        # WKWebView enforces the page's script policy on the injected bridge.
+        # pywebview 6.2.1 builds its wrappers with new Function. Install equivalent
+        # closures in the bundled JS so the page can retain its strict CSP.
+        bridge = app / "Contents/Resources/webview/js/api.js"
+        js = bridge.read_text("utf-8")
+        start = js.index("      // Define the function body")
+        end = js.index("      window.pywebview._returnValuesCallbacks[funcName]", start)
+        js = js[:start] + """      nestedObject[functionName] = (function (name) {
+        return function () {
+          var id = (Math.random() + "").substring(2);
+          var args = Array.prototype.slice.call(arguments);
+          return new Promise(function (resolve, reject) {
+            window.pywebview._checkValue(name, resolve, reject, id);
+            window.pywebview._jsApiCallback(name, args, id);
+          });
+        };
+      })(funcName);
+""" + js[end:]
+        bridge.write_text(js, "utf-8")
         info = app / "Contents/Info.plist"
         metadata = plistlib.loads(info.read_bytes())
         metadata.update(CFBundleShortVersionString=VERSION, CFBundleVersion=VERSION)

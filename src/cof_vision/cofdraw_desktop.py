@@ -174,11 +174,12 @@ def main(argv=None):
         status["status"] = "desktop_window"; write_status()
         def smoke():
             deadline = time.monotonic() + 40
+            evaluate = window.run_js if sys.platform == "darwin" else window.evaluate_js
             try:
                 while time.monotonic() < deadline:
-                    ready = window.evaluate_js("document.readyState === 'complete' && !!document.querySelector('main') && !!(window.pywebview && window.pywebview.api && window.pywebview.api.save_export)")
+                    ready = evaluate("document.readyState === 'complete' && !!document.querySelector('main') && !!(window.pywebview && window.pywebview.api && window.pywebview.api.save_export)")
                     if ready:
-                        status.update(status="desktop_smoke_passed", title=window.evaluate_js("document.title"), native_save_bridge=True)
+                        status.update(status="desktop_smoke_passed", title=evaluate("document.title"), native_save_bridge=True)
                         write_status(); return
                     time.sleep(.2)
                 raise RuntimeError("Desktop document did not become ready")

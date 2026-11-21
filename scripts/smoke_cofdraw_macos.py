@@ -50,9 +50,9 @@ def main():
         assert subprocess.check_output(["lipo", "-archs", str(exe)], text=True).strip() == platform.machine()
         subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)
         status = extracted / "native.json"
-        subprocess.run([str(exe), "--smoke-window", "--status-file", str(status)], check=True, timeout=120)
+        launch = subprocess.run([str(exe), "--smoke-window", "--status-file", str(status)], timeout=120)
         proof = json.loads(status.read_text())
-        assert proof["status"] == "desktop_smoke_passed" and proof["native_save_bridge"]
+        assert launch.returncode == 0 and proof["status"] == "desktop_smoke_passed" and proof["native_save_bridge"], proof
         service = extracted / "service.json"
         proc = subprocess.Popen([str(exe), "--headless", "--status-file", str(service)])
         try:
