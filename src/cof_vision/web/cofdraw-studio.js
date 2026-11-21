@@ -316,14 +316,45 @@
   const radii={H:.31,C:.76,N:.71,O:.66,F:.57,P:1.07,S:1.05,Cl:1.02,Br:1.2,I:1.39,B:.84,Si:1.11,Cu:1.32,Zn:1.22,Fe:1.32};
   const vdw={H:1.2,C:1.7,N:1.55,O:1.52,F:1.47,P:1.8,S:1.8,Cl:1.75,Br:1.85,I:1.98,B:1.92,Si:2.1,Cu:1.4,Zn:1.39,Fe:1.4};
   const groupPalette=['#28949c','#d89755','#8475b4','#6c9b68','#c97589','#5d8abe','#ae9666','#967b9f','#355b45','#775449','#474b8a','#bd9bb5'];
+  const groupPalettes={soft:groupPalette,
+    cpk:['#3672b8','#cf514c','#409469','#a77bc0','#ce9934','#638994','#b97357'],
+    contrast:['#0072b2','#d55e00','#009e73','#cc79a7','#e69f00','#56b4e9','#7d684c'],
+    mineral:['#327977','#d19458','#66658e','#9c4860','#73964e','#608eae','#8f684e']};
   const elementPalettes={soft:elementColors,cpk:{...elementColors,C:'#525252',O:'#ef272c',N:'#224db9',H:'#ffffff',F:'#76c94e',Cl:'#29aa39',Br:'#9a3b2e',S:'#dcc320',P:'#e88a1a'},
-    contrast:{...elementColors,C:'#424756',N:'#245fa5',O:'#dc532d',F:'#16896d',S:'#c99b12',P:'#a7569f',H:'#f4f3ea'}};
-  function viewerColors(atoms){const mode=$('viewer-color').value,root=$('viewer-legend'),colors=new Map(),groups=new Map();root.replaceChildren();if(mode==='element'){const palette=elementPalettes[$('viewer-palette').value];for(const a of atoms)colors.set(a.index,palette[a.element]||'#a59bc0');
-      const keys=new Map(atoms.filter(a=>a.element!=='*' && !(viewer.hideHydrogen && a.element==='H')).map(a=>[(a.isotope||'')+a.element,colors.get(a.index)]));
-      for(const [label,color] of keys){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,label);root.append(chip);}return colors;}const value=a=>mode==='network'?(a.network??a.inferred_component):a[mode];for(const a of atoms){const key=value(a);if(key!==undefined&&!groups.has(key))groups.set(key,groupPalette[groups.size%groupPalette.length]);colors.set(a.index,groups.get(key)||elementColors[a.element]||'#a59bc0');}for(const [key,color]of groups){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,document.createTextNode(mode==='component'?`Block ${key}`:mode==='network'&&atoms.every(a=>a.network===undefined)?`Inferred component ${Number(key)+1}`:`${mode==='layer'?'Layer':'Network copy'} ${Number(key)+1}`));root.append(chip);}if(!groups.size&&atoms.length)root.textContent=`No ${mode==='component'?'building-block':mode} groups supplied; showing element colors.`;return colors;}
+    contrast:{...elementColors,C:'#424756',N:'#245fa5',O:'#dc532d',F:'#16896d',S:'#c99b12',P:'#a7569f',H:'#f4f3ea'},
+    mineral:{...elementColors,C:'#65757a',H:'#f1eee7',N:'#456da8',O:'#be6256',F:'#549a83',S:'#c59a43',P:'#b57d5c',Cl:'#6e986c'}};
+  function viewerColors(atoms){
+    const mode=$('viewer-color').value, palette=$('viewer-palette').value, legend=$('viewer-legend');
+    const colors=new Map(), keys=new Map(), groupColors=groupPalettes[palette]||groupPalette;
+    legend.replaceChildren();
+    const inferred=mode==='network'&&atoms.every(a=>a.network===undefined);
+    for(const atom of atoms){
+      let color=(elementPalettes[palette]||elementColors)[atom.element]||'#a59bc0';
+      const key=mode==='element'?(atom.isotope||'')+atom.element:mode==='network'?(atom.network??atom.inferred_component):atom[mode];
+      if(mode!=='element'&&key!==undefined){
+        // An isolated network keeps its original color when the other nets are hidden.
+        const index=Number.isInteger(key)?key:['A','B','C'].includes(key)?key.charCodeAt(0)-65:keys.has(key)?keys.get(key).index:keys.size;
+        color=groupColors[index%groupColors.length];
+        if(!keys.has(key))keys.set(key,{color,index,label:mode==='component'?'Block '+key:(mode==='layer'?'Layer ':inferred?'Inferred component ':'Network ')+(Number(key)+1)});
+      }else if(mode==='element'&&atom.element!=='*'&&!(viewer.hideHydrogen&&atom.element==='H')){
+        keys.set(key,{color,label:key});
+      }
+      colors.set(atom.index,color);
+    }
+    for(const {color,label} of keys.values()){
+      const chip=document.createElement('span'),swatch=document.createElement('i');
+      swatch.style.background=color;chip.append(swatch,String(label));legend.append(chip);
+    }
+    if(mode!=='element'&&!keys.size&&atoms.length)legend.textContent='Element colors shown. No '+(mode==='component'?'building-block':mode)+' assignments supplied.';
+    return colors;
+  }
   function tint(hex,target,fraction){
     const n=parseInt(hex.slice(1),16);
     return 'rgb('+[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v+(target-v)*fraction)).join(',')+')';
+  }
+  function topologyInk(id){
+    const palette=groupPalettes[$('viewer-palette').value]||groupPalette;
+    return $('viewer-color').value==='network'&&Number.isInteger(id)?palette[id%palette.length]:'#ae591e';
   }
   const viewer={model:null,atoms:[],bonds:[],theta:-.3,phi:.6,zoom:1,selected:[],projected:[],set(model,retainZoom=false){this.model=model;this.projected=[];this.atoms=(model.atoms||[]).map((a,i)=>({...a,index:i,x:a.x??a.position?.[0]??a.cartesian?.[0]??0,y:a.y??a.position?.[1]??a.cartesian?.[1]??0,z:a.z??a.position?.[2]??a.cartesian?.[2]??0}));this.selected=[];$('viewer-distance').textContent='';$('viewer-legend').replaceChildren();if(!retainZoom)this.zoom=1;this.bonds=Array.isArray(model.bonds)&&!(model.periodic===true&&model.bonds.length===0)?model.bonds.map(b=>Array.isArray(b)?b:[b.a,b.b]):this.inferBonds();this.draw();},inferBonds(){const bins=new Map(),bond=[],width=3;for(let i=0;i<this.atoms.length;i++){const a=this.atoms[i],base=[a.x,a.y,a.z].map(x=>Math.floor(x/width));for(let x=-1;x<=1;x++)for(let y=-1;y<=1;y++)for(let z=-1;z<=1;z++){const key=[base[0]+x,base[1]+y,base[2]+z].join(',');for(const j of bins.get(key)||[]){const b=this.atoms[j];if(a.network!==undefined&&b.network!==undefined&&a.network!==b.network)continue;if(a.layer!==undefined&&b.layer!==undefined&&a.layer!==b.layer)continue;const distance=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z),cut=1.18*((radii[a.element]||.8)+(radii[b.element]||.8));if(distance>.35&&distance<cut)bond.push([i,j]);}}const key=base.join(',');if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);}return bond;},draw(){const canvas=$('structure-canvas'),rect=canvas.getBoundingClientRect();if(rect.width<1)return;const dpr=Math.min(devicePixelRatio||1,2),w=rect.width,h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='#f8fbfa';c.fillRect(0,0,w,h);if(!this.atoms.length){c.fillStyle='#91a59b';c.font='14px Segoe UI';c.textAlign='center';c.fillText('Your 3D structure will appear here',w/2,h/2);return;}const coords=this.atoms.map(a=>[a.x,a.y,a.z]),lo=[0,1,2].map(k=>Math.min(...coords.map(p=>p[k]))),hi=[0,1,2].map(k=>Math.max(...coords.map(p=>p[k]))),center=lo.map((v,k)=>(v+hi[k])/2);const rotate=p=>{const x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],x1=x*Math.cos(this.theta)+z*Math.sin(this.theta),z1=-x*Math.sin(this.theta)+z*Math.cos(this.theta);return {x:x1,y:y*Math.cos(this.phi)-z1*Math.sin(this.phi),z:y*Math.sin(this.phi)+z1*Math.cos(this.phi)};};
       const rotated=coords.map(rotate);
@@ -340,13 +371,6 @@
       const screen=r=>({...r,x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale});
       const project=p=>screen(camera(rotate(p)));
       this.projected=plane.map(screen);
-      if(this.model.guides){
-        c.save();c.strokeStyle='#bb6a37';c.globalAlpha=.65;c.lineWidth=3;c.setLineDash([7,5]);
-        for(const [i,j] of this.model.guides){
-          const a=this.projected[i],b=this.projected[j];c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
-        }
-        c.restore();
-      }
       const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
       const layers=new Map();
       if(mode==='mixed')this.atoms.forEach((a,i)=>{
@@ -370,20 +394,30 @@
         const p=this.projected[a],q=this.projected[b];
         if(p&&q)objects.push({kind:'guide',p,q,z:(p.z+q.z)/2});
       }
-      for(const [a,b] of this.model?.spatial_guides||[]){
+      for(const [i,[a,b]] of (this.model?.spatial_guides||[]).entries()){
         const p=project(a),q=project(b);
-        objects.push({kind:'guide',p,q,z:(p.z+q.z)/2});
+        objects.push({kind:'guide',p,q,z:(p.z+q.z)/2,network:this.model.guide_networks?.[i]});
+      }
+      for(const vertex of this.model?.topology_nodes||[]){
+        const p=project(vertex.position);
+        objects.push({kind:'vertex',p,z:p.z,network:vertex.network});
       }
       if(!this.model?.illustration)window.COFdrawPores?.addFaces(objects,project,scale);
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
         const depth=Math.max(0,Math.min(1,(zmax-o.z)/Math.max(.01,zmax-zmin)));
         const highlighted=this.model.highlightNetwork;
-        const ghost=Number.isInteger(highlighted)&&o.kind!=='pore'&&this.atoms[o.index]?.network!==highlighted;
-        const visibility=(1-fading*depth)*(ghost ? .12 : 1);
+        const molecular=o.kind==='atom'||o.kind==='bond';
+        const ghost=molecular&&Number.isInteger(highlighted)&&this.atoms[o.index]?.network!==highlighted;
+        const visibility=(1-fading*depth)*(ghost ? .1 : molecular&&this.model.topologyOverlay ? .5 : 1);
         if(o.kind==='pore'){window.COFdrawPores.paint(c,o,visibility);continue;}
+        if(o.kind==='vertex'){
+          c.save();c.globalAlpha=visibility;c.fillStyle=topologyInk(o.network);c.beginPath();
+          c.arc(o.p.x,o.p.y,3.2,0,2*Math.PI);c.fill();c.restore();continue;
+        }
         if(o.kind==='guide'){
-          c.save();c.globalAlpha=.8*visibility;c.strokeStyle='#bc6027';c.lineWidth=3.3;c.setLineDash([6,4]);
+          c.save();c.globalAlpha=.85*visibility;c.strokeStyle=topologyInk(o.network);c.lineWidth=2.5;
+          if(!this.model.topologyOverlay)c.setLineDash([6,4]);
           c.beginPath();c.moveTo(o.p.x,o.p.y);c.lineTo(o.q.x,o.q.y);c.stroke();c.restore();continue;
         }
         const a=this.atoms[o.index],p=this.projected[o.index],base=color(a);
@@ -415,6 +449,8 @@
       if(this.selected.length===2){const [a,b]=this.selected.map(i=>this.projected[i]);c.strokeStyle='#d98c22';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);}c.fillStyle='#82988d';c.font='10px Segoe UI';c.fillText(`${this.atoms.length} atoms · Å`,13,h-14);
     }};
   for(const id of ['viewer-palette','viewer-finish'])$(id).addEventListener('change',()=>viewer.draw());
+  viewer.colorsFor=viewerColors;
+  viewer.topologyInk=topologyInk;
   $('viewer-preset').addEventListener('change',()=>{
     const key=$('viewer-preset').value;
     const presets={pore:[0,0,'spacefill'],layers:[-.06,1.38,'ballstick'],oblique:[-.36,.72,'mixed']};
@@ -500,7 +536,7 @@
     try{
       if(!rendered||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)throw new Error('Render the current drawing before measuring its pore.');
       const result=await S.api('science/measure',drawingRequest());
-      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending||window.COFdrawExtent?.value>1)return;
+      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending||window.COFdrawExtent?.expanded)return;
       const el=$('pore-measurement'),title=document.createElement('strong');
       title.textContent=`Pore opening · ${fmt(result.diameter_nm,2)} nm`;
       const method=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
@@ -513,9 +549,8 @@
       window.dispatchEvent(new CustomEvent('cofdraw:pore-measured',{detail:{result,audit:rendered.audit,recipe}}));
     }catch(e){if(signature()===key)S.notice(e.message,true);}
   });
-  function drawSourceGallery(library){const root=$('source-gallery');root.replaceChildren();for(const source of library.source_recipes||[]){const b=document.createElement('button'),icon=document.createElement('span'),text=document.createElement('div'),small=document.createElement('small');icon.textContent='⬡';text.textContent=source.label||source.recipe_id;small.textContent=source.layout_origin==='source_coordinates'?'Source-aligned coordinates':'Qualified source drawing';text.append(small);b.append(icon,text);b.addEventListener('click',async()=>{if(S.state.busy)return;try{const r=await S.api(`sources/${encodeURIComponent(source.recipe_id)}`);S.acceptRecipe(r.recipe,source.recipe_id,r.metadata);S.showSourceMonomers(r.recipe,r.metadata);S.state.style=r.recipe.source_style?'source':'standard';S.state.styleOptions={};await S.render();}catch(e){S.notice(e.message,true);}});root.append(b);}}
   window.addEventListener('cofdraw:layoutchanged',()=>{lastRenderedRecipe=null;drawHandles();$('pore-measurement').hidden=true;});
-  window.addEventListener('cofdraw:library',e=>{drawSourceGallery(e.detail);loadScience();});
+  window.addEventListener('cofdraw:library',loadScience);
   window.addEventListener('cofdraw:rendered',()=>{lastRenderedRecipe=S.state.recipe;$('pore-measurement').hidden=true;drawHandles();$('layout-details').hidden=Boolean(S.state.recipe?.explicit_graph);const audit=S.state.result?.audit,review=S.state.sourceId?'':S.geometryReviewMessage(audit?.layout_refinement),messages=[review,...(audit?.layout_diagnostics?.warnings||[])].filter(Boolean);if(messages.length||!geometryMode)geometryMessage(messages.join(' '));});
   for(const [ids,target] of [[['probe-radius','pore-samples','pore-refinement'],'porosity-results'],[['bet-data','bet-min','bet-max','bet-cross-section'],'bet-results'],[['descriptor-block','descriptor-conformers','smiles-a','smiles-b'],'monomer-results']])for(const id of ids)$(id).addEventListener('input',()=>{invalidate('',false);$(target).replaceChildren();});
   function drawingChanged(){
@@ -537,5 +572,5 @@
   window.addEventListener('cofdraw:layoutchanged',drawingChanged);
   drawingKey=signature();syncSource();
   window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,invalidateCrystalDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
-  if(S.state.library){drawSourceGallery(S.state.library);loadScience();}
+  if(S.state.library)loadScience();
 })();

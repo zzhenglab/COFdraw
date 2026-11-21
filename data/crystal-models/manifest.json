@@ -221,6 +221,7 @@
     },
     {
       "id": "cof-300-c5",
+      "cofex_phase": {"monomer_ids": ["tapm", "ta"], "net": "dia", "network_count": 5, "linkage": "imine"},
       "label": "COF-300 \u00b7 fivefold diamond net (2009)",
       "model_name": "COF-300",
       "path": "cof-300.cif",
@@ -361,6 +362,7 @@
     },
     {
       "id": "curated-13040N3",
+      "cofex_phase": {"monomer_ids": ["tapm", "bpda_cho"], "net": "dia", "network_count": 9, "linkage": "imine"},
       "label": "COF-320 (CURATED 13040N3)",
       "model_name": "COF-320",
       "path": "curated/13040N3.cif",

@@ -69,6 +69,7 @@ def main():
             page.locator("#mode-manual").click()
             library = page.request.get(f"{base}/api/drawing/library").json()
             monomers = {item["id"]: item for item in library["monomer_presets"]}
+            shown_ids = {k for k, v in monomers.items() if v.get("catalog_use") != "synthetic_intermediate"}
             if args.expected_monomers is not None:
                 assert len(monomers) == args.expected_monomers, (len(monomers), args.expected_monomers)
 
@@ -136,7 +137,7 @@ def main():
             assert page.locator("#library-current-a").inner_text() == "TFB"
             assert page.locator("#library-current-b").inner_text() == "TAPB"
             assert not page.locator("#library-guide").evaluate("element => element.open")
-            assert str(len(monomers)) in page.locator("#library-count").inner_text()
+            assert str(len(shown_ids)) in page.locator("#library-count").inner_text()
             page.locator("#library-step-b").focus()
             page.keyboard.press("Enter")
             assert page.locator("#library-step-b").get_attribute("aria-pressed") == "true"
@@ -144,7 +145,7 @@ def main():
             page.locator("#library-step-a").focus()
             page.keyboard.press("Enter")
             assert page.locator("#library-step-a").get_attribute("aria-pressed") == "true"
-            assert len(ids()) == len(monomers)
+            assert set(ids()) == shown_ids
             checks.append("Current A/B pair and dynamic catalog count are visible; keyboard selection moves between the guided steps")
             choose("tfb")
             page.wait_for_function("document.getElementById('library-target').value==='b' && !document.getElementById('library-target').disabled")
@@ -157,7 +158,7 @@ def main():
             checks.append("Selecting TFB as A defaults to real complementary partners in both the grid and B dropdown")
 
             page.locator("#library-show-all").check()
-            assert len(ids()) == len(monomers)
+            assert set(ids()) == shown_ids
             references = [item for item in monomers.values() if item.get("catalog_use") == "reference_only"]
             assert references, "The bundled catalog includes qualified reference-only monomers"
             reference = references[0]
@@ -308,7 +309,7 @@ def main():
             assert page.locator("#build").is_disabled()
             page.locator("#smiles-a").fill("")
             open_b()
-            assert len(ids()) == len(monomers)
+            assert set(ids()) == shown_ids
             assert page.locator("#library-show-all-field").is_hidden()
             assert page.locator("#build").is_disabled()
             checks.append("Pending/unsupported custom A cannot reuse stale compatibility; an empty A permits full catalog browsing")
@@ -324,10 +325,9 @@ def main():
             close_library()
             quality["value"] = "needs_review"
             page.route("**/api/drawing/render", quality_fixture)
-            page.locator(".source-library").evaluate("element => element.open=true")
-            page.locator("#source-select").select_option("f-cof-1-source-v1")
+            search.fill("")
             with page.expect_response("**/api/drawing/render"):
-                page.locator("#load-source").click()
+                page.select_option("#cof-preset","source:f-cof-1-source-v1")
             page.wait_for_function("!window.COFdrawStudio.state.busy && window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1'")
             assert "need geometry review" not in page.locator("#notice").inner_text()
             assert "need geometry review" not in page.locator("#geometry-message").inner_text()

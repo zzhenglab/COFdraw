@@ -101,7 +101,7 @@ class DesktopBridge:
 
     def save_text(self, suggested_filename, content, mime_type=None):
         self._check()
-        limit = 50_000_000 if Path(str(suggested_filename)).suffix.lower() == '.csv' else 2_000_000
+        limit = 50_000_000 if Path(str(suggested_filename)).suffix.lower() in {'.svg', '.csv'} else 2_000_000
         if not isinstance(content, str) or len(content) > limit:
             raise ValueError("Project is too large")
         return self._save(suggested_filename, content.encode("utf-8"))

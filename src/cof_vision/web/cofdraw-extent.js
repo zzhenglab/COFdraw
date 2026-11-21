@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded',()=>{
   const studio=window.COFdrawStudio, state=studio.state, $=id=>document.getElementById(id);
   const bar=$('extent-bar'), choices=$('extent-options'), feedback=$('extent-feedback');
-  let count=1, revision=0, base=null, busy=false, summary='', singleExportNote='', cache=new Map();
+  let count=1, revision=0, base=null, visible=null, busy=false, summary='', singleExportNote='', cache=new Map();
   function clean(){return state.recipe&&state.result===base&&!state.inputsDirty&&!state.dirty&&!state.jsonPending;}
   function options(){return base?.repeat_options?.extents||[{value:1,label:'Original drawing'}];}
   function sync(){
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('pore-color-control').hidden=count===1||state.recipe?.layout_kind==='open_chain';
     $('color-pore-types').disabled=!ready||state.busy;
     for(const button of choices.children){
-      button.setAttribute('aria-pressed',String(Number(button.value)===count));
+      button.setAttribute('aria-pressed',String(button.value===String(count)));
       button.disabled=!ready||state.busy;
     }
     if(busy||!ready)for(const button of $('exports').children)button.disabled=true;
@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('export-note').textContent=singleExportNote;$('export-note').hidden=!singleExportNote;
     feedback.textContent=base.repeat_options?.available?'':base.repeat_options?.reason||'';
     $('pore-type-legend').replaceChildren();
+    visible=base;window.dispatchEvent(new CustomEvent('cofdraw:viewready',{detail:visible}));
   }
   function showRepeat(result){
     const s=result.summary, downloads=result.downloads||{svg:result.svg};
@@ -46,11 +47,13 @@ document.addEventListener('DOMContentLoaded',()=>{
       chip.append(name+' × '+n);legend.append(chip);
     }
     feedback.textContent=s.source_drawing_basis?'Neighboring pores use the precursor-derived layout.':'';
+    visible=result;window.dispatchEvent(new CustomEvent('cofdraw:viewready',{detail:visible}));
   }
   async function select(value){
     if(!clean())return;
     const token=++revision, drawing=base;
-    count=options().some(o=>Number(o.value)===value)?value:1;
+    const chosen=options().find(o=>o.value===value)||options()[0];
+    count=chosen.value;visible=null;
     busy=false;bar.removeAttribute('aria-busy');
     window.dispatchEvent(new Event('cofdraw:extentchanged'));
     if(count===1){baseView();sync();return;}
@@ -60,7 +63,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     busy=true;bar.setAttribute('aria-busy','true');feedback.textContent='Drawing neighboring pores…';sync();
     try{
       const payload=state.sourceId?{source_recipe_id:state.sourceId}:{recipe:state.recipe};
-      Object.assign(payload,{repeats:count,color_pores:colored,size:Number($('image-size').value),style_id:state.style,style_options:state.styleOptions});
+      Object.assign(payload,{repeats:chosen.repeats||count,extent_mode:chosen.extent_mode||'pores',color_pores:colored,size:Number($('image-size').value),style_id:state.style,style_options:state.styleOptions});
       if(state.seed!==null)payload.style_seed=state.seed;
       const result=await studio.api('repeat',payload);
       if(token!==revision||drawing!==base||!clean())return;
@@ -79,16 +82,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     choices.replaceChildren();bar.hidden=false;
     for(const o of options()){
       const button=document.createElement('button');button.type='button';button.value=o.value;button.textContent=o.label;
-      button.addEventListener('click',()=>select(Number(o.value)));choices.append(button);
+      button.addEventListener('click',()=>select(o.value));choices.append(button);
     }
     select(count);
   }
   // Geometry edits and a diameter belong to the chosen local pore.
   for(const id of ['edit-geometry','clean-geometry','measure-pore','undo-geometry']){
-    $(id).addEventListener('click',e=>{if(e.isTrusted&&count>1)select(1);},{capture:true});
+    $(id).addEventListener('click',()=>{
+      const closingEditor=id==='edit-geometry'&&$(id).getAttribute('aria-pressed')==='true';
+      if(count!==1&&!closingEditor)select(1);
+    },{capture:true});
   }
   window.addEventListener('cofdraw:rendered',render);
-  window.addEventListener('cofdraw:layoutchanged',()=>{revision++;busy=false;cache.clear();base=null;bar.hidden=true;});
+  window.addEventListener('cofdraw:layoutchanged',()=>{revision++;busy=false;cache.clear();base=null;visible=null;bar.hidden=true;});
   window.addEventListener('cofdraw:state',sync);
-  window.COFdrawExtent={get value(){return count;},restore(value,color=true){count=[1,2,3,4].includes(value)?value:1;$('color-pore-types').checked=color!==false;}};
+  window.COFdrawExtent={get value(){return count;},get expanded(){return count!==1;},get visible(){return clean()?visible:null;},
+    restore(value,color=true){count=[1,'three-pores',2,3,4].includes(value)?value:1;$('color-pore-types').checked=color!==false;}};
 });

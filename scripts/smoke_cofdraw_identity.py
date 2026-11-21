@@ -122,9 +122,17 @@ def main():
             assert record["catenation"] == "cat0" and "assumption" in record["catenation_qualification"]
             checks.append("Copy full record includes exact notation, current linkage/template and catenation qualification")
 
-            page.locator("details.source-library").evaluate("el => el.open=true")
-            page.locator("#source-select").select_option("tppa-pore-v1")
-            page.locator("#load-source").click()
+            page.click("#copy-drawing-cofex")
+            exchange = page.evaluate("window.__copiedRecord")
+            assert "COFex.sql.cat0;COFdraw/1?" in exchange
+            page.click("#open-cofex")
+            page.fill("#cofex-input",exchange)
+            page.click("#cofex-draw")
+            page.wait_for_function("!document.querySelector('#cofex-dialog').open && !COFdrawStudio.state.busy")
+            assert page.evaluate("COFdrawStudio.state.result.audit.drawing_cofex.text")==exchange
+            checks.append("Copy COFex and paste reproduce the editable square design and selected linkage")
+
+            page.select_option("#cof-preset","source:tppa-pore-v1")
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='tppa-pore-v1' && !window.COFdrawStudio.state.busy")
             expected_source = page.evaluate("window.COFdrawStudio.state.sourceMetadata.cofex_notation")
             assert page.locator("#identity-string").inner_text() == expected_source
@@ -135,8 +143,7 @@ def main():
             page.screenshot(path=str(output / "visible-source-record.png"))
             checks.append("Source record displays its exact full notation, unknown net and unverified catenation without constructor rematching")
 
-            page.locator("#source-select").select_option("pyurea-source-layout-v1")
-            page.locator("#load-source").click()
+            page.select_option("#cof-preset","source:pyurea-source-layout-v1")
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && !window.COFdrawStudio.state.busy")
             assert page.locator("#identity-string").inner_text() == "Not assigned"
             assert page.locator("#identity-cat").inner_text().startswith("Unknown")
@@ -152,6 +159,30 @@ def main():
             assert page.locator("#copy-identity").is_disabled()
             assert page.evaluate("window.COFdrawStudio.state.sourceId") is None
             checks.append("Edited inputs clear active source identity and disable copying a stale structure record")
+            page.select_option("#cof-preset","crystal:cof-300-c5")
+            page.wait_for_function("Boolean(window.COFdrawCrystalDesign?.report)",timeout=120000)
+            page.locator("#crystal-drawing-cofex button").click()
+            exchange=page.evaluate("window.__copiedRecord")
+            assert "COFex.dia.cat0;COFdraw/1?" in exchange
+            page.click("#rotate-crystal-design")
+            assert page.locator("#model-cofex .code-value").inner_text()==exchange.split(';')[0]
+            page.click("#close-science")
+            page.click("#open-cofex")
+            page.fill("#cofex-input",exchange)
+            page.click("#cofex-draw")
+            page.wait_for_function("!document.querySelector('#cofex-dialog').open && COFdrawCrystalDesign.report",timeout=120000)
+            assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.drawing_cofex.text")==exchange
+            checks.append("Both crystal views expose the generated pair and network count; pasting rebuilds the periodic model")
+            page.click("#open-cofex")
+            # The original COF-300 reference used five networks. Opening this
+            # record should recover its published phase rather than the editable one-net design.
+            page.fill("#cofex-input",exchange.split(" COFex.",1)[0]+" COFex.dia.cat5;COF-300")
+            page.click("#cofex-draw")
+            page.wait_for_function("!document.querySelector('#cofex-dialog').open && COFdrawCrystalDesign.report",timeout=120000)
+            reference=page.evaluate("COFdrawCrystalDesign.report.structure.provenance")
+            assert reference["kind"]=="reported_crystal" and reference["drawing_cofex"]["network_count"]==5
+            assert page.input_value("#smiles-a") and page.input_value("#smiles-b")
+            checks.append("The source fivefold phase reopens with its DOI and editable monomers")
             assert not errors, errors
             browser.close()
     except BaseException:

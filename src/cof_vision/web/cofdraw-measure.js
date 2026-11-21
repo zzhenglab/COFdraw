@@ -138,6 +138,7 @@
   }
   window.addEventListener('cofdraw:pore-measured', event => show(event.detail));
   window.addEventListener('cofdraw:rendered', invalidate);
+  window.addEventListener('cofdraw:schemeenabled', invalidate);
   window.addEventListener('cofdraw:extentchanged', invalidate);
   window.addEventListener('cofdraw:layoutchanged', invalidate);
   window.addEventListener('cofdraw:state', () => {if (S.state.dirty || S.state.inputsDirty || S.state.jsonPending) invalidate();});

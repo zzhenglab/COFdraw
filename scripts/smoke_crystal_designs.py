@@ -61,7 +61,25 @@ def main():
             assert not any(name=='model' for name,_ in calls[start:]),(preset,calls[start:])
         print(f'{len(presets)} named presets generated from editable SMILES; zero catalog loads during selection or 3D switch.',flush=True)
         assert page.locator("#crystal-drawing-view").input_value()=="Framework drawing"
-        assert page.locator('#crystal-drawing-view option',has_text='Literature drawing (comparison)').count()==1
+        page.select_option('#crystal-drawing-view','Depth fade · two building blocks')
+        with page.expect_download() as faded:
+            page.click('#save-crystal-drawing')
+        drawing=ElementTree.parse(faded.value.path()).getroot()
+        marks=[float(n.attrib['opacity']) for n in drawing.iter() if 'data-depth' in n.attrib]
+        assert min(marks)<.25 and max(marks)>.95
+        screenshot('COF-300-depth-drawing.png')
+        page.click('#crystal-drawing-panel .scheme-toggle')
+        for view in ['Depth fade · two building blocks','Three connected circuits']:
+            page.select_option('#crystal-drawing-view',view)
+            page.wait_for_selector('.crystal-drawing-page .reaction-figure')
+            with page.expect_download() as saved:
+                page.click('#save-crystal-drawing')
+            root=ElementTree.parse(saved.value.path()).getroot()
+            framework=root.find(".//*[@data-part='framework']")
+            assert framework is not None and framework.get('preserveAspectRatio')=='xMidYMid meet'
+            assert float(framework.get('width'))>0 and float(framework.get('height'))>0
+        screenshot('COF-300-three-circuit-scheme.png')
+        page.click('#crystal-drawing-panel .scheme-toggle')
         assert page.locator('#card-a').is_visible() and page.locator('#card-b').is_visible()
         assert page.locator('#preset-a').input_value()=='tapm' and page.locator('#preset-b').input_value()=='ta'
         screenshot("COF-300-drawing.png")
@@ -77,6 +95,9 @@ def main():
         wait_for("COFdrawScience.structure?.provenance?.kind==='monomer_dia_design'")
         assert page.locator("#structure-canvas").is_visible()
         assert page.locator("#crystal-scene").input_value()=="cell"
+        page.check('#crystal-topology')
+        assert page.evaluate("COFdrawScience.viewer.model.spatial_guides.length>20")
+        screenshot('COF-300-full-topology.png')
         before=page.evaluate("COFdrawScience.viewer.theta")
         box=page.locator("#structure-canvas").bounding_box()
         x,y=box["x"]+.5*box["width"],box["y"]+.45*box["height"]
@@ -98,7 +119,8 @@ def main():
         page.click("#compare-crystal-reference")
         wait_for("COFdrawScience.structure?.provenance?.template==='cof-300-c5'")
         assert any(name=='model' for name,_ in calls)
-        page.select_option("#crystal-scene","spotlight")
+        page.click("#crystal-interpenetration")
+        assert page.locator('#crystal-scene').input_value()=='spotlight'
         page.select_option("#crystal-net-index",index=1)
         assert page.evaluate("COFdrawScience.viewer.model.highlightNetwork")==1
         screenshot("COF-300-network.png")
@@ -129,7 +151,7 @@ def main():
         page.select_option('#reticular-net','lon')
         ready()
         assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.net==='lon' && COFdrawCrystalDesign.report.cell_validation.junction_coordination_sequence[2]===25")
-        assert page.locator('#crystal-drawing-view').input_value()=='Framework drawing'
+        assert page.locator('#crystal-drawing-view').input_value()=='Chemical drawing + periodic network'
         page.select_option('#crystal-drawing-view','Chemical drawing + periodic network')
         screenshot('lon-drawing-and-network.png')
         page.select_option('#dia-net-count','3')
@@ -138,6 +160,10 @@ def main():
         print('Custom lon drawing and three independent periodic networks verified.',flush=True)
         page.click("#rotate-crystal-design")
         assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
+        page.click('#crystal-interpenetration')
+        page.select_option('#crystal-build-nets','2')
+        wait_for("COFdrawScience.structure?.provenance?.network_count===2 && COFdrawScience.structure===COFdrawCrystalDesign.report?.structure")
+        assert page.locator('#crystal-scene').input_value()=='spotlight'
         page.click("#close-science")
         page.fill("#smiles-b","CC")
         wait_for("COFdrawCrystalDesign.report===null && document.getElementById('rotate-crystal-design').disabled")

@@ -126,9 +126,19 @@ def kagome_recipe(row,component,pore):
                               +' pore in the reported Kagome arrangement. Rigid molecular blocks with head-to-tail imine bonds.'))
 
 
-def kagome_patch(recipe,repeats):
-    """Draw a connected N-by-N patch, joining shared vertices only once."""
-    points = sorted({p for u,v in product(range(repeats),repeat=2) for p in _hexagon(u,v)})
+def patch_points(repeats,triad=False):
+    if triad:
+        # Two consecutive hexagon edges each bound one outward triangular face.
+        points=set(_hexagon(0,0))
+        for (ax,ay),(bx,by) in zip(HEX[:2],HEX[1:3]):
+            points.add((1+ax+bx,1+ay+by))
+        return points
+    return {p for u,v in product(range(repeats),repeat=2) for p in _hexagon(u,v)}
+
+
+def kagome_patch(recipe,repeats,triad=False):
+    """Draw the selected connected neighborhood, joining shared vertices only once."""
+    points = sorted(patch_points(repeats,triad))
     mol,ports,centers,coords,edges = _incidence(recipe['components']['A'],points)
     if len(points)*mol.GetNumAtoms()-2*len(edges)>2400:
         raise ValueError('Choose a smaller multi-pore extent for this molecular size.')
@@ -159,6 +169,6 @@ def kagome_patch(recipe,repeats):
                for a in result.GetAtoms()]
     # E - V + 1 counts all bounded faces in this connected planar junction graph.
     face_count = len(edges)-len(points)+1
-    hexagons = repeats*repeats
+    hexagons = 1 if triad else repeats*repeats
     return result,dict(blocks=len(points),pore_count=face_count,
                        pore_counts={'triangle':face_count-hexagons,'hexagon':hexagons}, atom_origin=origins)

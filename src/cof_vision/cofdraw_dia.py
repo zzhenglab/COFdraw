@@ -342,6 +342,9 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
                 packing=pack,
                 conformer_seed=seed,product_geometry="Extended E starting geometry at newly formed imines" if linkage!="secondary_amine" else "Reduced amine",
                 qualification=scope)
+        from .cofdraw_cofex import design_record
+        feeds = [dict(smiles=s, label=l) for s,l in zip(smiles,(label_a,label_b))]
+        structure["provenance"]["drawing_cofex"] = design_record(feeds, 'crystal', linkage, topology, network_count)
         return structure,dict(periodic_bonds=bonds,network_dimensions=net["dimensions"],short_contacts=0,
                               missing_bonds=0,extra_bonds=0,junction_sites=junctions,tetrahedral_max_angle_error_deg=round(angle,3),
                               network_count=network_count,topology=topology,junction_coordination_sequence=sequence,

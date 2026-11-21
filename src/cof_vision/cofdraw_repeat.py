@@ -1,6 +1,7 @@
 ﻿"""Finite drawings with shared molecular blocks and explicitly reacted boundaries."""
 from collections import Counter
 from copy import deepcopy
+from functools import lru_cache
 from itertools import product
 import hashlib
 import json
@@ -90,7 +91,7 @@ def _quotient(template, components):
     return [node, linker, linker, linker], cell, centers, edges
 
 
-def _faces(template, n, cell, centers):
+def _faces(template, n, cell, centers, triad=False):
     """Look up face boundaries in the infinite ideal net, then deduplicate their blocks."""
     def key(xy):
         return tuple(np.round(xy, 6))
@@ -112,6 +113,10 @@ def _faces(template, n, cell, centers):
     else:
         vertices = np.array([[0.,0.],[1.,0.],[1.,1.],[0.,1.]])
         closed = [vertices + [u,v] for u,v in product(range(n),repeat=2)]
+    # In a 2 × 2 sheet the first three faces share edges around a junction.
+    # This compact crop is distinct from the legacy 3 × 3 extent.
+    if triad:
+        closed = closed[:3]
     insert_linkers = template in ('sql_4_2','hcb_3_2','hxl_6_2')
     result = []
     for vertices in closed:
@@ -164,7 +169,10 @@ def _bounded_faces(mol, origins, links):
 
 def _sheet_layout(design, template, repeats, extent_mode):
     kinds, cell, centers, edges = _quotient(template, design['components'])
-    faces = _faces(template,repeats,cell,centers) if extent_mode == 'pores' else []
+    if extent_mode == 'triad':
+        faces = _faces(template,2,cell,centers,triad=True)
+    else:
+        faces = _faces(template,repeats,cell,centers) if extent_mode == 'pores' else []
     nodes = set(k for face in faces for k in face) if faces else set(product(range(repeats),range(repeats),range(len(kinds))))
     return kinds, cell, centers, edges, faces, nodes
 
@@ -193,14 +201,13 @@ def _chain(recipe, repeats):
     return mol, dict(atom_origin=audit['atom_origin'],blocks=count,pore_count=0)
 
 
-def _sheet(design,template,repeats,extent_mode):
-    kinds, ref, centers, edges, faces, nodes = _sheet_layout(design,template,repeats,extent_mode)
-    blocks = {key:_planar_block(c) for key,c in design['components'].items()}
-    counts = sum(blocks[kinds[k]]['mol'].GetNumAtoms() for _,_,k in nodes)
-    face_edges = {frozenset((a,b)) for face in faces for a,b in zip(face,face[1:]+face[:1])}
-    if (counts - 2*len(face_edges) if faces else counts) > MAX_ATOMS:
-        raise ValueError('This repeat exceeds the 2,400-atom drawing limit. Choose a smaller extent.')
-    order = design['connections'][0]['bond_order']
+@lru_cache(maxsize=64)
+def _fit_sheet(template,fragments,order):
+    # The placement is independent of drawing size and style. Reuse it in
+    # the extent picker and the actual drawing, including unsuccessful fits.
+    components = {key:dict(fragment_smiles=smiles,connectivity=count) for key,smiles,count in fragments}
+    kinds,ref,centers,edges = _quotient(template,components)
+    blocks = {key:_planar_block(c) for key,c in components.items()}
     poses = []
     cell_blocks = [blocks[k] for k in kinds]
     states = _self_states(cell_blocks[0]) if template == 'self_square' else [cell_blocks]
@@ -213,9 +220,24 @@ def _sheet(design,template,repeats,extent_mode):
                        for (a,b,_),slots in zip(edges,pose[5])):
                     continue
             poses.append((pose[0],pose,state))
-    if not poses:
-        raise ValueError('These reacted ports cannot form this drawing with consistent bond lengths and directions. Try a different connectivity.')
-    _, pose, cell_blocks = min(poses,key=lambda item:item[0])
+    return min(poses,key=lambda item:item[0])[1:] if poses else None
+
+
+def _sheet_placement(design,template):
+    fragments = tuple((key,c['fragment_smiles'],c['connectivity']) for key,c in sorted(design['components'].items()))
+    placement = _fit_sheet(template,fragments,design['connections'][0]['bond_order'])
+    if placement is None:
+        raise ValueError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
+    return placement
+
+
+def _sheet(design,template,repeats,extent_mode):
+    kinds, _, _, edges, faces, nodes = _sheet_layout(design,template,repeats,extent_mode)
+    pose,cell_blocks = _sheet_placement(design,template)
+    counts = sum(cell_blocks[k]['mol'].GetNumAtoms() for _,_,k in nodes)
+    face_edges = {frozenset((a,b)) for face in faces for a,b in zip(face,face[1:]+face[:1])}
+    if (counts - 2*len(face_edges) if faces else counts) > MAX_ATOMS:
+        raise ValueError('This repeat exceeds the 2,400-atom drawing limit. Choose a smaller extent.')
     _, lattice, fitted, angles, mirror, slots, *_ = pose
     fragments = {}
     for key in sorted(nodes):
@@ -263,24 +285,24 @@ def _sheet(design,template,repeats,extent_mode):
                      interblock_bonds=len(joined_edges))
 
 
-def _estimate(recipe, template, n):
+def _estimate(recipe, template, n, extent_mode='pores'):
     """Count actual fragment atoms and bounded faces before allocating a molecular graph."""
     components = recipe['components']
     counts = {k:Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for k,c in components.items()}
     if template in (*SHEET_TEMPLATES,'self_square'):
-        kinds,_,_,_,faces,nodes = _sheet_layout(recipe,template,n,'pores')
+        kinds,_,_,_,faces,nodes = _sheet_layout(recipe,template,n,extent_mode)
         shared = {frozenset((a,b)) for face in faces for a,b in zip(face,face[1:]+face[:1])}
         return sum(counts[kinds[k]] for _,_,k in nodes) - 2*len(shared),len(faces)
     if template in ('self_chain','chain_2_2'):
         return sum(counts[i['component']] for i in recipe['instances']) * n - 2*(n*len(recipe['instances'])-1),0
     if template=='self_kagome':
-        from .cofdraw_self_kagome import HEX,_hexagon
-        nodes = {p for i,j in product(range(n),repeat=2) for p in _hexagon(i,j)}
+        from .cofdraw_self_kagome import HEX,patch_points
+        nodes = patch_points(n, triad=extent_mode=='triad')
         joins = sum((x+dx,y+dy) in nodes for x,y in nodes for dx,dy in HEX[:3])
         return len(nodes)*counts['A'] - 2*joins, joins-len(nodes)+1
     from .cofdraw_mixed import _faces as mixed_faces
     pattern = recipe['assembly'].get('linker_sequence') or 'BBBBBB'
-    faces = mixed_faces(pattern,n,template=='mixed_kgm')
+    faces = mixed_faces(pattern,n,template=='mixed_kgm',triad=extent_mode=='triad')
     edge_types = {tuple(sorted((p,vertices[(i+1)%len(vertices)]))):sequence[i]
                   for vertices,sequence in faces for i,p in enumerate(vertices)}
     nodes = {p for edge in edge_types for p in edge}
@@ -288,7 +310,7 @@ def _estimate(recipe, template, n):
 
 
 def repeat_options(recipe, source_rule=None, source_sha256=None):
-    """Cheap eligibility for the current drawing; actual fitting checks every join."""
+    """Offer connected extents that fit the current fragment geometry and atom budget."""
     label = 'Source drawing' if source_sha256 else ('One segment' if recipe.get('layout_kind')=='open_chain' else 'One pore')
     options = {'available':False,'extents':[{'value':1,'label':label}],'reason':None,
                'scope':'Extent 1 retains the current drawing and coordinates.'}
@@ -297,13 +319,19 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
         model = recipe
         if source_sha256:
             model,_ = validated_design(recipe,source_rule=source_rule,source_sha256=source_sha256)
+        if template in (*SHEET_TEMPLATES,'self_square'):
+            _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
-        multi_shape = template in ('self_kagome','mixed_kgm')
+        if not chain:
+            atoms,pores = _estimate(model,template,3,'triad')
+            if pores==3 and atoms<=MAX_ATOMS:
+                options['extents'].append({'value':'three-pores','repeats':3,'extent_mode':'triad',
+                                           'label':'3 pores','pores':3,'atoms':atoms})
         for n in (2,3,4):
             count,pores = _estimate(model,template,n)
             if count > MAX_ATOMS:
                 continue
-            name = f'{n} chain segments' if chain else (f'{pores} pores' if multi_shape else f'{n} × {n} pores')
+            name = f'{n} chain segments' if chain else f'{pores} pores'
             options['extents'].append({'value':n,'label':name,'pores':pores,'atoms':count})
         options.update(available=len(options['extents'])>1,template=template,
                        scope='Finite chemical design with shared building blocks. Larger extents use a new layout.')
@@ -315,8 +343,10 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
 
 
 def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mode='pores'):
-    if repeats not in (2,3,4) or extent_mode not in ('pores','cells'):
+    if repeats not in (2,3,4) or extent_mode not in ('pores','cells','triad'):
         raise ValueError('Choose a repeat extent from 2 through 4.')
+    if extent_mode=='triad' and repeats!=3:
+        raise ValueError('The three-pore cluster requires repeats=3.')
     template = _classification(recipe,source_rule,source_sha256)
     assembly = recipe.get('assembly') or {}
     design = recipe
@@ -328,19 +358,21 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
     if extent_mode == 'cells' and assembly:
         raise ValueError('Assembly repeats use complete pore or chain neighborhoods.')
     if template in ('self_chain','chain_2_2'):
+        if extent_mode=='triad':
+            raise ValueError('Open chains can be extended by segments. This drawing has no closed pores.')
         if _estimate(recipe,template,repeats)[0] > MAX_ATOMS:
             raise ValueError('This chain exceeds the 2,400-atom drawing limit.')
         mol,details = _chain(recipe,repeats)
     elif template == 'self_kagome':
         from .cofdraw_self_kagome import kagome_patch
-        mol,details = kagome_patch(recipe,repeats)
+        mol,details = kagome_patch(recipe,repeats,triad=extent_mode=='triad')
     elif template in ('mixed_linkers','mixed_kgm','self_boroxine','self_triazine'):
         from .cofdraw_mixed import pore_patch
         pattern = 'BBBBBB' if template in ('self_boroxine','self_triazine') else assembly['linker_sequence']
         if not pattern:
             raise ValueError('The sequence around the selected aperture must be specified.')
         mol,details = pore_patch(design['components'],pattern,repeats,design['connections'][0]['bond_order'],
-                                 layout='kgm' if template=='mixed_kgm' else '')
+                                 layout='kgm' if template=='mixed_kgm' else '',triad=extent_mode=='triad')
     else:
         mol,details = _sheet(design,template,repeats,extent_mode)
     if mol.GetNumAtoms() > MAX_ATOMS or len(Chem.GetMolFrags(mol)) != 1:
@@ -356,6 +388,8 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
     links = [b for b in mol.GetBonds() if origins[b.GetBeginAtomIdx()]['instance'] != origins[b.GetEndAtomIdx()]['instance']]
     fragcount = len(set(o['instance'] for o in origins))
     nfaces = len(links) - fragcount + 1
+    if extent_mode=='triad' and nfaces!=3:
+        raise ValueError('The chosen drawing does not produce three connected pores.')
     if nfaces < 0 or details.get('pore_count',details.get('pores',nfaces)) != nfaces:
         raise ValueError('The counted pores disagree with the independent block-graph cycle count.')
     if template in ('self_boroxine','self_triazine'):

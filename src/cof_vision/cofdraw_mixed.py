@@ -81,7 +81,7 @@ def _add(a,b):
     return (a[0]+b[0],a[1]+b[1])
 
 
-def _faces(pattern,repeats,kgm):
+def _faces(pattern,repeats,kgm,triad=False):
     """Integer vertex coordinates make neighboring faces share exact graph edges."""
     n = len(pattern)
     if kgm:
@@ -89,12 +89,15 @@ def _faces(pattern,repeats,kgm):
             i = 0 if pattern=='BBB' else 1
             return [((_HEX[i],_HEX[(i+1)%6],_add(_HEX[i],_HEX[(i+1)%6])),pattern)]
         faces = {}
-        for u,v in product(range(max(1,repeats-1)),repeat=2):
+        radius=1 if triad else max(1,repeats-1)
+        for u,v in product(range(radius),repeat=2):
             center = (4*u+2*v,2*v)
             verts = tuple(_add(center,p) for p in _HEX)
             faces[frozenset(verts)] = (verts,'BCBCBC')
             if repeats>1:
                 for i,p in enumerate(_HEX):
+                    if triad and i>=2:
+                        break
                     q = _HEX[(i+1)%6]
                     tri = (_add(center,p),_add(center,q),_add(center,_add(p,q)))
                     faces[frozenset(tri)] = (tri,'BC'[i%2]*3)
@@ -103,7 +106,8 @@ def _faces(pattern,repeats,kgm):
     # Opposite sides belong to one edge family. Parity alternates along
     # its face normal, so both incident pores always assign the same linker.
     faces=[]
-    for u,v in product(range(repeats),repeat=2):
+    cells=((0,0),(0,1),(1,0)) if triad else product(range(repeats),repeat=2)
+    for u,v in cells:
         center = (3*u,u+2*v) if n==6 else (u,v)
         parity = (u,v,u) if n==6 else (v,u)
         seq = ''.join(pattern[(i+n//2*(parity[i%(n//2)]%2))%n] for i in range(n))
@@ -231,13 +235,13 @@ def _fit(geometry,kinds,centers,joins,slot_pairs):
     return translations,angles,slots
 
 
-def pore_patch(components,pattern,repeats,bond_order,layout=''):
+def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
     """Build a finite molecular graph with shared blocks, labeled outer ports, and pore census."""
     kgm=layout=='kgm'
     if repeats not in (1,2,3,4) or (kgm and pattern not in ('BBB','CCC','BCBCBC','CBCBCB')) or (
             not kgm and (len(pattern) not in (4,6) or not set(pattern)<=set('BC'))):
         raise ValueError('Choose a supported pore and a drawing extent from one to four.')
-    faces=_faces(pattern,repeats,kgm)
+    faces=_faces(pattern,repeats,kgm,triad=triad)
     edge_types={}
     for vertices,sequence in faces:
         for i,letter in enumerate(sequence):

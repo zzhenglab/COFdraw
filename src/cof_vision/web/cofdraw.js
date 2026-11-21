@@ -22,9 +22,25 @@ function engineOrder(){const pair=checkedMonomers(),match=sourceMode()?null:L.co
 function templateCheck(template=selectedTemplate()){if(!template)return {compatible:true};const order=engineOrder(),check=L.templateCompatibility(template,$("linkage").value,{a:checkedMonomer(order[0]),b:checkedMonomer(order[1])},state.library||{});if(order[0]==='b'&&check.reason)check.reason=check.reason.replace(/Block ([AB])/g,(_,block)=>`Block ${block==='A'?'B':'A'}`);return check;}
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
+function periodicLinkage(a,b){
+  if(!a||!b)return null;
+  const supported=['imine','secondary_amine','acylhydrazone'];
+  const selected=$('linkage').value;
+  for(const linkage of [...new Set([selected,...(state.autoChemistry?supported:[])])]){
+    if(!supported.includes(linkage))continue;
+    const roles=state.library?.linkages?.[linkage]?.roles;
+    if(roles?.length!==2)continue;
+    for(const [node,link] of [[a,b],[b,a]]){
+      if(node.geometry_hint!=='tetrahedral')continue;
+      if(roles.some((r,i)=>L.reactiveCount(node,linkage,r)===4&&L.reactiveCount(link,linkage,roles[1-i])===2))return linkage;
+    }
+  }
+  return null;
+}
 function monomerChoice(item,block,other){
   if(block!=='editor'&&window.COFdrawCrystalDesign?.active)
     return window.COFdrawCrystalDesign.choice(item,other);
+  if(block!=='editor'&&periodicLinkage(item,other))return {compatible:true,reason:'This pair supports a tetrahedral periodic framework.'};
   if(block!=='editor'&&item.binary_eligible===false)return {compatible:false,reason:item.qualification||'Outside the supported pair constructor.'};
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
   if(!state.autoChemistry&&block!=='editor'&&other){const pair=block==='a'?[item,other]:[other,item],match=L.compatibleLinkages(state.library||{},...pair).find(row=>row.id===$("linkage").value);if(match)return {compatible:true,reason:`Compatible with this partner for ${match.label}. Your A/B choices stay in place; construction assigns the reactive roles.`};}
@@ -223,7 +239,7 @@ function showSuggestions(){
   const priority=row=>term&&compact(row.label).startsWith(compact(term))?0:
     ['source:cof-300-projection-v1','source:tppa-pore-v1','named:COF-LZU1','named:COF-76','design-tfb_deth'].includes(row.id)?1:
     row.group==='Named starting pairs'?2:row.source?3:4;
-  const crystals=crystalSuggestions.filter(r=>term?(term==='3d'||compact(r.label).includes(compact(term))):r.featured);
+  const crystals=crystalSuggestions.filter(r=>r.id!=='custom-dia'||periodicLinkage(checkedMonomer('a'),checkedMonomer('b'))).filter(r=>term?(term==='3d'||compact(r.label).includes(compact(term))):r.featured);
   if(crystals.length)$('combination-count').textContent=matchingCombinations.length+' drawing choices · '+crystals.length+' crystal models';
   const rank=row=>term&&row.crystal&&compact(row.label).startsWith(compact(term))?-1:row.featured?1:priority(row);
   const choices=[...matchingCombinations,...crystals].sort((a,b)=>rank(a)-rank(b)).slice(0,12);
@@ -257,7 +273,7 @@ function refreshCombinations(force=false){
   const crystals=crystalSuggestions.filter(r=>!query||query==='3d'||r.label.toLowerCase().includes(query)||'crystal:'+r.id===current);
   if(crystals.length){
     const group=document.createElement('optgroup');group.label='3D crystal figures';
-    for(const r of crystals)group.append(option('crystal:'+r.id,r.label));
+    for(const r of crystals){const opt=option('crystal:'+r.id,r.label);if(r.id==='custom-dia')opt.hidden=!periodicLinkage(checkedMonomer('a'),checkedMonomer('b'));group.append(opt);}
     fragment.append(group);
   }
   let found=crystals.length,selected=crystals.some(r=>'crystal:'+r.id===current);
@@ -335,7 +351,11 @@ function sync() {
     $("build").title=assemblyReady()?'Draw the selected arrangement.':'Choose valid monomers and an explicit linker order.';
   }
   const crystal=window.COFdrawCrystalDesign;
-  $('construction-target').parentElement.hidden=multi();
+  const eligible=!multi()&&!crystal?.active&&periodicLinkage(checkedMonomer('a'),checkedMonomer('b'));
+  const periodic=$('build-periodic-from-pair');
+  periodic.hidden=!eligible;periodic.disabled=blocked;periodic.dataset.linkage=eligible||'';
+  const customOption=$('cof-preset').querySelector('option[value="crystal:custom-dia"]');
+  if(customOption)customOption.hidden=!eligible&&!crystal?.active;
   if(crystal?.active){
     $('build').disabled=blocked||!$('smiles-a').value.trim()||!$('smiles-b').value.trim();
     $('build').textContent='Build 3D framework';$('build').title='Generate the selected net from the two editable precursors.';
@@ -344,7 +364,6 @@ function sync() {
   for(const id of ['assembly-count','assembly-example','assembly-a','assembly-b','assembly-c','assembly-pattern','self-face','mixed-layout','assembly-arrangement'])$(id).disabled=blocked;
   $("build-from-canvas").disabled=$("build").disabled;
   $("build-from-canvas").title=$("build").title;
-  $("load-source").disabled=blocked||!$("source-select").value;
   $("save-project").disabled=window.COFdrawCrystalDesign?.active?!window.COFdrawCrystalDesign.report:!state.recipe||state.busy||state.jsonPending||(multi()&&state.inputsDirty);
   $("render-changes").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
   $("apply-recipe").disabled=blocked;
@@ -360,7 +379,7 @@ function sync() {
   $("open-topology-library").disabled=blocked||!(state.library?.topology_catalog?.length);
   document.querySelectorAll("#style-controls input,#style-controls select,#style-controls button").forEach(b=>b.disabled=blocked);
   $("apply-style-options").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
-  for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","source-select","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
+  for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
   $("auto-chemistry").checked=state.autoChemistry;$("auto-chemistry").disabled=state.busy;
   for(const id of ['linkage','linkage-search','template','pore'])$(id).disabled=state.busy||state.autoChemistry;
   $("linkage-mode-label").textContent=state.autoChemistry?'Linkage · Auto':'Linkage · Manual';
@@ -393,13 +412,13 @@ function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){val
 function updateIdentity(){
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
   const key=state.sourceId?(metadata.cofex_id||audit?.cofex_id||state.recipe?.cofex_id):null;
-  const notation=state.inputsDirty||state.jsonPending?null:state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.design_cofex_notation||state.recipe?.design_cofex_notation);
+  const notation=state.inputsDirty||state.jsonPending?null:state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.design_cofex_notation||state.recipe?.design_cofex_notation||audit?.drawing_cofex?.compact);
   const pending=!state.recipe||state.inputsDirty;
   $("identity-heading").textContent=state.sourceId?'Source COFex record':'Design COFex record';
   $("identity-linkage").textContent=pending?($("linkage").selectedOptions[0]?.textContent||"Not selected"):(state.library?.linkages?.[state.recipe?.linkage]?.label||state.recipe?.linkage||(sourceMode()?(state.sourceId?"Source-recorded bonds":"Explicit recorded bonds"):$("linkage").selectedOptions[0]?.textContent)||"Unknown");
   $("identity-key").textContent=key||(state.sourceId?"Not supplied by source":"Unassigned design");$("identity-string").textContent=notation||"Not assigned";
   const topology=audit?audit.design_topology:state.recipe?.design_topology,template=pending?selectedTemplate():audit?audit.selected_template:state.recipe?.selected_template;$("identity-template").textContent=state.sourceId?"Source-visible finite patch":template?.label||(typeof topology==="object"?(topology?.label||topology?.template_id||topology?.name):topology)||"Explicit editable connections";
-  const cat=notation?.match(/\sCOFex\.[^.\s]+\.(cat[^;\s]+);/)?.[1]||metadata.catenation||null;
+  const cat=notation?.match(/\sCOFex\.[^.\s]+\.(cat\d+)(?:;|$)/)?.[1]||metadata.catenation||null;
   $("identity-cat").textContent=cat?(state.sourceId?`${cat} · source convention; not independently verified`:`${cat} · design assumption; observed interpenetration unknown`):'Unknown · no catenation assignment';
   $("identity-note").textContent=state.recipe?.assembly&&!state.inputsDirty?state.recipe.assembly.scope:state.inputsDirty?'Inputs changed. Create a drawing to update its notation and explicit connectivity.':state.sourceId?(notation?'Full source precursor SMILES and recorded COFex suffix. Provisional finite patch; unknown net codes and unverified catenation remain qualified.':'This source has no complete COFex assignment. Its recorded graph and source provenance are retained; missing identities are not inferred.'):notation?'Full design precursor SMILES with the chosen template and assumed cat0. These are design choices, not an observed material identity or a periodic crystal.':'Choose monomers and create a drawing to obtain a qualified design notation.';
   $("copy-identity").disabled=!state.recipe||state.inputsDirty||state.jsonPending;
@@ -538,7 +557,7 @@ $("cof-preset").addEventListener("change",()=>{
   }
   window.COFdrawCrystalDesign?.leave();
   const row=combinations.find(p=>p.id===$("cof-preset").value);
-  if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
+  if(row?.source){loadSource(row.source.recipe_id);return;}
   if(row){setCombination(row);notice("Checking the selected pair…");}
   else if(sourceMode()){markInputsChanged();refreshMonomers();}
 });
@@ -547,8 +566,23 @@ $("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry
 $("linkage-search").addEventListener("input",()=>populateLinkages());
 $("pore").addEventListener("change",markInputsChanged);
 $("template").addEventListener("change",()=>{markInputsChanged();refreshTemplates();updateIdentity();});
-$("source-select").addEventListener("change",sync);
-$("load-source").addEventListener("click",async()=>{state.busy=true;sync();try{const id=$("source-select").value,result=await api(`sources/${encodeURIComponent(id)}`);acceptRecipe(result.recipe,id,result.metadata);showSourceMonomers(result.recipe,result.metadata);state.style=result.recipe.source_style?"source":"standard";state.styleOptions={};state.seed=null;state.busy=false;await render();}catch(e){notice(e.message,true);}finally{state.busy=false;sync();}});
+async function loadSource(id){
+  window.COFdrawCrystalDesign?.leave();
+  clearTimeout(liveDrawingTimer);
+  const revision=++selectionRevision;
+  state.busy=true;sync();
+  try{
+    const result=await api('sources/'+encodeURIComponent(id));
+    if(revision!==selectionRevision)return;
+    acceptRecipe(result.recipe,id,result.metadata);
+    showSourceMonomers(result.recipe,result.metadata);
+    state.style=result.recipe.source_style?'source':'standard';
+    state.styleOptions={};state.seed=null;state.busy=false;
+    await render();
+    return state.result;
+  }catch(e){notice(e.message,true);}
+  finally{state.busy=false;sync();}
+}
 function styleIcon(style){
   const span=document.createElement("span");span.className="style-icon";span.setAttribute("aria-hidden","true");const svg=node("svg",{viewBox:"0 0 56 48",fill:"none"});
   const kind=style.preview_kind||style.id,layered=style.category==="layered"||/stack|layer|3d/.test(kind),schematic=style.category==="schematic"||/cartoon|schematic/.test(kind);
@@ -575,8 +609,7 @@ function drawStyles(){
   const styles=state.library?.styles||[{id:"standard",label:"Standard",description:"Conventional chemical bonds"}],categories=["all",...new Set(styles.map(s=>s.category||"chemical"))],names={all:"All",chemical:"Chemical",layered:"Layered / depth",schematic:"Schematic"};
   $("style-categories").replaceChildren();for(const category of categories){const b=document.createElement("button");b.textContent=names[category]||category;b.setAttribute("aria-pressed",String(state.styleCategory===category));b.addEventListener("click",()=>{state.styleCategory=category;drawStyles();sync();});$("style-categories").append(b);}
   $("style-list").replaceChildren();for(const style of L.stylesInCategory(styles,state.styleCategory)){
-    const button=document.createElement("button");button.className="style-choice";button.dataset.style=style.id;const label=document.createElement("span"),title=document.createElement("strong"),description=document.createElement("small"),check=document.createElement("span");title.textContent=style.label;description.textContent=style.description;label.append(title,description);
-    if(style.source_style_basis||style.evidence_basis){const basis=document.createElement("span");basis.className="style-qualification";basis.textContent="Literature-inspired presentation";label.append(basis);}
+    const button=document.createElement("button");button.className="style-choice";button.dataset.style=style.id;const label=document.createElement("span"),title=document.createElement("strong"),check=document.createElement("span");title.textContent=style.label;button.title=style.description||style.label;label.append(title);
     check.className="style-check";check.textContent="✓";button.append(styleIcon(style),label,check);button.addEventListener("click",()=>chooseStyle(style.id));$("style-list").append(button);
   }
 }
@@ -655,9 +688,9 @@ $("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;c
 for(const type of["pointerup","pointercancel"])$("layout-canvas").addEventListener(type,()=>{if(dragged!==null){dragged=null;syncJSON();drawLayoutTable();}});
 $("recipe-json").addEventListener("input",()=>{state.jsonPending=true;state.dirty=true;sync();});
 $("apply-recipe").addEventListener("click",()=>{try{const input=$("recipe-json").value;if(input.length>200000)throw new Error("Recipe limit is 200 kB.");const value=JSON.parse(input);acceptRecipe(value.recipe||value);notice("Recipe applied as a designed variant. Render to check its chemistry and connections.");}catch(e){notice(e.message,true);}});
-$("save-project").addEventListener("click",()=>{if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.save();return;}const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,drawing_extent:window.COFdrawExtent?.value||1,color_pore_types:$('color-pore-types').checked,monomers:assemblyFeeds(state.recipe)||["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
+$("save-project").addEventListener("click",()=>{if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.save();return;}const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,reaction_scheme:window.COFdrawScheme?.snapshot(),drawing_extent:window.COFdrawExtent?.value||1,color_pore_types:$('color-pore-types').checked,monomers:assemblyFeeds(state.recipe)||["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
 $("open-project").addEventListener("click",()=>$("project-file").click());
-$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());if(value.format==="cofdraw-crystal-project"){await window.COFdrawCrystalDesign.restore(value);return;}window.COFdrawCrystalDesign?.leave();state.autoChemistry=value.chemistry_mode==="auto";
+$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());window.COFdrawScheme?.restore(value.reaction_scheme);if(value.format==="cofdraw-crystal-project"){await window.COFdrawCrystalDesign.restore(value);return;}window.COFdrawCrystalDesign?.leave();state.autoChemistry=value.chemistry_mode==="auto";
   const imported=value.recipe||value;
   for(const input of (imported.assembly?.custom_precursors||[]).slice(0,3)){
     const row=await api("assembly/precursor",{label:input.label,smiles:input.smiles});customAssemblyRows.set(row.id,row);
@@ -666,13 +699,14 @@ $("project-file").addEventListener("change",async e=>{try{const file=e.target.fi
 $("copy-identity").addEventListener("click",async()=>{
   if(!state.recipe||state.inputsDirty||state.jsonPending)return;
   const source=Boolean(state.sourceId),metadata=state.sourceMetadata||state.result?.audit?.literature_metadata||{};
-  const notation=source?(metadata.cofex_notation||metadata.cofex_string||null):state.recipe.design_cofex_notation||null;
+  const notation=source?(metadata.cofex_notation||metadata.cofex_string||null):state.recipe.design_cofex_notation||state.result?.audit?.drawing_cofex?.text||null;
   const record={cofex_id:source?(metadata.cofex_id||state.recipe.cofex_id||null):null,
     cofex_notation:source?notation:null,source_recipe_id:state.sourceId,
     design_cofex_notation:source?null:notation,design_topology:source?null:state.recipe.design_topology||null,
     linkage:state.recipe.linkage||null,selected_template:state.recipe.selected_template||null,
     catenation:notation?.match(/\sCOFex\.[^.\s]+\.(cat[^;\s]+);/)?.[1]||null,
     catenation_qualification:$("identity-cat").textContent,qualification:$("identity-note").textContent,
+    drawing_cofex:state.result?.audit?.drawing_cofex?.text||null,
     ground_truth:false,graph_scope:"finite_patch_with_continuation_ports",
     monomers:assemblyFeeds(state.recipe)||["a","b"].map(b=>({label:$(`label-${b}`).value,smiles:$(`smiles-${b}`).value}))};
   try{await navigator.clipboard.writeText(JSON.stringify(record,null,2));notice("Full structure record copied.");}
@@ -935,7 +969,6 @@ async function applyDescriptionPlan(plan){
     if(plan.source_recipe_id){
       const source=await api(`sources/${encodeURIComponent(plan.source_recipe_id)}`);
       acceptRecipe(source.recipe,plan.source_recipe_id,source.metadata);showSourceMonomers(source.recipe,source.metadata);
-      if(Array.from($('source-select').options).some(option=>option.value===plan.source_recipe_id))$('source-select').value=plan.source_recipe_id;
     }else{
       const request=clone(plan.prepare_request),prepared=await api('prepare',request);
       // A reviewed description plan contains explicit choices. Keep those
@@ -953,16 +986,34 @@ async function applyDescriptionPlan(plan){
   }finally{state.busy=false;sync();}
 }
 
+async function applyCofexAssembly(request){
+  if(!state.online||state.busy)throw new Error('Wait for the current drawing to finish.');
+  clearTimeout(liveDrawingTimer);
+  const revision=++selectionRevision;
+  state.busy=true;sync();
+  try{
+    const prepared=await api('prepare/assembly',request);
+    const rows=await Promise.all((request.custom_precursors||[]).map(item=>api('assembly/precursor',item)));
+    if(revision!==selectionRevision)throw new Error('The selected precursors changed during import.');
+    for(const row of rows)customAssemblyRows.set(row.id,row);
+    window.COFdrawCrystalDesign?.leave();
+    $('cof-preset').value='custom';
+    acceptRecipe(prepared.recipe,null,null,true);
+    state.busy=false;sync();
+    if(!await render())throw new Error($('notice').textContent||'The assembly could not be drawn.');
+  }finally{state.busy=false;sync();}
+}
+
 async function initialize(){
   try{
     const library=await api("library");state.library=library;state.online=true;$("engine-dot").classList.add("live");$("engine-status").textContent="Local chemistry engine · ready";$("catalog-version").textContent=library.catalog_version||"Built-in drawing library";
     const presets=library.cof_presets?.length?library.cof_presets:fallbackPresets;library.cof_presets=presets;combinations=L.startingCombinations(library);populateLinkages("imine");refreshChemistry();
-    $("source-select").replaceChildren();for(const source of library.source_recipes||[]){const o=document.createElement("option");o.value=source.recipe_id;o.textContent=source.label;$("source-select").append(o);}if(!library.source_recipes?.length){const o=document.createElement("option");o.value="";o.textContent="No registered source recipes";$("source-select").append(o);}$("source-count").textContent=library.source_recipes?.length||0;
     drawStyles();drawStyleControls();
     if(library.source_registry_errors?.length)notice("Some source recipes failed integrity checks and are omitted from the library.",true);
     setCombination(presets[0]);state.inputsDirty=false;setStyleDescription();window.dispatchEvent(new CustomEvent('cofdraw:library',{detail:library}));
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
-window.COFdrawStudio={state,showExports,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
+window.COFdrawStudio={state,loadSource,precursorSVG:async smiles=>(await libraryPreviews.request(smiles)).result.svg,showExports,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
+window.COFdrawStudio.applyCofexAssembly=applyCofexAssembly;
 initialize();

@@ -17,6 +17,7 @@ from cof_vision.cofdraw_chemistry import (
     refresh_design_identity,
 )
 from cof_vision.framework_drawing import VERSION, TP, build_patch, linkage_fragment
+from cof_vision.cofdraw_repeat import repeat_options
 
 
 # Catalog v3 source occurrences (provisional agent reviews, not human gold):
@@ -210,6 +211,12 @@ def test_template_counts_and_ports_are_design_intent_not_source_identity(
     assert audit["topology"] is None
     assert audit["whole_cof_smiles"] is None
     _assert_internal_bonds_retained(recipe, mol, audit)
+    if template == "hxl_6_2":
+        # The nonplanar triptycene in this projection cannot tile a flat
+        # triangular net while preserving its attachment directions.
+        choices = repeat_options(dict(recipe,design_template_signature=design_signature(recipe)))
+        assert not choices['available'] and len(choices['extents']) == 1
+        assert 'align' in choices['reason']
     if template == "chain_2_2":
         assert recipe["layout_kind"] == "open_chain"
         endpoints = Counter(p["instance"] for p in audit["continuation_ports"])

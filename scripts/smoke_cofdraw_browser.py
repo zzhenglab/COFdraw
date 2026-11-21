@@ -77,7 +77,7 @@ def main():
         checks.append("Composition map allows page scrolling and linkage Back restores gallery focus")
         page.locator('#mode-manual').click()
         page.locator('#appearance-options').evaluate('e=>e.open=true')
-        assert page.locator('.identity-summary').is_visible()
+        assert page.locator('.canvas-panel .identity-summary').is_visible()
         library=page.request.get(f"{base_url}/api/drawing/library").json()
         page.wait_for_function("!document.getElementById('build').disabled")
         page.locator('#tool-jump').select_option('balance')
@@ -393,9 +393,8 @@ def main():
               page.locator("#framework-image").evaluate("i=>i.decode()")
               page.screenshot(path=str(out/f"cofdraw-{category}.png"),full_page=True)
               checks.append(f"Actual {category} presentation rendered with explicit scope notice")
-        page.locator(".source-library").evaluate("e=>e.open=true")
-        page.locator("#source-select").select_option("tfb-tab-pore-v1")
-        with page.expect_response("**/api/drawing/render") as source:page.locator("#load-source").click()
+        with page.expect_response("**/api/drawing/render") as source:
+            page.select_option("#cof-preset","source:tfb-tab-pore-v1")
         assert source.value.status==200,source.value.text();assert source.value.json()["audit"]["cofex_string"]
         if not page.locator('.identity-more').evaluate('element=>element.open'):
           page.locator('.identity-more > summary').click()

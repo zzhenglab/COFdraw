@@ -10,9 +10,10 @@ def _circuit_svg(mol, coordinates, elements, ports):
     """Project the traced circuit using depth for crossing order and explicit labels."""
     xy=coordinates[:,:2]
     low,high=xy.min(0),xy.max(0)
-    scale=min(740/max(high[0]-low[0],1),530/max(high[1]-low[1],1))
-    points=(xy-(low+high)/2)*[scale,-scale]+[400,295]
-    root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox="0 0 800 590",width="800",height="590")
+    scale=15.
+    w,h=np.maximum((high-low)*scale,1)+32
+    points=(xy-(low+high)/2)*[scale,-scale]+[w/2,h/2]
+    root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox=f"0 0 {w:.2f} {h:.2f}",width=f"{w:.2f}",height=f"{h:.2f}")
     ink={"N":"#185a9b","O":"#b8313f","F":"#267d64","S":"#8b6522","B":"#9a6144"}
     groups=[]
     for bond in mol.GetBonds():
@@ -26,17 +27,20 @@ def _circuit_svg(mol, coordinates, elements, ports):
             vector=q-p
             side=np.array([-vector[1],vector[0]])/max(np.linalg.norm(vector),.1)*2.1
             stroke(p+.15*vector+side,q-.15*vector+side,{"stroke-dasharray":"2 2"} if bond.GetIsAromatic() else {})
+            if bond.GetBondTypeAsDouble()==3:stroke(p+.15*vector-side,q-.15*vector-side)
         groups.append(((coordinates[a,2]+coordinates[b,2])/2,bond_group))
     for _,g in sorted(groups,key=lambda item:item[0]):
         root.append(g)
     for i,(x,y) in enumerate(points):
         el=elements[i] if i<ports else "∗"
-        if el=="C":
+        atom=mol.GetAtomWithIdx(i)
+        if el=="C" and not atom.GetIsotope():
             continue
         label=ET.SubElement(root,"text",x=f"{x:.2f}",y=f"{y+3:.2f}",fill=ink.get(el,"#37454a"),
             stroke="white",attrib={"paint-order":"stroke","stroke-width":"2.4","font-size":"9",
             "font-family":"Arial, sans-serif","text-anchor":"middle"})
-        label.text=el
+        hydrogens=atom.GetNumExplicitHs()
+        label.text=(str(atom.GetIsotope()) if atom.GetIsotope() else "")+el+("H"+(str(hydrogens) if hydrogens>1 else "") if hydrogens else "")
     return ET.tostring(root,encoding="unicode")
 
 
@@ -97,6 +101,8 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
         i = site[0]
         atom = Chem.Atom(elements[i])
         atom.SetNoImplicit(True)
+        if atoms[i].get("isotope"):
+            atom.SetIsotope(int(atoms[i]["isotope"]))
         if elements[i] != "C":
             atom.SetNumExplicitHs(sum(elements[j] == "H" for j, _ in graph[i]))
         ids[site] = rw.AddAtom(atom)
@@ -173,7 +179,12 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
             return ids[site[0],tuple(site[1:])]
         backbone=[index(site) for site in circuit["backbone"]]
         segments=[[index(site) for site in group] for group in circuit["linkers"]]
-        return draw_scheme(mol,backbone,segments)
+        # Retain real crystal depths even when rigid linker fragments are laid
+        # out with conventional bond angles in the plane of the drawing.
+        normal=np.asarray(circuit["direction"])
+        depths=[((np.asarray(atoms[i]["fractional"])+image)@structure["cell"])@normal for i,image in positions]
+        blocks=[atoms[i].get("component","") for i,_ in positions]
+        return draw_scheme(mol,backbone,segments,depths,blocks)
     if circuit:
         # Preserve the source circuit geometry. A generic 2D macrocycle layout
         # can fold the pore shut and enumerate an enormous set of ring layouts.
@@ -237,6 +248,31 @@ def readable_direction(model, face=None):
         perpendicular = (local*local).sum(axis=1)[:,None]-(local @ directions.T)**2
         scores -= 12*(perpendicular < .7**2).mean(axis=0)
     model["direction"] = directions[np.argmax(scores)].tolist()
+
+
+def adjacent_circuits(ring, cell):
+    """Three translates of a traced ring sharing real periodic junction edges."""
+    loop=[tuple(site) for site in ring["backbone"]]
+    edges={tuple(sorted((a,b))) for a,b in zip(loop,loop[1:]+loop[:1])}
+    def translate(site,shift):
+        return (site[0],*(a+b for a,b in zip(site[1:],shift)))
+    candidates={}
+    for a in loop:
+        for b in loop:
+            if a==b or a[0]!=b[0]:continue
+            shift=tuple(x-y for x,y in zip(a[1:],b[1:]))
+            moved={tuple(sorted((translate(u,shift),translate(v,shift)))) for u,v in edges}
+            if len(moved&edges)==1:candidates[shift]=moved
+    if len(candidates)<2:return None
+    # Prefer a compact group whose outer circuits also share an edge.
+    # Equivalent choices are broken by distance in the actual lattice metric.
+    pairs=[(p,q) for p in sorted(candidates) for q in sorted(candidates) if p<q]
+    p,q=min(pairs,key=lambda pair:(-len(candidates[pair[0]]&candidates[pair[1]]),
+                                    np.linalg.norm(np.subtract(*pair)@cell),pair))
+    sites={(i,*shift) for i,shift in ring["site_images"]}
+    union=sites|{translate(s,d) for s in sites for d in (p,q)}
+    return {"site_images":[[site[0],list(site[1:])] for site in sorted(union)],
+            "direction":ring["direction"],"circuits":3}
 
 
 def precursor_scenes(structure, edges):
@@ -337,6 +373,17 @@ def precursor_scenes(structure, edges):
     if links:
         details["blocknet"]=patched(groups,sorted(links),True)
         details["block_overlay"]=patched(groups,sorted(links))
+        # Keep fractional offsets so both skewed cells and supercell displays
+        # can reconstruct the whole net without guessing across face boundaries.
+        positions=[c-np.floor(c) for c in centers]
+        spans=[]
+        for i,neighbors in enumerate(connections):
+            for j,x,y,z in sorted(neighbors):
+                if (i,0,0,0)>=(j,x,y,z):continue
+                shift=(np.floor(centers[j])-np.floor(centers[i])+[x,y,z]).astype(int)
+                spans.append([i,j,*shift.tolist()])
+        details["periodic_topology"]={"points":[p.tolist() for p in positions],"edges":spans,
+                                     "kind":"Reacted building-block centers"}
     return details
 
 
@@ -408,6 +455,17 @@ def crystal_details(structure, edges):
     adjacent = arms(root)
     if not adjacent or any(not arms(junction) for junction in adjacent):
         return details
+    site_ids=sorted(centers)
+    site_index={site:i for i,site in enumerate(site_ids)}
+    spans=[]
+    for i in site_ids:
+        site=(i,0,0,0)
+        ends=arms(site)
+        if not ends:break
+        spans.extend([site_index[i],site_index[j],x,y,z] for j,x,y,z in sorted(ends) if site<(j,x,y,z))
+    else:
+        details["periodic_topology"]={"points":[sites[i]["fractional"] for i in site_ids],
+                                     "site_ids":site_ids,"edges":spans,"kind":"Traced junction-to-junction paths"}
     bonds = {tuple(sorted((a,b))) for a in [root,*adjacent] for b in arms(a)}
     details["net"] = model({site for edge in bonds for site in edge}, bonds)
     shell = {root,*adjacent}
@@ -445,7 +503,7 @@ def crystal_details(structure, edges):
             points = np.array([(np.asarray(sites[i]["fractional"]) + [x,y,z]) @ cell for i,x,y,z in path+[root]])
             _, _, vectors = np.linalg.svd(points-points.mean(axis=0), full_matrices=False)
             readable_direction(details["ring"],vectors[-1])
-            details["cage_overlay"]["direction"]=details["ring"].get("direction",vectors[-1].tolist())
+            details["cage_overlay"]["direction"]=details["ring"].setdefault("direction",vectors[-1].tolist())
             break
         if len(path) < 8:
             for end in sorted(arms(path[-1])):

@@ -50,7 +50,7 @@ def test_linker_derivative_keeps_periodic_graph_and_has_distinct_identity():
 def test_generated_circuit_preserves_linker_substitution_and_block_views():
     from xml.etree import ElementTree as ET
     from cof_vision.cofdraw_dia import build_dia
-    from cof_vision.cofdraw_crystal_figures import chemical_drawing
+    from cof_vision.cofdraw_crystal_figures import adjacent_circuits, chemical_drawing
     tetraamine="Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
     model,audit=build_dia(tetraamine,"O=Cc1cc(F)c(C=O)cc1")
     edges=audit["periodic_bonds"]
@@ -65,3 +65,14 @@ def test_generated_circuit_preserves_linker_substitution_and_block_views():
     assert all(a["component"]=="A" for a in details["blockA"]["atoms"])
     assert any(a["element"]=="F" for a in details["blockB"]["atoms"])
     assert len(details["blocknet"]["bonds"])==len(details["block_overlay"]["spatial_guides"])>4
+    topology=details["periodic_topology"]
+    assert set(topology["site_ids"])==set(audit["junction_sites"])
+    assert len(topology["edges"])==2*len(topology["site_ids"])
+    assert any(any(edge[2:]) for edge in topology["edges"])
+    joined=adjacent_circuits(ring,model["cell"])
+    site_images={(i,tuple(image)) for i,image in joined["site_images"]}
+    assert len(joined["site_images"])==len(site_images)
+    assert {(i,tuple(image)) for i,image in ring["site_images"]}<site_images
+    assert len(site_images)<3*len(ring["site_images"])
+    depths=[float(el.attrib["data-depth"]) for el in svg.iter() if "data-depth" in el.attrib]
+    assert min(depths)<.1 and max(depths)>.9

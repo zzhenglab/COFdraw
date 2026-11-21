@@ -44,6 +44,11 @@ def main():
             wait("""n=>COFdrawExtent.value===n&&!document.querySelector('#extent-bar').hasAttribute('aria-busy')
               && document.querySelector('#framework-image').complete && document.querySelector('#framework-image').naturalWidth>0""", arg=value)
 
+        def three_pores():
+            extent("three-pores")
+            wait("""() => COFdrawExtent.visible?.summary?.pore_count===3 &&
+                document.querySelector('#framework-image').getAttribute('src')==='.'+COFdrawExtent.visible.downloads.svg""")
+
         def save(ext, path):
             with page.expect_download() as event:
                 page.locator("#exports").get_by_role("button", name=ext, exact=True).click()
@@ -57,6 +62,7 @@ def main():
         page.select_option("#self-face", "triangle")
         ready("bfbaeb-cof", face="triangle")
         assert page.locator("#descriptor-block option").count() == 1
+        three_pores()
         extent(2)
         page.screenshot(path=args.output / "self-kagome.png")
         save("SVG", "self-kagome.svg")
@@ -64,6 +70,7 @@ def main():
         page.select_option("#assembly-example", "aba-chain")
         ready("aba-chain")
         assert page.locator("#measure-pore").is_disabled()
+        assert not page.locator('#extent-options button[value="three-pores"]').count()
         assert "segment" in page.locator("#extent-options").inner_text().lower()
         page.select_option("#assembly-count", "3")
         ready("sioc-cof-1", seq="BCBCBC")
@@ -89,16 +96,18 @@ def main():
         assert page.locator('#pore-type-legend i').count()==0
         page.locator("#color-pore-types").check()
         wait("document.querySelectorAll('#pore-type-legend i').length===3")
+        three_pores()
+        assert page.locator('#pore-type-legend i').count()==3
         with page.expect_download() as event:
             page.locator("#save-project").click()
         project = args.output / "sioc-project.json"
         event.value.save_as(project)
-        assert json.loads(project.read_bytes())["drawing_extent"] == 2
+        assert json.loads(project.read_bytes())["drawing_extent"] == "three-pores"
         page.select_option("#assembly-example", "mixed-tapb")
         ready("mixed-tapb")
         page.locator('#project-file').set_input_files(project)
         ready("sioc-cof-1", seq="BCBCBC")
-        wait("COFdrawExtent.value===2 && !document.querySelector('#extent-bar').hasAttribute('aria-busy')")
+        wait("COFdrawExtent.value==='three-pores' && COFdrawExtent.visible?.summary?.pore_count===3")
         extent(1)
         page.get_by_role("button", name="Edit precursor C").click()
         page.fill("#sketch-smiles", "O=Cc1ccc(-c2ccc(C=O)c(F)c2)cc1")
@@ -108,9 +117,26 @@ def main():
         assert page.locator("#assembly-example").input_value() == ""
         extent(2)
         save("SVG", "edited-linker-neighborhood.svg")
+        page.select_option("#assembly-count","2")
+        page.locator("#cof-preset").select_option("tfb-tab-pore-v1")
+        wait("""() => document.querySelector('#cof-preset').value==='tfb-tab-pore-v1' && !COFdrawStudio.state.busy &&
+            !COFdrawStudio.state.inputsDirty && !COFdrawStudio.state.recipe?.assembly && !!COFdrawExtent.visible""")
+        three_pores()
+        save("PNG","three-connected-hexagons.png")
+        save("SVG","three-connected-hexagons.svg")
+        save("MOL","three-connected-hexagons.mol")
+        page.select_option("#cof-preset","source:pyurea-source-layout-v1")
+        wait("""() => COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && COFdrawExtent.value===1 &&
+            !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
+        assert not page.locator('#extent-options button[value="three-pores"]').count()
+        page.select_option("#cof-preset","source:wiley-r198-tppa-so3h-pore-0002")
+        wait("""() => COFdrawStudio.state.sourceId==='wiley-r198-tppa-so3h-pore-0002' &&
+            !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
+        three_pores()
         assert not errors, errors
         print(json.dumps({"self_examples":self_examples,"mixed_examples":mixed_examples,"script_errors":errors,
-                          "passed":["self faces","chain","three mixed faces","neighboring pores","visible exports","restore","custom linker"]}))
+                          "passed":["self faces","chain","three mixed faces","neighboring pores","visible exports","restore","custom linker",
+                                    "three connected hexagons","source switching"]}))
         browser.close()
 
 

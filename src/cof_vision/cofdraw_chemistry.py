@@ -51,7 +51,7 @@ def inspect_monomer(smiles):
             if count:
                 roles.append({"linkage":linkage,"role":role,"reactive_sites":count,"compatible":True,
                               "reason":"Recognized functional group; crystallization and reaction conditions are not predicted."})
-    tetra=mol.HasSubstructMatch(Chem.MolFromSmarts("[CX4](-[c])(-[c])(-[c])-[c]"))
+    tetra=mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4](-[c])(-[c])(-[c])-[c]"))
     return {"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,
             "geometry_hint":"tetrahedral" if tetra else "unspecified",
             "geometry_note":"Tetrahedral tetraaryl-carbon node: a planar template does not establish a 3D net." if tetra else None}

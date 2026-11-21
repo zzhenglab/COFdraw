@@ -9,7 +9,7 @@
   };
   const custom='custom-dia';
   let id=null, edit=null, revision=0, referenceRevision=0, report=null, svgText='', svgDownload='', views=[], timer, failure='';
-  let preparedCells=null;
+  let preparedCells=null, preferredView='Framework drawing';
   let restoredReference=false, comparing=false;
   function blob(text){
     const url=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));previews.push(url);return url;
@@ -20,11 +20,11 @@
     picture.hidden=true;picture.removeAttribute('src');
     $('save-crystal-drawing').disabled=true;$('rotate-crystal-design').disabled=true;
     $('crystal-drawing-caption').textContent='';
+    window.dispatchEvent(new Event('cofdraw:crystalviewclear'));
   }
   function leave(){
     if(!id)return;
     clearTimeout(timer);revision++;id=null;edit=null;failure='';clearPicture();main.classList.remove('crystal-design-active');
-    $('construction-target').value='patch';
     $('crystal-design-controls').hidden=true;$('crystal-drawing-panel').hidden=true;
     if($('cof-preset').value.startsWith('crystal:'))$('cof-preset').value='custom';
     $('crystal-template').querySelector('option[value="custom-dia"]')?.remove();
@@ -74,6 +74,26 @@
     if(!view)return;
     svgText=view.text||'';svgDownload=view.download||'';
     picture.src=view.url;picture.hidden=false;$('crystal-drawing-caption').textContent=view.caption;
+    preferredView=view.label;
+    window.dispatchEvent(new CustomEvent('cofdraw:crystalviewready',{detail:{...view}}));
+  }
+  function fadedCircuit(text,colored){
+    const svg=new DOMParser().parseFromString(text,'image/svg+xml').documentElement;
+    if(!svg.querySelector('[data-depth]'))return null;
+    const fills={A:'#99afd6',B:'#f4c77e'}, inks={A:'#2768b0',B:'#bb6c18'};
+    svg.querySelector('[data-ring-washes]')?.removeAttribute('display');
+    for(const mark of svg.querySelectorAll('[data-depth]')){
+      const depth=Number(mark.dataset.depth), block=mark.dataset.block;
+      const visible=.14+.86*depth**.85;
+      if(mark.localName==='polygon'){
+        mark.setAttribute('fill',colored?(fills[block]||'#b9c7df'):'#b5c3dc');
+        mark.setAttribute('opacity',(.47*visible).toFixed(3));
+      }else{
+        mark.setAttribute('opacity',visible.toFixed(3));
+        if(mark.localName==='g'&&colored&&inks[block])mark.setAttribute('stroke',inks[block]);
+      }
+    }
+    return new XMLSerializer().serializeToString(svg);
   }
   function enterDrawing(){
     if(!$('science-dialog').hidden)$('close-science').click();
@@ -81,7 +101,6 @@
     if(!$('science-dialog').hidden||main.hidden)$('close-science').click();
     $('mode-manual').click();
     main.classList.add('crystal-design-active');$('crystal-design-controls').hidden=false;$('crystal-drawing-panel').hidden=false;
-    $('construction-target').value='dia';
   }
   function startCustom(){
     id=custom;edit=null;failure='';restoredReference=false;clearTimeout(timer);revision++;clearPicture();
@@ -162,27 +181,29 @@
         if(token!==revision)return;
       }
       if(result.chemical_framework_svg)choices.push({label:'Framework drawing',text:result.chemical_framework_svg,url:blob(result.chemical_framework_svg),caption:'Bond-line scheme of a closed 3D framework circuit. Ring geometry is drawn in the plane.'});
+      if(result.chemical_framework_svg){
+        for(const [label,colored] of [['Depth fade · ink and ring wash',false],['Depth fade · two building blocks',true]]){
+          if(colored&&!result.chemical_framework_svg.includes('data-block="A"'))continue;
+          const text=fadedCircuit(result.chemical_framework_svg,colored);
+          if(text)choices.push({label,text,url:blob(text),caption:'Rear bonds fade with their depth in the crystal. '+(colored?'Blue and amber identify the two reacted precursors.':'Shaded rings retain the bond-line geometry.')});
+        }
+      }
       if(cells&&result.chemical_framework_svg){
         const text=window.COFdrawChemicalNetworkFigure(result,cells);
         if(text)choices.push({label:'Chemical drawing + periodic network',text,url:blob(text),caption:'Bond-line scheme and oblique projection of the same model. Faint bonds lie at the back.'});
       }
       for(const [key,label,caption] of [
         ['chemical_circuit_svg','Projected circuit','Cartesian projection of a closed covalent circuit and its junction branches.'],
+        ['chemical_three_circuits_svg','Three connected circuits','Three circuits share bonded edges of the same periodic network. Common atoms are drawn once.'],
         ['chemical_drawing_svg','Linker detail','Local linker connectivity.']
       ]){
         const text=result[key];
         if(text)choices.push({text,label,url:blob(text),caption:caption+' Stars mark continuation. '+(restoredReference?'Bond markings are inferred from the CIF.':'Bond orders follow the reacted precursor graph.')});
       }
       const generatedChoices=choices.length;
-      if(row?.source_recipe_id&&!edit){
-        try{
-          const rendered=await studio.api('render',{source_recipe_id:row.source_recipe_id,style_id:'standard',size:1000});
-          if(token!==revision)return;
-          choices.push({label:'Literature drawing (comparison)',download:rendered.downloads.svg,url:rendered.downloads.svg,caption:'Source-annotated drawing for comparison · '+row.model_name});
-        }catch(error){if(token!==revision)return;studio.notice('Source annotation unavailable. '+error.message,true);}
-      }
       report=result;preparedCells=cells;views=choices;studio.sync();
       for(const choice of choices)$('crystal-drawing-view').add(new Option(choice.label));
+      if(choices.some(v=>v.label===preferredView))$('crystal-drawing-view').value=preferredView;
       if(!generatedChoices)$('crystal-drawing-view').selectedIndex=-1;
       drawView();$('crystal-drawing-progress').textContent=cells?.warning||(generatedChoices?'':'Periodic cell ready. A chemical projection could not be resolved.');
       $('save-crystal-drawing').disabled=!generatedChoices;$('rotate-crystal-design').disabled=false;
@@ -196,11 +217,17 @@
   $('rotate-crystal-design').addEventListener('click',()=>$('open-science').click());
   function returnToPatch(){leave();studio.queueDrawing();}
   $('leave-crystal-design').addEventListener('click',returnToPatch);
-  $('construction-target').onchange=()=>{if($('construction-target').value==='dia')select(custom);else returnToPatch();};
+  $('build-periodic-from-pair').onclick=()=>{
+    const button=$('build-periodic-from-pair');
+    if(button.hidden||!button.dataset.linkage)return;
+    $('dia-linkage').value=button.dataset.linkage;
+    $('reticular-net').value='dia';$('dia-net-count').value='1';
+    select(custom);
+  };
   $('dia-linkage').onchange=()=>{inputsChanged();studio.refreshChemistry();};
   $('dia-net-count').onchange=inputsChanged;
   $('reticular-net').onchange=()=>{inputsChanged();studio.refreshChemistry();};
-  for(const element of ['mode-describe','load-source','new-project'])$(element)?.addEventListener('click',leave,true);
+  for(const element of ['mode-describe','new-project'])$(element)?.addEventListener('click',leave,true);
   $('save-crystal-drawing').addEventListener('click',()=>{
     const name=$('crystal-drawing-title').textContent;
     (svgDownload?studio.saveExport(svgDownload,'svg'):studio.saveText(name+'.svg',svgText,'image/svg+xml')).catch(e=>studio.notice(e.message,true));
@@ -224,7 +251,7 @@
     }
   }
   function save(){
-    if(report)studio.saveText('COFdraw-crystal-project.json',JSON.stringify({format:'cofdraw-crystal-project',
+    if(report)studio.saveText('COFdraw-crystal-project.json',JSON.stringify({format:'cofdraw-crystal-project',reaction_scheme:window.COFdrawScheme?.snapshot(),
       version:2,template_id:id,linker_edit:edit,reference_only:restoredReference,...(id===custom?{monomers:['a','b'].map(precursor),linkage:$('dia-linkage').value,network_count:+$('dia-net-count').value,topology:$('reticular-net').value}:{}),view:$('crystal-drawing-view').value},null,2)).catch(e=>studio.notice(e.message,true));
   }
   async function selectInViewer(key,modification=null){

@@ -34,7 +34,18 @@ def test_binary_shared_faces_keep_isotopes_and_stereochemistry():
     assert sum(a.GetChiralTag()!=Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms())==19
     assert sum(b.GetStereo() in (Chem.BondStereo.STEREOE,Chem.BondStereo.STEREOTRANS)
                for b in mol.GetBonds())==19
-    assert repeat_options(recipe)['extents'][1]['atoms']==mol.GetNumAtoms()
+    extents={o['value']:o for o in repeat_options(recipe)['extents']}
+    assert extents[2]['atoms']==mol.GetNumAtoms()
+    tri,origins,ports,summary,_=repeat_patch(recipe,3,extent_mode='triad')
+    faces=[set(face) for face in summary['pore_faces']]
+    # Three hexagons meet at a single junction. Every pair shares one
+    # linker and the two adjacent junctions, each present once in the MOL.
+    assert len(faces)==3 and len(set.intersection(*faces))==1
+    assert all(len(faces[i]&faces[i-1])==3 for i in range(3))
+    assert summary['component_counts']=={'A':13,'B':15}
+    assert summary['interblock_bonds']==30 and len(ports)==9
+    assert tri.GetNumAtoms()==extents['three-pores']['atoms']
+    assert len({(o['instance'],o['fragment_atom_index']) for o in origins})==tri.GetNumAtoms()
 
 
 def test_actual_kagome_pore_tints_and_v3000_exports(api):
@@ -43,7 +54,7 @@ def test_actual_kagome_pore_tints_and_v3000_exports(api):
     assert prepared.status_code==200,prepared.text
     body={'recipe':prepared.json()['recipe'],'style_id':'standard','size':500}
     options=api.post('/api/drawing/repeat-options',json=body).json()
-    assert [o['label'] for o in options['extents'][1:]]==['7 pores','20 pores']
+    assert [o['label'] for o in options['extents'][1:]]==['3 pores','7 pores','20 pores']
     result=api.post('/api/drawing/repeat',json={**body,'repeats':3,'color_pores':True})
     assert result.status_code==200,result.text
     report=result.json()
@@ -77,3 +88,31 @@ def test_expansion_uses_only_reviewed_source_boundaries(api):
     options=api.post('/api/drawing/repeat-options',json=other).json()
     assert options['extents']==[{'value':1,'label':'Source drawing'}] and not options['available']
     assert api.post('/api/drawing/repeat',json={**other,'repeats':2}).status_code==422
+    triad=api.post('/api/drawing/repeat',json={**selected,'repeats':3,'extent_mode':'triad'}).json()
+    assert triad['summary']['pore_count']==3
+    assert triad['summary']['source_drawing_basis']['recipe_sha256']==checked['source_sha256']
+
+
+@pytest.mark.parametrize(('inputs','expected'),[
+    ({'monomer_ids':['bdba']},{'hexagon':3}),
+    ({'monomer_ids':['bfbaeb'],'pore_view':'triangle'},{'triangle':2,'hexagon':1}),
+    ({'monomer_ids':['tape','ta','bpda_cho'],'linker_sequence':'CCC','pore_layout':'kgm'},
+     {'BBB':1,'CCC':1,'BCBCBC':1}),
+    ({'monomer_ids':['tapp','ta','bpda_cho'],'linker_sequence':'BCBC'},{'BCBC':3}),
+])
+def test_three_pore_choice_returns_the_visible_molecule(api,inputs,expected):
+    recipe=api.post('/api/drawing/prepare/assembly',json=inputs).json()['recipe']
+    body={'recipe':recipe,'size':500}
+    option=next(o for o in api.post('/api/drawing/repeat-options',json=body).json()['extents']
+                if o['value']=='three-pores')
+    response=api.post('/api/drawing/repeat',json={**body,'repeats':option['repeats'],
+                      'extent_mode':option['extent_mode'],'color_pores':True})
+    assert response.status_code==200,response.text
+    result=response.json();summary=result['summary'];urls=result['downloads']
+    assert summary.get('pore_counts',summary.get('pore_sequences'))==expected
+    assert summary['pore_count']==summary['interblock_bonds']-summary['blocks']+1==3
+    assert summary['atoms']==option['atoms']
+    svg=ElementTree.fromstring(api.get(urls['svg']).content)
+    assert sum(p.get('data-pore-fill') is not None for p in svg.iter())==3
+    mol=Chem.MolFromMolBlock(api.get(urls['mol']).text,sanitize=False,removeHs=False)
+    assert len(Chem.GetMolFrags(mol))==1 and mol.GetNumAtoms()==summary['atoms']

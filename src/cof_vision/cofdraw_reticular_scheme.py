@@ -79,7 +79,7 @@ def segment_vertices(lengths):
     return polygon
 
 
-def draw_scheme(mol, backbone, segments):
+def draw_scheme(mol, backbone, segments, depths=None, blocks=None):
     mol=Chem.Mol(mol)
     n=len(backbone)
     layouts=[]
@@ -157,10 +157,10 @@ def draw_scheme(mol, backbone, segments):
             other=[positions[a.GetIdx()]-positions[anchor] for a in mol.GetAtomWithIdx(anchor).GetNeighbors() if a.GetIdx() in positions]
             direction=-np.sum(other,axis=0) if other else np.array([0.,1.])
             positions[i]=positions[anchor]+1.45*direction/max(np.linalg.norm(direction),1e-6)
-    return vector_art(mol,positions)
+    return vector_art(mol,positions,depths,blocks)
 
 
-def vector_art(mol,positions):
+def vector_art(mol,positions,depths=None,blocks=None):
     pts=np.array([positions[i] for i in range(mol.GetNumAtoms())])
     # Use a fixed bond scale so exports retain consistent strokes and labels.
     pts=(pts-np.min(pts,axis=0))*[16,-16]
@@ -169,17 +169,36 @@ def vector_art(mol,positions):
     root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox=f"0 0 {w:.2f} {h:.2f}",
                     width="840",height="660",role="img")
     ET.SubElement(root,"title").text="Framework circuit with outward continuation bonds"
-    bonds=ET.SubElement(root,"g",fill="none",stroke="#262a30",attrib={"stroke-linecap":"round","stroke-linejoin":"round","stroke-width":"1.65"})
+    if depths is None:
+        depths=np.ones(len(pts))
+    else:
+        low,high=np.percentile(depths,[5,95])
+        depths=np.clip((np.asarray(depths)-low)/(high-low),0,1) if high-low>.001 else np.ones(len(pts))
+    blocks=blocks or [""]*len(pts)
+    def attributes(indices):
+        block=blocks[indices[0]]
+        return {"data-depth":f"{np.mean(depths[list(indices)]):.3f}",
+                "data-block":block if block and all(blocks[i]==block for i in indices) else ""}
     def point(p):
         return f"{p[0]:.2f},{p[1]:.2f}"
+    shades=ET.SubElement(root,"g",attrib={"data-ring-washes":"", "display":"none"})
+    ring_seen=set()
+    for bond in mol.GetBonds():
+        if not bond.HasProp("drawingRing"):continue
+        ring=tuple(int(k) for k in bond.GetProp("drawingRing").split(","))
+        if frozenset(ring) in ring_seen:continue
+        ring_seen.add(frozenset(ring))
+        ET.SubElement(shades,"polygon",points=" ".join(point(pts[k]) for k in ring),attrib=attributes(ring))
+    bonds=ET.SubElement(root,"g",fill="none",stroke="#262a30",attrib={"stroke-linecap":"round","stroke-linejoin":"round","stroke-width":"1.65"})
     def line(a,b,**attrs):
-        ET.SubElement(bonds,"path",d="M"+point(a)+" L"+point(b),attrib=attrs)
+        ET.SubElement(group,"path",d="M"+point(a)+" L"+point(b),attrib=attrs)
     for b in mol.GetBonds():
         i,j=b.GetBeginAtomIdx(),b.GetEndAtomIdx()
         p,q=pts[i],pts[j]
         d=q-p
         size=np.linalg.norm(d)
         if size<.01:continue
+        group=ET.SubElement(bonds,"g",attrib=attributes([i,j]))
         normal=np.array([-d[1],d[0]])/size
         if not mol.GetAtomWithIdx(i).GetAtomicNum() or not mol.GetAtomWithIdx(j).GetAtomicNum():
             end,start=(q,p) if mol.GetAtomWithIdx(i).GetAtomicNum() else (p,q)
@@ -187,7 +206,7 @@ def vector_art(mol,positions):
             line(start,stem)
             axis=(end-start)/size
             wave=[stem+normal*t+axis*1.35*math.sin(t*1.5) for t in np.linspace(-4,4,25)]
-            ET.SubElement(bonds,"polyline",points=" ".join(point(x) for x in wave))
+            ET.SubElement(group,"polyline",points=" ".join(point(x) for x in wave))
         else:
             line(p,q)
             order=b.GetDoubleProp("drawingOrder") if b.HasProp("drawingOrder") else b.GetBondTypeAsDouble()
@@ -201,14 +220,14 @@ def vector_art(mol,positions):
     labels=ET.SubElement(root,"g",attrib={"text-anchor":"middle","font-family":"Arial, sans-serif","font-size":"14"})
     for atom in mol.GetAtoms():
         symbol=atom.GetSymbol()
-        if symbol in ("C","*"):continue
+        if symbol=="*" or symbol=="C" and not atom.GetIsotope():continue
         i=atom.GetIdx()
         h=atom.GetNumExplicitHs()
-        label=symbol+("H"+(str(h) if h>1 else "") if h else "")
+        label=(str(atom.GetIsotope()) if atom.GetIsotope() else "")+symbol+("H"+(str(h) if h>1 else "") if h else "")
         charge=atom.GetFormalCharge()
         if charge:label+=(str(abs(charge)) if abs(charge)>1 else "")+("⁺" if charge>0 else "⁻")
         x,y=pts[i]
         halfwidth=4.8*len(label)+1.2
         ET.SubElement(labels,"rect",x=f"{x-halfwidth:.2f}",y=f"{y-7.4:.2f}",width=f"{halfwidth*2:.2f}",height="14.8",fill="white")
-        ET.SubElement(labels,"text",x=f"{x:.2f}",y=f"{y+4.8:.2f}",fill={"N":"#17679b","O":"#b32e35","S":"#986619","F":"#247656"}.get(symbol,"#292a32")).text=label
+        ET.SubElement(labels,"text",x=f"{x:.2f}",y=f"{y+4.8:.2f}",fill={"N":"#17679b","O":"#b32e35","S":"#986619","F":"#247656"}.get(symbol,"#292a32"),attrib=attributes([i])).text=label
     return ET.tostring(root,encoding="unicode")

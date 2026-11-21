@@ -28,6 +28,11 @@ class PrepareDrawing(BaseModel):
     template_id: str | None = Field(default=None, max_length=80)
 
 
+class CofexInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=20000)
+
+
 class AssemblyPrecursor(BaseModel):
     model_config = ConfigDict(extra="forbid")
     smiles: str = Field(min_length=1, max_length=4000)
@@ -62,7 +67,7 @@ class RenderDrawing(BaseModel):
 
 class RepeatDrawing(RenderDrawing):
     repeats: int = Field(ge=2, le=4)
-    extent_mode: Literal['pores', 'cells'] = 'pores'
+    extent_mode: Literal['pores', 'cells', 'triad'] = 'pores'
     color_pores: bool = False
 
 
@@ -455,6 +460,52 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             raise ValueError("Catalog names/SMILES/COFex precursor sets do not agree")
         return value
 
+    @router.post("/cofex/resolve")
+    def resolve_cofex(request: CofexInput):
+        from .cofdraw_cofex import parse_record, phase_record
+        try:
+            text = request.text.strip()
+            if not text:
+                raise ValueError('Paste a COFex record first.')
+            legacy = {}
+            if text.startswith('{'):
+                legacy = json.loads(text)
+                if not isinstance(legacy,dict):
+                    raise ValueError('Paste a COFex notation or a copied COFex record.')
+                text = next((value for field in ('drawing_cofex','cofex_notation','design_cofex_notation','cofex_id')
+                             if isinstance(value:=legacy.get(field),str) and value), '')
+                if not text:
+                    raise ValueError('The copied record contains no assigned COFex notation.')
+            catalog = read_catalog(root)
+            matches = []
+            for row in source_records():
+                key = row['recipe_id']
+                meta = catalog.get('source_metadata', {}).get(key, {})
+                if text in (row.get('cofex_id'), meta.get('cofex_notation')):
+                    value, digest = source_recipe(key)
+                    meta = source_metadata(value,digest)
+                    if text in (value.get('cofex_id'),meta.get('cofex_notation')):
+                        matches.append(dict(source_recipe_id=key, label=meta.get('literature_name') or key))
+            monomers = catalog_monomers(catalog)
+            manifest = crystal_manifest()
+            for item in manifest.get('reported_models',[]) + manifest.get('curated_models',[]):
+                phase = phase_record(item,monomers)
+                if phase and text in (phase['text'], phase['text'].split(';',1)[0]):
+                    matches.append(dict(label=item['model_name']+' · published phase',crystal_project={
+                        'template_id':item['id'],'version':2,'reference_only':True}))
+            choices = matches or parse_record(text, monomers)
+            if legacy.get('design_cofex_notation') and not legacy.get('drawing_cofex'):
+                template = legacy.get('selected_template')
+                linkage = legacy.get('linkage')
+                choices = [p for p in choices if ('prepare_request' not in p or
+                    ((not linkage or p['prepare_request']['linkage']==linkage) and
+                     (not isinstance(template,dict) or p['prepare_request']['template_id']==template.get('id'))))]
+                if not choices:
+                    raise ValueError('Saved linkage and connectivity disagree with the COFex notation.')
+            return {'choices': choices}
+        except (ValueError, KeyError, RuntimeError, TypeError, RecursionError) as exc:
+            raise HTTPException(422,str(exc)) from exc
+
     @router.get("/library")
     def library():
         sources, errors = [], []
@@ -747,6 +798,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             audit.update(cofex_string=metadata.get("cofex_notation"), cofex_notation=metadata.get("cofex_notation"),
                          literature_metadata=metadata, monomers=[{"component": name, "label": c.get("label", name), "smiles": c.get("monomer_smiles")} for name, c in recipe.get("components",{}).items()],
                          chemical_export_scope="Editable finite patch with continuation atoms. SVG styles are separate presentation; no complete periodic unit cell is implied.")
+            from .cofdraw_cofex import recipe_record
+            audit['drawing_cofex'] = recipe_record(recipe, metadata, source=bool(source_hash))
             urls = {ext: f"/api/drawing/exports/{drawing_id}/{ext}" for ext in ("svg", "png", "mol", "json", *extra_formats)}
             bundle = {"recipe": recipe, "audit": audit, "downloads": urls}
             (directory / f"{drawing_id}.json").write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
@@ -883,6 +936,11 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         if 'linker_label' in item:
             structure['provenance'].update(kind='reticular_design', network_dimension=3,
                 generator=item['generator'], monomer_ids=item['monomer_ids'])
+        if item.get('cofex_phase'):
+            from .cofdraw_cofex import phase_record
+            record = phase_record(item,catalog_monomers(read_catalog(root)))
+            if record:
+                structure['provenance']['drawing_cofex'] = record
         return structure
 
     def crystal_exports(item,structure,repeats):
@@ -904,13 +962,16 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         result['color_periodic_networks'] = 3 in network['dimensions']
         if result['color_periodic_networks']:
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
-            from .cofdraw_crystal_figures import chemical_drawing, crystal_details
+            from .cofdraw_crystal_figures import adjacent_circuits, chemical_drawing, crystal_details
             result['crystal_details'] = crystal_details(structure, network['edges'])
             if item is not None or structure['provenance'].get('kind') in ('linker_design','monomer_dia_design'):
                 result['chemical_drawing_svg'] = chemical_drawing(structure, network['edges'])
                 circuit = result['crystal_details'].get('ring')
                 if circuit:
                     result['chemical_circuit_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit)
+                    joined=adjacent_circuits(circuit,structure['cell'])
+                    if joined:
+                        result['chemical_three_circuits_svg']=chemical_drawing(structure,network['edges'],circuit=joined)
                     try:
                         result['chemical_framework_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit, scheme=True)
                     except ValueError as exc:

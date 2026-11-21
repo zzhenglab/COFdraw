@@ -8,3 +8,13 @@
 @media(min-width:1250px){.identity-summary .identity-facts{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:759px){.identity-summary{padding:12px}.identity-summary .identity-facts{gap:8px 12px}.identity-summary .code-value{font-size:10px}.identity-heading-row h3{font-size:12px}}
 @media(max-width:430px){.identity-summary .identity-facts{grid-template-columns:1fr}.identity-heading-row{align-items:flex-start}}
+.cofex-footer[hidden],#cofex-choices[hidden]{display:none}
+.cofex-footer{margin:8px 0;padding:10px 12px;background:#fff;border:1px solid #dce7de;border-radius:6px;min-width:0}
+.cofex-footer .code-value{font:11px/1.55 Consolas,monospace;overflow-wrap:anywhere;background:#f5f8f5;padding:6px 8px;user-select:text}
+.cofex-footer .identity-heading-row,.identity-panel .identity-heading-row:first-child{margin:0 0 4px}
+.cofex-footer .identity-notation-label,.identity-panel .identity-notation-label{margin:0}
+#cofex-dialog{width:min(560px,94vw)}
+#cofex-dialog label{display:block;margin-bottom:6px}
+#cofex-input{width:100%;box-sizing:border-box;resize:vertical;font:12px/1.5 Consolas,monospace}
+#cofex-choices{width:100%;margin:8px 0}
+.cofex-clipboard{position:fixed;left:-10000px}

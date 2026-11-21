@@ -54,8 +54,7 @@ def main():
             page.wait_for_function("document.getElementById('linkage').value==='acylhydrazone'")
             assert page.locator('#template').input_value()=='hcb_3_2'
             checks.append('Monomer edit automatically changed linkage and connectivity')
-            page.locator('.source-library summary').click()
-            page.locator('#source-select').select_option('f-cof-1-source-v1');page.locator('#load-source').click()
+            page.select_option('#cof-preset','source:f-cof-1-source-v1')
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1' && !window.COFdrawStudio.state.busy")
             page.locator('[data-style="source"]').click();page.wait_for_function("!window.COFdrawStudio.state.busy")
             page.screenshot(path=str(output/'studio-source-halo.png'));checks.append('Recovered source alignment and halo style rendered')
@@ -78,7 +77,7 @@ def main():
             checks.append('Undo restores source identity; projected styles disable atom handles')
             page.locator('#edit-geometry').click()
             page.locator('#open-science').click();page.locator('#structure-source').select_option('periodic');page.locator('#crystal-template').select_option('dia-imine');page.locator('#build-crystal').click()
-            page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model generated')")
+            page.wait_for_function("window.COFdrawScience.structure?.atoms?.length > 0 && document.getElementById('science-status').textContent === 'Periodic model ready.'")
             page.screenshot(path=str(output/'studio-3d-dia.png'));assert page.locator('#structure-exports').inner_text().find('CIF')>=0
             checks.append('Real periodic DIA model generated and shown with CIF/XYZ/PDB exports')
             with page.expect_download() as download:
@@ -89,7 +88,7 @@ def main():
             assert page.locator('#porosity-results .metric-card').count()>=6
             page.screenshot(path=str(output/'studio-pore-analysis.png'));checks.append('Periodic geometric pore/volume/surface analysis completed')
             page.locator('[data-science-tab="model"]').click();page.locator('#crystal-template').select_option('hcb-imine-aa');page.locator('#build-crystal').click()
-            page.wait_for_function("document.getElementById('science-status').textContent.startsWith('Periodic model generated')")
+            page.wait_for_function("window.COFdrawScience.structure?.atoms?.length > 0 && document.getElementById('science-status').textContent === 'Periodic model ready.'")
             assert page.locator('#porosity-results .metric-card').count()==0
             checks.append('Changing a periodic model clears previous pore results')
             page.locator('[data-science-tab="bet"]').click()

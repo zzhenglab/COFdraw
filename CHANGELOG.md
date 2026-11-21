@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.8
+
+- Add the selected precursors and a horizontal or vertical reaction arrow to the current drawing. SVG and PNG exports include the scheme.
+- Choose exactly three connected pores on supported frameworks. The same graph supplies the drawing and its molecular exports.
+- Build a periodic framework from eligible tetrahedral pairs directly from the standard editor. Draw depth-faded chemical circuits and inspect networks and their topology in the periodic viewer.
+- Copy the precursor-based COFex below a drawing or paste a supported record to reconstruct a design. The rendering inspector uses a compact list.
+
 ## 0.9.7
 
 - Draw one pore or its connected neighbors directly on the 2D canvas. SVG, PNG and molecular exports follow the visible extent. Project files remember the extent and pore colors.
