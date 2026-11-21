@@ -67,6 +67,14 @@
   function precursor(block){
     return ['a','b'].includes(block)?{smiles:$('smiles-'+block).value.trim(),label:$('label-'+block).value.trim()}:null;
   }
+  function referenceReaction(){
+    const starter=entries.get(id)?.starter;
+    if(!restoredReference||edit||report?.structure?.provenance?.template!==id||!starter?.monomer_ids?.length)return null;
+    const catalog=studio.state.library?.monomer_presets||[];
+    const feeds=starter.monomer_ids.map(key=>catalog.find(m=>m.id===key));
+    if(!feeds.every(m=>m?.smiles))return null;
+    return {linkage:starter.linkage,feeds:feeds.map(m=>({smiles:m.smiles,label:m.abbreviation||m.label}))};
+  }
   function choice(item,partner){
     const linkage=$('dia-linkage').value;
     function roles(m){
@@ -373,5 +381,5 @@
       lab.status('Comparison CIF · '+entries.get(key).model_name+(modification?' · aryl-F design':''));
     }catch(e){if(token===revision&&ref===referenceRevision)lab.status(e.message,true);}
   }
-  window.COFdrawCrystalDesign={restore,save,get styles(){return availableStyles();},chooseStyle,redraw:()=>drawView(),get visible(){return visible;},get scope(){return scope;},get isReference(){return restoredReference;},precursor,choice,build,inputsChanged,selectInViewer,has:key=>entries.has(key),get active(){return id;},get report(){return report;},leave,showPeriodic};
+  window.COFdrawCrystalDesign={restore,save,get styles(){return availableStyles();},chooseStyle,redraw:()=>drawView(),get visible(){return visible;},get scope(){return scope;},get isReference(){return restoredReference;},referenceReaction,precursor,choice,build,inputsChanged,selectInViewer,has:key=>entries.has(key),get active(){return id;},get report(){return report;},leave,showPeriodic};
 })();

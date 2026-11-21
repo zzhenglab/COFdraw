@@ -54,10 +54,17 @@ def main():
             if starter.get('kind')=='reference':
                 assert [(name,p['template_id']) for name,p in calls[start:] if name=='model']==[('model',preset.split(':',1)[1])]
                 assert page.evaluate("COFdrawCrystalDesign.report.structure.periodic")
+                reaction=page.evaluate("COFdrawCrystalDesign.referenceReaction()")
+                assert len(reaction['feeds'])==len(starter['monomer_ids']) and reaction['linkage']==starter['linkage']
+                arrow=page.locator('.canvas-panel .scheme-toggle')
+                assert arrow.is_enabled()
                 if preset=='crystal:curated-07013N3':
                     page.select_option('#extent-options','3')
                     wait_for("COFdrawCrystalDesign.visible?.count===3")
                     screenshot('COF-108-three-connected-circuits.png')
+                    arrow.click()
+                    wait_for("COFdrawScheme.composed && document.querySelector('.reaction-figure')?.naturalWidth>0")
+                    arrow.click()
                 references+=1
             else:
                 builds=[p for name,p in calls[start:] if name in ('build-dia','build-reticular')]

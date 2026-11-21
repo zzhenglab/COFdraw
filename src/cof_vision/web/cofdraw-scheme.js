@@ -73,8 +73,10 @@
     if(crystal?.active){
       const provenance=crystal.report?.structure?.provenance;
       if(!crystalView||!provenance)return null;
-      const feeds=(provenance.precursors||[]).map((smiles,i)=>({smiles,label:crystal.precursor('ab'[i])?.label}));
-      return {feeds,text:crystalView.text,url:crystalView.download,parent:byId('canvas-sheet'),key:JSON.stringify([provenance.kind,provenance.model_name,provenance.net,provenance.network_count,provenance.precursors,provenance.linkage]),linkage:provenance.linkage,sites:provenance.precursor_connectivities||[],common:studio.selectedFigureName()||(['reported_crystal','curated_crystal'].includes(provenance.kind)?provenance.model_name:null)};
+      const reference=crystal.referenceReaction();
+      const feeds=reference?.feeds||(provenance.precursors||[]).map((smiles,i)=>({smiles,label:crystal.precursor('ab'[i])?.label}));
+      const linkage=reference?.linkage||provenance.linkage;
+      return {feeds,text:crystalView.text,url:crystalView.download,parent:byId('canvas-sheet'),key:JSON.stringify([provenance.kind,provenance.model_name,provenance.net,provenance.network_count,feeds.map(f=>f.smiles),linkage]),linkage,sites:provenance.precursor_connectivities||[],common:studio.selectedFigureName()||(['reported_crystal','curated_crystal'].includes(provenance.kind)?provenance.model_name:null)};
     }
     const view=window.COFdrawExtent?.visible, s=studio.state;
     if(!view||!s.recipe||!view.downloads?.svg)return null;
