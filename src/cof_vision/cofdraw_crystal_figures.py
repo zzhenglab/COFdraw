@@ -3,23 +3,29 @@ from collections import deque
 from functools import lru_cache
 
 import numpy as np
-from rdkit import Chem
 
 
 def readable_direction(model, face=None):
     """Prefer views that keep six-membered rings open and distinct atoms apart."""
     atoms = model["atoms"]
     xyz = np.array([[a[k] for k in ("x","y","z")] for a in atoms])
-    mol = Chem.RWMol()
-    for _ in atoms:
-        mol.AddAtom(Chem.Atom(6))
+    graph = [[] for _ in atoms]
     for a,b in model["bonds"]:
-        mol.AddBond(a,b,Chem.BondType.SINGLE)
+        graph[a].append(b)
+        graph[b].append(a)
     normals = []
-    for ring in Chem.GetSymmSSSR(mol):
-        if len(ring)==6:
-            points = xyz[list(ring)]
-            normals.append(np.linalg.svd(points-points.mean(axis=0),full_matrices=False)[2][-1])
+    # Only six-membered rings inform this camera. Enumerate short paths directly
+    # to avoid finding a global cycle basis on large, branched molecular motifs.
+    for start in range(len(graph)):
+        paths = [(start,)]
+        while paths:
+            path = paths.pop()
+            if len(path)==6:
+                if start in graph[path[-1]] and path[1]<path[-1]:
+                    points = xyz[list(path)]
+                    normals.append(np.linalg.svd(points-points.mean(axis=0),full_matrices=False)[2][-1])
+            else:
+                paths.extend(path+(n,) for n in graph[path[-1]] if n>start and n not in path)
     if not normals:
         return
     indices = np.arange(192)+.5
