@@ -353,10 +353,10 @@
     if(!$('science-dialog').hidden)lab.status(failure);
     studio.sync();
   }
-  async function select(key,modification=null,restoreReference=false){
+  async function select(key,modification=null,restoreReference=false,keepView=false){
     if(key===custom){id=custom;enterDrawing();startCustom();studio.setCrystalMonomers();await build();return;}
     const row=entries.get(key);if(!row)return;
-    count=1;armSpread=0;tilt=0;preferredView='Framework drawing';
+    if(!keepView){count=1;armSpread=0;tilt=0;preferredView='Framework drawing';}
     const preset=row.starter;
     restoreReference=restoreReference||preset?.kind==='reference';
     clearTimeout(timer);const token=++revision;
@@ -416,7 +416,7 @@
   }
   window.addEventListener('cofdraw:crystal-catalog',e=>{for(const r of e.detail)entries.set(r.id,r);});
   window.addEventListener('cofdraw:open-crystal',e=>select(e.detail));
-  picker.addEventListener('change',()=>{if(picker.value==='aryl_f'){picker.value=id;selectInViewer(id,'aryl_f');}else select(picker.value);});
+  picker.addEventListener('change',()=>{if(picker.value==='aryl_f'){picker.value=id;selectInViewer(id,'aryl_f');}else select(picker.value,null,false,true);});
   $('compare-crystal-reference').onclick=()=>selectInViewer(id);
   $('crystal-drawing-view').addEventListener('change',e=>{preferredView=e.target.value;drawView();});
   $('measure-pore').addEventListener('click',async e=>{
