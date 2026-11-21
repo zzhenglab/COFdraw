@@ -79,6 +79,10 @@ function restoreAssembly(recipe){
   if(keys.includes(previous.toUpperCase()))descriptor.value=previous;
 }
 function selectedDescriptor(){
+  if(window.COFdrawCrystalDesign?.active){
+    const item=window.COFdrawCrystalDesign.precursor($('descriptor-block').value);
+    return {label:item?.label||'Unassigned precursor',smiles:item?.smiles||''};
+  }
   const block=$('descriptor-block').value, comp=state.recipe?.assembly&&state.recipe.components[block.toUpperCase()];
   return comp?{label:comp.label,smiles:comp.monomer_smiles}:{label:$('label-'+block).value,smiles:$('smiles-'+block).value.trim()};
 }
@@ -183,7 +187,7 @@ function selectSuggestion(item){
   if(!item)return;
   const id=item.dataset.value;closeSuggestions();comboInput.value='';
   refreshCombinations(true);
-  if(item.dataset.crystal){window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:id}));return;}
+  if(item.dataset.crystal){$('cof-preset').value='crystal:'+id;window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:id}));return;}
   $('cof-preset').value=id;$('cof-preset').dispatchEvent(new Event('change'));
 }
 function refreshCombinations(force=false){
@@ -191,16 +195,16 @@ function refreshCombinations(force=false){
   const key=JSON.stringify([query,linkage]);
   if(!force&&combinationFilter===key)return;
   combinationFilter=key;
-  const select=$("cof-preset"),current=state.sourceId?'source:'+state.sourceId:select.value;
+  const select=$("cof-preset"),current=window.COFdrawCrystalDesign?.active?'crystal:'+window.COFdrawCrystalDesign.active:state.sourceId?'source:'+state.sourceId:select.value;
   const groups=new Map(),words=query.split(/\s+/).filter(Boolean),fragment=document.createDocumentFragment();
   fragment.append(option("custom","Custom monomers"));
-  const crystals=crystalSuggestions.filter(r=>r.featured&&(!query||query==='3d'||r.label.toLowerCase().includes(query)));
+  const crystals=crystalSuggestions.filter(r=>!query||query==='3d'||r.label.toLowerCase().includes(query)||'crystal:'+r.id===current);
   if(crystals.length){
     const group=document.createElement('optgroup');group.label='3D crystal figures';
     for(const r of crystals)group.append(option('crystal:'+r.id,r.label));
     fragment.append(group);
   }
-  let found=crystals.length,selected=false;
+  let found=crystals.length,selected=crystals.some(r=>'crystal:'+r.id===current);
   matchingCombinations=[];
   for(const row of combinations){
     if(linkage ? row.linkage!==linkage&&!row.source : row.linkage==='secondary_amine')continue;
@@ -273,7 +277,7 @@ function sync() {
   $("build-from-canvas").disabled=$("build").disabled;
   $("build-from-canvas").title=$("build").title;
   $("load-source").disabled=blocked||!$("source-select").value;
-  $("save-project").disabled=!state.recipe||state.busy||state.jsonPending||(multi()&&state.inputsDirty);
+  $("save-project").disabled=window.COFdrawCrystalDesign?.active?!window.COFdrawCrystalDesign.report:!state.recipe||state.busy||state.jsonPending||(multi()&&state.inputsDirty);
   $("render-changes").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
   $("apply-recipe").disabled=blocked;
   $("render-busy").classList.toggle("hidden",!state.busy);
@@ -425,9 +429,10 @@ comboInput.addEventListener('keydown',e=>{
 });
 $("cof-preset").addEventListener("change",()=>{
   if($('cof-preset').value.startsWith('crystal:')){
-    const id=$('cof-preset').value.slice(8);refreshCombinations(true);
+    const id=$('cof-preset').value.slice(8);
     window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:id}));return;
   }
+  window.COFdrawCrystalDesign?.leave();
   const row=combinations.find(p=>p.id===$("cof-preset").value);
   if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
   if(row){setCombination(row);notice("Checking the selected pair…");}
@@ -546,9 +551,9 @@ $("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;c
 for(const type of["pointerup","pointercancel"])$("layout-canvas").addEventListener(type,()=>{if(dragged!==null){dragged=null;syncJSON();drawLayoutTable();}});
 $("recipe-json").addEventListener("input",()=>{state.jsonPending=true;state.dirty=true;sync();});
 $("apply-recipe").addEventListener("click",()=>{try{const input=$("recipe-json").value;if(input.length>200000)throw new Error("Recipe limit is 200 kB.");const value=JSON.parse(input);acceptRecipe(value.recipe||value);notice("Recipe applied as a designed variant. Render to check its chemistry and connections.");}catch(e){notice(e.message,true);}});
-$("save-project").addEventListener("click",()=>{const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,monomers:state.recipe?.assembly?Object.values(state.recipe.components).map(c=>({label:c.label,smiles:c.monomer_smiles})):["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
+$("save-project").addEventListener("click",()=>{if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.save();return;}const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,monomers:state.recipe?.assembly?Object.values(state.recipe.components).map(c=>({label:c.label,smiles:c.monomer_smiles})):["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
 $("open-project").addEventListener("click",()=>$("project-file").click());
-$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());state.autoChemistry=value.chemistry_mode==="auto";acceptRecipe(value.recipe||value);if(value.format==="cofdraw-project"&&Array.isArray(value.monomers)){for(const[block,entry]of[["a",value.monomers[0]],["b",value.monomers[1]]])if(entry){$(`label-${block}`).value=String(entry.label||block.toUpperCase()).slice(0,100);$(`smiles-${block}`).value=String(entry.smiles||"").slice(0,4000);}$("linkage-search").value="";populateLinkages(state.library?.linkages?.[value.linkage]?value.linkage:"imine");$("pore").value=[6,12].includes(value.instances)?value.instances:6;refreshChemistry(value.template_id||value.recipe?.template_id);state.style=state.library?.styles.some(s=>s.id===value.style_id)?value.style_id:"standard";state.seed=Number.isInteger(value.style_seed)?value.style_seed:null;state.styleOptions=value.style_options&&typeof value.style_options==="object"&&!Array.isArray(value.style_options)?clone(value.style_options):{};state.resolvedStyleOptions={};$("image-size").value=[1000,1600,2400].includes(value.image_size)?value.image_size:1600;state.inputsDirty=Boolean(value.inputs_changed_since_recipe);}else showSourceMonomers(state.recipe);$("cof-preset").value="custom";setStyleDescription();drawStyleControls();refreshMonomers();sync();notice("Project opened as an editable design. Source records are reloaded separately from the audited library.");}catch(error){notice(error.message,true);}finally{e.target.value="";}});
+$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());if(value.format==="cofdraw-crystal-project"){await window.COFdrawCrystalDesign.restore(value);return;}window.COFdrawCrystalDesign?.leave();state.autoChemistry=value.chemistry_mode==="auto";acceptRecipe(value.recipe||value);if(value.format==="cofdraw-project"&&Array.isArray(value.monomers)){for(const[block,entry]of[["a",value.monomers[0]],["b",value.monomers[1]]])if(entry){$(`label-${block}`).value=String(entry.label||block.toUpperCase()).slice(0,100);$(`smiles-${block}`).value=String(entry.smiles||"").slice(0,4000);}$("linkage-search").value="";populateLinkages(state.library?.linkages?.[value.linkage]?value.linkage:"imine");$("pore").value=[6,12].includes(value.instances)?value.instances:6;refreshChemistry(value.template_id||value.recipe?.template_id);state.style=state.library?.styles.some(s=>s.id===value.style_id)?value.style_id:"standard";state.seed=Number.isInteger(value.style_seed)?value.style_seed:null;state.styleOptions=value.style_options&&typeof value.style_options==="object"&&!Array.isArray(value.style_options)?clone(value.style_options):{};state.resolvedStyleOptions={};$("image-size").value=[1000,1600,2400].includes(value.image_size)?value.image_size:1600;state.inputsDirty=Boolean(value.inputs_changed_since_recipe);}else showSourceMonomers(state.recipe);$("cof-preset").value="custom";setStyleDescription();drawStyleControls();refreshMonomers();sync();notice("Project opened as an editable design. Source records are reloaded separately from the audited library.");}catch(error){notice(error.message,true);}finally{e.target.value="";}});
 $("copy-identity").addEventListener("click",async()=>{
   if(!state.recipe||state.inputsDirty||state.jsonPending)return;
   const source=Boolean(state.sourceId),metadata=state.sourceMetadata||state.result?.audit?.literature_metadata||{};

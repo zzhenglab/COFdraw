@@ -1,0 +1,196 @@
+[
+  {
+    "id": "design-dia-bpda",
+    "model_name": "TAPM + BPDA-CHO",
+    "label": "TAPM + BPDA-CHO · single-net design",
+    "path": "diamond/bpda.cif",
+    "sha256": "b4f424478950380cfd83d5db078946e88f9b8d7b86a7c6c485e73ddf69be7bc2",
+    "network_dimension": 3,
+    "monomer_ids": [
+      "tapm",
+      "bpda_cho"
+    ],
+    "generator": "D4_TTPM_NH2_H-L2_BPNY_CHO_H-DIA_A-1",
+    "linker_label": "BPDA-CHO",
+    "description": "Single-net dia imine starting model from pyCOFBuilder. Explicit atoms and attachment graph checked. Cell and packing are unrelaxed.",
+    "audit": {
+      "atom_count": 186,
+      "element_counts": {
+        "C": 106,
+        "H": 72,
+        "N": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991995507783245,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N–CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  },
+  {
+    "id": "design-dia-tfta",
+    "model_name": "TAPM + TFTA",
+    "label": "TAPM + TFTA · single-net design",
+    "path": "diamond/tfta.cif",
+    "sha256": "24e3510e7f43a3276f655ff6866f42768fb438dcfff53b7b3813d0e480f334e0",
+    "network_dimension": 3,
+    "monomer_ids": [
+      "tapm",
+      "tfta"
+    ],
+    "generator": "D4_TTPM_NH2_H-L2_BENZ_CHO_F_F-DIA_A-1",
+    "linker_label": "TFTA",
+    "description": "Single-net dia imine starting model from pyCOFBuilder. Explicit atoms and attachment graph checked. Cell and packing are unrelaxed.",
+    "audit": {
+      "atom_count": 146,
+      "element_counts": {
+        "C": 82,
+        "F": 16,
+        "H": 40,
+        "N": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991996886146806,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N–CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  },
+  {
+    "id": "design-dia-dhta",
+    "model_name": "TAPM + DHTA",
+    "label": "TAPM + DHTA · single-net design",
+    "path": "diamond/dhta.cif",
+    "sha256": "bd6b6beb92648bb8c69feb24c081ab066a5a1c1571d571b1036932aa97968417",
+    "network_dimension": 3,
+    "monomer_ids": [
+      "tapm",
+      "dhta"
+    ],
+    "generator": "D4_TTPM_NH2_H-L2_BENZ_CHO_OH-DIA_A-1",
+    "linker_label": "DHTA",
+    "description": "Single-net dia imine starting model from pyCOFBuilder. Explicit atoms and attachment graph checked. Cell and packing are unrelaxed.",
+    "audit": {
+      "atom_count": 154,
+      "element_counts": {
+        "C": 82,
+        "H": 56,
+        "N": 8,
+        "O": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.021076537534184,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N–CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  },
+  {
+    "id": "design-dia-dmta",
+    "model_name": "TAPM + DMTA",
+    "label": "TAPM + DMTA · single-net design",
+    "path": "diamond/dmta.cif",
+    "sha256": "c43288fbab634c00aa4297c0d03c63b0d125223bb7c29af3aec2c8daba9d2328",
+    "network_dimension": 3,
+    "monomer_ids": [
+      "tapm",
+      "dmtp"
+    ],
+    "generator": "D4_TTPM_NH2_H-L2_BENZ_CHO_OMe-DIA_A-1",
+    "linker_label": "DMTA",
+    "description": "Single-net dia imine starting model from pyCOFBuilder. Explicit atoms and attachment graph checked. Cell and packing are unrelaxed.",
+    "audit": {
+      "atom_count": 178,
+      "element_counts": {
+        "C": 90,
+        "H": 72,
+        "N": 8,
+        "O": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0699998225556522,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N–CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  },
+  {
+    "id": "design-dia-dbta",
+    "model_name": "TAPM + DBTA",
+    "label": "TAPM + DBTA · single-net design",
+    "path": "diamond/dbta.cif",
+    "sha256": "4a65c980799297a95f51541048ad6900941b560bda7c0ace169a6cbe5f2325c4",
+    "network_dimension": 3,
+    "monomer_ids": [
+      "tapm",
+      "cv_53ad3ea36de7ff89"
+    ],
+    "generator": "D4_TTPM_NH2_H-L2_BENZ_CHO_Br-DIA_A-1",
+    "linker_label": "DBTA",
+    "description": "Single-net dia imine starting model from pyCOFBuilder. Explicit atoms and attachment graph checked. Cell and packing are unrelaxed.",
+    "audit": {
+      "atom_count": 146,
+      "element_counts": {
+        "Br": 8,
+        "C": 82,
+        "H": 48,
+        "N": 8
+      },
+      "precursor_multiplicities": {
+        "amine": 2,
+        "aldehyde": 4
+      },
+      "water_eliminations": 8,
+      "all_product_fragments_match": true,
+      "explicit_hydrogens_validated": true,
+      "all_fragment_cycle_translations_zero": true,
+      "inferred_periodic_dimensions": [
+        3
+      ],
+      "short_contact_count": 0,
+      "minimum_candidate_distance_angstrom": 1.0991996886146806,
+      "method": "All-element explicit-H adjacency isomorphism after cutting uniquely identified short N–CH imine junctions, plus complete precursor-minus-water atom balance.",
+      "bond_order_limit": "CIF does not contain chemical bond orders; coordinate-inferred adjacency and explicit H are checked against the chosen imine product. No experimental structure assignment."
+    }
+  }
+]

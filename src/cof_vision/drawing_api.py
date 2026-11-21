@@ -81,6 +81,7 @@ class ModelDrawing(BaseModel):
     cif_text: str | None = Field(default=None, max_length=2_000_000)
     repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
     recipe_match: RenderDrawing | None = None
+    linker_edit: Literal['aryl_f'] | None = None
 
 
 class DisplayCells(BaseModel):
@@ -761,7 +762,26 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
 
     def crystal_manifest():
         path=root/'crystal-models/manifest.json'
-        return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
+        catalog=json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {'templates':[]}
+        designs=path.parent/'diamond/models.json'
+        catalog['linker_models']=json.loads(designs.read_bytes()) if designs.is_file() else []
+        series=path.parent/'linker-series.json'
+        rows={r['id']:r for group in ('templates','reported_models','curated_models','linker_models') for r in catalog.get(group,[])}
+        if series.is_file():
+            for family in json.loads(series.read_bytes()):
+                choices={key:label for key,label in family['choices'].items() if key in rows}
+                if family.get('include_diamond_designs'):
+                    choices.update({r['id']:r['linker_label']+' · single-net design' for r in catalog['linker_models']})
+                for key in choices:
+                    rows[key]['linker_series']={'shared_node':family['shared_node'],'choices':choices,'sources':family['sources']}
+        audit=path.parent/'aryl-substitutions.json'
+        if audit.is_file():
+            substitutions=json.loads(audit.read_bytes())
+            for group in ('templates','reported_models','curated_models','linker_models'):
+                for row in catalog.get(group,[]):
+                    match=substitutions.get(row['id'],{})
+                    row['aryl_f_sites']=match.get('substituted_sites',0) if match.get('parent_sha256')==row['sha256'] else 0
+        return catalog
 
     def load_crystal_template(item, manifest):
         from .cofdraw_science import import_cif
@@ -778,6 +798,9 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             for field in ('data_doi','license','attribution','precursor_match','dataset_id','upstream_url'):
                 if field in item:
                     structure['provenance'][field]=item[field]
+        if 'linker_label' in item:
+            structure['provenance'].update(kind='reticular_design', network_dimension=3,
+                generator=item['generator'], monomer_ids=item['monomer_ids'])
         return structure
 
     def crystal_exports(item,structure,repeats):
@@ -799,8 +822,13 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         result['color_periodic_networks'] = 3 in network['dimensions']
         if result['color_periodic_networks']:
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
-            from .cofdraw_crystal_figures import crystal_details
+            from .cofdraw_crystal_figures import chemical_drawing, crystal_details
             result['crystal_details'] = crystal_details(structure, network['edges'])
+            if item is not None or structure['provenance'].get('kind') == 'linker_design':
+                result['chemical_drawing_svg'] = chemical_drawing(structure, network['edges'])
+                circuit = result['crystal_details'].get('ring')
+                if circuit:
+                    result['chemical_circuit_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit)
         if item is None:
             return result
         result['scope']=item['description']
@@ -816,7 +844,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
     @router.get('/science/library')
     def scientific_library():
         data=crystal_manifest()
-        return {'templates':data['templates'],'reported_models':data.get('reported_models',[]),
+        return {'templates':data['templates'],'reported_models':data.get('reported_models',[]),'linker_models':data['linker_models'],
                 'curated_models':data.get('curated_models',[]),'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
 
     @router.get('/science/synthesis-library')
@@ -837,9 +865,11 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         try:
             from .cofdraw_science import import_cif, structure_exports
             if bool(request.template_id)==bool(request.cif_text):raise ValueError('Choose one model template or import one CIF')
+            if request.linker_edit and (not request.template_id or request.recipe_match):
+                raise ValueError('Choose a catalog crystal to start a separate linker design.')
             if request.template_id:
                 manifest=crystal_manifest()
-                matches=[x for x in manifest['templates']+manifest.get('reported_models',[])+manifest.get('curated_models',[]) if x['id']==request.template_id]
+                matches=[x for x in manifest['templates']+manifest.get('reported_models',[])+manifest.get('curated_models',[])+manifest['linker_models'] if x['id']==request.template_id]
                 if len(matches)!=1:raise ValueError('Unknown crystal template')
                 item=matches[0];structure=load_crystal_template(item,manifest)
                 if request.recipe_match:
@@ -851,7 +881,14 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 if request.recipe_match:raise ValueError('Recipe matching applies only to validated built-in periodic designs')
                 structure=import_cif(request.cif_text)
             with lock:
-                if request.template_id:
+                if request.linker_edit:
+                    from .cofdraw_crystal_linkers import fluorinated_model
+                    structure=fluorinated_model(structure,request.template_id)
+                    result=crystal_exports(None,structure,request.repeats)
+                    result['scope']=structure['provenance']['qualification']
+                    result['exports']['cif']=result['exports']['cif'].replace('data_COFdraw\n',
+                        'data_COFdraw\n# Unrelaxed aryl-F design from '+request.template_id+'; inherited cell.\n',1)
+                elif request.template_id:
                     result=crystal_exports(item,structure,request.repeats)
                 else:
                     result=crystal_exports(None,structure,request.repeats)

@@ -44,6 +44,10 @@
   }
   $('open-science').addEventListener('click',()=>{
     workspace(true);tab('model');
+    if(window.COFdrawCrystalDesign?.active){
+      window.COFdrawCrystalDesign.showPeriodic();
+      return;
+    }
     const activeDrawing=drawingReady();
     const otherModel=activeDrawing&&($('structure-source').value!=='drawing'||origin==='monomer');
     if(otherModel||(!currentStructure&&!origin&&!scienceBusy)){
@@ -61,7 +65,6 @@
   $('close-science').addEventListener('click',()=>{workspace(false);$('switch-space').focus();});
   $('switch-space').addEventListener('click',()=>{
     if($('science-dialog').hidden)$('open-science').click();
-    else if(!$('crystal-figure-tools').hidden&&!$('model-view').hidden)$('crystal-figure-toggle').click();
     else $('close-science').click();
   });
   window.addEventListener('cofdraw:rendered',()=>{
@@ -201,7 +204,7 @@
   $('crystal-template').addEventListener('change',()=>{templateNote();invalidate('Periodic template changed. Generate it to replace the displayed model.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
   async function loadScience(){try{
     const data=await S.api('science/library'),select=$('crystal-template');
-    const groups=[['Published models',data.reported_models],['3D structures · CURATED-COFs',data.curated_models],['Reticular designs',data.templates]];
+    const groups=[['Published models',data.reported_models],['3D structures · CURATED-COFs',data.curated_models],['Reticular designs',[...data.templates,...(data.linker_models||[])]]];
     crystalTemplates=[];select.replaceChildren();
     for(const [label,entries] of groups){
       if(!entries?.length)continue;
@@ -211,26 +214,38 @@
     }
     select.value=crystalTemplates.find(t=>t.id==='cof-300-c5')?.id||crystalTemplates[0]?.id;templateNote();
     window.dispatchEvent(new CustomEvent('cofdraw:crystal-catalog',{detail:[
-      ...(data.reported_models||[]).filter(r=>r.network_dimension===3),...(data.curated_models||[])]}));
+      ...crystalTemplates.filter(r=>r.network_dimension===3||r.id==='dia-imine')]}));
     if(new URLSearchParams(location.search).get('workspace')==='crystal'&&!currentStructure&&!origin){
       workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
       $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
     }
   }catch(e){status(e.message,true);}}
-  window.addEventListener('cofdraw:open-crystal',e=>{
-    if(!crystalTemplates.some(t=>t.id===e.detail))return;
-    workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
-    $('crystal-template').value=e.detail;templateNote();$('build-crystal').click();
-    window.dispatchEvent(new CustomEvent('cofdraw:request-figure',{detail:e.detail}));
-  });
-  $('build-crystal').addEventListener('click',()=>work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);if(['reported_crystal','curated_crystal'].includes(r.structure.provenance.kind))$('viewer-provenance').textContent=(r.structure.provenance.dataset_id||'Published coordinates')+' · DOI '+r.structure.provenance.doi;status('Periodic model ready.');}));
+  function showCatalogDesign(result, id){
+    $('structure-source').value='periodic';sourceMode();
+    $('crystal-template').value=id;templateNote();
+    const title=result.structure.provenance.model_name;
+    basePeriodic={result,title};display(result,title,'catalog-design');
+    const sites=result.structure.atoms.length;
+    const counts=sites<=400?[2,2,2]:sites<=750?[2,2,1]:[1,1,1];
+    if(counts[0]>1){
+      cellSelects.forEach((select,i)=>select.value=String(counts[i]));
+      changeCells();
+    }
+    $('viewer-provenance').textContent=result.structure.provenance.qualification||result.scope;
+    status('Periodic cell ready. Drag to rotate.');
+  }
+  $('build-crystal').addEventListener('click',()=>{
+    const crystal=window.COFdrawCrystalDesign,id=$('crystal-template').value;
+    if(crystal?.active&&crystal.has(id)){crystal.selectInViewer(id);return;}
+    crystal?.leave();
+    return work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);if(['reported_crystal','curated_crystal'].includes(r.structure.provenance.kind))$('viewer-provenance').textContent=(r.structure.provenance.dataset_id||'Published coordinates')+' · DOI '+r.structure.provenance.doi;status('Periodic model ready.');});});
   $('import-cif').addEventListener('click',()=>$('cif-file').click());
-  $('cif-file').addEventListener('change',e=>{const file=e.target.files[0];if(file){basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;invalidate('Importing a periodic CIF…');work(async api=>{if(file.size>2000000)throw new Error('CIF limit is 2 MB.');const r=await api('science/model',{cif_text:await file.text(),repeats:repeats()});basePeriodic={result:r,title:file.name};hypothesis=null;$('network-comparison').hidden=true;display(r,file.name);status('CIF imported. Cell parameters, symmetry, and occupancies were checked.');});}e.target.value='';});
+  $('cif-file').addEventListener('change',e=>{const file=e.target.files[0];if(file){window.COFdrawCrystalDesign?.leave();basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;invalidate('Importing a periodic CIF…');work(async api=>{if(file.size>2000000)throw new Error('CIF limit is 2 MB.');const r=await api('science/model',{cif_text:await file.text(),repeats:repeats()});basePeriodic={result:r,title:file.name};hypothesis=null;$('network-comparison').hidden=true;display(r,file.name);status('CIF imported. Cell parameters, symmetry, and occupancies were checked.');});}e.target.value='';});
   $('build-networks').addEventListener('click',()=>work(async api=>{if(!basePeriodic?.result.structure)throw new Error('Generate a periodic model or import a CIF first.');const offsets=$('network-offsets').value.trim().split(/\r?\n/).filter(Boolean).map(row=>row.trim().split(/[\s,;]+/).map(Number));if(offsets.some(row=>row.length!==3||row.some(x=>!Number.isFinite(x))))throw new Error('Enter one fractional x, y, z offset per line.');const r=await api('science/networks',{structure:basePeriodic.result.structure,offsets,repeats:repeats()});hypothesis=r;$('network-comparison').hidden=false;$('network-view').value='hypothesis';$('viewer-color').value='network';display(r,'Translated-network hypothesis','networks');status('Network-copy hypothesis generated. Review contacts; the number of copies does not establish interpenetration.');}));
   $('network-view').addEventListener('change',()=>{invalidate('',false);if($('network-view').value==='base'&&basePeriodic)display(basePeriodic.result,basePeriodic.title);else if(hypothesis)display(hypothesis,'Translated-network hypothesis','networks');});
   $('network-offsets').addEventListener('input',()=>{invalidate('Network offsets changed. Regenerate the hypothesis.');hypothesis=null;$('network-comparison').hidden=true;});
   for(const axis of ['a','b','c'])$(`repeat-${axis}`).addEventListener('input',()=>{invalidate('Cell repeats changed. Generate the model again.');basePeriodic=null;hypothesis=null;$('network-comparison').hidden=true;});
-  $('calculate-monomer').addEventListener('click',()=>work(async api=>{const monomer=S.selectedDescriptor();const r=await api('science/monomer',{smiles:monomer.smiles,conformers:Number($('descriptor-conformers').value)});display(r,`Monomer ${monomer.label}`,'monomer');const el=$('monomer-results');report(el,r.descriptors,{molecular_weight_g_mol:'Molecular weight / g mol⁻¹',exact_mass_da:'Exact mass / Da',tpsa_angstrom2:'Topological polar surface / Å²',crippen_logp:'Crippen logP',hydrogen_bond_donors:'H-bond donors',hydrogen_bond_acceptors:'H-bond acceptors',rotatable_bonds:'Rotatable bonds',formal_charge:'Formal charge'});if(r.selected_conformer?.energy_kcal_mol!==null)metric(el,'Conformer energy / kcal mol⁻¹',fmt(r.selected_conformer?.energy_kcal_mol,3));note(el,`${r.method?.embedding||'ETKDG'} · ${r.method?.force_field||'No available force field'} · ${r.selected_conformer?.converged?'converged':'not converged'}`,!r.selected_conformer?.converged);for(const warning of r.warnings||[])note(el,warning);details(el,{method:r.method,conformers:r.conformers,partial_charges:r.partial_charges});status('Monomer descriptors calculated. Conformer energies are force-field values, not quantum orbital energies.');}));
+  $('calculate-monomer').addEventListener('click',()=>work(async api=>{const monomer=S.selectedDescriptor();if(!monomer.smiles)throw new Error('This model has no assigned precursor SMILES.');const r=await api('science/monomer',{smiles:monomer.smiles,conformers:Number($('descriptor-conformers').value)});display(r,`Monomer ${monomer.label}`,'monomer');const el=$('monomer-results');report(el,r.descriptors,{molecular_weight_g_mol:'Molecular weight / g mol⁻¹',exact_mass_da:'Exact mass / Da',tpsa_angstrom2:'Topological polar surface / Å²',crippen_logp:'Crippen logP',hydrogen_bond_donors:'H-bond donors',hydrogen_bond_acceptors:'H-bond acceptors',rotatable_bonds:'Rotatable bonds',formal_charge:'Formal charge'});if(r.selected_conformer?.energy_kcal_mol!==null)metric(el,'Conformer energy / kcal mol⁻¹',fmt(r.selected_conformer?.energy_kcal_mol,3));note(el,`${r.method?.embedding||'ETKDG'} · ${r.method?.force_field||'No available force field'} · ${r.selected_conformer?.converged?'converged':'not converged'}`,!r.selected_conformer?.converged);for(const warning of r.warnings||[])note(el,warning);details(el,{method:r.method,conformers:r.conformers,partial_charges:r.partial_charges});status('Monomer descriptors calculated. Conformer energies are force-field values, not quantum orbital energies.');}));
   $('calculate-pores').addEventListener('click',()=>work(async(api,check)=>{
     if(!currentStructure||currentStructure.periodic!==true)throw new Error('Generate a periodic model or import a CIF first. Finite drawing layers are not a periodic pore model.');
     const r=await window.COFdrawPores.calculate();
@@ -330,7 +345,9 @@
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
         const depth=Math.max(0,Math.min(1,(zmax-o.z)/Math.max(.01,zmax-zmin)));
-        const visibility=1-fading*depth;
+        const highlighted=this.model.highlightNetwork;
+        const ghost=Number.isInteger(highlighted)&&o.kind!=='pore'&&this.atoms[o.index]?.network!==highlighted;
+        const visibility=(1-fading*depth)*(ghost ? .12 : 1);
         if(o.kind==='pore'){window.COFdrawPores.paint(c,o,visibility);continue;}
         const a=this.atoms[o.index],p=this.projected[o.index],base=color(a);
         const localScale=scale*p.factor;
@@ -475,6 +492,6 @@
   window.addEventListener('cofdraw:state',drawingChanged);
   window.addEventListener('cofdraw:layoutchanged',drawingChanged);
   drawingKey=signature();syncSource();
-  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,viewer,work,status,metric,note,details,display,tab,invalidate};
+  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
   if(S.state.library){drawSourceGallery(S.state.library);loadScience();}
 })();

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.5
+
+- Crystal examples open on the 2D drawing canvas. Open the same periodic coordinates in 3D, rotate the packing, highlight one network, or export the unit cell.
+- Switch between reported linkers in four literature series or choose a checked TAPM diamond-net design. Qualified aryl-F derivatives retain their parent cell and have a separate design identity.
+- Apple silicon and Intel Mac betas use the shared desktop application and ship separately from the Windows ZIP.
+
 ## 0.9.4
 
 - Open COF-300, COF-320 and COF-103 crystal figures from Starting combination. Switch between a vector projection and the rotatable coordinates. Inspect traced junctions, molecular circuits and periodic packing where supported.

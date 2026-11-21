@@ -316,7 +316,7 @@
   $('screen-pores').addEventListener('change',()=>{C.invalidate('',false);$('inspection-results').replaceChildren();$('comparison-results').replaceChildren();});
   const balanceDialog=$('balance-dialog');
   let balanceRevision=0;
-  function balanceAvailable(){return !multi()&&!sourceMode() && Boolean(checkedMonomer('a') && checkedMonomer('b'));}
+  function balanceAvailable(){return !window.COFdrawCrystalDesign?.active&&!multi()&&!sourceMode() && Boolean(checkedMonomer('a') && checkedMonomer('b'));}
   function clearBalance(){
     balanceRevision++;$('balance-results').replaceChildren();$('balance-status').textContent='';
     $('calculate-balance').disabled=!balanceAvailable();
@@ -353,6 +353,7 @@
     const name=event.target.value;event.target.value='';
     if(name==='balance'){openBalance();return;}
     if(name==='library'||name.startsWith('sketch-')){
+      window.COFdrawCrystalDesign?.leave();
       $('mode-manual').click();
       if(name==='library')$('open-monomer-library').click();
       else document.querySelector('.sketch-open[data-block="'+name.slice(-1)+'"]').click();

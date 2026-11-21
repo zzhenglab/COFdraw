@@ -7,13 +7,15 @@
   const colors={C:'#465568',N:'#3576b6',O:'#c95550',S:'#b78d37',B:'#a67e64',Si:'#808597',F:'#398f77'};
   const palette=['#166d83','#bd654a','#8071ac','#a4882e','#39816b','#b45d8a','#5077ac','#998766','#727b4e'];
   const labels={ring:'Molecular circuit',junction:'Tetrahedral junction',net:'Junction net',overlay:'Structure + net',single:'One network',cell:'Crystal packing'};
+  labels.spotlight='Highlight a network';
   const descriptions={ring:'Closed circuit traced through a single covalent network. All heavy atoms along its linkers are shown.',
     junction:'Four bonded shells around one four-connected center, unwrapped across cell faces.',
     net:'Each segment follows a traced linker between two four-connected centers. Two junction shells are shown.',
     overlay:'Dashed guides connect junction centers along four traced linker paths.',
     single:'One distance-connected periodic network within the displayed cell boundaries.',
     cell:'Networks are colored by connectivity in the selected coordinate model.'};
-  let source=null,full=null,requested=null,isFigure=false;
+  descriptions.spotlight='Selected network in color with the surrounding crystal faded.';
+  let source=null,full=null,isFigure=false;
 
   function part(model,accept){
     const ids=new Map(), atoms=[], bonds=[];
@@ -24,16 +26,21 @@
   function choose(){
     const key=scene.value;
     let model=full;
+    const selected=Number($('crystal-net-index').value);
+    $('crystal-net-field').hidden=!['single','spotlight'].includes(key);
     if(key==='single'){
-      const id=full.atoms.find(a=>Number.isInteger(a.network)).network;
-      model=part(full,a=>a.network===id);
+      model={...part(full,a=>a.network===selected),cell:full.cell};
+    }else if(key==='spotlight'){
+      model={...full,highlightNetwork:selected};
     }else if(key!=='cell')model=source.crystal_details[key];
-    viewer.set(key==='cell'?model:{...model,illustration:true});
+    viewer.set(key==='cell'||key==='spotlight'?model:{...model,illustration:true});
     const direction=model.direction;
-    viewer.theta=direction?Math.atan2(-direction[0],direction[2]):-.34;
-    viewer.phi=direction?Math.asin(Math.min(1,Math.max(-1,direction[1]))):.38;
+    if(direction){
+      viewer.theta=Math.atan2(-direction[0],direction[2]);
+      viewer.phi=Math.asin(Math.min(1,Math.max(-1,direction[1])));
+    }
     $('viewer-axis').value='free';
-    $('viewer-color').value=key==='cell'?'network':'element';
+    $('viewer-color').value=['cell','single','spotlight'].includes(key)?'network':'element';
     viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;
     note.textContent=descriptions[key]+' Calculations use the full crystal.';
     window.dispatchEvent(new Event('cofdraw:crystal-scene'));
@@ -90,41 +97,49 @@
     isFigure=active;sheet.hidden=!active;save.hidden=!active;
     $('model-view').classList.toggle('figure-active',active);
     toggle.textContent=active?'Rotate in 3D':'2D figure';toggle.setAttribute('aria-pressed',String(active));
-    if(!$('science-dialog').hidden)$('switch-space').textContent=source?(active?'3D workspace':'2D crystal figure'):'2D drawing';
+    if(!$('science-dialog').hidden)$('switch-space').textContent='2D drawing';
     if(active)paint();else viewer.draw();
   }
   scene.addEventListener('change',choose);
+  $('crystal-net-index').addEventListener('change',choose);
   $('crystal-annotation').addEventListener('click',()=>{
-    $('close-science').click();
-    $('source-select').value='cof-300-projection-v1';
-    $('load-source').disabled=false;$('load-source').click();
+    window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:'cof-300-c5'}));
   });
   toggle.addEventListener('click',()=>mode(!isFigure));
   save.addEventListener('click',()=>window.COFdrawStudio.saveText('COFdraw-'+scene.value+'.svg',
     new XMLSerializer().serializeToString(sheet.firstElementChild),'image/svg+xml').catch(e=>lab.status(e.message,true)));
-  window.addEventListener('cofdraw:request-figure',e=>{requested=e.detail;});
+  function networks(){
+    const ids=[...new Set(full.atoms.map(a=>a.network).filter(Number.isInteger))].sort((a,b)=>a-b);
+    const select=$('crystal-net-index');select.replaceChildren();
+    for(const id of ids)select.add(new Option(String(id+1),id));
+    $('crystal-net-field').hidden=true;
+    return ids;
+  }
   window.addEventListener('cofdraw:structure',({detail:r})=>{
     if(r.invalidated&&lab.structure===source?.structure)return;
     source=null;full=null;tools.hidden=true;note.hidden=true;sheet.replaceChildren();mode(false);
-    if(!r.structure||!(r.color_periodic_networks||r.structure.provenance?.network_dimension===3)){requested=null;return;}
+    if(!r.structure||!(r.color_periodic_networks||r.structure.provenance?.network_dimension===3))return;
     source=r;full=r.viewer;
     scene.replaceChildren();
-    for(const key of ['cell','single','ring','junction','net','overlay']){
-      if(key==='cell'||(key==='single'?full.atoms.some(a=>Number.isInteger(a.network)):r.crystal_details?.[key]))
+    const ids=networks();
+    for(const key of ['cell','single','spotlight','ring','junction','net','overlay']){
+      if(key==='cell'||(key==='single'?ids.length:key==='spotlight'?ids.length>1:r.crystal_details?.[key]))
         scene.add(new Option(labels[key],key));
     }
     tools.hidden=false;note.hidden=false;
     $('crystal-annotation').hidden=r.structure.provenance.template!=='cof-300-c5';
     note.textContent=descriptions.cell;
-    if(requested===r.structure.provenance.template){
-      scene.value=r.crystal_details?.ring?'ring':r.crystal_details?.junction?'junction':'cell';
-      choose();mode(true);
+    if(lab.origin==='catalog-design'){
+      viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;
+      $('viewer-color').value=ids.length>1?'network':'element';viewer.draw();
     }
-    requested=null;
   });
   window.addEventListener('cofdraw:display-cells',()=>{
     if(!source)return;
-    full=viewer.model;scene.value='cell';note.textContent=descriptions.cell;paint();
+    const key=scene.value, previous=$('crystal-net-index').value;
+    full=viewer.model;networks();
+    if([...$('crystal-net-index').options].some(o=>o.value===previous))$('crystal-net-index').value=previous;
+    if(key!=='cell')choose();else{note.textContent=descriptions.cell;paint();}
   });
   for(const id of ['viewer-axis','viewer-reset','viewer-preset'])$(id).addEventListener(id==='viewer-reset'?'click':'change',()=>requestAnimationFrame(paint));
 })();

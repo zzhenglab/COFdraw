@@ -1,0 +1,39 @@
+[
+  {
+    "shared_node": "Tetrakis(4-aminophenyl)methane (TAPM)",
+    "sources": ["10.1021/ja8096256", "10.1021/ja409033p"],
+    "include_diamond_designs": true,
+    "choices": {
+      "cof-300-c5": "TA · COF-300",
+      "curated-13040N3": "BPDA · COF-320",
+      "dia-imine": "TA · single-net design"
+    }
+  },
+  {
+    "shared_node": "Tetrakis(4-aminophenyl)methane (TAPM)",
+    "sources": ["10.1002/anie.201905591", "10.1021/jacs.1c03042"],
+    "choices": {
+      "curated-19240N3": "TPB-H · 3D-TPB-COF-H",
+      "curated-19241N3": "TPB-Me · 3D-TPB-COF-Me",
+      "curated-19242N3": "TPB-F · 3D-TPB-COF-F",
+      "curated-21270N3": "TPB-OMe · 3D-TPB-COF-OMe",
+      "curated-21271N3": "TPB-Ph · 3D-TPB-COF-Ph"
+    }
+  },
+  {
+    "shared_node": "1,3,5,7-Tetraaminoadamantane",
+    "sources": ["10.1002/anie.201310500"],
+    "choices": {
+      "curated-14050N3": "Triformylbenzene · BF-COF-1",
+      "curated-14051N3": "Triformylphloroglucinol · BF-COF-2"
+    }
+  },
+  {
+    "shared_node": "Eight-connected porphyrin aldehyde (TTEP)",
+    "sources": ["10.1021/jacs.2c01037"],
+    "choices": {
+      "curated-22250N3": "p-Phenylenediamine · NUST-5",
+      "curated-22251N3": "Dimethyl-p-phenylenediamine · NUST-6"
+    }
+  }
+]

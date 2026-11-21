@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="./cofdraw-space.css">
   <script defer src="./cofdraw-space.js"></script>
   <link rel="icon" type="image/png" href="./cofdraw-logo.png"><link rel="stylesheet" href="./cofdraw.css"><link rel="stylesheet" href="./cofdraw-studio.css"><link rel="stylesheet" href="./cofdraw-materials.css"><link rel="stylesheet" href="./cofdraw-describe.css"><link rel="stylesheet" href="./cofdraw-identity.css"><link rel="stylesheet" href="./cofdraw-picker.css"><link rel="stylesheet" href="./cofdraw-workspace.css"><link rel="stylesheet" href="./cofdraw-chat.css">
-  <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-crystal-figure.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
+  <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-crystal-figure.js" defer></script><script src="./cofdraw-crystal-design.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
   <link rel="stylesheet" href="./cofdraw-classic.css">
   <link rel="stylesheet" href="./cofdraw-crystal.css">
 </head>
@@ -100,9 +100,21 @@
       <div class="chemistry-options"><label class="field" id="template-field" hidden><span id="template-mode-label">Connectivity &middot; Auto</span><select id="template"></select></label><label class="field" id="pore-field"><span>Chosen pore</span><select id="pore"><option value="6">3 A + 3 B</option><option value="12">6 A + 6 B</option></select></label></div><p id="template-description" class="small-note"></p><button id="open-topology-library" class="text-button" disabled>Browse topology references</button><p class="template-scope">A chosen finite-patch template does not identify a periodic net or crystal structure.</p>
       <button id="open-balance" type="button" class="text-button">Reagent balance…</button><button id="build" class="button primary full" disabled>Create drawing <span aria-hidden="true">→</span></button><p id="chemistry-note" class="small-note">The pore sequence is an explicit design choice. It does not assign a periodic topology.</p>
       </div>
+      <section id="crystal-design-controls" hidden>
+        <label class="field"><span>Linker and periodic model</span><select id="crystal-linker"></select></label>
+        <p class="small-note" id="crystal-linker-note"></p>
+        <div id="crystal-precursors"></div>
+        <button class="text-button" id="leave-crystal-design" type="button">Return to monomer editor</button>
+      </section>
       <details class="source-library"><summary>Audited source drawings <span id="source-count">0</span></summary><label class="field"><span>Source recipe</span><select id="source-select"><option value="">No registered recipes</option></select></label><button id="load-source" class="button outline full" disabled>Open source drawing</button><p class="small-note">Provisional source annotations retain their provenance. Graph edits create a new design.</p><div id="source-gallery" class="source-gallery"></div></details>
       </section>
     </aside>
+    <section id="crystal-drawing-panel" aria-labelledby="crystal-drawing-title" hidden>
+      <div class="crystal-drawing-bar"><div><h2 id="crystal-drawing-title">Crystal drawing</h2><p id="crystal-drawing-kind"></p></div>
+        <button type="button" id="rotate-crystal-design" class="button primary">View periodic 3D</button></div>
+      <div class="crystal-drawing-page"><img id="crystal-drawing-image" alt="Chemical drawing of the selected framework" hidden><p id="crystal-drawing-progress" role="status"></p></div>
+      <div class="crystal-drawing-bottom"><label>Drawing <select id="crystal-drawing-view"></select></label><span id="crystal-drawing-caption"></span><button type="button" class="button outline" id="save-crystal-drawing" disabled>Save SVG</button></div>
+    </section>
     <section class="canvas-panel" aria-labelledby="canvas-title">
       <div class="canvas-toolbar"><div><h2 id="canvas-title">Framework canvas</h2></div><span id="scope-badge" class="scope-badge">DESIGNED PATCH</span><button id="build-from-canvas" class="button primary toolbar-build" disabled>Create drawing</button><div class="zoom-controls"><button id="zoom-out" class="icon-button" aria-label="Zoom out">−</button><output id="zoom-label">100%</output><button id="zoom-in" class="icon-button" aria-label="Zoom in">+</button><button id="zoom-fit" class="text-button">Fit</button></div></div>
 
@@ -298,6 +310,7 @@
       <div class="viewer-toolbar"><span id="viewer-title">Choose or import a structure</span><button id="render-toggle" class="button outline" aria-controls="render-panel" aria-expanded="true">Rendering</button></div>
       <p id="viewer-provenance" class="viewer-provenance" role="status">Generate the current drawing as finite layers, or choose a separate periodic model.</p><div id="crystal-figure-tools" hidden>
         <label>Crystal view <select id="crystal-scene"></select></label>
+        <label id="crystal-net-field" hidden>Network <select id="crystal-net-index"></select></label>
         <button type="button" id="crystal-figure-toggle" class="button outline" aria-pressed="false">2D figure</button>
         <button type="button" id="crystal-figure-save" class="text-button" hidden>Save figure SVG</button>
         <button type="button" id="crystal-annotation" class="text-button" hidden>Open annotated chemical drawing</button>

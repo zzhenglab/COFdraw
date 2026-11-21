@@ -25,8 +25,12 @@ def check_service(url):
         assert response.read(8) == bytes.fromhex("89504e470d0a1a0a")
     model = api("science/model", {"template_id": "cof-300-c5"})
     assert model["structure"]["periodic"] and model["viewer"]["bonds"]
+    assert "<svg" in model["chemical_circuit_svg"] and "<svg" in model["chemical_drawing_svg"]
     with urlopen(url.rstrip("/") + model["downloads"]["cif"], timeout=30) as response:
         assert b"_cell_length_a" in response.read()
+    variant = api("science/model", {"template_id": "design-dia-dmta"})
+    assert variant["structure"]["provenance"]["monomer_ids"] == ["tapm", "dmtp"]
+    assert variant["structure"]["atoms"] != model["structure"]["atoms"] and variant["viewer"]["periodic"]
     assert api("science/adsorption/engine")["available"]
     structure = api("science/model", {"template_id": "hcb-imine-aa"})["structure"]
     job = api("science/adsorption/jobs", {"structure": structure, "gases": ["Ar"], "charge_mode": "zero",

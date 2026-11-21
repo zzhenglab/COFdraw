@@ -27,3 +27,21 @@ def test_coordinate_illustrations(filename,has_circuit):
             assert 1 < np.linalg.norm(xyz[a]-xyz[b]) < 1.9
         assert np.linalg.norm(ring["direction"])==pytest.approx(1)
     assert json.dumps(structure,sort_keys=True)==original
+
+
+def test_linker_derivative_keeps_periodic_graph_and_has_distinct_identity():
+    from collections import Counter
+    from cof_vision.cofdraw_crystal_linkers import fluorinated_model
+    root=Path(__file__).resolve().parents[1]/"data/crystal-models"
+    parent=import_cif((root/"cof-300.cif").read_text())
+    parent["provenance"].update(model_name="COF-300",doi="10.1021/ja8096256")
+    original=json.dumps(parent,sort_keys=True)
+    design=fluorinated_model(parent,"cof-300-c5")
+    provenance=design["provenance"]
+    assert provenance["kind"]=="linker_design" and "doi" not in provenance
+    assert inspect_periodic_network(design)["dimensions"]==[3]
+    assert design["cell"]==parent["cell"] and json.dumps(parent,sort_keys=True)==original
+    before=Counter(a["element"] for a in parent["atoms"])
+    after=Counter(a["element"] for a in design["atoms"])
+    count=len(provenance["substituted_atom_indices"])
+    assert count==after["F"]-before["F"]==before["H"]-after["H"] and count>0

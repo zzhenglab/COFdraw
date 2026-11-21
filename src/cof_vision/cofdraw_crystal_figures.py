@@ -3,6 +3,171 @@ from collections import deque
 from functools import lru_cache
 
 import numpy as np
+from xml.etree import ElementTree as ET
+
+
+def _circuit_svg(mol, coordinates, elements, ports):
+    """Project the traced circuit using depth for crossing order and explicit labels."""
+    xy=coordinates[:,:2]
+    low,high=xy.min(0),xy.max(0)
+    scale=min(740/max(high[0]-low[0],1),530/max(high[1]-low[1],1))
+    points=(xy-(low+high)/2)*[scale,-scale]+[400,295]
+    root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox="0 0 800 590",width="800",height="590")
+    ink={"N":"#185a9b","O":"#b8313f","F":"#267d64","S":"#8b6522","B":"#9a6144"}
+    groups=[]
+    for bond in mol.GetBonds():
+        a,b=bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()
+        bond_group=ET.Element("g",stroke="#263842",attrib={"stroke-linecap":"round","stroke-width":"1.35"})
+        p,q=points[a],points[b]
+        def stroke(u,v,extra=None):
+            ET.SubElement(bond_group,"line",x1=f"{u[0]:.2f}",y1=f"{u[1]:.2f}",x2=f"{v[0]:.2f}",y2=f"{v[1]:.2f}",attrib=extra or {})
+        stroke(p,q)
+        if bond.GetBondTypeAsDouble()>1:
+            vector=q-p
+            side=np.array([-vector[1],vector[0]])/max(np.linalg.norm(vector),.1)*2.1
+            stroke(p+.15*vector+side,q-.15*vector+side,{"stroke-dasharray":"2 2"} if bond.GetIsAromatic() else {})
+        groups.append(((coordinates[a,2]+coordinates[b,2])/2,bond_group))
+    for _,g in sorted(groups,key=lambda item:item[0]):
+        root.append(g)
+    for i,(x,y) in enumerate(points):
+        el=elements[i] if i<ports else "∗"
+        if el=="C":
+            continue
+        label=ET.SubElement(root,"text",x=f"{x:.2f}",y=f"{y+3:.2f}",fill=ink.get(el,"#37454a"),
+            stroke="white",attrib={"paint-order":"stroke","stroke-width":"2.4","font-size":"9",
+            "font-family":"Arial, sans-serif","text-anchor":"middle"})
+        label.text=el
+    return ET.tostring(root,encoding="unicode")
+
+
+def chemical_drawing(structure, edges, *, circuit=None):
+    """Depict an unwrapped, connected local chemical graph with continuation ports."""
+    from rdkit import Chem
+    from rdkit.Chem import rdDepictor
+    from rdkit.Chem.Draw import rdMolDraw2D
+
+    atoms = structure["atoms"]
+    elements = [a["element"] for a in atoms]
+    graph = [[] for _ in atoms]
+    for edge in edges:
+        a, b, t = edge["a"], edge["b"], tuple(edge["translation"])
+        graph[a].append((b, t))
+        graph[b].append((a, tuple(-n for n in t)))
+    def adjacent(site):
+        i, image = site
+        return [(j, tuple(a+b for a, b in zip(image, shift))) for j, shift in graph[i]
+                if elements[j] != "H"]
+    # Start at a chemically distinctive site on a framework component. Preserve
+    # image shifts: neighbors across opposite cell faces may be different atoms.
+    def priority(i):
+        el = elements[i]
+        neighbors = [elements[j] for j, _ in graph[i]]
+        if el == "H" or not any(e != "H" for e in neighbors):
+            return -1
+        if el in {"F", "Cl", "Br"} and neighbors == ["C"]:
+            return 6
+        if el in {"O", "S"} and "C" in neighbors:
+            return 5
+        if el in {"Si","B","Cu","Zn","Co","Ni"}:
+            return 4
+        return 3 if el == "N" else 2 if len(neighbors) == 4 and "H" not in neighbors else 1
+    seed = max(range(len(atoms)), key=priority)
+    root = (seed, (0, 0, 0))
+    nodes, frontier = {root}, {root}
+    for _ in range(9):
+        frontier = {b for a in frontier for b in adjacent(a)} - nodes
+        if len(nodes | frontier) > 95:
+            break
+        nodes |= frontier
+    # Complete rings crossing the crop where the missing path is short.
+    for _ in range(2):
+        outer = {b for a in nodes for b in adjacent(a)} - nodes
+        bridges = {b for b in outer if len(set(adjacent(b)) & nodes) >= 2}
+        for b in outer:
+            for c in set(adjacent(b)) & outer:
+                if len((set(adjacent(b)) | set(adjacent(c))) & nodes) >= 2:
+                    bridges.update((b, c))
+        nodes |= bridges
+    if circuit:
+        nodes = {(i, tuple(image)) for i,image in circuit["site_images"]}
+    ordered = sorted(nodes)
+    rw = Chem.RWMol()
+    ids = {}
+    for site in ordered:
+        i = site[0]
+        atom = Chem.Atom(elements[i])
+        atom.SetNoImplicit(True)
+        if elements[i] != "C":
+            atom.SetNumExplicitHs(sum(elements[j] == "H" for j, _ in graph[i]))
+        ids[site] = rw.AddAtom(atom)
+    positions=list(ordered)
+    for a in ordered:
+        for b in adjacent(a):
+            if b not in nodes:
+                port = Chem.Atom(0)
+                port.SetProp("atomLabel", "∗")
+                rw.AddBond(ids[a], rw.AddAtom(port), Chem.BondType.SINGLE)
+                positions.append(b)
+            elif a < b:
+                rw.AddBond(ids[a], ids[b], Chem.BondType.SINGLE)
+    mol = rw.GetMol()
+    mol.UpdatePropertyCache(strict=False)
+    # CIF coordinates alone do not determine resonance or bond orders. Mark
+    # six-carbon aromatic-like rings only when geometry supports that choice.
+    xyz = np.array([(np.array(atoms[i]["fractional"])+image) @ structure["cell"] for i, image in ordered])
+    carbon_graph = {ids[a]: [ids[b] for b in adjacent(a) if b in nodes and elements[b[0]]=="C"]
+                    for a in ordered if elements[a[0]]=="C"}
+    rings = []
+    for start in carbon_graph:
+        paths = [[start]]
+        while paths:
+            path=paths.pop()
+            if len(path)==6:
+                if start in carbon_graph[path[-1]] and path[1]<path[-1]:
+                    rings.append(path)
+            else:
+                paths.extend(path+[v] for v in carbon_graph[path[-1]] if v>start and v not in path)
+    for r in rings:
+        points = xyz[r]
+        lengths = np.linalg.norm(points-np.roll(points, 1, axis=0), axis=1)
+        if min(lengths) < 1.29 or max(lengths) > 1.49 or np.linalg.svd(points-points.mean(0))[1][-1] > .24:
+            continue
+        for a, b in zip(r, r[1:]+r[:1]):
+            mol.GetBondBetweenAtoms(a,b).SetBondType(Chem.BondType.AROMATIC)
+            mol.GetBondBetweenAtoms(a,b).SetIsAromatic(True)
+            mol.GetAtomWithIdx(a).SetIsAromatic(True)
+    for bond in mol.GetBonds():
+        a,b = bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()
+        if max(a,b) >= len(ordered) or bond.GetIsAromatic():
+            continue
+        i,j=ordered[a][0],ordered[b][0]
+        if elements[j]=="C":
+            i,j=j,i
+        if elements[i]!="C" or len(graph[i])!=3:
+            continue
+        length=np.linalg.norm(xyz[a]-xyz[b])
+        if (elements[j]=="O" and len(graph[j])==1 and 1.10<length<1.32
+                or elements[j]=="N" and len(graph[j])==2 and 1.18<length<1.34
+                and sorted(elements[k] for k,_ in graph[i])==["C","H","N"]):
+            bond.SetBondType(Chem.BondType.DOUBLE)
+    if circuit:
+        # Preserve the source circuit geometry. A generic 2D macrocycle layout
+        # can fold the pore shut and enumerate an enormous set of ring layouts.
+        normal=np.asarray(circuit.get("direction",[0.,0.,1.]))
+        horizontal=np.cross(np.eye(3)[np.argmin(np.abs(normal))],normal)
+        horizontal/=np.linalg.norm(horizontal)
+        vertical=np.cross(normal,horizontal)
+        coords=np.array([(np.array(atoms[i]["fractional"])+image)@structure["cell"] for i,image in positions])
+        return _circuit_svg(mol, coords@np.array([horizontal,vertical,normal]).T,
+                            [elements[i] for i,_ in ordered],len(ordered))
+    else:
+        rdDepictor.Compute2DCoords(mol, canonOrient=True)
+    draw = rdMolDraw2D.MolDraw2DSVG(800, 590)
+    draw.drawOptions().prepareMolsBeforeDrawing = False
+    draw.drawOptions().padding = .055
+    draw.DrawMolecule(mol)
+    draw.FinishDrawing()
+    return draw.GetDrawingText()
 
 
 def readable_direction(model, face=None):
@@ -146,6 +311,7 @@ def crystal_details(structure, edges):
                     atoms.update(branch)
                     branch = {n for a in branch for n in neighbors(a)} - atoms
             details["ring"] = molecular(atoms)
+            details["ring"]["site_images"] = [[i,[x,y,z]] for i,x,y,z in sorted(atoms)]
             points = np.array([(np.asarray(sites[i]["fractional"]) + [x,y,z]) @ cell for i,x,y,z in path+[root]])
             _, _, vectors = np.linalg.svd(points-points.mean(axis=0), full_matrices=False)
             readable_direction(details["ring"],vectors[-1])
