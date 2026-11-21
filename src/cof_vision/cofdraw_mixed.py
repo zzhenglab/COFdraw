@@ -1,0 +1,313 @@
+"""Local pore environments and explicitly connected planar molecular patches."""
+from collections import Counter
+from functools import lru_cache
+from itertools import permutations, product
+import math
+
+import numpy as np
+from rdkit import Chem
+
+from .cofdraw_depiction import compute_2d_coords
+from .depiction_rings import symmetric_depiction_rings
+from .framework_drawing import _ports
+
+
+PANG_DOI = '10.1021/jacs.6b01244'
+ETTA = 'Nc1ccc(C(=C(c2ccc(N)cc2)c2ccc(N)cc2)c2ccc(N)cc2)cc1'
+_ARYL_FORMYL = Chem.MolFromSmarts('[c]-[CH1;X3](=[O])')
+TPDA = dict(id='tpda_terphenyl', abbreviation='TPDA', full_name='p-Terphenyl-4,4″-dicarbaldehyde',
+            label='TPDA · p-terphenyl-4,4″-dicarbaldehyde', smiles='O=Cc1ccc(-c2ccc(-c3ccc(C=O)cc3)cc2)cc1',
+            aliases=['4,4″-Diformyl-p-terphenyl'], source_dois=[PANG_DOI],
+            source_evidence=[dict(source_doi=PANG_DOI,source_label='TPDA',location='Supporting Information pp. S2–S3, SIOC-COF-2')],
+            geometry_hint='linear', qualification='Reported SIOC-COF-2 dialdehyde precursor.')
+
+MIXED_EXAMPLES = [
+    dict(id='sioc-cof-1',label='SIOC-COF-1 · three pore types',monomer_ids=['tape','ta','bpda_cho'],
+         linker_sequence='BCBCBC',pore_layout='kgm',doi=PANG_DOI,
+         description='ETTA, terephthalaldehyde and biphenyldialdehyde. The reported arrangement has two triangular pores and an alternating hexagon.'),
+    dict(id='sioc-cof-2',label='SIOC-COF-2 · extended triple pore',monomer_ids=['tape','bpda_cho','tpda_terphenyl'],
+         linker_sequence='BCBCBC',pore_layout='kgm',doi=PANG_DOI,
+         description='Biphenyl and terphenyl dialdehydes line the two triangles; both occur in the hexagon.'),
+    dict(id='mixed-tapb',label='Hexagonal design · alternating linkers',monomer_ids=['tapb','ta','bpda_cho'],
+         linker_sequence='BCBCBC',description='A three-arm amine with alternating short and long dialdehydes.'),
+    dict(id='mixed-tfb',label='Hexagonal design · adjacent diamines',monomer_ids=['tfb','pa','benzidine'],
+         linker_sequence='BBBCCC',description='Three adjacent short diamines and three adjacent biphenyl diamines in the selected pore.'),
+    dict(id='mixed-tapp',label='Porphyrin design · opposite linkers',monomer_ids=['tapp','ta','bpda_cho'],
+         linker_sequence='BCBC',description='A free-base porphyrin tetraamine with a different dialdehyde along each sheet direction.'),
+    dict(id='mixed-tfppy',label='Pyrene design · adjacent linkers',monomer_ids=['tfppy','pa','benzidine'],
+         linker_sequence='BBCC',description='Two short and two extended diamines placed around a four-sided pore.'),
+]
+
+
+def canonical_sequence(seq):
+    """Chemical B/C environments equivalent by rotation or reversal of a face."""
+    return min(s[i:]+s[:i] for s in (seq,seq[::-1]) for i in range(len(s)))
+
+
+def mixed_pore_patterns():
+    patterns = {}
+    for n in (4,6):
+        unique = sorted({canonical_sequence(''.join(seq)) for seq in product('BC',repeat=n) if len(set(seq))==2})
+        patterns[str(n)] = [dict(sequence=s,label=f'{s} · {s.count("B")} B + {s.count("C")} C',
+                                 counts=dict(B=s.count('B'),C=s.count('C'))) for s in unique]
+    return patterns
+
+
+@lru_cache(maxsize=512)
+def linear_dialdehyde(smiles):
+    """Require both outward formyl directions to follow the end-to-end rod."""
+    mol=Chem.MolFromSmiles(smiles)
+    matches=mol.GetSubstructMatches(_ARYL_FORMYL)
+    if len(matches)!=2:
+        return False
+    compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
+    xy=mol.GetConformer().GetPositions()[:,:2]
+    a,b=matches
+    chord=xy[b[1]]-xy[a[1]]
+    span=np.linalg.norm(chord)
+    if span<1e-8:
+        return False
+    unit=chord/span
+    directions=[xy[aldehyde]-xy[aryl] for aryl,aldehyde,_ in matches]
+    return all(outward@d/np.linalg.norm(d)>math.cos(math.radians(25))
+               for outward,d in zip((-unit,unit),directions))
+
+
+_HEX = ((2,0),(1,1),(-1,1),(-2,0),(-1,-1),(1,-1))
+_SQUARE = ((0,0),(1,0),(1,1),(0,1))
+
+
+def _add(a,b):
+    return (a[0]+b[0],a[1]+b[1])
+
+
+def _faces(pattern,repeats,kgm):
+    """Integer vertex coordinates make neighboring faces share exact graph edges."""
+    n = len(pattern)
+    if kgm:
+        if repeats==1 and n==3:
+            i = 0 if pattern=='BBB' else 1
+            return [((_HEX[i],_HEX[(i+1)%6],_add(_HEX[i],_HEX[(i+1)%6])),pattern)]
+        faces = {}
+        for u,v in product(range(max(1,repeats-1)),repeat=2):
+            center = (4*u+2*v,2*v)
+            verts = tuple(_add(center,p) for p in _HEX)
+            faces[frozenset(verts)] = (verts,'BCBCBC')
+            if repeats>1:
+                for i,p in enumerate(_HEX):
+                    q = _HEX[(i+1)%6]
+                    tri = (_add(center,p),_add(center,q),_add(center,_add(p,q)))
+                    faces[frozenset(tri)] = (tri,'BC'[i%2]*3)
+        return list(faces.values())
+    corners = _HEX if n==6 else _SQUARE
+    # Opposite sides belong to one edge family. Parity alternates along
+    # its face normal, so both incident pores always assign the same linker.
+    faces=[]
+    for u,v in product(range(repeats),repeat=2):
+        center = (3*u,u+2*v) if n==6 else (u,v)
+        parity = (u,v,u) if n==6 else (v,u)
+        seq = ''.join(pattern[(i+n//2*(parity[i%(n//2)]%2))%n] for i in range(n))
+        faces.append((tuple(_add(center,p) for p in corners),seq))
+    return faces
+
+
+def _block(component):
+    mol = Chem.MolFromSmiles(component['fragment_smiles'])
+    compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
+    ports = list(_ports(mol).values())
+    endpoints = [site for _,site in ports]
+    xy = mol.GetConformer().GetPositions()[:,:2].copy()
+    xy -= xy[endpoints].mean(axis=0)
+    tangents = xy[[dummy for dummy,_ in ports]]-xy[endpoints]
+    tangents /= np.linalg.norm(tangents,axis=1)[:,None]
+    return mol,ports,xy,tangents
+
+
+def _turn(v,theta):
+    c,s = np.cos(theta),np.sin(theta)
+    return np.stack((c*v[...,0]-s*v[...,1],s*v[...,0]+c*v[...,1]),axis=-1)
+
+
+def _orient(axes,ports,xy):
+    target = np.arctan2(axes[:,1],axes[:,0])
+    # Several junctions (e.g. boroxine) can have short attachment radii.
+    # The external dummy points unambiguously identify their outgoing arms.
+    radial = xy[[p[0] for p in ports]]
+    phase = np.arctan2(radial[:,1],radial[:,0])
+    best=None
+    for indices in permutations(range(len(ports)),len(axes)):
+        diff=target-phase[list(indices)]
+        theta=math.atan2(np.sin(diff).sum(),np.cos(diff).sum())
+        error=float(np.sum(1-np.cos(diff-theta)))
+        score=(round(error,9),round(abs(theta),9),indices)
+        if best is None or score<best[0]:
+            best=score,indices,theta
+    return best[1:]
+
+
+def _fit(geometry,kinds,centers,joins,slot_pairs):
+    """Fit rigid fragments to shared junctions with analytic rotation derivatives."""
+    owners=np.array(joins)
+    a,b=owners.T
+    n=len(kinds)
+    incident=[[] for _ in kinds]
+    for x,y in joins:
+        d=centers[y]-centers[x]
+        d=d/np.linalg.norm(d)
+        incident[x].append(d)
+        incident[y].append(-d)
+    placed=[_orient(np.array(axes),geometry[k][1],geometry[k][2]) for k,axes in zip(kinds,incident)]
+    slots=np.array([[placed[k][0][slot] for k,slot in zip(pair,sp)] for pair,sp in zip(joins,slot_pairs)])
+    angles=np.array([p[1] for p in placed])
+    anchors=np.array([[geometry[kinds[k]][2][geometry[kinds[k]][1][s][1]] for k,s in zip(pair,ss)]
+                      for pair,ss in zip(joins,slots)])
+    tangents=np.array([[geometry[kinds[k]][3][s] for k,s in zip(pair,ss)] for pair,ss in zip(joins,slots)])
+    # At a terminal trigonal reaction atom the two depiction sides are
+    # interchangeable before an explicit E/Z assignment. Choose the side
+    # facing the opposite molecule without reflecting its other atoms.
+    for i,pair in enumerate(joins):
+        choices=[]
+        for k,s,d in zip(pair,slots[i],tangents[i]):
+            mol,ports,xy,_=geometry[kinds[k]]
+            dummy,end=ports[s]
+            atom=mol.GetAtomWithIdx(end)
+            others=[j.GetIdx() for j in atom.GetNeighbors() if j.GetIdx()!=dummy]
+            variants=[d]
+            if len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
+                    bond.GetStereo()==Chem.BondStereo.STEREONONE for bond in atom.GetBonds()):
+                axis=xy[end]-xy[others[0]]
+                axis/=np.linalg.norm(axis)
+                variants.append(2*np.dot(axis,d)*axis-d)
+            choices.append(variants)
+        axis=incident[pair[0]][slot_pairs[i][0]]
+        def penalty(pair_dirs):
+            da,db=_turn(np.array(pair_dirs),angles[list(pair)])
+            return np.linalg.norm(da+db)**2+.6*(2-(da-db)@axis)
+        tangents[i]=min(product(*choices),key=penalty)
+    half_junctions=anchors+.75*tangents
+    incidence=np.zeros((len(joins),n))
+    ix=np.arange(len(joins))
+    incidence[ix,a]=-1
+    incidence[ix,b]=1
+    solve=np.linalg.pinv(incidence)
+    project=incidence@solve-np.eye(len(joins))
+    initial=angles.copy()
+    def evaluate(theta):
+        ends=_turn(half_junctions,theta[owners])
+        dirs=_turn(tangents,theta[owners])
+        target=ends[:,0]-ends[:,1]
+        residual=np.r_[(project@target).ravel(),(.7*(dirs[:,0]+dirs[:,1])).ravel(),.1*(theta-initial)]
+        return residual,ends,dirs,solve@target
+    for _ in range(18):
+        residual,ends,dirs,translations=evaluate(angles)
+        dt=np.zeros((len(joins),2,n))
+        dt[ix,:,a]=np.stack((-ends[:,0,1],ends[:,0,0]),axis=1)
+        dt[ix,:,b]=np.stack((ends[:,1,1],-ends[:,1,0]),axis=1)
+        dd=np.zeros_like(dt)
+        dd[ix,:,a]=.7*np.stack((-dirs[:,0,1],dirs[:,0,0]),axis=1)
+        dd[ix,:,b]=.7*np.stack((-dirs[:,1,1],dirs[:,1,0]),axis=1)
+        jac=np.vstack(((project@dt.reshape(len(joins),-1)).reshape(-1,n),dd.reshape(-1,n),.1*np.eye(n)))
+        step=np.linalg.solve(jac.T@jac+np.eye(n)*1e-6,-jac.T@residual)
+        step*=min(1.,.2/max(1e-10,float(np.abs(step).max())))
+        if np.abs(step).max()<1e-6:
+            break
+        for scale in (1.,.5,.25,.1):
+            trial=angles+step*scale
+            if np.linalg.norm(evaluate(trial)[0])<np.linalg.norm(residual):
+                angles=trial
+                break
+        else:
+            break
+    translations=evaluate(angles)[3]
+    ends=_turn(anchors,angles[owners])
+    # Different length linkers can leave short junctions at closed loops.
+    # Correct inter-block distances by translations of complete molecules.
+    for _ in range(60):
+        bonds=translations[b]-translations[a]+ends[:,1]-ends[:,0]
+        lengths=np.linalg.norm(bonds,axis=1)
+        if np.min(lengths)<1e-8 or np.max(abs(lengths-1.5))<.015:
+            break
+        translations=solve@(ends[:,0]-ends[:,1]+1.5*bonds/lengths[:,None])
+    return translations,angles,slots
+
+
+def pore_patch(components,pattern,repeats,bond_order,layout=''):
+    """Build a finite molecular graph with shared blocks, labeled outer ports, and pore census."""
+    kgm=layout=='kgm'
+    if repeats not in (1,2,3,4) or (kgm and pattern not in ('BBB','CCC','BCBCBC','CBCBCB')) or (
+            not kgm and (len(pattern) not in (4,6) or not set(pattern)<=set('BC'))):
+        raise ValueError('Choose a supported pore and a drawing extent from one to four.')
+    faces=_faces(pattern,repeats,kgm)
+    edge_types={}
+    for vertices,sequence in faces:
+        for i,letter in enumerate(sequence):
+            edge=tuple(sorted((vertices[i],vertices[(i+1)%len(vertices)])))
+            if edge_types.setdefault(edge,letter)!=letter:
+                raise ValueError('Conflicting linker assignments on a shared edge.')
+    nodes=sorted({vertex for edge in edge_types for vertex in edge})
+    ix={point:i for i,point in enumerate(nodes)}
+    kinds=['A']*len(nodes)
+    centers=list(map(np.array,nodes))
+    joins=[]; slot_pairs=[]; degrees=Counter()
+    linker_ids={}
+    for edge,letter in edge_types.items():
+        mid=len(kinds)
+        linker_ids[edge]=f'{letter}{mid+1}'
+        kinds.append(letter)
+        centers.append(.5*(np.array(edge[0])+edge[1]))
+        for p in edge:
+            node=ix[p]
+            joins.append((node,mid))
+            slot_pairs.append((degrees[node],degrees[mid]))
+            degrees[node]+=1; degrees[mid]+=1
+    centers=np.array(centers)*([.5,math.sqrt(3)/2] if kgm or len(pattern)==6 else [1.,1.])
+    geo={k:_block(components[k]) for k in set(kinds)}
+    if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
+        raise ValueError('This drawing exceeds 2,400 atoms. Use a smaller neighborhood.')
+    if any(degrees[i]>len(geo[k][1]) for i,k in enumerate(kinds)):
+        raise ValueError('The selected node has too few sites for this pore arrangement.')
+    translations,angles,slots=_fit(geo,kinds,centers,joins,slot_pairs)
+    fragments=[]
+    for i,k in enumerate(kinds):
+        original,ports,local,_=geo[k]
+        mol=Chem.Mol(original)
+        xy=_turn(local,angles[i])+translations[i]
+        for atom,(x,y) in zip(mol.GetAtoms(),xy):
+            atom.SetProp('component',k)
+            atom.SetProp('instance',f'{k}{i+1}')
+            atom.SetIntProp('fragment_atom_index',atom.GetIdx())
+            mol.GetConformer().SetAtomPosition(atom.GetIdx(),(float(x),float(y),0.))
+            if atom.GetAtomicNum()==0:
+                atom.SetAtomMapNum(0)
+        fragments.append(mol)
+    for tag,(pair,pair_slots) in enumerate(zip(joins,slots),1):
+        for k,s in zip(pair,pair_slots):
+            dummy,endpoint=geo[kinds[k]][1][s]
+            mol=fragments[k]
+            if mol.GetBondBetweenAtoms(dummy,endpoint).GetBondTypeAsDouble()!=bond_order:
+                raise ValueError('The reacted fragments have incompatible bond orders.')
+            mol.GetAtomWithIdx(dummy).SetAtomMapNum(tag)
+    joined=fragments[0]
+    for mol in fragments[1:]:
+        joined=Chem.CombineMols(joined,mol)
+    result=Chem.molzip(joined)
+    if len(Chem.GetMolFrags(result))!=1 or result.GetNumAtoms()!=joined.GetNumAtoms()-2*len(joins):
+        raise ValueError('The connected molecular patch failed its boundary and valence checks.')
+    result.UpdatePropertyCache(strict=True)
+    symmetric_depiction_rings(result)
+    origins=[dict(component=a.GetProp('component'),instance=a.GetProp('instance'),
+                  fragment_atom_index=a.GetIntProp('fragment_atom_index')) for a in result.GetAtoms()]
+    census=dict(sorted(Counter(canonical_sequence(s) for _,s in faces).items()))
+    pore_faces=[]
+    for vertices,_ in faces:
+        rim=[]
+        for i,p in enumerate(vertices):
+            edge=tuple(sorted((p,vertices[(i+1)%len(vertices)])))
+            rim.extend((f'A{ix[p]+1}',linker_ids[edge]))
+        pore_faces.append(rim)
+    return result,dict(extent=f'{len(faces)} complete pores',template='kgm' if kgm else 'hcb' if len(pattern)==6 else 'sql',
+                       atoms=result.GetNumAtoms(),blocks=len(kinds),pores=len(faces),pore_sequences=census,
+                       pore_faces=pore_faces,face_labels=[canonical_sequence(s) for _,s in faces],atom_origin=origins,
+                       continuation_sites=sum(a.GetAtomicNum()==0 for a in result.GetAtoms()),
+                       order_assumption='Separated B and C triangles share edges with alternating hexagons.' if kgm else
+                       'A two-cell B/C ordering extends the selected pore. Neighboring pores share each molecular edge.')

@@ -1,3 +1,23 @@
+.extent-bar{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;margin:2px 0 10px;font-size:12px;color:#38564f}
+.extent-bar[hidden]{display:none}
+#extent-options{display:flex;gap:2px;flex-wrap:wrap;border:1px solid #c4d5cf;background:#f2f6f4;border-radius:7px;padding:2px}
+#extent-options button{border:0;background:transparent;color:#34534b;border-radius:5px;min-height:28px;padding:4px 10px;font:inherit;cursor:pointer}
+#extent-options button[aria-pressed=true]{background:#225d50;color:white}
+#extent-options button:disabled{opacity:.65}
+#extent-feedback{font-size:11px;color:#526861;max-width:68ch}
+#extent-feedback:empty{display:none}
+#pore-color-control:not([hidden]),#pore-type-legend,#pore-type-legend span,#pore-type-legend button{display:inline-flex;gap:5px;align-items:center}
+#pore-color-control input{width:14px;height:14px;accent-color:#225d50}
+#pore-type-legend{flex-wrap:wrap;gap:8px;font-size:11px}
+#pore-type-legend:empty{display:none}
+#pore-type-legend button{font:inherit;color:inherit;background:white;border:1px solid #d5e2db;border-radius:5px;padding:4px 7px;cursor:pointer}
+#pore-type-legend button:hover{border-color:#225d50}
+#pore-type-legend i{width:10px;height:10px;border:1px solid #52686155;border-radius:50%}
+.assembly-structures{display:flex;gap:5px;margin:10px 0}
+.assembly-structures figure{margin:0;min-width:0;flex:1;padding:6px 3px;text-align:center;border:1px solid #d7e3dd;background:white;border-radius:6px}
+.assembly-structures img{display:block;width:100%;height:66px;object-fit:contain}
+.assembly-structures figcaption{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#assembly-evidence a{color:#166758}
 .space-workspace{max-width:1460px;box-sizing:border-box;margin:auto;padding:28px clamp(14px,3vw,48px) 56px;color:#203e41}
 body:has(#space-workspace:not([hidden])) #notice{display:none}
 body:has(#space-workspace:not([hidden])){display:block;height:auto;min-height:100dvh;overflow:visible}
@@ -63,6 +83,5 @@ body:has(#space-workspace:not([hidden])){display:block;height:auto;min-height:10
 #space-pair-detail{max-height:none}.pair-molecules{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 .pair-molecules figure{margin:0;min-width:0}.pair-molecules img{display:block;width:100%;height:110px;object-fit:contain;background:white}.pair-molecules figcaption{font-size:12px;line-height:1.35;margin-top:5px}
 #space-model{width:100%}#space-pair-detail .button{margin:3px 6px 3px 0}
-#repeat-view{max-width:95vw;width:min(88vw,830px);border:1px solid #aabfb5;border-radius:10px;padding:16px}#repeat-view::backdrop{background:#172e2e88}#repeat-view header{display:flex;gap:10px;align-items:center;flex-wrap:wrap}#repeat-image{width:100%;max-height:66vh;object-fit:contain}#repeat-message{min-height:1.4em}
 @media(max-width:850px){.space-grid,.space-overview-plots{grid-template-columns:1fr}.space-head h1{font-size:29px}}
 @media(max-width:560px){.space-family-intro{grid-template-columns:1fr;gap:2px;padding-top:18px}#space-family-figure svg{height:165px}.space-workspace .space-map-tools input{width:150px}}

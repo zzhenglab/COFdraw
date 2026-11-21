@@ -500,7 +500,7 @@
     try{
       if(!rendered||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)throw new Error('Render the current drawing before measuring its pore.');
       const result=await S.api('science/measure',drawingRequest());
-      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)return;
+      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending||window.COFdrawExtent?.value>1)return;
       const el=$('pore-measurement'),title=document.createElement('strong');
       title.textContent=`Pore opening · ${fmt(result.diameter_nm,2)} nm`;
       const method=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');

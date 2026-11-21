@@ -31,13 +31,32 @@ function monomerChoice(item,block,other){
   return state.autoChemistry?L.automaticChoice(state.library||{},item,block,other):L.monomerChoice(state.library||{},item,$("linkage").value,block,other);
 }
 function assemblyMode(){return $('assembly-count').value;}
+const customAssemblyRows=new Map();
 function multi(){return assemblyMode()!=='2';}
+function assemblyExamples(){
+  return (state.library?.assembly_examples||[]).filter(e=>e.monomer_ids.length===Number(assemblyMode()));
+}
+function assemblyStructures(items){
+  const root=$('assembly-structures'), key=JSON.stringify(items.map(r=>r?.smiles));
+  if(root.dataset.selection===key)return;
+  root.dataset.selection=key;root.replaceChildren();
+  for(const [i,item] of items.entries()){
+    if(!item)continue;
+    const fig=document.createElement('figure'),img=document.createElement('img'),label=document.createElement('figcaption');
+    img.alt=L.displayName(item);label.textContent=item.abbreviation||item.label;fig.title=img.alt;
+    const edit=document.createElement('button');edit.type='button';edit.className='text-button';edit.textContent='Draw / edit';
+    const block='abc'[i];edit.setAttribute('aria-label','Edit precursor '+block.toUpperCase());
+    edit.onclick=()=>openSketch(block,item,true);
+    fig.append(img,label,edit);root.append(fig);
+    libraryPreviews.request(item.smiles).then(preview=>{if(img.isConnected)img.src=preview.url;}).catch(()=>img.hidden=true);
+  }
+}
 function fillAssembly(saved=null){
-  const count=assemblyMode(), mixed=count==='3', rows=state.library?.monomer_presets||[];
+  const count=assemblyMode(), mixed=count==='3', rows=[...(state.library?.monomer_presets||[]),...customAssemblyRows.values()];
   $('binary-fields').hidden=multi();$('assembly-fields').hidden=!multi();
   $('mixed-fields').hidden=!mixed;
   if(!multi())return;
-  const one=rows.filter(r=>r.assembly_roles?.self_imine);
+  const one=rows.filter(r=>r.assembly_roles?.self_kind||r.assembly_roles?.self_imine);
   const countFor=(r,role)=>r.assembly_roles?.[role]||0;
   const nodes=rows.filter(r=>!r.assembly_roles?.self_imine&&!r.geometry_hint?.startsWith('tetrahedral')&&['aryl_aldehyde','primary_arylamine'].some(k=>[3,4].includes(countFor(r,k))));
   function choose(key,values,fallback){
@@ -46,38 +65,65 @@ function fillAssembly(saved=null){
     select.value=[previous,fallback,values[0]?.id].find(id=>values.some(r=>r.id===id))||'';
     return values.find(r=>r.id===select.value);
   }
-  $('assembly-a-label').textContent=mixed?'Node A':'Aminoaldehyde';
-  const node=choose('a',mixed?nodes:one,mixed?'tapb':'bfbapy');
+  $('assembly-a-label').textContent=mixed?'Node A':'Precursor';
+  const node=choose('a',mixed?nodes:one,mixed?'tape':'bdba');
   if(!node)return;
+  let chosen=[node];
+  const faces=mixed?[]:node.assembly_roles.self_pores||[];
+  const face=$('self-face'), desiredFace=saved?.pore_view||face.value||'hexagon';
+  face.replaceChildren(...faces.map(f=>option(f.id,f.label)));
+  face.value=faces.some(f=>f.id===desiredFace)?desiredFace:faces.some(f=>f.id==='hexagon')?'hexagon':faces[0]?.id||'';
+  $('self-face-field').hidden=faces.length<2;
   if(mixed){
     const nodeAmine=countFor(node,'primary_arylamine')>=3;
     const other=nodeAmine?'aryl_aldehyde':'primary_arylamine';
-    const links=rows.filter(r=>r.id!==node.id&&!r.assembly_roles?.self_imine&&countFor(r,other)===2);
+    const layout=$('mixed-layout'),hasKagome=assemblyExamples().some(e=>e.pore_layout==='kgm'&&e.monomer_ids[0]===node.id);
+    $('mixed-layout-field').hidden=!hasKagome;
+    if(saved||!hasKagome)layout.value=hasKagome&&saved?.pore_layout==='kgm'?'kgm':'local';
+    const kgm=layout.value==='kgm', n=countFor(node,nodeAmine?'primary_arylamine':'aryl_aldehyde')===3?6:4;
+    const links=rows.filter(r=>r.id!==node.id&&!r.assembly_roles?.self_imine&&countFor(r,other)===2&&(!kgm||r.assembly_roles.kgm_linear_dialdehyde));
     const b=choose('b',links,nodeAmine?'ta':'pa');
-    choose('c',links.filter(r=>r.canonical_smiles!==b?.canonical_smiles),nodeAmine?'bpda_cho':'benzidine');
-    const n=countFor(node,nodeAmine?'primary_arylamine':'aryl_aldehyde')===3?6:4, pattern=$('assembly-pattern');
-    if(saved)pattern.value=saved.linker_sequence;
-    else if(pattern.dataset.length!==String(n))pattern.value='BC'.repeat(n/2);
+    const c=choose('c',links.filter(r=>r.canonical_smiles!==b?.canonical_smiles),nodeAmine?'bpda_cho':'benzidine');
+    chosen=[node,b,c];
+    const pattern=$('assembly-pattern'),arr=$('assembly-arrangement');
+    const choices=kgm?[{sequence:'BCBCBC',label:'Hexagon · alternating B and C'},{sequence:'BBB',label:'Triangle · three B linkers'},{sequence:'CCC',label:'Triangle · three C linkers'}]:state.library?.mixed_pore_patterns?.[String(n)]||[];
+    const current=saved?.linker_sequence??pattern.value;
+    const free=!kgm&&arr.value==='custom'&&pattern.dataset.length===String(n)&&!saved;
+    arr.replaceChildren(...choices.map(p=>option(p.sequence,p.label)));
+    if(!kgm)arr.add(option('custom','Enter a clockwise sequence…'));
+    const valid=kgm?choices.some(p=>p.sequence===current):current.length===n&&/^[BC]+$/.test(current)&&current.includes('B')&&current.includes('C');
+    pattern.value=free||valid?current:kgm?'BCBCBC':'BC'.repeat(n/2);
     pattern.dataset.length=String(n);
-    $('sequence-note').textContent='Enter '+n+' edges, e.g. '+('BC'.repeat(n/2))+' or '+('B'.repeat(n/2)+'C'.repeat(n/2))+'.';
+    arr.value=free?'custom':choices.some(p=>p.sequence===pattern.value)?pattern.value:'custom';
+    $('sequence-field').hidden=arr.value!=='custom';
+    $('sequence-note').textContent=kgm?'The two triangles and the hexagon share the same network.': 'Letters give the clockwise order of the linkers. Rotations and mirror images are grouped.';
   }
-  $('assembly-note').textContent=mixed?'Imine · one local arrangement. A feed ratio alone does not fix the pore sequence.':
-    node.self_activation?'Self-condensed imine · four-corner pore after removal of two '+node.self_activation+' protecting groups.':
-    node.assembly_roles.aryl_aldehyde===2?'Self-condensed imine · four-corner pore design.':'Self-condensed imine · head-to-tail chain.';
+  assemblyStructures(chosen);
+  const examples=assemblyExamples(), selected=examples.find(e=>e.monomer_ids.every((id,i)=>id===chosen[i]?.id)&&(!mixed||(e.pore_layout==='kgm'?$('mixed-layout').value==='kgm':$('mixed-layout').value!=='kgm'&&e.linker_sequence===$('assembly-pattern').value)));
+  const menu=$('assembly-example');menu.replaceChildren(option('','Custom selection'),...examples.map(e=>option(e.id,e.label)));menu.value=selected?.id||'';
+  const evidence=$('assembly-evidence');evidence.replaceChildren();evidence.hidden=!selected?.doi;
+  if(selected?.doi){const a=document.createElement('a');a.href='https://doi.org/'+selected.doi;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Source paper';evidence.append(a);}
+  $('assembly-note').textContent=selected?.description||(mixed?'A selected linker sequence defines a local design. Bulk order depends on how the COF forms.':'A finite drawing from the selected precursor.');
 }
 function assemblyReady(){
   if(!$('assembly-a').value)return false;
   if(assemblyMode()==='1')return true;
   const p=$('assembly-pattern');
-  return Boolean($('assembly-b').value&&$('assembly-c').value&&p.value.length===Number(p.dataset.length)&&/^[BC]+$/.test(p.value)&&p.value.includes('B')&&p.value.includes('C'));
+  const valid=$('mixed-layout').value==='kgm'?['BBB','CCC','BCBCBC'].includes(p.value):p.value.length===Number(p.dataset.length)&&/^[BC]+$/.test(p.value)&&p.value.includes('B')&&p.value.includes('C');
+  return Boolean($('assembly-b').value&&$('assembly-c').value&&valid);
+}
+function assemblyFeeds(recipe){
+  if(!recipe?.assembly)return null;
+  if(recipe.assembly.precursors)return recipe.assembly.precursors;
+  return Object.values(recipe.components).map(c=>({label:c.label,smiles:c.monomer_smiles}));
 }
 function restoreAssembly(recipe){
   const saved=recipe?.assembly;
   $('assembly-count').value=saved?String(saved.monomer_ids.length):'2';
   fillAssembly(saved);
   const descriptor=$('descriptor-block'),previous=descriptor.value;
-  const keys=saved?Object.keys(recipe.components):['A','B'];
-  descriptor.replaceChildren(...keys.map(k=>option(k.toLowerCase(),saved?recipe.components[k].label:'Building block '+k)));
+  const feeds=assemblyFeeds(recipe),keys=feeds?feeds.map((_,i)=>'ABC'[i]):['A','B'];
+  descriptor.replaceChildren(...keys.map((k,i)=>option(k.toLowerCase(),feeds?feeds[i].label:'Building block '+k)));
   if(keys.includes(previous.toUpperCase()))descriptor.value=previous;
 }
 function selectedDescriptor(){
@@ -85,15 +131,19 @@ function selectedDescriptor(){
     const item=window.COFdrawCrystalDesign.precursor($('descriptor-block').value);
     return {label:item?.label||'Unassigned precursor',smiles:item?.smiles||''};
   }
-  const block=$('descriptor-block').value, comp=state.recipe?.assembly&&state.recipe.components[block.toUpperCase()];
-  return comp?{label:comp.label,smiles:comp.monomer_smiles}:{label:$('label-'+block).value,smiles:$('smiles-'+block).value.trim()};
+  const block=$('descriptor-block').value, feed=assemblyFeeds(state.recipe)?.['abc'.indexOf(block)];
+  return feed||{label:$('label-'+block).value,smiles:$('smiles-'+block).value.trim()};
 }
-function assemblyChanged(){
+function assemblyChanged(saved=null){
   clearTimeout(liveDrawingTimer);selectionRevision++;
+  if(multi())window.COFdrawCrystalDesign?.leave();
   state.inputsDirty=true;state.dirty=true;state.sourceId=null;state.sourceMetadata=null;
-  fillAssembly();sync();updateIdentity();queueDrawing();
+  fillAssembly(saved);sync();updateIdentity();queueDrawing();
 }
-for(const id of ['assembly-count','assembly-a','assembly-b','assembly-c'])$(id).addEventListener('change',assemblyChanged);
+$('assembly-count').addEventListener('change',()=>assemblyChanged(assemblyExamples()[0]||null));
+for(const id of ['assembly-a','assembly-b','assembly-c','self-face','mixed-layout'])$(id).addEventListener('change',()=>assemblyChanged());
+$('assembly-example').addEventListener('change',()=>assemblyChanged(assemblyExamples().find(e=>e.id===$('assembly-example').value)||null));
+$('assembly-arrangement').addEventListener('change',()=>{const value=$('assembly-arrangement').value;if(value!=='custom')$('assembly-pattern').value=value;assemblyChanged();if(value==='custom')$('assembly-pattern').focus();});
 $('assembly-pattern').addEventListener('input',()=>{$('assembly-pattern').value=$('assembly-pattern').value.toUpperCase();assemblyChanged();});
 $('assembly-build').onclick=()=>$('build').click();
 function constructionCheck(){
@@ -291,7 +341,7 @@ function sync() {
     $('build').textContent='Build 3D framework';$('build').title='Generate the selected net from the two editable precursors.';
   }else if($('build').textContent==='Build 3D framework')$('build').textContent='Create drawing →';
   $("assembly-build").disabled=$("build").disabled;
-  for(const id of ['assembly-count','assembly-a','assembly-b','assembly-c','assembly-pattern'])$(id).disabled=blocked;
+  for(const id of ['assembly-count','assembly-example','assembly-a','assembly-b','assembly-c','assembly-pattern','self-face','mixed-layout','assembly-arrangement'])$(id).disabled=blocked;
   $("build-from-canvas").disabled=$("build").disabled;
   $("build-from-canvas").title=$("build").title;
   $("load-source").disabled=blocked||!$("source-select").value;
@@ -359,6 +409,15 @@ async function saveText(name,text,type="application/json"){
   if(bridge?.save_text){const value=await bridge.save_text(name,text,type);if(value?.saved)notice(`Saved ${name}.`);return;}
   const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
+function showExports(downloads){
+  const bar=$("exports");bar.replaceChildren();
+  for(const ext of ["png","svg","mol","sdf","cdxml","json"]){
+    if(!downloads?.[ext])continue;
+    const button=document.createElement("button");
+    button.className="button outline";button.textContent=ext.toUpperCase();button.title="Save "+ext.toUpperCase();
+    button.onclick=()=>saveExport(downloads[ext],ext);bar.append(button);
+  }
+}
 async function saveExport(path,ext){
   try{const name=`cofdraw-${ext==="json"?"drawing":"patch"}.${ext}`;const bridge=window.pywebview?.api;if(bridge?.save_export){const r=await bridge.save_export(path,name);if(r?.saved)notice(`Saved ${name}.`);return;}const response=await fetch(`.${path}`);if(!response.ok)throw new Error("This export is unavailable; render the drawing again.");const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);}catch(e){notice(e.message,true);}
 }
@@ -419,7 +478,7 @@ async function render(){
     if(!state.sourceId){for(const key of["design_cofex_notation","design_topology","selected_template"])state.recipe[key]=clone(result.audit[key]??null);syncJSON();}
     $("framework-image").src=`.${result.downloads.svg}`;$("framework-image").hidden=false;$("canvas-empty").classList.add("hidden");
     const audit=result.audit;$("drawing-summary").textContent=`${audit.building_block_instances} blocks · ${audit.atoms} atoms · ${audit.continuation_ports.length} outward ports · ${state.sourceId?"provisional source patch":"designed finite patch"}`;
-    $("exports").replaceChildren();for(const ext of ["png","svg","mol","sdf","cdxml","json"])if(result.downloads[ext]){const button=document.createElement("button");button.className="button outline";button.textContent=ext.toUpperCase();button.title=ext==="cdxml"?"Editable ChemDraw XML graph":"Save "+ext.toUpperCase();button.addEventListener("click",()=>saveExport(result.downloads[ext],ext));$("exports").append(button);}
+    showExports(result.downloads);
     const exportNote=$("export-note"),exportAudit=audit.chemical_exports||{};
     exportNote.hidden=Boolean(result.downloads.cdxml);
     exportNote.textContent=result.downloads.cdxml?"":exportAudit.cdxml==="unavailable_in_this_rdkit_build"?"CDXML is unavailable in this local chemistry engine. Use MOL or SDF for chemical editing.":`CDXML was omitted${exportAudit.reason?`: ${exportAudit.reason}`:" because its export could not be validated"}. MOL and SDF remain available.`;
@@ -436,6 +495,9 @@ $("build").addEventListener("click",async()=>{
     if(multi()){
       const mixed=assemblyMode()==='3';
       const payload={monomer_ids:(mixed?['a','b','c']:['a']).map(k=>$('assembly-'+k).value),linker_sequence:mixed?$('assembly-pattern').value:''};
+      payload.custom_precursors=payload.monomer_ids.filter(k=>customAssemblyRows.has(k)).map(k=>{const r=customAssemblyRows.get(k);return {label:r.label,smiles:r.smiles};});
+      if(!mixed&&!$('self-face-field').hidden)payload.pore_view=$('self-face').value;
+      if(mixed&&$('mixed-layout').value==='kgm')payload.pore_layout='kgm';
       const result=await api('prepare/assembly',payload);
       if(revision!==selectionRevision)return;
       acceptRecipe(result.recipe,null,null,true);state.busy=false;await render();return;
@@ -593,9 +655,14 @@ $("layout-canvas").addEventListener("pointermove",e=>{if(dragged===null)return;c
 for(const type of["pointerup","pointercancel"])$("layout-canvas").addEventListener(type,()=>{if(dragged!==null){dragged=null;syncJSON();drawLayoutTable();}});
 $("recipe-json").addEventListener("input",()=>{state.jsonPending=true;state.dirty=true;sync();});
 $("apply-recipe").addEventListener("click",()=>{try{const input=$("recipe-json").value;if(input.length>200000)throw new Error("Recipe limit is 200 kB.");const value=JSON.parse(input);acceptRecipe(value.recipe||value);notice("Recipe applied as a designed variant. Render to check its chemistry and connections.");}catch(e){notice(e.message,true);}});
-$("save-project").addEventListener("click",()=>{if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.save();return;}const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,monomers:state.recipe?.assembly?Object.values(state.recipe.components).map(c=>({label:c.label,smiles:c.monomer_smiles})):["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
+$("save-project").addEventListener("click",()=>{if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.save();return;}const project={format:"cofdraw-project",version:1,chemistry_mode:state.autoChemistry?"auto":"manual",saved_at:new Date().toISOString(),ground_truth:false,drawing_extent:window.COFdrawExtent?.value||1,color_pore_types:$('color-pore-types').checked,monomers:assemblyFeeds(state.recipe)||["a","b"].map(block=>({label:$(`label-${block}`).value,smiles:$(`smiles-${block}`).value,editor_graph:state.monomers[block]?.graph||null})),linkage:$("linkage").value,instances:selectedTemplate()?.instances||Number($("pore").value),template_id:selectedTemplate()?.id||null,recipe:state.recipe,style_id:state.style,style_seed:state.seed,style_options:clone(state.styleOptions),image_size:Number($("image-size").value),derived_from_source_recipe_id:state.sourceId,catalog_version:state.library?.catalog_version||null,inputs_changed_since_recipe:state.inputsDirty};saveText("COFdraw-project.json",JSON.stringify(project,null,2)).catch(e=>notice(e.message,true));});
 $("open-project").addEventListener("click",()=>$("project-file").click());
-$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());if(value.format==="cofdraw-crystal-project"){await window.COFdrawCrystalDesign.restore(value);return;}window.COFdrawCrystalDesign?.leave();state.autoChemistry=value.chemistry_mode==="auto";acceptRecipe(value.recipe||value);if(value.format==="cofdraw-project"&&Array.isArray(value.monomers)){for(const[block,entry]of[["a",value.monomers[0]],["b",value.monomers[1]]])if(entry){$(`label-${block}`).value=String(entry.label||block.toUpperCase()).slice(0,100);$(`smiles-${block}`).value=String(entry.smiles||"").slice(0,4000);}$("linkage-search").value="";populateLinkages(state.library?.linkages?.[value.linkage]?value.linkage:"imine");$("pore").value=[6,12].includes(value.instances)?value.instances:6;refreshChemistry(value.template_id||value.recipe?.template_id);state.style=state.library?.styles.some(s=>s.id===value.style_id)?value.style_id:"standard";state.seed=Number.isInteger(value.style_seed)?value.style_seed:null;state.styleOptions=value.style_options&&typeof value.style_options==="object"&&!Array.isArray(value.style_options)?clone(value.style_options):{};state.resolvedStyleOptions={};$("image-size").value=[1000,1600,2400].includes(value.image_size)?value.image_size:1600;state.inputsDirty=Boolean(value.inputs_changed_since_recipe);}else showSourceMonomers(state.recipe);$("cof-preset").value="custom";setStyleDescription();drawStyleControls();refreshMonomers();sync();notice("Project opened as an editable design. Source records are reloaded separately from the audited library.");}catch(error){notice(error.message,true);}finally{e.target.value="";}});
+$("project-file").addEventListener("change",async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>1000000)throw new Error("Project files must be smaller than 1 MB.");const value=JSON.parse(await file.text());if(value.format==="cofdraw-crystal-project"){await window.COFdrawCrystalDesign.restore(value);return;}window.COFdrawCrystalDesign?.leave();state.autoChemistry=value.chemistry_mode==="auto";
+  const imported=value.recipe||value;
+  for(const input of (imported.assembly?.custom_precursors||[]).slice(0,3)){
+    const row=await api("assembly/precursor",{label:input.label,smiles:input.smiles});customAssemblyRows.set(row.id,row);
+  }
+  acceptRecipe(imported);if(value.format==="cofdraw-project"&&Array.isArray(value.monomers)){for(const[block,entry]of[["a",value.monomers[0]],["b",value.monomers[1]]])if(entry){$(`label-${block}`).value=String(entry.label||block.toUpperCase()).slice(0,100);$(`smiles-${block}`).value=String(entry.smiles||"").slice(0,4000);}$("linkage-search").value="";populateLinkages(state.library?.linkages?.[value.linkage]?value.linkage:"imine");$("pore").value=[6,12].includes(value.instances)?value.instances:6;refreshChemistry(value.template_id||value.recipe?.template_id);state.style=state.library?.styles.some(s=>s.id===value.style_id)?value.style_id:"standard";state.seed=Number.isInteger(value.style_seed)?value.style_seed:null;state.styleOptions=value.style_options&&typeof value.style_options==="object"&&!Array.isArray(value.style_options)?clone(value.style_options):{};state.resolvedStyleOptions={};$("image-size").value=[1000,1600,2400].includes(value.image_size)?value.image_size:1600;state.inputsDirty=Boolean(value.inputs_changed_since_recipe);}else showSourceMonomers(state.recipe);window.COFdrawExtent?.restore(value.drawing_extent,value.color_pore_types);$("cof-preset").value="custom";setStyleDescription();drawStyleControls();if(!multi())await refreshMonomers();sync();if(!state.inputsDirty)await render();notice("Project opened as an editable design. Source records are reloaded separately from the audited library.");}catch(error){notice(error.message,true);}finally{e.target.value="";}});
 $("copy-identity").addEventListener("click",async()=>{
   if(!state.recipe||state.inputsDirty||state.jsonPending)return;
   const source=Boolean(state.sourceId),metadata=state.sourceMetadata||state.result?.audit?.literature_metadata||{};
@@ -607,7 +674,7 @@ $("copy-identity").addEventListener("click",async()=>{
     catenation:notation?.match(/\sCOFex\.[^.\s]+\.(cat[^;\s]+);/)?.[1]||null,
     catenation_qualification:$("identity-cat").textContent,qualification:$("identity-note").textContent,
     ground_truth:false,graph_scope:"finite_patch_with_continuation_ports",
-    monomers:["a","b"].map(b=>({label:$(`label-${b}`).value,smiles:$(`smiles-${b}`).value}))};
+    monomers:assemblyFeeds(state.recipe)||["a","b"].map(b=>({label:$(`label-${b}`).value,smiles:$(`smiles-${b}`).value}))};
   try{await navigator.clipboard.writeText(JSON.stringify(record,null,2));notice("Full structure record copied.");}
   catch{await saveText("COFdraw-structure-record.json",JSON.stringify(record,null,2));}
 });
@@ -756,7 +823,9 @@ function hydrateSketch(result){
   sketchMessage(sketcher.hasStereo()?"Assigned stereo is retained. Move atoms here, or edit the stereospecific SMILES to change connectivity.":"Click an atom to extend a bond, or drag to connect atoms.");
 }
 async function sketchRequest(payload){sketchBusy=true;sketchControls();try{const result=await api("monomer",payload);hydrateSketch(result);return result;}finally{sketchBusy=false;sketchControls();}}
-async function openSketch(block,libraryMonomer=null){
+let sketchAssembly=false;
+async function openSketch(block,libraryMonomer=null,assembly=false){
+  sketchAssembly=assembly;
   activeBlock=block;
   $("sketch-dialog").dispatchEvent(new Event("cofdraw:open-sketch"));
   $("sketch-title").textContent=libraryMonomer
@@ -826,6 +895,26 @@ $("sketch-export").addEventListener("click",async()=>{try{const r=await checkedS
 async function applySketch(){
   const result=await checkedSketch(), block=activeBlock;
   const known=(state.library?.monomer_presets||[]).find(item=>item.canonical_smiles===result.smiles);
+  if(sketchAssembly){
+    const item=known||await api('assembly/precursor',{smiles:result.smiles,label:'Custom '+block.toUpperCase()});
+    const roles=item.assembly_roles||{},ids=(multi()&&assemblyMode()==='3'?['a','b','c']:['a']).map(k=>$('assembly-'+k).value);
+    const index='abc'.indexOf(block);
+    if(ids.length===1&&!roles.self_kind&&!roles.self_imine)throw new Error('Choose a precursor with a supported self-condensation reaction.');
+    if(ids.length===3){
+      if(index===0&&(![roles.primary_arylamine,roles.aryl_aldehyde].some(n=>[3,4].includes(n))||item.geometry_hint?.startsWith('tetrahedral')||roles.self_imine))throw new Error('Node A needs three or four planar reactive sites for imine formation.');
+      if(index>0){
+        const rows=[...state.library.monomer_presets,...customAssemblyRows.values()],node=rows.find(r=>r.id===ids[0]);
+        const required=node.assembly_roles.primary_arylamine>=3?'aryl_aldehyde':'primary_arylamine';
+        if(roles[required]!==2||roles.self_imine)throw new Error('This linker needs two complementary '+required.replaceAll('_',' ')+' sites.');
+        if($('mixed-layout').value==='kgm'&&!roles.kgm_linear_dialdehyde)throw new Error('The Kagome arrangement needs a linear dialdehyde. Use Local pore design for a bent linker.');
+        if(rows.find(r=>r.id===ids[3-index])?.canonical_smiles===item.canonical_smiles)throw new Error('Choose two chemically distinct linkers.');
+      }
+    }
+    if(!known)customAssemblyRows.set(item.id,item);
+    ids[index]=item.id;
+    const saved={monomer_ids:ids,linker_sequence:$('assembly-pattern').value,pore_layout:$('mixed-layout').value,pore_view:$('self-face').value};
+    $('sketch-dialog').close();assemblyChanged(saved);return;
+  }
   const previous=checkedMonomer(block);
   if(known)$(`label-${block}`).value=known.abbreviation||known.full_name||known.id;
   else if(previous?.smiles!==result.smiles)$(`label-${block}`).value="Custom "+block.toUpperCase();
@@ -875,5 +964,5 @@ async function initialize(){
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
-window.COFdrawStudio={state,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
+window.COFdrawStudio={state,showExports,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
 initialize();

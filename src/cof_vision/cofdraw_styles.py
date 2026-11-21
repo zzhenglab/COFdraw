@@ -359,11 +359,20 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
             if not 3<=len(ring)<=8 or not all(mol.GetAtomWithIdx(i).GetIsAromatic() for i in ring):continue
             pts=np.asarray(xy)[list(ring)]; center=pts.mean(0); pts=center+.92*(pts-center)
             ET.SubElement(full,tag('polygon'),{"points":" ".join(f"{x:.3f},{y:.3f}" for x,y in pts),"fill":colors[audit['atom_origin'][ring[0]]['component']],"opacity":str(options['fill_opacity'])})
-    if style_id=='pore_fill' and recipe.get('layout_kind')!='open_chain' and len(centers)>=3:
-        ids=[i['id'] for i in recipe.get('instances',[]) if i['id'] in centers]
-        pts=np.asarray([centers[i] for i in ids] if len(ids)>=3 else hull(list(centers.values())))
-        center=pts.mean(0);pts=center+.82*(pts-center)
-        ET.SubElement(full,tag('polygon'),{"points":" ".join(f"{x:.3f},{y:.3f}" for x,y in pts),"fill":palette[1],"opacity":str(options['fill_opacity'])})
+    face_colors = recipe.get('repeat_face_colors',[])
+    if (style_id=='pore_fill' or face_colors) and recipe.get('layout_kind')!='open_chain' and len(centers)>=3:
+        faces = recipe.get('repeat_faces')
+        if faces is None:
+            ids = [i['id'] for i in recipe.get('instances',[]) if i['id'] in centers]
+            polygons = [[centers[i] for i in ids] if len(ids)>=3 else hull(list(centers.values()))]
+        else:
+            polygons = [[centers[i] for i in face] for face in faces]
+        for i,vertices in enumerate(polygons):
+            pts=np.asarray(vertices)
+            center=pts.mean(0);pts=center+.82*(pts-center)
+            fill=face_colors[i] if face_colors else palette[1]
+            ET.SubElement(full,tag('polygon'),{"points":" ".join(f"{x:.3f},{y:.3f}" for x,y in pts),
+                "fill":fill,"opacity":str(options['fill_opacity']),"data-pore-fill":"true"})
     if style_id=='cartoon_nodes':
         connections={(edge['a']['instance'],edge['b']['instance']) for edge in recipe.get('connections',[])}
         if not connections:

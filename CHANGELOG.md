@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.7
+
+- Draw one pore or its connected neighbors directly on the 2D canvas. SVG, PNG and molecular exports follow the visible extent. Project files remember the extent and pore colors.
+- Explore seven one-precursor examples, including boroxine COF-1, triazine CTF-1 and two imine frameworks with both triangular and hexagonal pores.
+- Explore six three-precursor examples. SIOC-COF-1 and SIOC-COF-2 expose both triangular environments and their alternating-linker hexagon. Change a library precursor or draw your own to create a design.
+
 ## 0.9.6
 
 - Generate periodic layers from four reviewed 2D source drawings. The CIF and model report identify the selected precursors, reaction, periodic template and assumed stacking.

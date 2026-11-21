@@ -1,36 +1,7 @@
 'use strict';
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
-  const studio=window.COFdrawStudio, repeatDialog=$('repeat-view');
-  let repeatRequest=0, repeatFile;
-  async function updateRepeat() {
-    const generation=++repeatRequest, state=studio.state, count=+$('repeat-count').value;
-    const image=$('repeat-image'), message=$('repeat-message'), save=$('repeat-save');
-    repeatFile=null;save.disabled=true;image.hidden=true;image.removeAttribute('src');
-    if(!state.recipe||!state.result||state.inputsDirty||state.jsonPending||state.busy||state.dirty){
-      message.textContent='Render the current drawing to inspect its repeat units.';return;
-    }
-    const template=state.recipe.selected_template?.id;
-    const supports=!state.sourceId&&!state.recipe.assembly&&['hcb_3_3','hcb_3_2','sql_4_2','sql_4_4','chain_2_2'].includes(template);
-    for(const option of $('repeat-count').options)if(+option.value>1)option.disabled=!supports;
-    if(count===1){
-      repeatFile=state.result.downloads.svg;image.src='.'+repeatFile;image.hidden=false;save.disabled=false;
-      message.textContent=supports?'Current drawing. Choose a larger extent to join neighboring blocks.':'Original drawing. To expand it, choose a design with declared chain, square or hexagonal connectivity.';return;
-    }
-    message.textContent='Fitting connected repeat units…';
-    try {
-      const r=await studio.api('repeat',{recipe:state.recipe,repeats:count,size:+$('image-size').value});
-      if(generation!==repeatRequest||!repeatDialog.open)return;
-      const s=r.summary;repeatFile=r.svg;image.src='.'+r.svg;image.hidden=false;save.disabled=false;
-      message.textContent=s.extent+' · '+s.blocks+' building blocks · '+s.continuation_sites+' boundary sites. Standard skeletal drawing of the selected design.';
-    }catch(error){if(generation===repeatRequest)message.textContent=error.message;}
-  }
-  $('repeat-open').onclick=()=>{$('repeat-count').value='1';repeatDialog.showModal();updateRepeat();};
-  $('repeat-count').onchange=updateRepeat;
-  $('repeat-save').onclick=()=>{if(repeatFile)studio.saveExport(repeatFile,'svg');};
-  $('repeat-close').onclick=()=>repeatDialog.close();
-  repeatDialog.addEventListener('close',()=>{repeatRequest++;});
-  for(const event of ['cofdraw:layoutchanged','cofdraw:rendered'])window.addEventListener(event,()=>{if(repeatDialog.open)repeatDialog.close();});
+  const studio=window.COFdrawStudio;
   const ns = 'http://www.w3.org/2000/svg';
   const element = (name, text) => { const el = document.createElement(name); if (text !== undefined) el.textContent = text; return el; };
   function svg(name, attrs, text) {

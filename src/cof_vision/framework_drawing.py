@@ -459,6 +459,8 @@ def build_patch(recipe: dict):
         if kept_coords.shape != (len(kept_origin), 2) or not np.isfinite(kept_coords).all() or np.max(abs(kept_coords)) > 100000:
             raise ValueError('Atom coordinates must be finite xy pairs')
         refinement = {'method': 'explicit_atom_coordinates', 'applied': False, 'source_coordinates_preserved': True}
+        if recipe.get('assembly',{}).get('kind') == 'self_kagome':
+            refinement.update(source_coordinates_preserved=False, coordinate_provenance=recipe.get('coordinate_provenance'))
     conf = Chem.Conformer(mol.GetNumAtoms())
     conf.Set3D(False)
     continuation_ports = []

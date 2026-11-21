@@ -53,7 +53,7 @@ body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflo
 #model-view.figure-active #structure-canvas, #model-view.figure-active .viewer-bottom,
 #model-view.figure-active #viewer-distance, #model-view.figure-active #viewer-legend { display:none }
 .crystal-design-active .canvas-panel,
-.crystal-design-active #manual-panel > .field:not(.construction-target),
+.crystal-design-active #manual-panel > .field:not(.construction-target):not(:has(#assembly-count)),
 .crystal-design-active #manual-panel > .source-library,
 .crystal-design-active #manual-panel > .section-heading,
 .crystal-design-active #binary-fields > :not(.combination-field):not(.monomer-card):not(.library-actions):not(#build) { display:none }

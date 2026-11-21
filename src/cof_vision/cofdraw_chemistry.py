@@ -68,6 +68,8 @@ def library_linkages(catalog):
     return result
 
 def decorated_monomers(rows):
+    from .cofdraw_self import self_kind
+    from .cofdraw_mixed import linear_dialdehyde
     output=[]
     for row in rows:
         try:
@@ -93,8 +95,13 @@ def decorated_monomers(rows):
             self_imine = complete and row.get('catalog_use') != 'synthetic_intermediate' and (bool(row.get('self_activation')) or aldehydes == amines and amines in (1,2))
             roles = {k:next((e['reactive_sites'] for e in candidates if e['linkage']=='imine' and e['role']==k),0)
                      for k in ('aryl_aldehyde','primary_arylamine')}
+            kind = self_kind(row,mol,self_imine) if complete else None
+            pores = ([{'id':'hexagon','label':'Hexagonal pore'}, {'id':'triangle','label':'Triangular pore'}]
+                     if kind=='self_kagome' else [])
             output.append({**row,**metadata,'binary_eligible':bool(candidates),'binary_roles':candidates,
-                           'canonical_smiles':canonical(row['smiles']), 'assembly_roles':{**roles,'self_imine':self_imine},
+                           'canonical_smiles':canonical(row['smiles']), 'assembly_roles':{**roles,'self_imine':self_imine,
+                           'self_kind':kind,'self_pores':pores,
+                           'kgm_linear_dialdehyde':roles['aryl_aldehyde']==2 and linear_dialdehyde(row['smiles'])},
                            "catalog_reactive_groups":row.get("reactive_groups", []),
                            "abbreviation":row.get("abbreviation") or row.get("id", ""),
                            "full_name":row.get("full_name") or row.get("label", ""),

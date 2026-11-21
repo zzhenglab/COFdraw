@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="./cofdraw-space.css">
   <script defer src="./cofdraw-screen-results.js"></script>
   <script defer src="./cofdraw-space.js"></script>
+  <script defer src="./cofdraw-extent.js"></script>
   <link rel="icon" type="image/png" href="./cofdraw-logo.png"><link rel="stylesheet" href="./cofdraw.css"><link rel="stylesheet" href="./cofdraw-studio.css"><link rel="stylesheet" href="./cofdraw-materials.css"><link rel="stylesheet" href="./cofdraw-describe.css"><link rel="stylesheet" href="./cofdraw-identity.css"><link rel="stylesheet" href="./cofdraw-picker.css"><link rel="stylesheet" href="./cofdraw-workspace.css"><link rel="stylesheet" href="./cofdraw-chat.css">
   <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-crystal-figure.js" defer></script><script src="./cofdraw-crystal-design.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
   <link rel="stylesheet" href="./cofdraw-classic.css">
@@ -85,11 +86,17 @@
       <div class="section-heading"><div><h1 id="building-title">Building blocks</h1><p>Paste, choose, or draw your monomers.</p></div></div>
       <label class="field"><span>Assembly</span><select id="assembly-count"><option value="2">Two monomers</option><option value="1">One monomer · self-condensation</option><option value="3">Three monomers · mixed-linker pore</option></select></label>
       <section id="assembly-fields" hidden>
+        <label class="field"><span>Starting example</span><select id="assembly-example"></select></label>
         <label class="field"><span id="assembly-a-label">Node A</span><select id="assembly-a"></select></label>
+        <label id="self-face-field" class="field" hidden><span>Pore to draw</span><select id="self-face"></select></label>
         <div id="mixed-fields"><label class="field"><span>Linker B</span><select id="assembly-b"></select></label>
           <label class="field"><span>Linker C</span><select id="assembly-c"></select></label>
-          <label class="field"><span>Linkers clockwise around one pore</span><input id="assembly-pattern" maxlength="6" spellcheck="false" autocomplete="off"></label>
+          <label class="field" id="mixed-layout-field" hidden><span>Framework pattern</span><select id="mixed-layout"><option value="local">Local pore design</option><option value="kgm">Kagome · two triangles and a hexagon</option></select></label>
+          <label class="field"><span>Pore arrangement</span><select id="assembly-arrangement"></select></label>
+          <label class="field" id="sequence-field" hidden><span>Linkers clockwise around one pore</span><input id="assembly-pattern" maxlength="6" spellcheck="false" autocomplete="off"></label>
           <p class="small-note" id="sequence-note"></p></div>
+        <div id="assembly-structures" class="assembly-structures" aria-label="Selected precursor structures"></div>
+        <p id="assembly-evidence" class="small-note" hidden></p>
         <p class="small-note" id="assembly-note" role="status"></p>
         <button id="assembly-build" class="button primary full">Create drawing</button>
       </section>
@@ -125,7 +132,6 @@
 
       <div class="workspace-tools">
         <button id="measure-pore" class="button outline">Measure pore</button>
-        <button id="repeat-open" class="button outline" title="Expand the current drawing along its declared connectivity">Repeat units</button>
         <button id="random-style" class="button outline" disabled>Randomize style</button>
         <button id="open-science" class="button science-launch">3D &amp; properties <span aria-hidden="true">&#8599;</span></button>
       <aside class="appearance-panel canvas-appearance" aria-label="Appearance">
@@ -138,6 +144,7 @@
       <div class="local-note"><span class="status-dot live"></span><span>Local files · no upload required<br><small id="catalog-version">Built-in drawing library</small></span></div>
       </div></details>
       </aside>
+      </div><div class="extent-bar" id="extent-bar" hidden><span id="extent-label">Drawing extent</span><div id="extent-options" role="group" aria-labelledby="extent-label"></div><label id="pore-color-control" hidden><input type="checkbox" id="color-pore-types" checked> Color pore types</label><div id="pore-type-legend" aria-live="polite"></div><small id="extent-feedback" role="status"></small>
       </div><div id="geometry-message" class="small-note" hidden></div><div id="pore-measurement" class="measurement-card" hidden></div><div id="canvas-viewport" class="canvas-viewport"><div id="canvas-sheet" class="canvas-sheet"><div id="canvas-empty"><svg viewBox="0 0 210 190" aria-hidden="true"><path d="M105 15 175 55v80l-70 40-70-40V55Z M105 30 162 63v64l-57 33-57-33V63Z"/><g><circle cx="105" cy="15" r="10"/><circle cx="175" cy="55" r="10"/><circle cx="175" cy="135" r="10"/><circle cx="105" cy="175" r="10"/><circle cx="35" cy="135" r="10"/><circle cx="35" cy="55" r="10"/></g></svg><h3>Choose two building blocks</h3><p>Select Create drawing to see the framework.</p></div><svg id="geometry-overlay" aria-label="Drag atom or block handles to adjust the drawing" hidden></svg><img id="framework-image" alt="Connected chemical framework patch with outward continuation ports" hidden></div><div id="render-busy" class="render-busy hidden"><span class="spinner"></span><strong>Building the chemical graph</strong><span>Preparing the drawing and editable exports…</span></div></div>
       <p id="representation-note" class="representation-note" hidden role="status"></p><div class="canvas-status"><span id="drawing-summary">Your drawing stays on this computer.</span><span id="dirty-status"></span></div>
       <div class="output-bar"><div><strong>Save your drawing</strong><span>Images for sharing. MOL + JSON for continued editing.</span></div><div id="exports" class="export-buttons"><button class="button outline" disabled>PNG</button><button class="button outline" disabled>SVG</button><button class="button outline" disabled>MOL</button></div></div>
@@ -264,10 +271,6 @@
   </dialog>
   <dialog id="help-dialog" class="help-dialog"><form method="dialog" class="dialog-header"><h2>A local chemical drawing kit</h2><button class="icon-button" aria-label="Close help">×</button></form><div class="help-body"><ol><li><strong>Choose your monomers.</strong> Use a preset, paste SMILES, or draw atoms and bonds. The local chemistry engine checks each structure.</li><li><strong>Build a finite patch.</strong> Choose linkage chemistry, check the reactive groups, and select a compatible connectivity template. Inspect attachment ports; the preset is a design choice.</li><li><strong>Choose a style and save.</strong> Chemical, layered, and schematic styles have separate depiction scopes. PNG and SVG preserve the drawing. MOL preserves the atom/bond graph. A project JSON preserves monomers, recipe, coordinates, and style choices.</li></ol><p>Source recipes come from provisional agent annotations. Their source hash and qualified COFex record are separate from a designed variant. A finite patch does not specify a full periodic crystal, and COF graph extraction accuracy has not been established by this drawing tool.</p><p>The basic editor supports element, charge, single/double/triple bond, and ring editing. It does not assign new wedge or axial stereochemistry. Model inference is not required to draw.</p><a href="./drawing.html">Open the original recipe workbench</a></div></dialog>
 
-  <dialog id="repeat-view" aria-labelledby="repeat-title">
-    <header><h2 id="repeat-title">Repeat units</h2><label>Drawing extent <select id="repeat-count"><option value="1">Original patch</option><option value="2">2 repeats per axis</option><option value="3">3 repeats per axis</option><option value="4">4 repeats per axis</option></select></label><button class="button outline" id="repeat-save" disabled>Save SVG</button><button class="button outline" id="repeat-close">Close</button></header>
-    <p id="repeat-message" role="status"></p><img id="repeat-image" alt="Finite chemical drawing with continuation sites">
-  </dialog>
   <section id="space-workspace" class="space-workspace" aria-labelledby="space-title" hidden>
     <p id="space-status" role="status"></p>
     <div id="space-content" hidden>

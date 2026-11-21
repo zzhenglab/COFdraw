@@ -52,6 +52,8 @@ def read_catalog(data_root: Path) -> dict:
 
 def catalog_monomers(catalog):
     from .cofdraw_catalog_review import reviewed_row
+    from .cofdraw_self import additional_precursors
+    from .cofdraw_mixed import TPDA
     occurrences = catalog.get("recent_monomer_update", {}).get("additional_occurrences", {})
     rows = []
     for monomer in catalog.get("monomer_presets", MONOMERS):
@@ -64,6 +66,8 @@ def catalog_monomers(catalog):
                 "source_evidence": [*monomer.get("source_evidence", []), *extra],
             }
         rows.append(reviewed_row(monomer))
+    seen = {row['id'] for row in rows}
+    rows.extend(row for row in [*additional_precursors(),TPDA] if row['id'] not in seen)
     return rows
 
 
@@ -238,6 +242,7 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
         if element.get('fill') not in (None, 'none'): element.set('fill', color)
         if element.get('stroke') not in (None, 'none'): element.set('stroke', color)
     gradients = set()
+    kept_xy = xy[kept]
     for element in list(root):
         classes = element.get('class', '')
         atoms = [int(v) for v in re.findall(r'atom-(\d+)', classes)]
@@ -250,8 +255,11 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
             if match:
                 values = list(map(float, match.groups()))
                 point = np.array(values[2:4])
-                nearest = min(kept, key=lambda i: float(np.linalg.norm(xy[i]-point)))
-                if np.linalg.norm(xy[nearest]-point) < 1.:
+                delta = kept_xy - point
+                squared = np.einsum('ij,ij->i',delta,delta)
+                position = int(np.argmin(squared))
+                nearest = kept[position]
+                if squared[position] < 1.:
                     atoms = [old_to_new[nearest]]
                     element.set('data-vertex-atom', str(nearest))
         if not atoms:
@@ -386,7 +394,7 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
     return audit
 
 
-def export_chemical_formats(directory, stem, *, source_mol=None):
+def export_chemical_formats(directory, stem, *, source_mol=None, repeated_patch=False):
     """Add chemical files without re-perceiving aromaticity of a large pore.
 
     The MOL has already passed the source-scoped graph/geometry checks. A full
@@ -435,6 +443,34 @@ def export_chemical_formats(directory, stem, *, source_mol=None):
                                for b in candidate.GetBonds())):
                     raise ValueError("defined atom/bond stereo retains the scoped MOL parser")
                 lines = molblock.splitlines()
+                if len(lines)>3 and "V3000" in lines[3] and repeated_patch:
+                    # Large MOL files switch to V3000. Re-perceiving every
+                    # macrocycle in a multi-pore graph can take minutes even
+                    # in the unsanitized native reader. Use the already bound
+                    # graph and verify the writer's atom/bond rows directly.
+                    atom_rows=lines[lines.index('M  V30 BEGIN ATOM')+1:lines.index('M  V30 END ATOM')]
+                    bond_rows=lines[lines.index('M  V30 BEGIN BOND')+1:lines.index('M  V30 END BOND')]
+                    if (len(atom_rows),len(bond_rows))!=(candidate.GetNumAtoms(),candidate.GetNumBonds()):
+                        raise ValueError('V3000 atom or bond count differs')
+                    Chem.Kekulize(candidate,clearAromaticFlags=True)
+                    for atom,row in zip(candidate.GetAtoms(),atom_rows):
+                        index,symbol,x,y,z,*_ = row.split()[2:]
+                        if int(index)!=atom.GetIdx()+1 or symbol not in (atom.GetSymbol(), 'R' if atom.GetAtomicNum()==0 else atom.GetSymbol()):
+                            raise ValueError('V3000 atom identity differs')
+                        candidate.GetConformer().SetAtomPosition(atom.GetIdx(),(float(x),float(y),float(z)))
+                    for bond,row in zip(candidate.GetBonds(),bond_rows):
+                        idx,order,a,b,*flags=row.split()[2:]
+                        if tuple(map(int,(idx,order,a,b))) != (bond.GetIdx()+1,int(bond.GetBondTypeAsDouble()),
+                                                              bond.GetBeginAtomIdx()+1,bond.GetEndAtomIdx()+1):
+                            raise ValueError('V3000 bond identity differs')
+                        if flags==['CFG=2'] and order=='2':
+                            bond.SetStereo(Chem.BondStereo.STEREOANY)
+                            bond.SetBondDir(Chem.BondDir.EITHERDOUBLE)
+                        elif flags:
+                            raise ValueError('V3000 bond annotation requires independent verification')
+                    candidate.UpdatePropertyCache(strict=True)
+                    report.update(molecule_input='verified_source_mol_v3000',source_mol_serialization_matches_stored_MOL=True)
+                    return candidate
                 if len(lines) < 4 or "V2000" not in lines[3]:
                     raise ValueError("non-V2000 input retains the scoped MOL parser")
                 atom_count, bond_count = int(lines[3][:3]), int(lines[3][3:6])
@@ -462,6 +498,8 @@ def export_chemical_formats(directory, stem, *, source_mol=None):
                 return candidate
             except Exception as exc:
                 report["source_mol_fallback_reason"] = f"{type(exc).__name__}: {exc}"
+                if repeated_patch:
+                    raise ValueError('CDXML could not be verified from the repeated graph. MOL and SDF retain the displayed chemistry.') from exc
         report["molecule_input"] = "scoped_MOL_parser"
         return Chem.MolFromMolBlock(molblock, sanitize=False, removeHs=False)
 

@@ -28,10 +28,19 @@ class PrepareDrawing(BaseModel):
     template_id: str | None = Field(default=None, max_length=80)
 
 
+class AssemblyPrecursor(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    smiles: str = Field(min_length=1, max_length=4000)
+    label: str = Field(default="Custom precursor", min_length=1, max_length=100)
+
+
 class AssemblyDrawing(BaseModel):
     model_config = ConfigDict(extra="forbid")
     monomer_ids: list[Annotated[str, Field(min_length=1,max_length=150)]] = Field(min_length=1,max_length=3)
     linker_sequence: str = Field(default="",max_length=6,pattern="^[BC]*$")
+    pore_view: Literal["triangle", "hexagon"] | None = None
+    pore_layout: Literal["kgm"] | None = None
+    custom_precursors: list[AssemblyPrecursor] = Field(default_factory=list, max_length=3)
 
 
 class RenderDrawing(BaseModel):
@@ -53,6 +62,8 @@ class RenderDrawing(BaseModel):
 
 class RepeatDrawing(RenderDrawing):
     repeats: int = Field(ge=2, le=4)
+    extent_mode: Literal['pores', 'cells'] = 'pores'
+    color_pores: bool = False
 
 
 class MonomerDrawing(BaseModel):
@@ -461,6 +472,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 errors.append(str(exc))
         from .cofdraw_synthesis import synthetic_accessibility
         from .cofdraw_describe import NAMED_PAIRS, NAMED_DESIGNS
+        from .cofdraw_mixed import MIXED_EXAMPLES, mixed_pore_patterns
+        from .cofdraw_self import self_examples
         monomers = decorated_monomers(catalog_monomers(catalog))
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
@@ -469,6 +482,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": monomers,
+                "assembly_examples": [*self_examples(), *MIXED_EXAMPLES],
+                "mixed_pore_patterns": mixed_pore_patterns(),
                 "cof_presets": catalog.get("cof_presets", PRESETS), "catalog_version": catalog.get("catalog_version", "builtin-1"),
                 "named_pairs": [{"name":name,"a":a,"b":b,"linkage":link,"template_id":template,
                                  "doi":NAMED_DESIGNS[name][1]} for name,(a,b,link,template) in NAMED_PAIRS.items()],
@@ -623,17 +638,45 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         except (ValueError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
+    def custom_assembly_row(precursor):
+        from rdkit import Chem
+        mol = Chem.MolFromSmiles(precursor.smiles)
+        if mol is None or not 1 <= mol.GetNumAtoms() <= 250 or len(Chem.GetMolFrags(mol)) != 1:
+            raise ValueError("Choose one connected precursor with up to 250 atoms.")
+        smiles = Chem.MolToSmiles(mol, isomericSmiles=True)
+        key = 'custom-' + hashlib.sha256(smiles.encode()).hexdigest()[:24]
+        row = decorated_monomers([{'id':key, 'label':precursor.label, 'abbreviation':precursor.label, 'smiles':smiles}])[0]
+        if not row.get('assembly_roles'):
+            raise ValueError("The precursor could not be checked for assembly.")
+        return row
+
+    @router.post("/assembly/precursor")
+    def inspect_assembly_precursor(request: AssemblyPrecursor):
+        try:
+            return custom_assembly_row(request)
+        except (ValueError, RuntimeError, IndexError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
     @router.post("/prepare/assembly")
     def prepare_assembly(request: AssemblyDrawing):
         from .cofdraw_assembly import assemble
         try:
             rows = {r['id']:r for r in decorated_monomers(
                 [r for r in catalog_monomers(read_catalog(root)) if r['id'] in request.monomer_ids])}
+            for precursor in request.custom_precursors:
+                row = custom_assembly_row(precursor)
+                if row['id'] in rows or row['id'] not in request.monomer_ids:
+                    raise ValueError("Each custom precursor must match one selected building block.")
+                rows[row['id']] = row
             if any(k not in rows for k in request.monomer_ids):
                 raise ValueError('Choose a recognized library entry.')
             if len(request.monomer_ids)==1 and request.linker_sequence:
                 raise ValueError('A self-condensing design has no mixed-linker sequence.')
-            recipe = assemble([rows[k] for k in request.monomer_ids],request.linker_sequence)
+            recipe = assemble([rows[k] for k in request.monomer_ids], request.linker_sequence,
+                              pore_view=request.pore_view, pore_layout=request.pore_layout)
+            recipe['assembly']['precursors'] = [{'id':k,'label':rows[k]['abbreviation'], 'smiles':rows[k]['canonical_smiles']} for k in request.monomer_ids]
+            if request.custom_precursors:
+                recipe['assembly']['custom_precursors'] = [row.model_dump() for row in request.custom_precursors]
             recipe.update(schema_version=VERSION,recipe_id='designed-assembly',designed_variant=True,ground_truth=False,
                           review_status='user_design',layout_refinement='bond_angle_pose_v2',design_note=recipe['assembly']['scope'])
             recipe['design_template_signature']=design_signature(recipe)
@@ -681,6 +724,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 status = "designed_variant"
                 metadata = {}
             validate_recipe(recipe)
+            extent_options = drawing_extents(recipe, request.source_recipe_id, source_hash)
             drawing_id = uuid.uuid4().hex
             original_id = recipe.get("recipe_id")
             recipe["recipe_id"] = drawing_id  # filenames are always server-generated
@@ -706,7 +750,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             urls = {ext: f"/api/drawing/exports/{drawing_id}/{ext}" for ext in ("svg", "png", "mol", "json", *extra_formats)}
             bundle = {"recipe": recipe, "audit": audit, "downloads": urls}
             (directory / f"{drawing_id}.json").write_text(json.dumps(bundle, indent=2) + "\n", encoding="utf-8")
-            return {"drawing_id": drawing_id, "status": status, "audit": audit, "downloads": urls}
+            return {"drawing_id": drawing_id, "status": status, "audit": audit, "downloads": urls,
+                    "repeat_options": extent_options}
         except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
@@ -734,18 +779,32 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         validate_recipe(value)
         return value
 
-    @router.post('/repeat')
-    def repeat_drawing(request: RepeatDrawing):
-        from .cofdraw_repeat import repeated_drawing
+    def drawing_extents(recipe, source_id, digest):
+        from .cofdraw_repeat import repeat_options
+        rule = crystal_manifest().get('source_layer_designs', {}).get(source_id) if source_id else None
+        return repeat_options(recipe, source_rule=rule, source_sha256=digest)
+
+    @router.post('/repeat-options')
+    def available_repeats(request: RenderDrawing):
         try:
             recipe = selected_recipe(request)
-            with lock:
-                svg, summary = repeated_drawing(recipe, request.repeats, request.size)
+            digest = source_recipe(request.source_recipe_id)[1] if request.source_recipe_id else None
+            return drawing_extents(recipe, request.source_recipe_id, digest)
+        except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @router.post('/repeat')
+    def repeat_drawing(request: RepeatDrawing):
+        from .cofdraw_repeat import write_repeat
+        try:
+            if request.source_recipe_id:
+                recipe, digest = source_recipe(request.source_recipe_id)
+                rule = crystal_manifest().get('source_layer_designs', {}).get(request.source_recipe_id)
+            else:
+                recipe, digest, rule = selected_recipe(request), None, None
             key = uuid.uuid4().hex
-            directory = outputs / key
-            directory.mkdir(parents=True)
-            (directory / f'{key}.svg').write_text(svg, encoding='utf8')
-            return {'summary': summary, 'svg': f'/api/drawing/exports/{key}/svg'}
+            with lock:
+                return write_repeat(recipe, outputs / key, key, request, source_rule=rule, source_sha256=digest)
         except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
