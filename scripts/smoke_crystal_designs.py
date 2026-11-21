@@ -113,6 +113,8 @@ def main():
         assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
         assert page.evaluate("COFdrawScience.viewer.model.periodic")
         screenshot("TAPM-DMTA-cell.png")
+        if not page.locator('#display-settings').evaluate('(panel) => panel.open'):
+            page.click('#display-settings > summary')
         page.select_option('#display-a','1')
         wait_for("COFdrawScience.viewer.atoms.length===4*COFdrawScience.structure.atoms.length")
         page.select_option('#crystal-scene','blockA')
