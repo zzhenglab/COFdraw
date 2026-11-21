@@ -1002,12 +1002,14 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                     except ValueError as exc:
                         result.setdefault('warnings',[]).append(f'Conventional circuit layout unavailable: {exc}')
                 elif item is not None:
-                    from .cofdraw_crystal_circuits import joined_reference_circuits
-                    patches=joined_reference_circuits(structure,network['edges'])
+                    from .cofdraw_crystal_circuits import reference_framework
+                    patches,topology=reference_framework(structure,network['edges'])
                     if patches:
                         result['reference_circuit_patches']={str(n):patch for n,patch in patches.items()}
                         result['circuit_extents']=sorted(patches)
                         result['chemical_circuit_svg']=chemical_drawing(structure,network['edges'],circuit=patches[1])
+                    if topology:
+                        result['crystal_details']['periodic_topology']=topology
         if item is None:
             return result
         result['scope']=item['description']

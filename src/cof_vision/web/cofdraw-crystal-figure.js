@@ -44,8 +44,10 @@
     const xyz=f=>[0,1,2].map(k=>f.reduce((v,n,i)=>v+n*cell[i][k],0));
     const n=source.structure.atoms.length, guides=[], networks=[], nodes=new Map();
     function networkAt(vertex,shift){
-      if(!net.site_ids||shift.some((x,k)=>x<0||x>=counts[k]))return undefined;
-      const image=(shift[0]*counts[1]+shift[1])*counts[2]+shift[2];
+      if(!net.site_ids)return undefined;
+      const anchor=shift.map((x,k)=>x+(net.site_shifts?.[vertex][k]||0));
+      if(anchor.some((x,k)=>x<0||x>=counts[k]))return undefined;
+      const image=(anchor[0]*counts[1]+anchor[1])*counts[2]+anchor[2];
       return model.atoms[image*n+net.site_ids[vertex]]?.network;
     }
     for(const [i,j,...image] of net.edges){

@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 
 
-def joined_reference_circuits(structure, edges, limit=4):
+def reference_framework(structure, edges, limit=4):
     """Contract local molecular rings, then follow bonds between branching residues.
 
     Every vertex includes its lattice image. An edge touching the opposite face
@@ -42,7 +42,7 @@ def joined_reference_circuits(structure, edges, limit=4):
         while queue:
             site=queue.pop();n=site[0]
             if n in owner:
-                if offset[n]!=site[1:]:return {}
+                if offset[n]!=site[1:]:return {}, None
                 continue
             owner[n]=group;offset[n]=site[1:];members.add(site)
             queue.extend(adjacent(site,local))
@@ -61,7 +61,7 @@ def joined_reference_circuits(structure, edges, limit=4):
         keep-=ends
     net=[sorted(v for v in row if v[0] in keep) for row in residue]
     junctions={i for i in keep if len(net[i])>=3}
-    if not junctions:return {}
+    if not junctions:return {}, None
     arms={i:{} for i in junctions}
     for i in junctions:
         root=(i,0,0,0)
@@ -71,7 +71,7 @@ def joined_reference_circuits(structure, edges, limit=4):
                 upcoming=set(adjacent(site,net))-{previous}
                 if len(upcoming)!=1:break
                 path.append(site);previous,site=site,upcoming.pop()
-            if site[0] not in junctions or site==root or site in arms[i]:return {}
+            if site[0] not in junctions or site==root or site in arms[i]:return {}, None
             arms[i][site]=path
     def neighbors(v):
         return [translated(w,v) for w in arms[v[0]]]
@@ -88,9 +88,33 @@ def joined_reference_circuits(structure, edges, limit=4):
         return None
     start=(min(junctions),0,0,0)
     first=next((p for b in sorted(neighbors(start)) if (p:=other_face(start,b,set(),10))),None)
-    if not first:return {}
+    if not first:return {}, None
     cell=np.asarray(structure["cell"])
     centers=[np.mean([np.asarray(atoms[i]["fractional"])+[x,y,z] for i,x,y,z in group],axis=0) for group in groups]
+    # Wrap each centroid into the primitive cell. Its incident edges must carry
+    # the same shift, even when the contracted ring crosses a cell boundary.
+    ordered=sorted(junctions)
+    indices={g:i for i,g in enumerate(ordered)}
+    images={g:np.floor(centers[g]+1e-10).astype(int) for g in ordered}
+    spans=set()
+    for g in ordered:
+        for h,x,y,z in arms[g]:
+            shift=np.array([x,y,z])+images[h]-images[g]
+            forward=(indices[g],indices[h],*map(int,shift))
+            reverse=(indices[h],indices[g],*map(int,-shift))
+            spans.add(min(forward,reverse))
+    anchors=[min(groups[g],key=lambda site:np.linalg.norm(
+        (np.array(atoms[site[0]]['fractional'])+site[1:]-centers[g])@cell)) for g in ordered]
+    from .cofdraw_network import _components
+    contracted=[dict(a=a,b=b,translation=t) for a,b,*t in spans]
+    components,_=_components(len(ordered),contracted,cell)
+    if any(group['periodic_rank']!=3 for group in components):
+        return {}, None
+    topology=dict(kind='Molecular junctions from distance-inferred CIF bonds',
+                  points=[np.maximum(0.,centers[g]-images[g]).tolist() for g in ordered],
+                  site_ids=[site[0] for site in anchors],
+                  site_shifts=[(np.array(site[1:])-images[g]).tolist() for g,site in zip(ordered,anchors)],
+                  edges=[list(edge) for edge in sorted(spans)])
     def centroid(loop):
         return np.mean([(centers[i]+[x,y,z])@cell for i,x,y,z in loop],axis=0)
     def ring_edges(loop):
@@ -130,4 +154,4 @@ def joined_reference_circuits(structure, edges, limit=4):
         midpoint=np.mean([centroid(loop) for loop in loops],axis=0)
         selected=min(options.values(),key=lambda v:(-len(ring_edges(v)&used),len(v),np.linalg.norm(centroid(v)-midpoint),v))
         loops.append(selected);used.update(ring_edges(selected));site_images.update(sites_for(selected))
-    return patches
+    return patches, topology

@@ -70,6 +70,11 @@ def main():
             page.click('#open-science')
             assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
             assert page.evaluate("COFdrawScience.viewer.atoms.length>=COFdrawScience.structure.atoms.length")
+            if starter.get('kind')=='reference':
+                page.check('#crystal-topology')
+                assert page.evaluate("COFdrawScience.viewer.model.spatial_guides.length>0")
+                if preset=='crystal:curated-07013N3':screenshot('COF-108-periodic-topology.png')
+                page.uncheck('#crystal-topology')
             page.click('#close-science')
             if starter.get('kind')!='reference':
                 assert not any(name=='model' for name,_ in calls[start:]),(preset,calls[start:])

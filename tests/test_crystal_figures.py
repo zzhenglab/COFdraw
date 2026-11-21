@@ -27,10 +27,12 @@ def test_coordinate_illustrations(filename,has_circuit):
             assert 1 < np.linalg.norm(xyz[a]-xyz[b]) < 1.9
         assert np.linalg.norm(ring["direction"])==pytest.approx(1)
     else:
-        from cof_vision.cofdraw_crystal_circuits import joined_reference_circuits
+        from cof_vision.cofdraw_crystal_circuits import reference_framework
         edges=inspect_periodic_network(structure)["edges"]
-        patches=joined_reference_circuits(structure,edges)
+        patches,topology=reference_framework(structure,edges)
         assert list(patches)==[1,2,3,4]
+        assert len(topology['site_ids'])==len(topology['points'])==len(topology['site_shifts'])
+        assert any(any(shift) for _,_,*shift in topology['edges'])
         sites=set()
         for n,patch in patches.items():
             expanded={(i,tuple(image)) for i,image in patch["site_images"]}

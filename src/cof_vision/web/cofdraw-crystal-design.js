@@ -134,7 +134,7 @@
     if(!report)return;
     const token=++job, model=report, type=$('crystal-drawing-view').value;
     count=['Framework drawing','Projected circuit'].includes(type)&&model.circuit_extents?.includes(n)?n:1;
-    preferredView=type;clearImage();$('canvas-empty').classList.add('hidden');circuitOptions();
+    clearImage();$('canvas-empty').classList.add('hidden');circuitOptions();
     let source=cache.get(count),text='',caption='';
     try{
       if(!source){
@@ -313,7 +313,7 @@
   window.addEventListener('cofdraw:open-crystal',e=>select(e.detail));
   picker.addEventListener('change',()=>{if(picker.value==='aryl_f'){picker.value=id;selectInViewer(id,'aryl_f');}else select(picker.value);});
   $('compare-crystal-reference').onclick=()=>selectInViewer(id);
-  $('crystal-drawing-view').addEventListener('change',()=>drawView());
+  $('crystal-drawing-view').addEventListener('change',e=>{preferredView=e.target.value;drawView();});
   $('measure-pore').addEventListener('click',e=>{
     if(!id)return;
     e.preventDefault();e.stopImmediatePropagation();
@@ -353,7 +353,7 @@
       studio.state.styleOptions=project.style_options&&typeof project.style_options==='object'?project.style_options:{};
       const view=legacy[project.view]||project.view==='Three connected circuits'?'Framework drawing':project.view;
       const selector=$('crystal-drawing-view');
-      if([...selector.options].some(o=>o.value===view))selector.value=view;
+      if([...selector.options].some(o=>o.value===view))selector.value=preferredView=view;
       studio.refreshStyles();await drawView(project.circuits||(project.view==='Three connected circuits'?3:1));
     }
   }
