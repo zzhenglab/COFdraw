@@ -36,6 +36,8 @@ The Windows application requires [Microsoft WebView2 Runtime](https://developer.
 
 Release assets include a SHA-256 checksum file. Troubleshooting and export details are in the [user guide](docs/cofdraw-desktop-release.md).
 
+**Mac beta** · Download the Apple silicon or Intel ZIP, extract it, and move **COFdraw.app** to Applications. Each beta lists the macOS version tested and first-open instructions. [Mac beta releases](https://github.com/zzhenglab/COFdraw/releases?q=mac-beta)
+
 ## What you can do
 
 | Feature | Included in v0.9.0 |

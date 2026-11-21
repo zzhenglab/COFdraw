@@ -27,6 +27,8 @@ MAX_WORK = 100_000_000_000
 
 def resource_directory():
     if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            return Path(sys._MEIPASS) / "data" / "raspa"
         return Path(sys.executable).resolve().parent / "data" / "raspa"
     return Path(__file__).resolve().parents[2] / "data" / "raspa"
 

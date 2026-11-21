@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import importlib.metadata as metadata
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -91,6 +92,50 @@ def copy_licenses(destination):
     (destination / "packages.json").write_text(json.dumps(sorted(packages, key=lambda p: p["name"]), indent=2), "utf-8")
 
 
+def freeze_desktop(run, icon, extra_args=()):
+    command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--windowed",
+               "--name", "COFdraw", "--distpath", str(run / "dist"),
+               "--workpath", str(run / "work"), "--specpath", str(run),
+               "--paths", str(REPO / "src"), "--icon", str(icon),
+               "--add-data", f"{REPO / 'src/cof_vision/web'}{os.pathsep}cof_vision/web",
+               "--collect-all", "rdkit", "--collect-all", "resvg_py",
+               "--collect-all", "raspalib", "--copy-metadata", "raspalib",
+               "--hidden-import", "uvicorn.logging", "--hidden-import", "uvicorn.loops.asyncio",
+               "--hidden-import", "uvicorn.protocols.http.h11_impl", "--hidden-import", "uvicorn.lifespan.on"]
+    for module in ("torch", "onnx", "onnxruntime", "pymupdf", "fitz", "matplotlib", "IPython",
+                   "tkinter", "pytest", "pandas", "scipy", "sklearn", "notebook", "PyQt5", "PyQt6", "PySide2", "PySide6"):
+        command += ["--exclude-module", module]
+    command += [*extra_args, str(REPO / "scripts/launch_cofdraw.py")]
+    subprocess.run(command, check=True)
+
+
+def stage_scientific_data(data, staged, catalog):
+    portable = staged / "data/framework-drawing"
+    portable.mkdir(parents=True)
+    # Copy only the hash-bound catalog. Local exports and logs stay private.
+    for relative in ["current-bundle-manifest.json", *[row["path"] for row in catalog["files"]]]:
+        output = portable / relative
+        output.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(data / "framework-drawing" / relative, output)
+    validate_catalog(staged / "data")
+    crystal_data = data / "crystal-models"
+    crystal_manifest = json.loads((crystal_data / "manifest.json").read_text("utf-8"))
+    for row in crystal_manifest["templates"] + crystal_manifest.get("reported_models", []) + crystal_manifest.get("curated_models", []):
+        crystal = (crystal_data / row["path"]).resolve()
+        if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
+            raise SystemExit("Periodic template hash mismatch")
+    shutil.copytree(crystal_data, staged / "data/crystal-models")
+    solubility_data = data / "solubility"
+    solubility_manifest = json.loads((solubility_data / "validation.json").read_text("utf-8"))
+    if sha(solubility_data / "measurements.csv") != solubility_manifest["measurements_sha256"]:
+        raise SystemExit("Solubility reference hash mismatch")
+    shutil.copytree(solubility_data, staged / "data/solubility")
+    # Immutable engine/profile resources belong to the application, independent
+    # of a user's writable catalog-data location.
+    shutil.copytree(REPO / "data/raspa", staged / "data/raspa")
+    return solubility_manifest
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--catalog-data", type=Path, default=REPO / "data")
@@ -119,20 +164,7 @@ def main():
         square.alpha_composite(rgba, ((edge - rgba.width) // 2, (edge - rgba.height) // 2))
         square.save(icon, format="ICO", sizes=[(x, x) for x in (16, 24, 32, 48, 64, 128, 256)])
     validate_raspa_resources()
-    command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--windowed",
-               "--name", "COFdraw", "--distpath", str(run / "dist"),
-               "--workpath", str(run / "work"), "--specpath", str(run),
-               "--paths", str(REPO / "src"), "--icon", str(icon),
-               "--add-data", f"{REPO / 'src/cof_vision/web'};cof_vision/web",
-               "--collect-all", "rdkit", "--collect-all", "resvg_py",
-               "--collect-all", "raspalib", "--copy-metadata", "raspalib",
-               "--hidden-import", "uvicorn.logging", "--hidden-import", "uvicorn.loops.asyncio",
-               "--hidden-import", "uvicorn.protocols.http.h11_impl", "--hidden-import", "uvicorn.lifespan.on"]
-    for module in ("torch", "onnx", "onnxruntime", "pymupdf", "fitz", "matplotlib", "IPython",
-                   "tkinter", "pytest", "pandas", "scipy", "sklearn", "notebook", "PyQt5", "PyQt6", "PySide2", "PySide6"):
-        command += ["--exclude-module", module]
-    command.append(str(REPO / "scripts/launch_cofdraw.py"))
-    subprocess.run(command, check=True)
+    freeze_desktop(run, icon)
     staged = inside_repository(run / "dist/COFdraw")
     if not (staged / "COFdraw.exe").is_file():
         raise SystemExit("PyInstaller did not produce COFdraw.exe")
@@ -141,29 +173,7 @@ def main():
     # downloaded ZIP. The process-scoped CLR setting lets Python.NET/WebView2
     # load the supplied managed DLLs without unblocking files or changing the OS.
     shutil.copy2(REPO / "packaging/COFdraw.exe.config", staged / "COFdraw.exe.config")
-    portable = staged / "data/framework-drawing"
-    portable.mkdir(parents=True)
-    # Copy only the hash-bound catalog. Local exports and logs stay private.
-    for relative in ["current-bundle-manifest.json", *[row["path"] for row in catalog["files"]]]:
-        output = portable / relative
-        output.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(data / "framework-drawing" / relative, output)
-    validate_catalog(staged / "data")
-    crystal_data = data / "crystal-models"
-    crystal_manifest = json.loads((crystal_data / "manifest.json").read_text("utf-8"))
-    for row in crystal_manifest["templates"] + crystal_manifest.get("reported_models", []) + crystal_manifest.get("curated_models", []):
-        crystal = (crystal_data / row["path"]).resolve()
-        if not crystal.is_relative_to(crystal_data.resolve()) or sha(crystal) != row["sha256"]:
-            raise SystemExit("Periodic template hash mismatch")
-    shutil.copytree(crystal_data, staged / "data/crystal-models")
-    solubility_data = data / "solubility"
-    solubility_manifest = json.loads((solubility_data / "validation.json").read_text("utf-8"))
-    if sha(solubility_data / "measurements.csv") != solubility_manifest["measurements_sha256"]:
-        raise SystemExit("Solubility reference hash mismatch")
-    shutil.copytree(solubility_data, staged / "data/solubility")
-    # Immutable engine/profile resources belong to the application, independent
-    # of a user's writable catalog-data location.
-    shutil.copytree(REPO / "data/raspa", staged / "data/raspa")
+    solubility_manifest = stage_scientific_data(data, staged, catalog)
     for cpu in ("base", "avx", "avx2", "avx512"):
         if not list((staged / "_internal/raspalib").glob(f"raspalib_{cpu}*.pyd")):
             raise SystemExit(f"Bundled RASPA CPU variant missing: {cpu}")

@@ -351,7 +351,7 @@ def validate_recipe(recipe: dict) -> None:
                 raise ValueError("Every connection must identify an existing instance and integer port")
 
 
-def create_drawing_router(data_root: Path) -> APIRouter:
+def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -> APIRouter:
     from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, render_recipe, build_patch
     from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
     from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
@@ -360,7 +360,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     router = APIRouter(prefix="/api/drawing", tags=["COF drawing"])
     root = data_root.resolve()
     registry = root / "framework-drawing" / "registry.json"
-    outputs = root / "framework-drawing" / "exports"
+    outputs = (output_root or root) / "framework-drawing" / "exports"
     lock = threading.Lock()
     from .cofdraw_adsorption import create_adsorption_router
     router.include_router(create_adsorption_router(outputs))

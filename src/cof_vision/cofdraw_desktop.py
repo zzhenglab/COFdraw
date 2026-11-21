@@ -1,4 +1,4 @@
-"""Windows desktop launcher; local drawing only, no OCR/model imports."""
+"""Desktop launcher for the offline drawing studio."""
 from __future__ import annotations
 
 import argparse
@@ -25,7 +25,7 @@ VERSION = "0.9.4"
 STATIC = Path(__file__).with_name("web")
 
 
-def create_desktop_app(data_root):
+def create_desktop_app(data_root, *, output_root=None):
     app = FastAPI(title="COFdraw", version=VERSION, docs_url=None, redoc_url=None)
 
     @app.exception_handler(RequestValidationError)
@@ -61,7 +61,7 @@ def create_desktop_app(data_root):
         return {"version": VERSION, "offline": True, "optional_llm_api": True,
                 "default_mode": "offline_rules", "data_directory": str(Path(data_root).resolve()), "training": False}
 
-    app.include_router(create_drawing_router(Path(data_root)))
+    app.include_router(create_drawing_router(Path(data_root), output_root=output_root))
     app.mount("/", StaticFiles(directory=STATIC), name="assets")
     return app
 
@@ -128,8 +128,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     home = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[3]
     data = (args.data_dir or home / "data").resolve()
-    data.mkdir(parents=True, exist_ok=True)
-    log = data / "cofdraw.log"
+    writable = data
+    if sys.platform == "darwin" and getattr(sys, "frozen", False) and not args.data_dir:
+        data = Path(sys._MEIPASS) / "data"
+        writable = Path.home() / "Library/Application Support/COFdraw"
+    writable.mkdir(parents=True, exist_ok=True)
+    log = writable / "cofdraw.log"
     logging.basicConfig(filename=log, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     # Windowed PyInstaller has no stdout/stderr; libraries expect writable streams.
     if sys.stdout is None:
@@ -141,7 +145,7 @@ def main(argv=None):
     sock.bind(("127.0.0.1", args.port))
     port = sock.getsockname()[1]
     origin = f"http://127.0.0.1:{port}"
-    server = uvicorn.Server(uvicorn.Config(create_desktop_app(data), host="127.0.0.1", port=port, log_config=None, access_log=False, loop="asyncio", http="h11", ws="none"))
+    server = uvicorn.Server(uvicorn.Config(create_desktop_app(data, output_root=writable), host="127.0.0.1", port=port, log_config=None, access_log=False, loop="asyncio", http="h11", ws="none"))
     status = {"version": VERSION, "url": origin + "/", "data_directory": str(data), "pid": os.getpid(), "status": "starting"}
     def write_status():
         if args.status_file:
@@ -182,13 +186,14 @@ def main(argv=None):
                 status.update(status="desktop_smoke_failed", error=str(exc)); write_status()
             finally:
                 window.destroy()
-        webview.start(smoke if args.smoke_window else None, gui="edgechromium", debug=False, private_mode=True)
+        gui = "edgechromium" if sys.platform == "win32" else None
+        webview.start(smoke if args.smoke_window else None, gui=gui, debug=False, private_mode=True)
         if args.smoke_window and status.get('status') != 'desktop_smoke_passed':
             return 1
     except Exception as exc:
         logging.exception("Desktop startup failed")
         status.update(status="failed", error=str(exc)); write_status()
-        if not args.smoke_window:
+        if not args.smoke_window and sys.platform == "win32":
             import ctypes
             ctypes.windll.user32.MessageBoxW(0, "COFdraw could not open its desktop window.\n\n"
                 "Extract the complete current release and keep COFdraw.exe.config, _internal, and data beside COFdraw.exe.\n\n"
