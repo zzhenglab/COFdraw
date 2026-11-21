@@ -8,6 +8,8 @@
   const palette=['#166d83','#bd654a','#8071ac','#a4882e','#39816b','#b45d8a','#5077ac','#998766','#727b4e'];
   const labels={ring:'Molecular circuit',junction:'Tetrahedral junction',net:'Junction net',overlay:'Structure + net',single:'One network',cell:'Crystal packing'};
   labels.spotlight='Highlight a network';
+  Object.assign(labels,{blockA:'Building block A',blockB:'Building block B',cage_overlay:'Circuit + topology',layer:'Single layer',stack:'Layer stack',pores:'Pore surface'});
+  labels.blocknet='Building-block net';labels.block_overlay='Building blocks + net';
   const descriptions={ring:'Closed circuit traced through a single covalent network. All heavy atoms along its linkers are shown.',
     junction:'Four bonded shells around one four-connected center, unwrapped across cell faces.',
     net:'Each segment follows a traced linker between two four-connected centers. Two junction shells are shown.',
@@ -15,6 +17,13 @@
     single:'One distance-connected periodic network within the displayed cell boundaries.',
     cell:'Networks are colored by connectivity in the selected coordinate model.'};
   descriptions.spotlight='Selected network in color with the surrounding crystal faded.';
+  Object.assign(descriptions,{blockA:'One reacted building block A, unwrapped across periodic boundaries.',
+    blockB:'One reacted building block B, unwrapped across periodic boundaries.',
+    cage_overlay:'Covalent circuit with its junction-to-junction paths superimposed.',
+    layer:'One explicitly assigned layer of the displayed structure.',stack:'All displayed layers colored by layer index.',
+    pores:'Probe-center surface calculated on the current periodic cell.'});
+  descriptions.blocknet='Centers of reacted building blocks, joined through the actual interblock bonds.';
+  descriptions.block_overlay='Two coordination shells of the framework with its building-block graph overlaid.';
   let source=null,full=null,isFigure=false;
 
   function part(model,accept){
@@ -28,22 +37,32 @@
     let model=full;
     const selected=Number($('crystal-net-index').value);
     $('crystal-net-field').hidden=!['single','spotlight'].includes(key);
-    if(key==='single'){
+    if(key==='layer'){
+      const index=full.atoms.find(a=>a.layer!==undefined)?.layer;
+      model=part(full,a=>a.layer===index);
+    }else if(key==='single'){
       model={...part(full,a=>a.network===selected),cell:full.cell};
     }else if(key==='spotlight'){
       model={...full,highlightNetwork:selected};
-    }else if(key!=='cell')model=source.crystal_details[key];
-    viewer.set(key==='cell'||key==='spotlight'?model:{...model,illustration:true});
+    }else if(!['cell','stack','pores'].includes(key))model=source.crystal_details[key];
+    viewer.set(['cell','spotlight','stack','pores'].includes(key)?model:{...model,illustration:true});
     const direction=model.direction;
     if(direction){
       viewer.theta=Math.atan2(-direction[0],direction[2]);
       viewer.phi=Math.asin(Math.min(1,Math.max(-1,direction[1])));
     }
     $('viewer-axis').value='free';
-    $('viewer-color').value=['cell','single','spotlight'].includes(key)?'network':'element';
+    $('viewer-color').value=['layer','stack'].includes(key)?'layer':['single','spotlight'].includes(key)?'network':key==='blocknet'?'component':'element';
     viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;
     note.textContent=descriptions[key]+' Calculations use the full crystal.';
     window.dispatchEvent(new Event('cofdraw:crystal-scene'));
+    if(key==='pores'){
+      if(isFigure)mode(false);
+      $('viewer-mode').value='wireframe';
+      $('pore-visible').checked=true;
+      window.COFdrawPores?.calculate().catch(error=>lab.status(error.message,true));
+    }
+    toggle.disabled=key==='pores';
     viewer.draw();paint();
   }
 
@@ -55,7 +74,7 @@
   }
   function paint(){
     if(!isFigure||!source||!viewer.atoms.length)return;
-    const atoms=viewer.atoms, key=scene.value, net=key==='net', packing=key==='cell';
+    const atoms=viewer.atoms, key=scene.value, net=['net','blocknet'].includes(key), packing=key==='cell';
     const name=source.structure.provenance.model_name||'Periodic crystal';
     const svg=node('svg',{xmlns:'http://www.w3.org/2000/svg',viewBox:'0 0 760 570',role:'img','aria-label':name+' · '+labels[key]});
     svg.append(node('title',{},name+' · '+labels[key]),node('desc',{},note.textContent+' DOI '+(source.structure.provenance.doi||'')),
@@ -71,6 +90,12 @@
     const color=i=>packing&&Number.isInteger(atoms[i].network)?palette[atoms[i].network%palette.length]:colors[atoms[i].element]||'#795f90';
     for(const [a,b] of viewer.model.guides||[])svg.append(node('line',{x1:xy[a][0],y1:xy[a][1],x2:xy[b][0],y2:xy[b][1],
       stroke:'#bc6a36','stroke-width':4,'stroke-dasharray':'7 5',opacity:.65}));
+    const guideXY=([x,y,z])=>[380+(x*ct+z*st-bounds[0][0]-width/2)*scale,
+      272-(y*cp-(-x*st+z*ct)*sp-bounds[1][0]-height/2)*scale];
+    for(const guide of viewer.model.spatial_guides||[]){
+      const [a,b]=guide.map(guideXY);
+      svg.append(node('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#bc6a36','stroke-width':3,'stroke-dasharray':'7 5',opacity:.75}));
+    }
     const commands=[];
     for(const [a,b] of viewer.bonds){
       if(atoms[a].element==='H'||atoms[b].element==='H')continue;
@@ -118,16 +143,19 @@
   window.addEventListener('cofdraw:structure',({detail:r})=>{
     if(r.invalidated&&lab.structure===source?.structure)return;
     source=null;full=null;tools.hidden=true;note.hidden=true;sheet.replaceChildren();mode(false);
-    if(!r.structure||!(r.color_periodic_networks||r.structure.provenance?.network_dimension===3))return;
+    if(!r.structure||!r.viewer?.atoms?.length)return;
     source=r;full=r.viewer;
     scene.replaceChildren();
     const ids=networks();
-    for(const key of ['cell','single','spotlight','ring','junction','net','overlay']){
-      if(key==='cell'||(key==='single'?ids.length:key==='spotlight'?ids.length>1:r.crystal_details?.[key]))
-        scene.add(new Option(labels[key],key));
+    toggle.disabled=false;
+    const layers=new Set(full.atoms.map(a=>a.layer).filter(x=>x!==undefined));
+    for(const key of ['cell','layer','stack','blockA','blockB','blocknet','block_overlay','ring','junction','net','overlay','cage_overlay','single','spotlight','pores']){
+      const supported=key==='cell'||(key==='single'&&ids.length)||(key==='spotlight'&&ids.length>1)||
+        (key==='layer'&&layers.size)||(key==='stack'&&layers.size>1)||(key==='pores'&&r.structure.periodic)||r.crystal_details?.[key];
+      if(supported)scene.add(new Option(key==='cell'&&!r.structure.periodic?'Full structure':labels[key],key));
     }
     tools.hidden=false;note.hidden=false;
-    $('crystal-annotation').hidden=r.structure.provenance.template!=='cof-300-c5';
+    $('crystal-annotation').hidden=r.structure.provenance?.template!=='cof-300-c5';
     note.textContent=descriptions.cell;
     if(lab.origin==='catalog-design'){
       viewer.hideHydrogen=true;$('viewer-hide-h').checked=true;

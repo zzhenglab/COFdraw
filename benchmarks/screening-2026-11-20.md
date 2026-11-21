@@ -1,5 +1,15 @@
 # Five-hour COF screening checkpoint
 
+## Follow-up on November 21 (UTC)
+
+The frozen confirmation set contains 1,133 unrelaxed periodic models. Its top 113 by ideal-crystal volumetric methane delivery all have a modeled layer repeat above 6 Å. In two earlier high-storage stress tests, changing the AA repeat to 4.25 Å lowered calculated volumetric delivery by 42–44%. The chosen point was at the edge of the accepted height scan. Its status as an equilibrium packing remains uncertain.
+
+At 03:08 UTC the extended calculation had completed its first seven-pressure methane isotherm, its first three-seed competitive methane/hydrogen result and one matched packing-sensitivity comparison. The deeper isotherms use 10,000 equilibration and 25,000 production cycles per independent seed and pressure, at 298 K and 1, 5.8, 10, 20, 35, 50 and 65 bar. Separate structural tests change the AA repeat or slip adjacent layers and repeat the connectivity, short-contact and pore checks before gas calculations. A second cohort covers 13,439 new imine recipe hypotheses. The explorer can read qualified outcomes and their exact CIFs from a local campaign snapshot.
+
+Seven 35 bar experimental controls from one publication place a limit on interpretation. The previous rigid-framework model overpredicted excess methane uptake by approximately 4–170% across these compounds. Three independent seeds estimate sampling variability for a fixed model. Claims about synthesized materials also require independent structural and adsorption validation. [Experimental benchmark](https://doi.org/10.1021/ja9015765) · [Computational methane storage in COFs](https://doi.org/10.1021/acs.chemmater.8b01425)
+
+## Five-hour sample
+
 Local screening from 2026-11-20 18:31 UTC through 2026-11-20 23:31 UTC. Counts include jobs with a recorded outcome by the cutoff. The schedule prioritizes published precursor precedents and samples all six families. These proportions describe the selected sample.
 
 | Linkage family | Recorded outcomes | Accepted cells | Completed gas screens | Build rejections | Execution errors or retries |

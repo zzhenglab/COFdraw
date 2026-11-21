@@ -3,6 +3,9 @@ import hashlib
 import io
 import json
 import zipfile
+import runpy
+from pathlib import Path
+import pytest
 
 from rdkit import Chem
 from rdkit.Chem import Descriptors
@@ -50,3 +53,19 @@ def test_export_masks_pending_targets_and_contains_exact_cifs(tmp_path):
                 assert hashlib.sha256(cif).hexdigest()==r['model_cif_sha256'] and float(r['density'])>0
             else:
                 assert r['density']=='0' and not r['model_cif_sha256']
+
+
+def test_campaign_confirmations_require_the_same_cell_and_complete_triplicates(tmp_path):
+    merge = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/build_campaign_snapshot.py'))['merge_confirmations']
+    table = tmp_path/'confirmed.csv'
+    head = 'id,paired_seeds,delivery_mmol_g,delivery_vv,delivery_sd_mmol_g,mixture_seeds,selectivity,sha256\n'
+    checksum = 'a'*64
+    row = {'id':'imine-10','sha256':checksum,'values':{}}
+    table.write_text(head+f'imine-10,3,0,0,0,2,12,{checksum}\n',encoding='utf8')
+    merge([row],table,'confirmation')
+    assert row['values']['confirmation_delivery_mmol_g']==0
+    assert 'confirmation_selectivity' not in row['values']
+    assert row['confirmation_seeds']=={'delivery':3,'mixture':2}
+    table.write_text(head+f'imine-10,3,1,1,1,3,4,{"b"*64}\n',encoding='utf8')
+    with pytest.raises(ValueError,match='CIF mismatch'):
+        merge([row],table,'deep')

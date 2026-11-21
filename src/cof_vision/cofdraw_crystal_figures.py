@@ -40,7 +40,7 @@ def _circuit_svg(mol, coordinates, elements, ports):
     return ET.tostring(root,encoding="unicode")
 
 
-def chemical_drawing(structure, edges, *, circuit=None):
+def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
     """Depict an unwrapped, connected local chemical graph with continuation ports."""
     from rdkit import Chem
     from rdkit.Chem import rdDepictor
@@ -150,6 +150,30 @@ def chemical_drawing(structure, edges, *, circuit=None):
                 or elements[j]=="N" and len(graph[j])==2 and 1.18<length<1.34
                 and sorted(elements[k] for k,_ in graph[i])==["C","H","N"]):
             bond.SetBondType(Chem.BondType.DOUBLE)
+    known=structure.get("chemical_bonds", [])
+    if known:
+        from .cofdraw_periodic_build import edge_key
+        orders={edge_key(b["a"],b["b"],b["translation"]):b["order"] for b in known}
+        types={1:Chem.BondType.SINGLE,1.5:Chem.BondType.AROMATIC,2:Chem.BondType.DOUBLE,3:Chem.BondType.TRIPLE}
+        for bond in mol.GetBonds():
+            a,b=bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()
+            if max(a,b)>=len(ordered):
+                continue
+            (i,u),(j,v)=ordered[a],ordered[b]
+            order=orders.get(edge_key(i,j,np.subtract(v,u).tolist()))
+            if order in types:
+                bond.SetBondType(types[order])
+                bond.SetIsAromatic(order==1.5)
+                if order==1.5:
+                    bond.GetBeginAtom().SetIsAromatic(True)
+                    bond.GetEndAtom().SetIsAromatic(True)
+    if scheme and circuit and circuit.get("backbone"):
+        from .cofdraw_reticular_scheme import draw_scheme
+        def index(site):
+            return ids[site[0],tuple(site[1:])]
+        backbone=[index(site) for site in circuit["backbone"]]
+        segments=[[index(site) for site in group] for group in circuit["linkers"]]
+        return draw_scheme(mol,backbone,segments)
     if circuit:
         # Preserve the source circuit geometry. A generic 2D macrocycle layout
         # can fold the pore shut and enumerate an enormous set of ring layouts.
@@ -215,6 +239,107 @@ def readable_direction(model, face=None):
     model["direction"] = directions[np.argmax(scores)].tolist()
 
 
+def precursor_scenes(structure, edges):
+    """Unwrap reacted molecular residues using their assigned precursor and image shifts."""
+    atoms=structure["atoms"]
+    if not edges or not all(a.get("component") in ("A","B") for a in atoms):
+        return {}
+    adjacency=[[] for _ in atoms]
+    for e in edges:
+        i,j=e["a"],e["b"]
+        t=np.asarray(e["translation"])
+        adjacency[i].append((j,t))
+        adjacency[j].append((i,-t))
+    cell=np.asarray(structure["cell"])
+    f=np.array([a["fractional"] for a in atoms])
+    group_of={}
+    offsets={}
+    residues=[]
+    details={}
+    for i,atom in enumerate(atoms):
+        if i in group_of:continue
+        group=len(residues)
+        family=atom["component"]
+        group_of[i]=group
+        offsets[i]=np.zeros(3,dtype=int)
+        queue=[i]
+        members=[]
+        while queue:
+            a=queue.pop()
+            members.append(a)
+            for b,t in adjacency[a]:
+                if atoms[b]["component"]!=family:continue
+                shift=offsets[a]+t
+                if b not in group_of:
+                    group_of[b]=group
+                    offsets[b]=shift
+                    queue.append(b)
+                elif not np.array_equal(offsets[b],shift):
+                    return {}
+        residues.append((family,members))
+    centers=[np.mean([f[a]+offsets[a] for a in members if atoms[a]["element"]!="H"],axis=0) for family,members in residues]
+    connections=[set() for _ in residues]
+    for e in edges:
+        a,b=e["a"],e["b"]
+        u,v=group_of[a],group_of[b]
+        if u==v:continue
+        t=offsets[a]+e["translation"]-offsets[b]
+        connections[u].add((v,*t.tolist()))
+        connections[v].add((u,*(-t).tolist()))
+    def patched(groups,links,topology=False):
+        out_atoms=[]
+        bonds=[]
+        origin={}
+        centroids={}
+        for group,x,y,z in sorted(groups):
+            tag=(group,x,y,z)
+            image=np.array([x,y,z])
+            family,members=residues[group]
+            centroids[tag]=((centers[group]+image)@cell).tolist()
+            if topology:
+                origin[tag]=len(out_atoms)
+                px,py,pz=centroids[tag]
+                out_atoms.append(dict(x=px,y=py,z=pz,component=family,element="*"))
+                continue
+            for i in members:
+                origin[tag,i]=len(out_atoms)
+                px,py,pz=(f[i]+offsets[i]+image)@cell
+                out_atoms.append(dict(element=atoms[i]["element"],x=px,y=py,z=pz,component=family))
+        if topology:
+            bonds=[[origin[a],origin[b]] for a,b in links]
+        else:
+            for group,x,y,z in sorted(groups):
+                tag=(group,x,y,z)
+                for a in residues[group][1]:
+                    for b,t in adjacency[a]:
+                        other=(group_of[b],*(offsets[a]+[x,y,z]+t-offsets[b]).tolist())
+                        left=origin[tag,a]
+                        right=origin.get((other,b))
+                        if right is not None and left<right:bonds.append([left,right])
+        return dict(atoms=out_atoms,bonds=bonds,spatial_guides=[] if topology else [[centroids[a],centroids[b]] for a,b in links])
+    for i,(family,members) in enumerate(residues):
+        if "block"+family not in details:
+            details["block"+family]=patched({(i,0,0,0)},[])
+    root=(max(range(len(residues)),key=lambda i:len(connections[i])),0,0,0)
+    groups={root}
+    frontier={root}
+    links=set()
+    for _ in range(2):
+        upcoming=set()
+        for tag in sorted(frontier):
+            i,x,y,z=tag
+            for j,u,v,w in connections[i]:
+                other=(j,x+u,y+v,z+w)
+                links.add(tuple(sorted((tag,other))))
+                upcoming.add(other)
+        frontier=upcoming-groups
+        groups.update(upcoming)
+    if links:
+        details["blocknet"]=patched(groups,sorted(links),True)
+        details["block_overlay"]=patched(groups,sorted(links))
+    return details
+
+
 def crystal_details(structure, edges):
     """Identify a four-aryl junction and trace linkers to adjacent junctions.
 
@@ -234,6 +359,7 @@ def crystal_details(structure, edges):
     centers = {i for i, neighbors in enumerate(graph)
                if sites[i]["element"] in {"C", "Si"} and len(neighbors) == 4
                and all(sites[j]["element"] == "C" and len(graph[j]) == 3 for j, _ in neighbors)}
+    centers.update(structure.get("junction_sites",[]))
     if not centers:
         return {}
     cell = np.array(structure["cell"])
@@ -259,9 +385,8 @@ def crystal_details(structure, edges):
     for _ in range(4):
         frontier = {other for a in frontier for other in neighbors(a)} - nodes
         nodes = nodes | frontier
-    details = {"junction": molecular(nodes)}
+    details = {"junction": molecular(nodes),**precursor_scenes(structure,edges)}
     readable_direction(details["junction"])
-
     @lru_cache(maxsize=256)
     def arms(site):
         result = {}
@@ -312,9 +437,15 @@ def crystal_details(structure, edges):
                     branch = {n for a in branch for n in neighbors(a)} - atoms
             details["ring"] = molecular(atoms)
             details["ring"]["site_images"] = [[i,[x,y,z]] for i,x,y,z in sorted(atoms)]
+            details["ring"]["backbone"]=loop[:-1]
+            details["ring"]["linkers"]=[sorted(arms(a)[b]) for a,b in zip(loop,loop[1:])]
+            ring_index={site:i for i,site in enumerate(sorted(atoms))}
+            details["cage_overlay"]={k:details["ring"][k] for k in ("atoms","bonds")}
+            details["cage_overlay"]["guides"]=[[ring_index[a],ring_index[b]] for a,b in zip(loop,loop[1:])]
             points = np.array([(np.asarray(sites[i]["fractional"]) + [x,y,z]) @ cell for i,x,y,z in path+[root]])
             _, _, vectors = np.linalg.svd(points-points.mean(axis=0), full_matrices=False)
             readable_direction(details["ring"],vectors[-1])
+            details["cage_overlay"]["direction"]=details["ring"].get("direction",vectors[-1].tolist())
             break
         if len(path) < 8:
             for end in sorted(arms(path[-1])):

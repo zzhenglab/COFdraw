@@ -5,6 +5,7 @@
   <meta name="description" content="COFdraw — local chemical framework drawing from monomers and explicit pore recipes.">
   <title>COFdraw — Chemical drawing studio</title>
   <link rel="stylesheet" href="./cofdraw-space.css">
+  <script defer src="./cofdraw-screen-results.js"></script>
   <script defer src="./cofdraw-space.js"></script>
   <link rel="icon" type="image/png" href="./cofdraw-logo.png"><link rel="stylesheet" href="./cofdraw.css"><link rel="stylesheet" href="./cofdraw-studio.css"><link rel="stylesheet" href="./cofdraw-materials.css"><link rel="stylesheet" href="./cofdraw-describe.css"><link rel="stylesheet" href="./cofdraw-identity.css"><link rel="stylesheet" href="./cofdraw-picker.css"><link rel="stylesheet" href="./cofdraw-workspace.css"><link rel="stylesheet" href="./cofdraw-chat.css">
   <script src="./cofdraw-library.js" defer></script><script src="./monomer-sketcher.js" defer></script><script src="./cofdraw.js" defer></script><script src="./cofdraw-solubility.js" defer></script><script src="./cofdraw-studio.js" defer></script><script src="./cofdraw-crystal-figure.js" defer></script><script src="./cofdraw-crystal-design.js" defer></script><script src="./cofdraw-measure.js" defer></script><script src="./cofdraw-materials.js" defer></script><script src="./cofdraw-describe.js" defer></script><script src="./cofdraw-synthesis.js" defer></script><script src="./cofdraw-adsorption.js" defer></script>
@@ -92,6 +93,7 @@
         <p class="small-note" id="assembly-note" role="status"></p>
         <button id="assembly-build" class="button primary full">Create drawing</button>
       </section>
+      <label class="field construction-target"><span>Framework to draw</span><select id="construction-target"><option value="patch">Finite 2D patch</option><option value="dia">Periodic 3D framework</option></select></label>
       <div id="binary-fields">
       <div class="library-actions"><button id="open-monomer-library" class="button outline">Monomer library</button><button id="new-monomer" class="text-button">New monomer</button></div><label class="auto-chemistry" id="chemistry-mode-field"><input type="checkbox" id="auto-chemistry" checked> Match linkage and connectivity automatically</label><label class="field linkage-first"><span id="linkage-mode-label">Linkage &middot; Auto</span><input id="linkage-search" type="search" placeholder="Search bonds or functional groups" autocomplete="off" aria-label="Search linkage chemistry"><select id="linkage" aria-label="Linkage chemistry"><option value="imine">Imine</option><option value="beta_ketoenamine">Beta-ketoenamine</option></select></label><p id="linkage-roles" class="role-pair"></p><p id="chemistry-match" class="small-note">Linkages and connectivity update as you choose building blocks.</p><div class="field combination-field"><label for="combination-search">Starting combination</label><div class="suggest-field"><input id="combination-search" type="search" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="combination-suggestions" aria-label="Search starting combinations" placeholder="COF, monomer or linkage" autocomplete="off"><div id="combination-suggestions" role="listbox" aria-label="Suggested starting combinations" hidden></div></div><select aria-label="Browse starting combinations" id="cof-preset" aria-describedby="combination-count"><option value="imine">Imine · TFB + TAPB</option><option value="keto">Ketoenamine · Tp + Pa</option><option value="custom">Custom monomers</option></select><small id="combination-count" role="status"></small></div>
       <article class="monomer-card" id="card-a"><div class="card-heading"><span class="block-badge a">A</span><input id="label-a" aria-label="Building block A label" value="TFB" maxlength="100"><button class="text-button library-open" data-block="a">Library</button><button class="text-button sketch-open" data-block="a">Draw / edit</button></div><button class="monomer-preview sketch-open" data-block="a" aria-label="Open building block A in chemical editor"><img id="preview-a" alt="Building block A structure" hidden><span id="preview-label-a">Monomer preview</span></button><label class="field compact"><span>Choose a monomer</span><select id="preset-a"><option value="">Custom / pasted structure</option></select></label><label class="field compact"><span>SMILES</span><textarea id="smiles-a" rows="2" spellcheck="false" maxlength="4000">O=Cc1cc(C=O)cc(C=O)c1</textarea></label><div class="reactivity-inspector" id="inspector-a" aria-live="polite"><span class="role-caption" id="role-a"></span><div class="group-chips" id="groups-a"></div><p id="compatibility-a">Update the preview to inspect reactive groups.</p></div><div class="monomer-meta"><span id="formula-a">Aryl aldehyde</span><button class="text-button validate-monomer" data-block="a">Update preview</button></div></article>
@@ -101,10 +103,13 @@
       <button id="open-balance" type="button" class="text-button">Reagent balance…</button><button id="build" class="button primary full" disabled>Create drawing <span aria-hidden="true">→</span></button><p id="chemistry-note" class="small-note">The pore sequence is an explicit design choice. It does not assign a periodic topology.</p>
       </div>
       <section id="crystal-design-controls" hidden>
+        <label class="field"><span>Net for a new design</span><select id="reticular-net"><option value="dia">Diamond · dia</option><option value="lon">Hexagonal diamond · lon</option></select></label>
+        <label class="field"><span>Linkage for a new design</span><select id="dia-linkage"><option value="imine">Imine</option><option value="secondary_amine">Reduced imine</option><option value="acylhydrazone">Acylhydrazone</option></select></label>
+        <label class="field"><span>Networks in a new design</span><select id="dia-net-count"><option value="1">1 · single net</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
         <label class="field"><span>Linker and periodic model</span><select id="crystal-linker"></select></label>
         <p class="small-note" id="crystal-linker-note"></p>
-        <div id="crystal-precursors"></div>
-        <button class="text-button" id="leave-crystal-design" type="button">Return to monomer editor</button>
+        <button class="text-button" id="compare-crystal-reference" type="button" hidden>Compare reference CIF in 3D</button>
+        <button class="text-button" id="leave-crystal-design" type="button">Use this pair in the 2D patch builder</button>
       </section>
       <details class="source-library"><summary>Audited source drawings <span id="source-count">0</span></summary><label class="field"><span>Source recipe</span><select id="source-select"><option value="">No registered recipes</option></select></label><button id="load-source" class="button outline full" disabled>Open source drawing</button><p class="small-note">Provisional source annotations retain their provenance. Graph edits create a new design.</p><div id="source-gallery" class="source-gallery"></div></details>
       </section>
@@ -281,6 +286,16 @@
         <svg class="plot space-prop" id="space-scatter" viewBox="0 0 430 270" aria-label="CIF property scatter plot"></svg><select id="space-model" aria-label="Inspect crystal model"></select><div id="space-model-detail" class="space-detail"></div>
         <details><summary>Geometric screening method</summary><p>Each point represents one periodic CIF. COFdraw uses a 1.82 Å probe, a requested 0.9 Å grid and 16 surface samples per atom. LCD and PLD are lower estimates. Surface and connected pore volume depend on the probe and grid resolution. Hypothetical cells assume aligned AA stacking and have passed periodic-bond and steric checks. Adsorption and electronic targets require separate calculations.</p></details></article>
         </div>
+        <article class="campaign-screen"><header class="space-row"><h2>Simulation results</h2><div class="space-row"><button id="campaign-refresh" class="text-button">Refresh local results</button><button id="campaign-import" class="button outline">Open results file</button><input type="file" id="campaign-file" accept=".json,.gz" hidden></div></header>
+          <p id="campaign-status" role="status">Open a COFdraw screening snapshot to browse simulated candidates.</p>
+          <div id="campaign-body" hidden>
+            <div class="space-picker"><label>Linkage family<select id="campaign-family"></select></label><label>Horizontal axis<select id="campaign-x"></select></label><label>Vertical axis<select id="campaign-y"></select></label><label>Candidate or linker<input id="campaign-query" type="search"></label></div>
+            <p id="campaign-count"></p>
+            <div class="campaign-columns"><div><canvas id="campaign-plot" width="720" height="300" aria-label="Simulated candidate scatter plot; use the candidate selector for keyboard access"></canvas><label>Inspect candidate<select id="campaign-candidate"></select></label><div class="space-row"><button id="campaign-prev" class="text-button">← Previous candidates</button><button id="campaign-next" class="text-button">Next candidates →</button></div></div><div id="campaign-detail" class="space-detail"></div></div>
+            <div class="space-row"><button id="campaign-export" class="button outline">Export filtered results</button><button id="campaign-methods-save" class="text-button">Save method metadata</button></div>
+            <details><summary>Simulation conditions and provenance</summary><pre id="campaign-methods"></pre></details>
+          </div>
+        </article>
         <section class="space-families" aria-labelledby="space-gallery-heading"><header class="space-row"><div><h2 id="space-gallery-heading">Linkage families</h2><p>Explore precursor pairs and reported COFs by linkage.</p></div><select id="space-family-menu" aria-label="Open linkage family"><option value="">Jump to a linkage&hellip;</option></select></header><div id="space-families"></div></section>
       </div>
       <section id="space-family-page" hidden aria-labelledby="space-family-heading">
@@ -336,7 +351,9 @@
           <label>Depth fading <output for="camera-fade">0%</output><input id="camera-fade" type="range" min="0" max="100" value="0"></label>
         </div>
       </details>
+      <div class="render-choices"><label>Atom finish <select id="viewer-finish"><option value="studio">Studio lighting</option><option value="matte">Matte</option><option value="ink">Flat with outlines</option></select></label><label>Element palette <select id="viewer-palette"><option value="soft">Pastel elements</option><option value="cpk">Conventional CPK</option><option value="contrast">High contrast</option></select></label></div>
       <div class="render-pore"><label for="pore-layer">Pore surface</label><select id="pore-layer"><option value="all">All probe-center voids</option><option value="connected">Certified channels</option></select>
+      <label>Surface color <select id="pore-palette"><option value="solid">Solid</option><option value="normal">Surface orientation</option></select></label>
       <button id="map-pores" type="button" class="button outline">Calculate pore map</button><label><input type="checkbox" id="pore-visible" disabled> Show surface</label>
       <label for="pore-alpha">Opacity <input type="range" id="pore-alpha" min="0.1" max="0.9" value="0.48" step="0.02"></label>
       <label for="pore-cut">Section along c <input type="range" id="pore-cut" min="0" max="1" value="1" step="0.02"></label>

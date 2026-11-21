@@ -92,6 +92,54 @@ def test_cof300_recorded_projection_opens_published_interpenetrated_crystal(tmp_
         assert not client.post('/api/drawing/science/build-periodic',json={'recipe':recipe}).json()['available']
 
 
+def test_registered_pores_build_fresh_audited_cells_and_keep_sulfonic_acid(tmp_path):
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    from cof_vision.cofdraw_network import inspect_periodic_network
+    from cof_vision.cofdraw_science import import_cif
+    from cof_vision.cofdraw_periodic_build import edge_key
+    data=Path(__file__).resolve().parents[1]/'data'
+    for folder in ('framework-drawing','crystal-models'):
+        shutil.copytree(data/folder,tmp_path/folder,ignore=shutil.ignore_patterns('exports'))
+    expected={
+        'tfb-tab-pore-v1':dict(C=33,H=21,N=3),
+        'tppa-pore-v1':dict(C=36,H=24,N=6,O=6),
+        'tpb-dmtp-cof-pore-v1':dict(C=78,H=60,N=6,O=6),
+        'wiley-r198-tppa-so3h-pore-0002':dict(C=36,H=24,N=6,O=15,S=3),
+    }
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        for source,counts in expected.items():
+            request={'source_recipe_id':source}
+            entry=client.get('/api/drawing/sources/'+source).json()
+            choices=client.post('/api/drawing/science/periodic-options',json=request).json()
+            assert choices['source_drawing_basis']['recipe_sha256']==entry['source_sha256']
+            result=client.post('/api/drawing/science/build-periodic',json=request).json()
+            assert result.get('available'),result
+            tags=result['structure']['provenance']
+            assert tags['kind']=='cofdraw_periodic_starting_model'
+            assert tags['source_drawing_basis']['recipe_id']==source
+            assert tags['linkage']==entry['metadata']['periodic_design_inputs']['linkage']
+            parsed=import_cif(client.get(result['downloads']['cif']).text)
+            assert Counter(a['element'] for a in parsed['atoms'])==counts
+            net=inspect_periodic_network(parsed)
+            assert net['dimensions']==[2] and not net['short_contact_count']
+            def identities(edges):
+                return {edge_key(e['a'],e['b'],e['translation']) for e in edges}
+            assert identities(net['edges'])==identities(result['cell_validation']['periodic_bonds'])
+        assert tags['linkage']=='beta_ketoenamine'
+        assert tags['spacing_angstrom']>=tags['interlayer_contact_height_angstrom']>3.4
+        assert '3.40' in result['scope'] and tags['source_drawing_basis']['comparison_reference']['doi']=='10.1021/acs.chemmater.5b04947'
+        rejected=client.post('/api/drawing/science/build-periodic',json={**request,'layer_spacing':3.4}).json()
+        assert not rejected['available'] and 'contact screen' in rejected['reason']
+        # A requested valid height should survive export. A replacement diamine
+        # creates its own desulfonated design with no inherited paper identity.
+        custom=client.post('/api/drawing/science/build-periodic',json={**request,'layer_spacing':6.1}).json()
+        assert custom['structure']['provenance']['spacing_angstrom']==6.1
+        drawing=client.post('/api/drawing/prepare',json=dict(
+            monomer_a=tags['precursors'][0],monomer_b='Nc1ccc(N)cc1',linkage=tags['linkage'],template_id=tags['template'])).json()['recipe']
+        edited=client.post('/api/drawing/science/build-periodic',json={'recipe':drawing}).json()['structure']
+        assert 'source_drawing_basis' not in edited['provenance'] and not any(a['element']=='S' for a in edited['atoms'])
+
+
 def test_exact_reported_ribbon_crystal_matches_the_pair_and_linkage(tmp_path):
     from cof_vision.cofdraw_desktop import create_desktop_app
     from cof_vision.cofdraw_network import inspect_periodic_network

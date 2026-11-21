@@ -190,6 +190,7 @@
     }catch(e){C.status(e.message,true);}
   };
   $('pore-layer').onchange=update;
+  $('pore-palette').onchange=()=>C.viewer.draw();
   $('pore-cut').oninput=()=>{section();C.viewer.draw();};
   for(const id of ['pore-alpha','pore-visible'])$(id).oninput=()=>C.viewer.draw();
   window.COFdrawPores={
@@ -207,8 +208,15 @@
           const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
           if(Math.abs(nz)<.02)continue;
           const light=Math.abs((-.35*nx-.52*ny+.78*nz)/(Math.hypot(nx,ny,nz)||1));
+          let hue=channel?32:194;
+          if($('pore-palette').value==='normal'){
+            const u=polygon[1].map((x,k)=>x-polygon[0][k]),v=polygon[2].map((x,k)=>x-polygon[0][k]);
+            const normal=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+            const mag=Math.hypot(...normal)||1;
+            hue=32+176*Math.abs(normal[2])/mag+72*Math.abs(normal[1])/mag;
+          }
           objects.push({kind:'pore',p,z:p.reduce((s,v)=>s+v.z,0)/p.length,alpha,
-            color:'hsl('+(channel?32:194)+' 57% '+Math.round(32+31*light)+'%)'});
+            color:'hsl('+hue+' 57% '+Math.round(32+31*light)+'%)'});
         }
       }
     },

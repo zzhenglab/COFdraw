@@ -222,6 +222,9 @@
   }catch(e){status(e.message,true);}}
   function showCatalogDesign(result, id){
     $('structure-source').value='periodic';sourceMode();
+    const select=$('crystal-template'),custom=select.querySelector('option[value="custom-dia"]');
+    if(id==='custom-dia'&&!custom)select.add(new Option('Current generated 3D framework',id));
+    if(id!=='custom-dia')custom?.remove();
     $('crystal-template').value=id;templateNote();
     const title=result.structure.provenance.model_name;
     basePeriodic={result,title};display(result,title,'catalog-design');
@@ -234,8 +237,13 @@
     $('viewer-provenance').textContent=result.structure.provenance.qualification||result.scope;
     status('Periodic cell ready. Drag to rotate.');
   }
+  function invalidateCrystalDesign(message){
+    basePeriodic=null;hypothesis=null;comparisonParent=null;currentLayer=null;
+    $('network-comparison').hidden=true;clearComparison();invalidate(message);
+  }
   $('build-crystal').addEventListener('click',()=>{
     const crystal=window.COFdrawCrystalDesign,id=$('crystal-template').value;
+    if(id==='custom-dia'&&crystal?.active){crystal.build();return;}
     if(crystal?.active&&crystal.has(id)){crystal.selectInViewer(id);return;}
     crystal?.leave();
     return work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);if(['reported_crystal','curated_crystal'].includes(r.structure.provenance.kind))$('viewer-provenance').textContent=(r.structure.provenance.dataset_id||'Published coordinates')+' · DOI '+r.structure.provenance.doi;status('Periodic model ready.');});});
@@ -293,7 +301,9 @@
   const radii={H:.31,C:.76,N:.71,O:.66,F:.57,P:1.07,S:1.05,Cl:1.02,Br:1.2,I:1.39,B:.84,Si:1.11,Cu:1.32,Zn:1.22,Fe:1.32};
   const vdw={H:1.2,C:1.7,N:1.55,O:1.52,F:1.47,P:1.8,S:1.8,Cl:1.75,Br:1.85,I:1.98,B:1.92,Si:2.1,Cu:1.4,Zn:1.39,Fe:1.4};
   const groupPalette=['#28949c','#d89755','#8475b4','#6c9b68','#c97589','#5d8abe','#ae9666','#967b9f','#355b45','#775449','#474b8a','#bd9bb5'];
-  function viewerColors(atoms){const mode=$('viewer-color').value,root=$('viewer-legend'),colors=new Map(),groups=new Map();root.replaceChildren();if(mode==='element'){for(const a of atoms)colors.set(a.index,elementColors[a.element]||'#a59bc0');
+  const elementPalettes={soft:elementColors,cpk:{...elementColors,C:'#525252',O:'#ef272c',N:'#224db9',H:'#ffffff',F:'#76c94e',Cl:'#29aa39',Br:'#9a3b2e',S:'#dcc320',P:'#e88a1a'},
+    contrast:{...elementColors,C:'#424756',N:'#245fa5',O:'#dc532d',F:'#16896d',S:'#c99b12',P:'#a7569f',H:'#f4f3ea'}};
+  function viewerColors(atoms){const mode=$('viewer-color').value,root=$('viewer-legend'),colors=new Map(),groups=new Map();root.replaceChildren();if(mode==='element'){const palette=elementPalettes[$('viewer-palette').value];for(const a of atoms)colors.set(a.index,palette[a.element]||'#a59bc0');
       const keys=new Map(atoms.filter(a=>a.element!=='*' && !(viewer.hideHydrogen && a.element==='H')).map(a=>[(a.isotope||'')+a.element,colors.get(a.index)]));
       for(const [label,color] of keys){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,label);root.append(chip);}return colors;}const value=a=>mode==='network'?(a.network??a.inferred_component):a[mode];for(const a of atoms){const key=value(a);if(key!==undefined&&!groups.has(key))groups.set(key,groupPalette[groups.size%groupPalette.length]);colors.set(a.index,groups.get(key)||elementColors[a.element]||'#a59bc0');}for(const [key,color]of groups){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,document.createTextNode(mode==='component'?`Block ${key}`:mode==='network'&&atoms.every(a=>a.network===undefined)?`Inferred component ${Number(key)+1}`:`${mode==='layer'?'Layer':'Network copy'} ${Number(key)+1}`));root.append(chip);}if(!groups.size&&atoms.length)root.textContent=`No ${mode==='component'?'building-block':mode} groups supplied; showing element colors.`;return colors;}
   function tint(hex,target,fraction){
@@ -341,6 +351,14 @@
           for(const [index,tip] of [[a,p],[b,q]])objects.push({kind:'bond',index,tip,mid,z:(tip.z+mid.z)/2});
         }
       }
+      for(const [a,b] of this.model?.guides||[]){
+        const p=this.projected[a],q=this.projected[b];
+        if(p&&q)objects.push({kind:'guide',p,q,z:(p.z+q.z)/2});
+      }
+      for(const [a,b] of this.model?.spatial_guides||[]){
+        const p=project(a),q=project(b);
+        objects.push({kind:'guide',p,q,z:(p.z+q.z)/2});
+      }
       if(!this.model?.illustration)window.COFdrawPores?.addFaces(objects,project,scale);
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
@@ -349,6 +367,10 @@
         const ghost=Number.isInteger(highlighted)&&o.kind!=='pore'&&this.atoms[o.index]?.network!==highlighted;
         const visibility=(1-fading*depth)*(ghost ? .12 : 1);
         if(o.kind==='pore'){window.COFdrawPores.paint(c,o,visibility);continue;}
+        if(o.kind==='guide'){
+          c.save();c.globalAlpha=.8*visibility;c.strokeStyle='#bc6027';c.lineWidth=3.3;c.setLineDash([6,4]);
+          c.beginPath();c.moveTo(o.p.x,o.p.y);c.lineTo(o.q.x,o.q.y);c.stroke();c.restore();continue;
+        }
         const a=this.atoms[o.index],p=this.projected[o.index],base=color(a);
         const localScale=scale*p.factor;
         if(o.kind==='bond'){
@@ -359,18 +381,25 @@
           const skeletal=mode==='wireframe'||mode==='mixed'&&!featured(a);
           const r=skeletal?Math.max(.85,localScale*.06):Math.max(1.2,localScale*(vdw[a.element]||1.7)*(mode==='ballstick'?.25:mode==='halfspace'?.5:1));
           c.globalAlpha=visibility;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);
-          if(skeletal){c.fillStyle=base;}
+          const finish=$('viewer-finish').value;
+          if(skeletal||finish==='ink'){c.fillStyle=base;}
+          else if(finish==='matte'){
+            const g=c.createLinearGradient(p.x,p.y-r,p.x,p.y+r);
+            g.addColorStop(0,tint(base,255,.25));g.addColorStop(1,tint(base,30,.22));c.fillStyle=g;
+          }
           else{
             const g=c.createRadialGradient(p.x-r*.34,p.y-r*.38,r*.03,p.x,p.y,r*1.07);
             g.addColorStop(0,tint(base,255,.61));g.addColorStop(.34,tint(base,255,.20+depth*.12));
             g.addColorStop(.75,base);g.addColorStop(1,tint(base,20,.43));c.fillStyle=g;
           }
-          c.fill();if(this.selected.includes(o.index)){c.strokeStyle='#ec9e30';c.lineWidth=2;c.stroke();}
+          c.fill();if(finish==='ink'&&!skeletal){c.strokeStyle=tint(base,30,.65);c.lineWidth=.85;c.stroke();}
+          if(this.selected.includes(o.index)){c.strokeStyle='#ec9e30';c.lineWidth=2;c.stroke();}
         }
       }
       c.globalAlpha=1;
       if(this.selected.length===2){const [a,b]=this.selected.map(i=>this.projected[i]);c.strokeStyle='#d98c22';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);}c.fillStyle='#82988d';c.font='10px Segoe UI';c.fillText(`${this.atoms.length} atoms · Å`,13,h-14);
     }};
+  for(const id of ['viewer-palette','viewer-finish'])$(id).addEventListener('change',()=>viewer.draw());
   $('viewer-preset').addEventListener('change',()=>{
     const key=$('viewer-preset').value;
     const presets={pore:[0,0,'spacefill'],layers:[-.06,1.38,'ballstick'],oblique:[-.36,.72,'mixed']};
@@ -492,6 +521,6 @@
   window.addEventListener('cofdraw:state',drawingChanged);
   window.addEventListener('cofdraw:layoutchanged',drawingChanged);
   drawingKey=signature();syncSource();
-  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
+  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,invalidateCrystalDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
   if(S.state.library){drawSourceGallery(S.state.library);loadScience();}
 })();

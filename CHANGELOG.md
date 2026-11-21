@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.6
+
+- Generate periodic layers from four reviewed 2D source drawings. The CIF and model report identify the selected precursors, reaction, periodic template and assumed stacking.
+- Generate diamond and hexagonal-diamond frameworks from editable tetrahedral and ditopic precursors with imine, reduced-imine or acylhydrazone bonds. Named starting combinations use the same builder as custom SMILES. Choose a network count and inspect the resulting contact checks.
+- Draw a closed framework circuit with conventional bond-line geometry. Rotate either reacted building block, highlight a network, superimpose the building-block graph or display a probe-center pore surface in the 3D viewer.
+- Explore locally imported screening results with model identifiers, CIF hashes, and separate first-pass and confirmation results.
+
 ## 0.9.5
 
 - Crystal examples open on the 2D drawing canvas. Open the same periodic coordinates in 3D, rotate the packing, highlight one network, or export the unit cell.

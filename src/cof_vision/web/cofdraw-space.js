@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const colorList=['#087b72','#c16b3d','#5d6fa9','#9567a5','#948031','#5e89a4','#974f65','#648946'];
   let data, loading, family, ranked, index, colors, zoom=1, pan=[0,0], base, selectedPoint;
   let linking, views, selectors, mapFamily=null, shownPoints=[], screen, candidates, modelRows, screenPage=0;
+  let campaign;
   const chemistryFields={repeat_mass:'Dry repeat mass (g/mol)',nitrogen_wt:'Nitrogen (wt%)',oxygen_wt:'Oxygen (wt%)',junction_density:'Linkage density (mmol/g)',aromatic_c_pct:'Aromatic share of carbon (%)'};
   const crystalFields={density:'Density (g/cm³)',void:'Void fraction (%)',lcd:'Largest cavity, LCD (Å)',pld:'Limiting diameter, PLD (Å)',pore_volume:'Void volume (cm³/g)',free_volume:'Probe-free volume (cm³/g)',connected_volume:'Connected pore volume (cm³/g)',area:'Connected surface (m²/g)',local_area:'Local exposed surface (m²/g)',cell_volume:'Cell volume (Å³)'};
   const tip=element('div'); tip.className='space-tip'; tip.hidden=true; document.body.append(tip);
@@ -202,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }else{panel.append(element('p',screen.failed[family]?.[code]?'AA fit did not pass structural checks.':row[2]==='chain_2_2'?'Open-chain design.':'Periodic model pending.'));}
     }
     if(p)refs(panel,p);
+    campaign?.showPair(panel, family, code);
   }
   function choosePair(a,b){
     const [left,right]=orient(a,b);
@@ -336,6 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
     for(const [k,v] of Object.entries({...chemistryFields,...crystalFields}))$('screen-metric').add(new Option(v,k));
     for(const id of ['space-property','space-property-x'])for(const [k,v] of Object.entries(crystalFields))$(id).add(new Option(v,k));
     $('space-property').value='void';$('space-property-x').value='density';scatter();
+    campaign=window.createCampaignExplorer({
+      atlas:data, screen, studio, label, resultsChanged:()=>{
+        if(!$('space-family-page').hidden&&selectors?.length===2)showPair(...selectors.map(s=>+s.value));
+      }, openPair:(f,code)=>{
+        openFamily(f,$('campaign-candidate'));choosePair(Math.floor(code/data.stride),code%data.stride);
+        $('space-pair-detail').scrollIntoView({block:'center'});
+      },
+    });
   }
   for(const id of ['space-property','space-property-x','space-model','space-model-set'])$(id).onchange=scatter;
   function clearRoute(){

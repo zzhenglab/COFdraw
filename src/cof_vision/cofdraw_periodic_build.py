@@ -354,6 +354,30 @@ def _cell_atoms(blocks, edges, pose, spacing, order):
     return {'periodic': True, 'cell': basis.tolist(), 'atoms': atoms}, bonds, formal_charges, lengths, angle_error
 
 
+def _interlayer_contact_height(blocks, pose):
+    """Minimum AA translation keeping adjacent sheets at 90% of summed vdW radii."""
+    _, cell, centers, angles, mirror, *_ = pose
+    xy, z, radii = [], [], []
+    table = Chem.GetPeriodicTable()
+    for i, block in enumerate(blocks):
+        xy.extend(_rotate(block['xyz'][:, :2]*mirror[i], angles[i]) + centers[i])
+        z.extend(block['xyz'][:, 2] * mirror[i][1])
+        radii.extend(table.GetRvdw(table.GetAtomicNumber(e)) for e in block['elements'])
+    fractional = (np.asarray(xy) @ np.linalg.inv(cell)) % 1
+    delta = fractional[:, None, :] - fractional[None, :, :]
+    cutoff = .90 * np.add.outer(radii, radii)
+    # All images within the largest possible contact distance lie inside this
+    # range, even in an oblique cell (bound via the smallest singular value).
+    span = math.ceil(1 + cutoff.max()/np.linalg.svd(cell, compute_uv=False)[-1])
+    nearest = np.full(cutoff.shape, np.inf)
+    for translation in product(range(-span, span+1), repeat=2):
+        plane = (delta+translation) @ cell
+        nearest = np.minimum(nearest, np.einsum('ijk,ijk->ij', plane, plane))
+    projected = nearest < cutoff**2
+    vertical = np.subtract.outer(z, z)[projected] + np.sqrt((cutoff**2-nearest)[projected])
+    return math.ceil(float(vertical.max())*100)/100
+
+
 def build_periodic_layer(design, *, spacing=None):
     """Build and check a single AA layer cell using the validated design."""
     template = design['selected_template']['id']
@@ -386,6 +410,8 @@ def build_periodic_layer(design, *, spacing=None):
         elements = {partner['elements'][i] for i in partner['sites']}
         cap_elements[key] = elements.pop() if len(elements) == 1 else None
     best = None
+    reference_height = design.get('source_drawing_basis', {}).get('reference_layer_spacing_angstrom')
+    minimum_height = None
     long_bonds = any(e in {'Si', 'P', 'S', 'Cl', 'Br', 'I'} for block in blocks for e in block['elements'])
     methods = ('restrained_mmff94',) if long_bonds else ('rigid', 'phenyl_torsions', 'restrained_mmff94')
     if chiral:
@@ -412,6 +438,14 @@ def build_periodic_layer(design, *, spacing=None):
         else:
             spacings = [round(3.4 + float(np.ptp(z)), 2)]
         for height, pose in product(spacings, poses):
+            contact_height = None
+            if reference_height:
+                contact_height = _interlayer_contact_height(blocks, pose)
+                minimum_height = min(minimum_height, contact_height) if minimum_height is not None else contact_height
+                if spacing is None:
+                    height = max(reference_height, contact_height)
+                elif height < contact_height:
+                    continue
             structure, bonds, charges, lengths, angle_error = _cell_atoms(blocks, edges, pose, height, order)
             try:
                 structure = normalize_structure(structure)
@@ -443,12 +477,18 @@ def build_periodic_layer(design, *, spacing=None):
             }
             periodic_bonds = [{'a': int(a), 'b': int(b), 'translation': list(map(int, t)), 'order': kind}
                               for a, b, t, kind in bonds]
+            if contact_height is not None:
+                structure['provenance']['interlayer_contact_height_angstrom'] = contact_height
+                structure['provenance']['interlayer_vdw_fraction'] = .90
             return structure, {
                 'periodic_bonds': periodic_bonds, 'formal_charges': charges,
                 'periodic_rank': 2, 'expected_atom_edges_verified': len(bonds), 'short_contacts': 0,
                 'junction_length_range_angstrom': [float(lengths.min()), float(lengths.max())],
                 'maximum_port_direction_error_degrees': angle_error,
             }
+    if spacing is not None and minimum_height is not None and spacing < minimum_height:
+        raise ValueError(f'This AA orientation needs at least {minimum_height:.2f} Å to clear the interlayer '
+                         'contact screen. Use automatic spacing or supply another packing model.')
     detail = best[1] if best else 'No converged fragment geometry passed the structural checks.'
     raise ValueError(f'The {template} cell failed geometric validation. Best fit: {detail} '
                      'Inspect the precursor geometry and template, or import a corresponding CIF.')

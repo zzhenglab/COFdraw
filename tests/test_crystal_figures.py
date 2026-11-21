@@ -45,3 +45,23 @@ def test_linker_derivative_keeps_periodic_graph_and_has_distinct_identity():
     after=Counter(a["element"] for a in design["atoms"])
     count=len(provenance["substituted_atom_indices"])
     assert count==after["F"]-before["F"]==before["H"]-after["H"] and count>0
+
+
+def test_generated_circuit_preserves_linker_substitution_and_block_views():
+    from xml.etree import ElementTree as ET
+    from cof_vision.cofdraw_dia import build_dia
+    from cof_vision.cofdraw_crystal_figures import chemical_drawing
+    tetraamine="Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+    model,audit=build_dia(tetraamine,"O=Cc1cc(F)c(C=O)cc1")
+    edges=audit["periodic_bonds"]
+    details=crystal_details(model,edges)
+    ring=details["ring"]
+    assert len(ring["backbone"])==len(ring["linkers"])==len(details["cage_overlay"]["guides"])==6
+    svg=ET.fromstring(chemical_drawing(model,edges,circuit=ring,scheme=True))
+    ns={"s":"http://www.w3.org/2000/svg"}
+    labels=[t.text for t in svg.findall(".//s:text",ns)]
+    assert labels.count("F")==6 and labels.count("N")==12
+    assert svg.findall(".//s:polyline",ns)
+    assert all(a["component"]=="A" for a in details["blockA"]["atoms"])
+    assert any(a["element"]=="F" for a in details["blockB"]["atoms"])
+    assert len(details["blocknet"]["bonds"])==len(details["block_overlay"]["spatial_guides"])>4

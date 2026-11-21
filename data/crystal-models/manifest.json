@@ -4,6 +4,29 @@
   "source": "https://github.com/lipelopesoliveira/pyCOFBuilder",
   "citation_doi": "10.1021/acs.jcim.3c01918",
   "qualification": "Explicit unrelaxed reticular designs generated for COFdraw; no experimental identity or stability asserted.",
+  "source_layer_designs": {
+    "tfb-tab-pore-v1": {
+      "source_sha256": "6fc12fcc3bb70e2eb7ac8c682322238cc5e5213dfce750cdb2ee849ff866c656",
+      "precursor_components": ["TFB", "TAB"], "linkage": "imine", "template": "hcb_3_3"
+    },
+    "tppa-pore-v1": {
+      "source_sha256": "70a64d4ff4aaf7893f227062b1cbef889235725887051f7a46085884629f6fa1",
+      "precursor_components": ["Tp", "Pa"], "linkage": "beta_ketoenamine", "template": "hcb_3_2"
+    },
+    "tpb-dmtp-cof-pore-v1": {
+      "source_sha256": "40ea143076fa6008efdff9c99413133cb31dbe59c96f8b686e73ef9aa4075150",
+      "precursor_components": ["DMTP", "TAPB"], "linkage": "imine", "template": "hcb_3_2"
+    },
+    "wiley-r198-tppa-so3h-pore-0002": {
+      "source_sha256": "d3b5f4f16de15dbf0b144d905d7dd491e5ed4c20f143e25af359534f1f258701",
+      "precursor_components": ["tp_triketone", "pa_so3h_ortho_next"],
+      "linkage": "beta_ketoenamine", "template": "hcb_3_2",
+      "reference_layer_spacing_angstrom": 3.4,
+      "spacing_reference": "Approximate powder (001) spacing from the 26.2 degree reflection in Figure 1b of the 2021 drawing paper.",
+      "orientation_assumption": "Neutral sulfonic acids occupy one repeating orientation pattern. Other orientations, hydration and protonation states can change pore dimensions.",
+      "comparison_reference": {"doi": "10.1021/acs.chemmater.5b04947", "location": "Supporting Information, Table S5", "description": "Published P1 slipped two-layer powder model for the same precursor pair."}
+    }
+  },
   "templates": [
     {
       "id": "hcb-imine-aa",

@@ -23,6 +23,8 @@ function templateCheck(template=selectedTemplate()){if(!template)return {compati
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
 function monomerChoice(item,block,other){
+  if(block!=='editor'&&window.COFdrawCrystalDesign?.active)
+    return window.COFdrawCrystalDesign.choice(item,other);
   if(block!=='editor'&&item.binary_eligible===false)return {compatible:false,reason:item.qualification||'Outside the supported pair constructor.'};
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
   if(!state.autoChemistry&&block!=='editor'&&other){const pair=block==='a'?[item,other]:[other,item],match=L.compatibleLinkages(state.library||{},...pair).find(row=>row.id===$("linkage").value);if(match)return {compatible:true,reason:`Compatible with this partner for ${match.label}. Your A/B choices stay in place; construction assigns the reactive roles.`};}
@@ -108,6 +110,7 @@ const recentTreatments=[];
 let liveDrawingTimer, selectionRevision=0;
 function queueDrawing(){
   clearTimeout(liveDrawingTimer);
+  if(window.COFdrawCrystalDesign?.active)return;
   const pair=JSON.stringify([$("smiles-a").value,$("smiles-b").value]);
   liveDrawingTimer=setTimeout(()=>{
     if(pair!==JSON.stringify([$("smiles-a").value,$("smiles-b").value])||state.jsonPending||sourceMode())return;
@@ -116,6 +119,7 @@ function queueDrawing(){
   },250);
 }
 function autoMatchChemistry(){
+  if(window.COFdrawCrystalDesign?.active)return;
   if(!state.autoChemistry||sourceMode())return;
   const pair=checkedMonomers();if(!pair.a||!pair.b){$("chemistry-match").textContent='Choose both building blocks and wait for their structure checks.';return;}
   const preferred=combinations.find(p=>p.id===$("cof-preset").value && p.monomer_a===pair.a.input && p.monomer_b===pair.b.input);
@@ -153,8 +157,9 @@ function refreshPresetLists(){
 let matchingCombinations=[], crystalSuggestions=[], suggestionIndex=-1;
 const comboInput=$('combination-search'),suggestions=$('combination-suggestions');
 window.addEventListener('cofdraw:crystal-catalog',e=>{
-  crystalSuggestions=e.detail.map(r=>({id:r.id,label:r.model_name,group:'3D crystal · figure and model',crystal:true,
-    featured:['cof-300-c5','curated-13040N3','curated-07011N3'].includes(r.id)}));
+  crystalSuggestions=e.detail.filter(r=>r.monomer_ids?.length===2||['cof-300-c5','curated-13040N3','dia-imine'].includes(r.id))
+    .map(r=>({id:r.id,label:r.model_name,group:'Editable 3D framework',crystal:true,featured:['cof-300-c5','curated-13040N3'].includes(r.id)}));
+  crystalSuggestions.unshift({id:'custom-dia',label:'Custom 3D framework · dia or lon',group:'Build from the current pair',crystal:true});
   refreshCombinations(true);
   if(document.activeElement===comboInput)showSuggestions();
 });
@@ -170,7 +175,8 @@ function showSuggestions(){
     row.group==='Named starting pairs'?2:row.source?3:4;
   const crystals=crystalSuggestions.filter(r=>term?(term==='3d'||compact(r.label).includes(compact(term))):r.featured);
   if(crystals.length)$('combination-count').textContent=matchingCombinations.length+' drawing choices · '+crystals.length+' crystal models';
-  const choices=[...matchingCombinations,...crystals].sort((a,b)=>(a.featured?1:priority(a))-(b.featured?1:priority(b))).slice(0,12);
+  const rank=row=>term&&row.crystal&&compact(row.label).startsWith(compact(term))?-1:row.featured?1:priority(row);
+  const choices=[...matchingCombinations,...crystals].sort((a,b)=>rank(a)-rank(b)).slice(0,12);
   closeSuggestions();suggestions.replaceChildren();
   for(const row of choices){
     const item=document.createElement('div');
@@ -244,6 +250,12 @@ function refreshInspectors(){
     const chips=$(`groups-${block}`);chips.replaceChildren();for(const group of L.groupRows(value)){const chip=document.createElement("span");chip.className="group-chip";chip.textContent=`${group.count} × ${group.label||group.kind?.replaceAll("_"," ")||"reactive group"}`;chips.append(chip);}
     $(`inspector-${block}`).classList.toggle("incompatible",evidence?.compatible===false);
     $(`compatibility-${block}`).textContent=source?($(`smiles-${block}`).value.trim()?"Associated precursor for the recorded graph. An automatic construction transform is not implied.":"No associated precursor structure is supplied for this part of the graph."):(!value?"Update preview to inspect reactive functionality.":evidence?.compatible===false?evidence.reason||"This structure cannot supply the selected role.":evidence?`${evidence.reactive_sites??evidence.count??"Supported"} reactive sites for this role. Attachment positions are checked during construction.`:"Structure valid. Reactive compatibility will be checked during construction.")+(value?.geometry_note?` ${value.geometry_note}`:"");
+    if(window.COFdrawCrystalDesign?.active){
+      const choice=value&&window.COFdrawCrystalDesign.choice(value,checkedMonomer(block==='a'?'b':'a'));
+      $(`role-${block}`).textContent=$('reticular-net').value+' framework · '+$('dia-linkage').selectedOptions[0].textContent;
+      $(`compatibility-${block}`).textContent=choice?.reason||'Choose or draw a precursor.';
+      $(`inspector-${block}`).classList.toggle('incompatible',Boolean(choice&&!choice.compatible));
+    }
   }
 }
 function refreshChemistry(desiredTemplate=null){const automatic=autoMatchChemistry();refreshPresetLists();refreshInspectors();refreshTemplates(state.autoChemistry?automatic:desiredTemplate);updateIdentity();sync();if($("monomer-library-dialog").open)drawLibrary();}
@@ -272,6 +284,12 @@ function sync() {
     $("build").disabled=blocked||!assemblyReady();
     $("build").title=assemblyReady()?'Draw the selected arrangement.':'Choose valid monomers and an explicit linker order.';
   }
+  const crystal=window.COFdrawCrystalDesign;
+  $('construction-target').parentElement.hidden=multi();
+  if(crystal?.active){
+    $('build').disabled=blocked||!$('smiles-a').value.trim()||!$('smiles-b').value.trim();
+    $('build').textContent='Build 3D framework';$('build').title='Generate the selected net from the two editable precursors.';
+  }else if($('build').textContent==='Build 3D framework')$('build').textContent='Create drawing →';
   $("assembly-build").disabled=$("build").disabled;
   for(const id of ['assembly-count','assembly-a','assembly-b','assembly-c','assembly-pattern'])$(id).disabled=blocked;
   $("build-from-canvas").disabled=$("build").disabled;
@@ -314,7 +332,7 @@ function removeIdentity() {
   Object.assign(state.recipe,{designed_variant:true,ground_truth:false,review_status:"user_design"});state.sourceId=null;state.sourceMetadata=null;
   updateIdentity();if(wasSource)refreshInspectors();
 }
-function markInputsChanged() { selectionRevision++;const wasSource=sourceMode();if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";if(wasSource)refreshChemistry();else{refreshInspectors();sync();} }
+function markInputsChanged() { selectionRevision++;const wasSource=sourceMode();if(state.recipe){removeIdentity();state.dirty=true;}state.inputsDirty=true;$("cof-preset").value="custom";window.COFdrawCrystalDesign?.inputsChanged();if(wasSource)refreshChemistry();else{refreshInspectors();sync();} }
 function syncJSON(){ $("recipe-json").value=state.recipe?JSON.stringify(state.recipe,null,2):"";state.jsonPending=false; }
 function validateRecipeShape(recipe) {
   if(recipe?.explicit_graph){if(!Array.isArray(recipe.explicit_graph.atoms)||!Array.isArray(recipe.explicit_graph.bonds))throw new Error("This source drawing needs explicit atoms and bonds.");return;}
@@ -354,17 +372,40 @@ async function validateMonomer(block,quiet=false){
   const result=await api("monomer",{smiles:input});if($(`smiles-${block}`).value.trim()===input)setPreview(block,result);if(!quiet)notice(`Building block ${block.toUpperCase()} checked · ${result.formula}.`);return result;
 }
 async function refreshMonomers(){const results=await Promise.allSettled([validateMonomer("a",true),validateMonomer("b",true)]);for(const r of results)if(r.status==="rejected")notice(r.reason.message,true);}
+function setCrystalMonomers(items){
+  clearTimeout(liveDrawingTimer);selectionRevision++;
+  $('assembly-count').value='2';fillAssembly();
+  Object.assign(state,{recipe:null,result:null,sourceId:null,sourceMetadata:null,inputsDirty:true,dirty:false,jsonPending:false});
+  $('framework-image').hidden=true;$('framework-image').removeAttribute('src');$('canvas-empty').classList.remove('hidden');$('exports').replaceChildren();
+  $('drawing-summary').textContent='';syncJSON();drawLayout();drawLayoutTable();updateIdentity();
+  if(items){
+    for(const [i,b] of ['a','b'].entries()){
+      const item=items[i];$('smiles-'+b).value=item?.smiles||'';$('label-'+b).value=item?.abbreviation||item?.label||'';
+      delete state.monomers[b];$('preview-'+b).hidden=true;$('preview-label-'+b).hidden=false;
+      $('formula-'+b).textContent=item?'Checking structure…':'No assigned precursor';
+      if(item?.smiles)validateMonomer(b,true).catch(e=>notice(e.message,true));
+    }
+  }
+  $('linkage-search').value='';populateLinkages('imine');refreshChemistry();
+}
 function setCombination(preset){
   for(const block of ["a","b"]){$(`smiles-${block}`).value=preset[`monomer_${block}`];$(`label-${block}`).value=preset[`label_${block}`]||block.toUpperCase();$(`preset-${block}`).value="";}
   $("linkage-search").value="";populateLinkages(preset.linkage);$("pore").value=preset.instances;markInputsChanged();const wanted=preset.template_id||templates().find(t=>t.instances===preset.instances&&(!t.linkages||t.linkages.includes(preset.linkage)))?.id;refreshChemistry(wanted);$("cof-preset").value=preset.id;updateIdentity();refreshMonomers().then(queueDrawing);
 }
 function showSourceMonomers(recipe,metadata){
+  const layer=metadata?.periodic_design_inputs;
   let components=Object.entries(recipe.components||{}).filter(([,c])=>c.monomer_smiles);
   if(!components.length)components=(metadata?.monomers||[]).filter(m=>m.smiles||m.monomer_smiles).map((m,i)=>[m.label||`precursor-${i+1}`,{...m,monomer_smiles:m.smiles||m.monomer_smiles}]);
-  const a=components.find(([,c])=>["aryl_aldehyde","tp_trialdehyde"].includes(c.role))||components[0],b=components.find(([,c])=>c.role==="primary_arylamine")||components.find(x=>x!==a);
-  for(const [block,entry] of [["a",a],["b",b]]){ $(`smiles-${block}`).value=entry?.[1]?.monomer_smiles||"";$(`label-${block}`).value=entry?.[1]?.label||entry?.[0]||block.toUpperCase();$(`preset-${block}`).value="";}
+  const a=components.find(([key])=>key===layer?.precursor_components[0])||components.find(([,c])=>["aryl_aldehyde","tp_trialdehyde"].includes(c.role))||components[0];
+  const b=components.find(([key])=>key===layer?.precursor_components[1])||components.find(([,c])=>c.role==="primary_arylamine")||components.find(x=>x!==a);
+  for(const [block,entry] of [["a",a],["b",b]]){
+    const smiles=entry?.[1]?.monomer_smiles||"";
+    const listed=(metadata?.monomers||[]).find(item=>smiles&&(item.smiles===smiles||item.canonical_smiles===smiles));
+    $(`smiles-${block}`).value=smiles;$(`label-${block}`).value=listed?.label||entry?.[1]?.label||entry?.[0]||block.toUpperCase();
+    $(`preset-${block}`).value="";
+  }
   for(const block of ['a','b'])if(!$(`smiles-${block}`).value){delete state.monomers[block];$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;$(`formula-${block}`).textContent="No precursor supplied";}
-  const link=recipe.linkage||a?.[1]?.linkage;if(link&&state.library?.linkages?.[link]){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances?.length))$("pore").value=recipe.instances.length;refreshChemistry(recipe.template_id);if(state.sourceId)refreshCombinations(true);else $("cof-preset").value="custom";
+  const link=layer?.linkage||recipe.linkage||a?.[1]?.linkage;if(link&&state.library?.linkages?.[link]){$("linkage-search").value="";populateLinkages(link);}if([6,12].includes(recipe.instances?.length))$("pore").value=recipe.instances.length;refreshChemistry(layer?.template||recipe.template_id);if(state.sourceId)refreshCombinations(true);else $("cof-preset").value="custom";
   for(const block of ['a','b'])if($(`smiles-${block}`).value.trim())validateMonomer(block,true).catch(e=>notice(e.message,true));
 }
 async function render(){
@@ -388,6 +429,7 @@ async function render(){
 }
 $("build").addEventListener("click",async()=>{
   clearTimeout(liveDrawingTimer);
+  if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.build();return;}
   if(state.busy)return;state.busy=true;sync();
   const revision=selectionRevision;
   try{
@@ -798,6 +840,7 @@ $("sketch-cancel").addEventListener("click",()=>$("sketch-dialog").close());
 async function applyDescriptionPlan(plan){
   if(!state.online||state.busy)throw new Error('Wait for the local drawing engine to be ready.');
   if(plan?.status!=='ready'||Boolean(plan.source_recipe_id)===Boolean(plan.prepare_request))throw new Error('Analyze and review a complete drawing plan first.');
+  window.COFdrawCrystalDesign?.leave();
   state.busy=true;sync();
   try{
     if(plan.source_recipe_id){
@@ -832,5 +875,5 @@ async function initialize(){
   }catch(e){$("engine-dot").classList.add("offline");$("engine-status").textContent="Local engine unavailable";notice("Open COFdraw through its Windows launcher or the local COF Vision server. The drawing engine is not available on this static page.",true);}
   sync();
 }
-window.COFdrawStudio={state,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage};
+window.COFdrawStudio={state,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
 initialize();

@@ -102,6 +102,18 @@ class PeriodicFromDrawing(RenderDrawing):
     repeats: list[Annotated[int, Field(ge=1, le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
 
 
+class DiamondDesign(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    monomer_a: str = Field(min_length=1, max_length=4000)
+    monomer_b: str = Field(min_length=1, max_length=4000)
+    label_a: str = Field(default="Monomer A", max_length=180)
+    label_b: str = Field(default="Monomer B", max_length=180)
+    linkage: Literal["imine","secondary_amine","acylhydrazone"] = "imine"
+    topology: Literal["dia","lon"] = "dia"
+    network_count: int = Field(default=1,ge=1,le=7,strict=True)
+    repeats: list[Annotated[int, Field(ge=1,le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
+
+
 class NetworkHypothesis(BaseModel):
     model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
     structure: dict
@@ -366,6 +378,14 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
     from .cofdraw_adsorption import create_adsorption_router
     router.include_router(create_adsorption_router(outputs))
 
+    @router.get('/space/screen-results')
+    def local_screen_results():
+        path = outputs/'research-screen.json.gz'
+        if not path.is_file():
+            return Response(status_code=204, headers={'Cache-Control': 'no-store'})
+        return FileResponse(path, media_type='application/json',
+                            headers={'Content-Encoding': 'gzip', 'Cache-Control': 'no-store'})
+
     @router.get('/space/blocks/{block}.svg')
     def space_block(block: int):
         from .cofdraw_family_screen import block_svg
@@ -553,6 +573,9 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         try:
             value, digest = source_recipe(recipe_id)
             metadata = source_metadata(value, digest)
+            rule=crystal_manifest().get('source_layer_designs',{}).get(recipe_id)
+            if rule and rule['source_sha256']==digest:
+                metadata={**metadata,'periodic_design_inputs':{k:rule[k] for k in ('precursor_components','linkage','template')}}
             return {"recipe": value, "source_sha256": digest, "status": "source_bound_provisional", "metadata": metadata}
         except (ValueError, KeyError, OSError) as exc:
             raise HTTPException(422, str(exc)) from exc
@@ -824,11 +847,15 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
             from .cofdraw_crystal_figures import chemical_drawing, crystal_details
             result['crystal_details'] = crystal_details(structure, network['edges'])
-            if item is not None or structure['provenance'].get('kind') == 'linker_design':
+            if item is not None or structure['provenance'].get('kind') in ('linker_design','monomer_dia_design'):
                 result['chemical_drawing_svg'] = chemical_drawing(structure, network['edges'])
                 circuit = result['crystal_details'].get('ring')
                 if circuit:
                     result['chemical_circuit_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit)
+                    try:
+                        result['chemical_framework_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit, scheme=True)
+                    except ValueError as exc:
+                        result.setdefault('warnings',[]).append(f'Conventional circuit layout unavailable: {exc}')
         if item is None:
             return result
         result['scope']=item['description']
@@ -857,7 +884,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         try:
             from .cofdraw_periodic_options import periodic_options
             manifest=crystal_manifest()
-            with lock:return periodic_options(selected_recipe(request),manifest)
+            digest=source_recipe(request.source_recipe_id)[1] if request.source_recipe_id else None
+            with lock:return periodic_options(selected_recipe(request),manifest,source_sha256=digest)
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/model')
@@ -874,7 +902,9 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 item=matches[0];structure=load_crystal_template(item,manifest)
                 if request.recipe_match:
                     from .cofdraw_periodic_options import periodic_options
-                    options=periodic_options(selected_recipe(request.recipe_match),manifest)
+                    match_id=request.recipe_match.source_recipe_id
+                    options=periodic_options(selected_recipe(request.recipe_match),manifest,
+                                             source_sha256=source_recipe(match_id)[1] if match_id else None)
                     if not any(o['id']==item['id'] for o in options['options']):raise ValueError('This periodic model does not match the current precursor pair, linkage and unchanged connectivity template')
                     structure['provenance']['drawing_match']={**item['precursor_match'],'scope':options['scope']}
             else:
@@ -906,27 +936,30 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             recipe = selected_recipe(request)
             manifest = crystal_manifest()
             with lock:
-                if request.source_recipe_id and request.layer_spacing is None:
+                source_digest=source_recipe(request.source_recipe_id)[1] if request.source_recipe_id else None
+                source_rule=manifest.get('source_layer_designs',{}).get(request.source_recipe_id)
+                if request.source_recipe_id and request.layer_spacing is None and not source_rule:
                     exact=next((r for r in manifest.get('reported_models',[])
                                 if r.get('source_recipe_id')==request.source_recipe_id
-                                and r.get('source_recipe_sha256')==source_recipe(request.source_recipe_id)[1]),None)
+                                and r.get('source_recipe_sha256')==source_digest),None)
                     if exact:
                         return reported_result(exact,manifest,request)
                 try:
-                    design = validated_design(recipe)
+                    design = validated_design(recipe,source_rule=source_rule,source_sha256=source_digest)
                     options = periodic_options(recipe, manifest, design=design)
                 except (ValueError, KeyError, TypeError) as exc:
                     return {'available': False, 'reason': str(exc)}
+                basis=design[0].get('source_drawing_basis')
                 matches = {o['id'] for o in options['options']}
                 reported = next((entry for entry in manifest.get('reported_models', [])
-                    if entry.get('precursor_match',{}).get('linkage') == recipe['linkage']
+                    if entry.get('precursor_match',{}).get('linkage') == design[0]['linkage']
                     and design[0]['selected_template']['id'] in entry['precursor_match']['drawing_template_ids']
                     and sorted(entry['precursor_match']['canonical_smiles']) == design[1]), None)
-                if reported and request.layer_spacing is None:
+                if reported and request.layer_spacing is None and not basis:
                     return reported_result(reported,manifest,request)
                 item = next((entry for entry in manifest['templates']
                              if entry['id'] in matches and entry['model_name'].endswith('-AA')), None)
-                if item and request.layer_spacing is None:
+                if item and request.layer_spacing is None and not basis:
                     structure = load_crystal_template(item, manifest)
                     structure['provenance']['drawing_match'] = item['precursor_match']
                     structure['provenance']['spacing_angstrom'] = structure['cell'][2][2]
@@ -936,19 +969,47 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                         structure, validation = build_periodic_layer(design[0], spacing=request.layer_spacing)
                     except ValueError as exc:
                         return {'available': False, 'reason': str(exc)}
+                if basis:
+                    structure['provenance']['source_drawing_basis']=basis
+                    validation['source_recipe_sha256']=source_digest
                 result = structure_exports(structure, repeats=tuple(request.repeats), periodic_bonds=validation.get("periodic_bonds"))
+                if validation.get("periodic_bonds"):
+                    from .cofdraw_crystal_figures import precursor_scenes
+                    result["crystal_details"]=precursor_scenes(structure,validation["periodic_bonds"])
             result.update(available=True, cell_validation=validation,
                 scope='Unrelaxed periodic starting model of the selected precursor chemistry and planar connectivity. AA layer spacing is a model parameter.')
             provenance = structure['provenance']
+            if basis:
+                result['scope']=' '.join(filter(None,[result['scope'],basis['assumption'],basis.get('orientation_assumption')]))
+                if 'reference_layer_spacing_angstrom' in basis:
+                    result['scope']+=(f" The powder reference spacing is approximately {basis['reference_layer_spacing_angstrom']:.2f} Å. "
+                                      f"This AA model uses {provenance['spacing_angstrom']:.2f} Å after interlayer contact screening.")
             result['exports']['cif'] = result['exports']['cif'].replace('data_COFdraw\n', (
                 'data_COFdraw\n# COFdraw unrelaxed AA starting model.\n'
-                f"# Template {design[0]['selected_template']['id']}; layer spacing {provenance['spacing_angstrom']:.4f} angstrom.\n"
+                + (f"# Source drawing {basis['recipe_id']} ({source_digest}); chosen periodic net and AA stacking.\n" if basis else '')
+                + f"# Template {design[0]['selected_template']['id']}; layer spacing {provenance['spacing_angstrom']:.4f} angstrom.\n"
                 + (f"# Fragment geometry: {provenance['fragment_geometry']}.\n" if 'fragment_geometry' in provenance else '')
                 + (f"# Meso phenyl tilt {provenance['phenyl_tilt_degrees']} degrees.\n"
                    if provenance.get('phenyl_tilt_degrees') else '')), 1)
             return scientific_result(result, 'build-periodic', request.model_dump())
         except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
             raise HTTPException(422, str(exc)) from exc
+
+    @router.post('/science/build-reticular')
+    @router.post('/science/build-dia')
+    def build_diamond_design(request: DiamondDesign):
+        try:
+            from .cofdraw_dia import build_dia
+            with lock:
+                structure,audit = build_dia(request.monomer_a, request.monomer_b, request.linkage,
+                                            request.label_a, request.label_b, request.network_count, request.topology)
+                result = crystal_exports(None, structure, request.repeats)
+            result.update(available=True,cell_validation=audit,scope=structure["provenance"]["qualification"])
+            result["exports"]["cif"] = result["exports"]["cif"].replace("data_COFdraw\n",
+                f"data_COFdraw\n# Unrelaxed {request.topology} design from reacted precursors, {request.network_count} network(s).\n",1)
+            return scientific_result(result,"build-dia",request.model_dump())
+        except (ValueError,KeyError,TypeError,RuntimeError) as exc:
+            raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/patch')
     def patch_model(request: Patch3D):

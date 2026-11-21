@@ -6,6 +6,14 @@ The running API is authoritative. `GET /api/drawing/science/capabilities` return
 python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/contracts science capabilities
 ```
 
+## Explore a local simulation campaign
+
+Open **Explore COF chemical space → Simulation results**. Load a `.json.gz` campaign snapshot or fetch the installed copy through `GET /api/drawing/space/screen-results` (HTTP 204 means no local results). The local copy belongs under `framework-drawing/exports/research-screen.json.gz` in the application's writable data directory. The public catalog contains no private campaign snapshots.
+
+For a native COFdraw campaign, run `python scripts/build_campaign_snapshot.py --results RESULTS --recipes recipes.jsonl.gz --output research-screen.json.gz`. Optional `--extra-results DIR` adds a breadth catalog and its per-candidate receipts. `--confirmation-csv CSV --confirmation-method JSON` and `--deep-csv CSV --deep-method JSON` add independent longer runs on identical CIFs. Open the output directly or place it in the installed location. See `--help` for cutoff handling.
+
+Each record carries its precursor-pair code, family, QC outcome and available computed values. Modeled records include the CIF bytes (base64-encoded gzip) and their SHA-256. Use `metrics` for units and `methods` for settings. Missing fields and nulls indicate unavailable results. GCMC methane delivery, dilute Henry ratios and finite-pressure mixture selectivity have distinct fields. Scatters require both axes; CSV export includes every filtered candidate, with empty cells for missing calculations.
+
 Use `science query` with `record_types:["literature"]` to retrieve the bundled Yaghi review ledger by title or DOI. Each paper carries actually inspected pages, checked monomer IDs, unresolved candidates and review limits. There are 100 selected index records; this is not an exhaustive main-paper/SI audit. Monomer query support includes current runtime roles separately from the preserved source catalog record. A functional-group match does not validate a reported source reaction or periodic crystal.
 
 ## Describe a drawing before rendering

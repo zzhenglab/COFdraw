@@ -1,6 +1,7 @@
 """Exact precursor/template matching to separately validated periodic designs."""
 from __future__ import annotations
 
+from collections import Counter
 from copy import deepcopy
 from rdkit import Chem
 
@@ -12,10 +13,39 @@ def _graph(smiles):
     return Chem.MolToSmiles(molecule,isomericSmiles=True)
 
 
-def validated_design(recipe):
+def validated_design(recipe, *, source_rule=None, source_sha256=None):
     """Recover the declared chemistry and confirm its finite template incidence."""
-    from .cofdraw_chemistry import design_signature, _assemble_template
+    from .cofdraw_chemistry import design_signature, _assemble_template, prepare_template
     from .framework_drawing import linkage_fragment, _ports, LINKAGE_LIBRARY
+
+    if source_rule and source_sha256 and source_rule["source_sha256"] == source_sha256:
+        keys=source_rule["precursor_components"]
+        components=recipe["components"]
+        smiles=[_graph(components[k]["monomer_smiles"]) for k in keys]
+        # A reviewed fragment can include an outward continuation or use separate
+        # names for the same asymmetric linker facing opposite directions.
+        # React complete precursors; never tile these source-boundary fragments.
+        design=prepare_template(*smiles, source_rule["linkage"], *keys, 6, source_rule["template"])
+        expected={k:_graph(c["monomer_smiles"]) for k,c in design["components"].items()}
+        source_nodes={i["id"]:_graph(components[i["component"]]["monomer_smiles"]) for i in recipe["instances"]}
+        expected_counts=Counter(expected[i["component"]] for i in design["instances"])
+        edges=recipe["connections"]
+        degree=Counter(end["instance"] for edge in edges for end in (edge["a"],edge["b"]))
+        order=LINKAGE_LIBRARY[design["linkage"]]["join_bond_order"]
+        if (Counter(source_nodes.values())!=expected_counts or set(degree)!=set(source_nodes)
+                or any(n!=2 for n in degree.values())
+                or any(e["bond_order"]!=order or source_nodes[e["a"]["instance"]]==source_nodes[e["b"]["instance"]]
+                       for e in edges)):
+            raise ValueError("Reviewed local pore does not match the declared alternating precursor chemistry.")
+        basis={"recipe_id":recipe["recipe_id"],"recipe_sha256":source_sha256,
+               "drawing_doi":(recipe.get("source") or {}).get("doi"),
+               "template":source_rule["template"],
+               "assumption":"The reviewed precursor graphs and local pore specify the chemistry. The periodically repeated net and AA stacking are model choices."}
+        for field in ("orientation_assumption","comparison_reference","reference_layer_spacing_angstrom","spacing_reference"):
+            if field in source_rule:
+                basis[field]=deepcopy(source_rule[field])
+        design["source_drawing_basis"]=basis
+        return design,sorted(smiles)
 
     selected=recipe.get('selected_template') or {}
     if recipe.get('assembly'):
@@ -64,18 +94,19 @@ def validated_design(recipe):
     return fresh, precursors
 
 
-def periodic_options(recipe, manifest, *, design=None):
+def periodic_options(recipe, manifest, *, design=None, source_sha256=None):
     result={'options':[], 'preserves_drawing_coordinates':False,
       'scope':'Matching precursors and chosen connectivity identify separate unrelaxed periodic design hypotheses. They do not convert the drawing coordinates into a crystal or establish experimental identity.'}
     try:
-        fresh,precursors=design if design is not None else validated_design(recipe)
+        fresh,precursors=design if design is not None else validated_design(recipe,
+            source_rule=manifest.get("source_layer_designs",{}).get(recipe.get("recipe_id")),source_sha256=source_sha256)
     except (ValueError,KeyError,TypeError) as exc:
         result['reason']=str(exc)
         return result
     selected=fresh['selected_template']['id']
     for item in manifest.get('templates',[]):
         match=item.get('precursor_match') or {}
-        if (match.get('linkage')==recipe.get('linkage')
+        if (match.get('linkage')==fresh.get('linkage')
                 and selected in match.get('drawing_template_ids',[])
                 and sorted(_graph(s) for s in match.get('canonical_smiles',[]))==precursors):
             result['options'].append({'id':item['id'],'label':item['label'],'atoms':item['atoms'],
@@ -83,6 +114,10 @@ def periodic_options(recipe, manifest, *, design=None):
               'match':match,'qualification':item['description']})
     result['precursor_canonical_smiles']=precursors
     result['drawing_template_id']=selected
+    if 'source_drawing_basis' in fresh:
+        result['source_drawing_basis']=fresh['source_drawing_basis']
+        result['reason']='Build an unrelaxed periodic layer from the precursors in this reviewed drawing.'
+        return result
     result['reason']=('Choose a matching periodic design, then inspect its geometry before calculating pore properties.' if result['options'] else
                       'No validated periodic design for this exact precursor pair, linkage and connectivity is bundled yet. Finite checks/scattering remain available; import a corresponding CIF for periodic properties.')
     return result
