@@ -237,7 +237,7 @@ def launch_from_explorer(executable, arguments, output):
                             creationflags=subprocess.CREATE_NO_WINDOW)
 
 
-def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_passed", timeout=180):
+def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_passed", timeout=180, shell_open=False):
     """Launch an existing isolated copy; do not modify its DLLs or configuration."""
     kernel, _ = _windows_api()
     executable = Path(executable).resolve()
@@ -245,17 +245,22 @@ def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_pa
     output.mkdir(parents=True, exist_ok=False)
     status_file = output / "native-status.json"
     arguments = ["--smoke-window", "--status-file", str(status_file)]
-    report = {"method": "ordinary_explorer_reviewed_shell_link", "expected_status": expected_status,
+    report = {"method": "windows_shell_open" if shell_open else "ordinary_explorer_reviewed_shell_link", "expected_status": expected_status,
               "native": None, "process": None, "server_closed": False}
     process = None
     helper = None
     status = None
     try:
-        print("Opening the verified COFdraw shortcut in Explorer. If Windows shows a first-run "
+        print("Opening the extracted COFdraw through the Windows shell. If Windows shows a first-run "
               "confirmation, review the exact COFdraw.exe identity before choosing Run. "
               "Do not change security settings or unblock DLLs.", flush=True)
-        helper = launch_from_explorer(executable, arguments, output)
-        report["explorer_request_pid"] = helper.pid
+        if shell_open:
+            # Use the ordinary Windows shell Open verb, including its first-run
+            # UI. Independently verify the application's token and file marks.
+            os.startfile(str(executable), "open", subprocess.list2cmdline(arguments), str(executable.parent))
+        else:
+            helper = launch_from_explorer(executable, arguments, output)
+            report["explorer_request_pid"] = helper.pid
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             try:
@@ -315,6 +320,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zip", dest="archive", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--shell-open", action="store_true", help="Use the standard Windows Open verb from an ordinary user session")
     args = parser.parse_args(argv)
     _windows_api()
     output = args.output_dir.resolve()
@@ -326,7 +332,7 @@ def main(argv=None):
         records = mark_downloads(application)
         report["marked_files"] = records
         report["executable_download_mark_before"] = True
-        report["launch"] = launch_medium_smoke(application / "COFdraw.exe", output / "normal-user-native")
+        report["launch"] = launch_medium_smoke(application / "COFdraw.exe", output / "normal-user-native", shell_open=args.shell_open)
         report.update(verify_after_launch_marks(application, records))
         report["passed"] = True
     except BaseException as exc:
