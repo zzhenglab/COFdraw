@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.4
+
+- Open COF-300, COF-320 and COF-103 crystal figures from Starting combination. Switch between a vector projection and the rotatable coordinates. Inspect traced junctions, molecular circuits and periodic packing where supported.
+- Added four source-reviewed framework precursors and excluded radical fragments from automatic pairing.
+
 ## 0.9.3
 
 - Explore linkage families, DOI-linked precursor pairs and their chemical structures. Open compatible pairs in the drawing studio or export a family screening batch.

@@ -59,7 +59,11 @@
     requestAnimationFrame(()=>viewer.draw());
   });
   $('close-science').addEventListener('click',()=>{workspace(false);$('switch-space').focus();});
-  $('switch-space').addEventListener('click',()=>$('science-dialog').hidden?$('open-science').click():$('close-science').click());
+  $('switch-space').addEventListener('click',()=>{
+    if($('science-dialog').hidden)$('open-science').click();
+    else if(!$('crystal-figure-tools').hidden&&!$('model-view').hidden)$('crystal-figure-toggle').click();
+    else $('close-science').click();
+  });
   window.addEventListener('cofdraw:rendered',()=>{
     if(!$('science-dialog').hidden&&$('structure-source').value==='drawing'&&!origin&&!scienceBusy&&drawingReady())generateCurrentCell();
   });
@@ -206,7 +210,8 @@
       select.append(group);
     }
     select.value=crystalTemplates.find(t=>t.id==='cof-300-c5')?.id||crystalTemplates[0]?.id;templateNote();
-    window.dispatchEvent(new CustomEvent('cofdraw:crystal-catalog',{detail:data.curated_models||[]}));
+    window.dispatchEvent(new CustomEvent('cofdraw:crystal-catalog',{detail:[
+      ...(data.reported_models||[]).filter(r=>r.network_dimension===3),...(data.curated_models||[])]}));
     if(new URLSearchParams(location.search).get('workspace')==='crystal'&&!currentStructure&&!origin){
       workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
       $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
@@ -216,6 +221,7 @@
     if(!crystalTemplates.some(t=>t.id===e.detail))return;
     workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
     $('crystal-template').value=e.detail;templateNote();$('build-crystal').click();
+    window.dispatchEvent(new CustomEvent('cofdraw:request-figure',{detail:e.detail}));
   });
   $('build-crystal').addEventListener('click',()=>work(async api=>{const r=await api('science/model',{template_id:$('crystal-template').value,repeats:repeats()});basePeriodic={result:r,title:crystalTemplates.find(t=>t.id===$('crystal-template').value)?.label||'Periodic model'};hypothesis=null;$('network-comparison').hidden=true;display(r,basePeriodic.title);if(['reported_crystal','curated_crystal'].includes(r.structure.provenance.kind))$('viewer-provenance').textContent=(r.structure.provenance.dataset_id||'Published coordinates')+' · DOI '+r.structure.provenance.doi;status('Periodic model ready.');}));
   $('import-cif').addEventListener('click',()=>$('cif-file').click());
@@ -271,7 +277,7 @@
   const elementColors={C:'#73818c',H:'#e8edf0',N:'#5597dc',O:'#e76769',S:'#e7c356',P:'#d99a55',B:'#d5ac85',F:'#72cfa4',Cl:'#66bb8c',Br:'#b88b65',I:'#a77ac0',Si:'#bcae9a',Cu:'#d5a477',Zn:'#939eb7',Fe:'#cb895b','*':'#b8bbc3'};
   const radii={H:.31,C:.76,N:.71,O:.66,F:.57,P:1.07,S:1.05,Cl:1.02,Br:1.2,I:1.39,B:.84,Si:1.11,Cu:1.32,Zn:1.22,Fe:1.32};
   const vdw={H:1.2,C:1.7,N:1.55,O:1.52,F:1.47,P:1.8,S:1.8,Cl:1.75,Br:1.85,I:1.98,B:1.92,Si:2.1,Cu:1.4,Zn:1.39,Fe:1.4};
-  const groupPalette=['#28949c','#d89755','#8475b4','#6c9b68','#c97589','#5d8abe','#ae9666','#967b9f'];
+  const groupPalette=['#28949c','#d89755','#8475b4','#6c9b68','#c97589','#5d8abe','#ae9666','#967b9f','#355b45','#775449','#474b8a','#bd9bb5'];
   function viewerColors(atoms){const mode=$('viewer-color').value,root=$('viewer-legend'),colors=new Map(),groups=new Map();root.replaceChildren();if(mode==='element'){for(const a of atoms)colors.set(a.index,elementColors[a.element]||'#a59bc0');
       const keys=new Map(atoms.filter(a=>a.element!=='*' && !(viewer.hideHydrogen && a.element==='H')).map(a=>[(a.isotope||'')+a.element,colors.get(a.index)]));
       for(const [label,color] of keys){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,label);root.append(chip);}return colors;}const value=a=>mode==='network'?(a.network??a.inferred_component):a[mode];for(const a of atoms){const key=value(a);if(key!==undefined&&!groups.has(key))groups.set(key,groupPalette[groups.size%groupPalette.length]);colors.set(a.index,groups.get(key)||elementColors[a.element]||'#a59bc0');}for(const [key,color]of groups){const chip=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;chip.append(swatch,document.createTextNode(mode==='component'?`Block ${key}`:mode==='network'&&atoms.every(a=>a.network===undefined)?`Inferred component ${Number(key)+1}`:`${mode==='layer'?'Layer':'Network copy'} ${Number(key)+1}`));root.append(chip);}if(!groups.size&&atoms.length)root.textContent=`No ${mode==='component'?'building-block':mode} groups supplied; showing element colors.`;return colors;}
@@ -294,6 +300,13 @@
       const screen=r=>({...r,x:w/2+(r.x-(xlo+xhi)/2)*scale,y:h/2-(r.y-(ylo+yhi)/2)*scale});
       const project=p=>screen(camera(rotate(p)));
       this.projected=plane.map(screen);
+      if(this.model.guides){
+        c.save();c.strokeStyle='#bb6a37';c.globalAlpha=.65;c.lineWidth=3;c.setLineDash([7,5]);
+        for(const [i,j] of this.model.guides){
+          const a=this.projected[i],b=this.projected[j];c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();
+        }
+        c.restore();
+      }
       const mode=$('viewer-mode').value,colors=viewerColors(this.atoms),color=a=>colors.get(a.index)||elementColors[a.element]||'#a59bc0';
       const layers=new Map();
       if(mode==='mixed')this.atoms.forEach((a,i)=>{
@@ -313,7 +326,7 @@
           for(const [index,tip] of [[a,p],[b,q]])objects.push({kind:'bond',index,tip,mid,z:(tip.z+mid.z)/2});
         }
       }
-      window.COFdrawPores?.addFaces(objects,project,scale);
+      if(!this.model?.illustration)window.COFdrawPores?.addFaces(objects,project,scale);
       objects.sort((a,b)=>a.z-b.z);
       for(const o of objects){
         const depth=Math.max(0,Math.min(1,(zmax-o.z)/Math.max(.01,zmax-zmin)));
@@ -449,6 +462,11 @@
     syncSource();
     if(key===drawingKey)return;
     drawingKey=key;
+    // The editor's debounced first render can finish after a user has opened a
+    // catalog crystal. Its new recipe does not supersede that independent CIF.
+    if($('structure-source').value==='periodic'&&origin!=='monomer'&&origin!=='current-periodic'){
+      $('monomer-results').replaceChildren();return;
+    }
     clearComparison();
     cellNote('');
     currentLayer=null;

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "cofdraw-inventory-0110",
+  "catalog_version": "cofdraw-inventory-0111",
   "created_at_utc": "2026-11-17T16:45:06.666156+00:00",
   "ground_truth": false,
   "reviewer_type": "agent",
@@ -20737,6 +20737,326 @@
       ],
       "compatibility_scope": "Recognized groups support explicit drawing designs only. They do not establish the source reaction, synthesis feasibility, topology or a periodic crystal.",
       "name_scope": "Names describe this exact finite graph. Source compound numbers and abbreviations remain paper-scoped."
+    },
+    {
+      "id": "ttba_four_formyl",
+      "abbreviation": "TTBA",
+      "full_name": "4,4′,4″,4‴-([1,1′-biphenyl]-4,4′-diylbis(azanetriyl))tetrabenzaldehyde",
+      "label": "TTBA - 4,4′,4″,4‴-([1,1′-biphenyl]-4,4′-diylbis(azanetriyl))tetrabenzaldehyde",
+      "smiles": "O=Cc1ccc(N(c2ccc(C=O)cc2)c2ccc(-c3ccc(N(c4ccc(C=O)cc4)c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "canonical_smiles": "O=Cc1ccc(N(c2ccc(C=O)cc2)c2ccc(-c3ccc(N(c4ccc(C=O)cc4)c4ccc(C=O)cc4)cc3)cc2)cc1",
+      "formula": "C40H28N2O4",
+      "literature_names": [
+        "TTBA",
+        "4,4′,4″,4‴-([1,1′-biphenyl]-4,4′-diylbis(azanetriyl))tetrabenzaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acs.nanolett.1c02050"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/acs.nanolett.1c02050",
+          "source_pdf_sha256": "a15d51021235059dbbf762751448a2089a9acf03b0eeadfee2a94fc1166b0385",
+          "source_label": "TTBA",
+          "review_sha256": "2ec28334baa89d5f09621d235efabd76192d26ee3dfa61b8f310aa94ab046bf2",
+          "source_graph_table_sha256": "48de446d1bd4377778941e7dc7787fb1f7da3d4a4ca1a119d3460a951794a81f",
+          "source_role": "framework_feed",
+          "ground_truth": false
+        }
+      ],
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "review_status": "agent_reviewed_source_monomer",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 4
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 4,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 4,
+      "node_symmetry": null,
+      "geometry_hint": "unspecified",
+      "qualification": "Paper-scoped precursor identity. Automatic designs use recognized reaction sites."
+    },
+    {
+      "id": "dmta_23",
+      "abbreviation": "D23",
+      "full_name": "2,3-dimethoxyterephthalaldehyde",
+      "label": "D23 - 2,3-dimethoxyterephthalaldehyde",
+      "smiles": "COc1c(C=O)ccc(C=O)c1OC",
+      "canonical_smiles": "COc1c(C=O)ccc(C=O)c1OC",
+      "formula": "C10H10O4",
+      "literature_names": [
+        "D23",
+        "2,3-dimethoxyterephthalaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acsami.3c17188"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/acsami.3c17188",
+          "source_pdf_sha256": "0cb92f569baa27dac9958c1ce5fb660f83c37c8bbd77157fa98ba1b3dec787b3",
+          "source_label": "D23",
+          "review_sha256": "3f18068ce129658868b8f1e3fe5c03bacc7e4754702966b8ec0a2ce9ee7d682c",
+          "source_graph_table_sha256": "36061c2324857f4f77f5eb62b50e75224c3def6a5b74d21d8c6e71349866f04c",
+          "source_role": "framework_feed",
+          "ground_truth": false
+        }
+      ],
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "review_status": "agent_reviewed_source_monomer",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "node_symmetry": null,
+      "geometry_hint": "unspecified",
+      "qualification": "Paper-scoped precursor identity. Automatic designs use recognized reaction sites."
+    },
+    {
+      "id": "dva_25",
+      "abbreviation": "DVA",
+      "full_name": "2,5-divinylterephthalaldehyde",
+      "label": "DVA - 2,5-divinylterephthalaldehyde",
+      "smiles": "C=Cc1cc(C=O)c(C=C)cc1C=O",
+      "canonical_smiles": "C=Cc1cc(C=O)c(C=C)cc1C=O",
+      "formula": "C12H10O2",
+      "literature_names": [
+        "DVA",
+        "2,5-divinylterephthalaldehyde"
+      ],
+      "source_dois": [
+        "10.1021/acs.nanolett.4c02458"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/acs.nanolett.4c02458",
+          "source_pdf_sha256": "64f7ab2b6f45b471e3a383938f27ba98aa2bd953d98c47d1dd34aa9bf24a306a",
+          "source_label": "DVA",
+          "review_sha256": "7274b4585a66b7d1dfe4f3599c7d4397057adf3672c4c77ecdb451f92771f57a",
+          "source_graph_table_sha256": "e0c8370dbdf57191a3833940364f57acdeef254e52d63bb340aaf79e737dec9e",
+          "source_role": "framework_feed",
+          "ground_truth": false
+        }
+      ],
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "review_status": "agent_reviewed_source_monomer",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 2
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 2,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 2,
+      "node_symmetry": null,
+      "geometry_hint": "unspecified",
+      "qualification": "Paper-scoped precursor identity. Automatic designs use recognized reaction sites."
+    },
+    {
+      "id": "btpha2",
+      "abbreviation": "BTPHA2",
+      "full_name": "BTPHA2 extended bridged triphenylamine",
+      "label": "BTPHA2 - BTPHA2 extended bridged triphenylamine",
+      "smiles": "CC1(C)c2cc(-c3ccc(C=O)cc3)cc3c2N2c4c1cc(-c1ccc(C=O)cc1)cc4C(C)(C)c1cc(-c4ccc(C=O)cc4)cc(c12)C3(C)C",
+      "canonical_smiles": "CC1(C)c2cc(-c3ccc(C=O)cc3)cc3c2N2c4c1cc(-c1ccc(C=O)cc1)cc4C(C)(C)c1cc(-c4ccc(C=O)cc4)cc(c12)C3(C)C",
+      "formula": "C48H39NO3",
+      "literature_names": [
+        "BTPHA2",
+        "BTPHA2 extended bridged triphenylamine"
+      ],
+      "source_dois": [
+        "10.1021/acsami.1c05967"
+      ],
+      "source_evidence": [
+        {
+          "source_doi": "10.1021/acsami.1c05967",
+          "source_pdf_sha256": "ef714b33a0608c7aaf979a37dfb6ee1a568c813c7c48264c8a5cecce7ed445d7",
+          "source_label": "BTPHA2",
+          "review_sha256": "d0ae28ce9fccfca596a6d483b160222963b7cf1f9e5ed6bc8a92e46b3d2438b1",
+          "source_graph_table_sha256": "412645b0d6ba066df45352d5da9a83bb0631e81c2cde9ba101ec9579345e2c17",
+          "source_role": "framework_feed",
+          "ground_truth": false
+        }
+      ],
+      "ground_truth": false,
+      "reviewer_type": "agent",
+      "review_status": "agent_reviewed_source_monomer",
+      "catalog_use": "scoped_drawing_candidate",
+      "automatic_prepare_supported": true,
+      "reactive_groups": [
+        {
+          "kind": "aryl_aldehyde",
+          "label": "Aromatic aldehyde",
+          "count": 3
+        }
+      ],
+      "compatible_roles": [
+        {
+          "linkage": "imine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "nitrone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "acylhydrazone",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "azine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        },
+        {
+          "linkage": "secondary_amine",
+          "role": "aryl_aldehyde",
+          "reactive_sites": 3,
+          "compatible": true,
+          "reason": "Recognized functional group; crystallization and reaction conditions are not predicted."
+        }
+      ],
+      "connection_count": 3,
+      "node_symmetry": null,
+      "geometry_hint": "unspecified",
+      "qualification": "Paper-scoped precursor identity. Automatic designs use recognized reaction sites."
     }
   ],
   "cof_presets": [
@@ -25479,6 +25799,16 @@
       "cv_46a108241ae9d94d",
       "cv_eba16000faee0e1a",
       "cv_0f88d9e205372357"
+    ],
+    "ground_truth": false
+  },
+  "reviewed_feed_update": {
+    "previous_catalog_sha256": "721700c0115cf0ad0d4954b5a3aef8426beb6cfebbea4aff5af33f4ae58cfb7a",
+    "added_ids": [
+      "ttba_four_formyl",
+      "dmta_23",
+      "dva_25",
+      "btpha2"
     ],
     "ground_truth": false
   }

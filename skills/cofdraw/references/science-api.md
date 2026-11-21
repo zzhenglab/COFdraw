@@ -15,6 +15,8 @@ python skills/cofdraw/scripts/cofdraw_client.py --repo . --output outputs/monome
 
 For a CURATED model, start PXRD at 2–20° 2θ with the default Cu Kα wavelength. This interval was tested for every included structure. Wider ranges can exceed the desktop reflection budget for large cells.
 
+For a crystal figure request, try `cof-300-c5`, `curated-13040N3` (COF-320) or `curated-07011N3` (COF-103). The model response can include `crystal_details`. Each available scene supplies Cartesian heavy-atom positions in Å and index-pair bonds. The junction scene contains a local four-shell neighborhood. The ring scene follows one closed junction circuit and retains the other aryl branches. The net and overlay scenes simplify paths between four-connected junctions. Overlay guides are visual annotations. Use the full `structure` for quantitative calculations. Retain the source DOI and coordinate-model identity when exporting a figure.
+
 | Endpoint | JSON body | Meaning and outputs |
 | --- | --- | --- |
 | `GET library` | None | Available independent periodic model templates and methods |

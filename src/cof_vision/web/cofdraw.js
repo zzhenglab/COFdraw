@@ -149,7 +149,9 @@ function refreshPresetLists(){
 let matchingCombinations=[], crystalSuggestions=[], suggestionIndex=-1;
 const comboInput=$('combination-search'),suggestions=$('combination-suggestions');
 window.addEventListener('cofdraw:crystal-catalog',e=>{
-  crystalSuggestions=e.detail.map(r=>({id:r.id,label:r.model_name,group:'Open 3D crystal',crystal:true}));
+  crystalSuggestions=e.detail.map(r=>({id:r.id,label:r.model_name,group:'3D crystal · figure and model',crystal:true,
+    featured:['cof-300-c5','curated-13040N3','curated-07011N3'].includes(r.id)}));
+  refreshCombinations(true);
   if(document.activeElement===comboInput)showSuggestions();
 });
 function closeSuggestions(){
@@ -162,9 +164,9 @@ function showSuggestions(){
   const priority=row=>term&&compact(row.label).startsWith(compact(term))?0:
     ['source:cof-300-projection-v1','source:tppa-pore-v1','named:COF-LZU1','named:COF-76','design-tfb_deth'].includes(row.id)?1:
     row.group==='Named starting pairs'?2:row.source?3:4;
-  const crystals=term?crystalSuggestions.filter(r=>compact(r.label).includes(compact(term))):[];
+  const crystals=crystalSuggestions.filter(r=>term?(term==='3d'||compact(r.label).includes(compact(term))):r.featured);
   if(crystals.length)$('combination-count').textContent=matchingCombinations.length+' drawing choices · '+crystals.length+' crystal models';
-  const choices=[...matchingCombinations,...crystals].sort((a,b)=>priority(a)-priority(b)).slice(0,12);
+  const choices=[...matchingCombinations,...crystals].sort((a,b)=>(a.featured?1:priority(a))-(b.featured?1:priority(b))).slice(0,12);
   closeSuggestions();suggestions.replaceChildren();
   for(const row of choices){
     const item=document.createElement('div');
@@ -192,7 +194,13 @@ function refreshCombinations(force=false){
   const select=$("cof-preset"),current=state.sourceId?'source:'+state.sourceId:select.value;
   const groups=new Map(),words=query.split(/\s+/).filter(Boolean),fragment=document.createDocumentFragment();
   fragment.append(option("custom","Custom monomers"));
-  let found=0,selected=false;
+  const crystals=crystalSuggestions.filter(r=>r.featured&&(!query||query==='3d'||r.label.toLowerCase().includes(query)));
+  if(crystals.length){
+    const group=document.createElement('optgroup');group.label='3D crystal figures';
+    for(const r of crystals)group.append(option('crystal:'+r.id,r.label));
+    fragment.append(group);
+  }
+  let found=crystals.length,selected=false;
   matchingCombinations=[];
   for(const row of combinations){
     if(linkage ? row.linkage!==linkage&&!row.source : row.linkage==='secondary_amine')continue;
@@ -416,6 +424,10 @@ comboInput.addEventListener('keydown',e=>{
   const active=items[suggestionIndex];comboInput.setAttribute('aria-activedescendant',active.id);active.scrollIntoView({block:'nearest'});
 });
 $("cof-preset").addEventListener("change",()=>{
+  if($('cof-preset').value.startsWith('crystal:')){
+    const id=$('cof-preset').value.slice(8);refreshCombinations(true);
+    window.dispatchEvent(new CustomEvent('cofdraw:open-crystal',{detail:id}));return;
+  }
   const row=combinations.find(p=>p.id===$("cof-preset").value);
   if(row?.source){$("source-select").value=row.source.recipe_id;$("load-source").click();return;}
   if(row){setCombination(row);notice("Checking the selected pair…");}

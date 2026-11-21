@@ -137,7 +137,11 @@ def test_exact_additive_history_and_manifest_bindings(catalog, rows):
     assert digest(old_path) == old_sha
     previous_rows = {r['id']:r for r in read(old_path)['monomer_presets']}
     assert set(previous_rows) - set(prior) == set(catalog['recent_monomer_update']['added_ids']) == {'dhp_cho4', 'hapt', 'hbc_la12'}
-    assert set(rows) - set(previous_rows) == set(catalog['cofvision_census']['added_ids'])
+    recent = set(catalog['reviewed_feed_update']['added_ids'])
+    assert recent == {'ttba_four_formyl','dmta_23','dva_25','btpha2'}
+    assert set(rows) - set(previous_rows) == set(catalog['cofvision_census']['added_ids']) | recent
+    for identifier in recent:
+        assert rows[identifier]['source_evidence'][0]['source_role'] == 'framework_feed'
     assert all(rows[k] == v for k,v in previous_rows.items())
     for identifier, previous in prior.items():
         assert rows[identifier] == previous

@@ -73,7 +73,8 @@ def decorated_monomers(rows):
         try:
             metadata=inspect_monomer(row["smiles"])
             mol = Chem.MolFromSmiles(row['smiles'])
-            complete = len(Chem.GetMolFrags(mol)) == 1 and all(a.GetAtomicNum() and not a.GetAtomMapNum() for a in mol.GetAtoms())
+            complete = len(Chem.GetMolFrags(mol)) == 1 and all(
+                a.GetAtomicNum() and not a.GetAtomMapNum() and not a.GetNumRadicalElectrons() for a in mol.GetAtoms())
             eligible = complete and not str(row.get('catalog_use','')).startswith('reference_only') and row.get('automatic_prepare_supported') is not False and not row.get('annotation_only')
             candidates = []
             if eligible and not row.get('self_activation'):
