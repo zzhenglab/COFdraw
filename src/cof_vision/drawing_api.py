@@ -783,12 +783,26 @@ def create_drawing_router(data_root: Path) -> APIRouter:
     def crystal_exports(item,structure,repeats):
         from .cofdraw_science import structure_exports
         from .cofdraw_network import inspect_periodic_network, label_periodic_networks
-        network=inspect_periodic_network(structure)
+        if item is None:
+            # Imported CIFs can exceed the contact-search budget while remaining
+            # usable coordinates. Preserve ordinary import in that case.
+            try:
+                network=inspect_periodic_network(structure)
+            except ValueError as exc:
+                result=structure_exports(structure,tuple(repeats))
+                result.setdefault('warnings',[]).append(f'Connectivity illustration unavailable: {exc}')
+                return result
+        else:
+            network=inspect_periodic_network(structure)
         result=structure_exports(structure,tuple(repeats),periodic_bonds=network['edges'])
         result['display_edges'] = network['edges']
         result['color_periodic_networks'] = 3 in network['dimensions']
         if result['color_periodic_networks']:
             label_periodic_networks(result['viewer'],structure,repeats,network['edges'])
+            from .cofdraw_crystal_figures import crystal_details
+            result['crystal_details'] = crystal_details(structure, network['edges'])
+        if item is None:
+            return result
         result['scope']=item['description']
         credit='; '.join(str(item[k]) for k in ('model_name','citation_doi','data_doi','attribution','license') if k in item)
         result['exports']['cif']=result['exports']['cif'].replace('data_COFdraw\n','data_COFdraw\n# '+credit+'\n',1)
@@ -840,7 +854,7 @@ def create_drawing_router(data_root: Path) -> APIRouter:
                 if request.template_id:
                     result=crystal_exports(item,structure,request.repeats)
                 else:
-                    result=structure_exports(structure,repeats=tuple(request.repeats))
+                    result=crystal_exports(None,structure,request.repeats)
                     result['scope']='Periodic atomic model with the supplied CIF geometry.'
             return scientific_result(result, 'model', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError,OSError) as exc:raise HTTPException(422,str(exc)) from exc

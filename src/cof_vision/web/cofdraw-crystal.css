@@ -47,3 +47,8 @@ body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflo
 .cell-counts select { width:70% }
 .camera-controls input { width:100%; accent-color:#247b70 }
 .camera-controls output { float:right; font-variant-numeric:tabular-nums }
+#crystal-figure-tools:not([hidden]) { display:flex; flex-wrap:wrap; gap:.65rem; align-items:center; margin:.65rem 0 }
+#crystal-figure-tools label { display:flex; gap:.45rem; align-items:center }
+#crystal-sheet svg { display:block; width:100%; max-height:65vh; border:1px solid #d2dfdc; border-radius:6px }
+#model-view.figure-active #structure-canvas, #model-view.figure-active .viewer-bottom,
+#model-view.figure-active #viewer-distance, #model-view.figure-active #viewer-legend { display:none }

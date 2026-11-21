@@ -112,6 +112,11 @@
     }
   }
   function update(){
+    if(C.viewer.model?.illustration){
+      mesh=null;tiles=[];
+      $('map-status').textContent='Choose Crystal packing to view the pore surface of the full crystal.';
+      C.viewer.draw();return;
+    }
     const isChannel=$('pore-layer').value==='connected';
     mesh=field?extract(field,isChannel):null;section();
     if(field){
@@ -159,6 +164,7 @@
   }
   window.addEventListener('cofdraw:structure',reset);
   window.addEventListener('cofdraw:display-cells',update);
+  window.addEventListener('cofdraw:crystal-scene',update);
   $('map-pores').onclick=()=>{C.tab('porosity');$('calculate-pores').click();};
   document.querySelector('[data-science-tab="porosity"]').addEventListener('click',()=>{
     if(C.structure?.periodic&&!$('porosity-results').childElementCount)$('calculate-pores').click();
