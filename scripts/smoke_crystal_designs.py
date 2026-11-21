@@ -2,6 +2,7 @@
 import argparse
 import time
 from pathlib import Path
+from xml.etree import ElementTree
 from playwright.sync_api import sync_playwright
 
 
@@ -51,8 +52,11 @@ def main():
             assert len(builds)==1 and not any(name=='model' for name,_ in calls[start:]),(preset,calls[start:])
             assert [builds[0]['monomer_'+b] for b in ('a','b')]==[page.locator('#smiles-'+b).input_value() for b in ('a','b')]
             assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.kind==='monomer_dia_design'")
+            assert page.locator('#crystal-drawing-view option',has_text='Chemical drawing + periodic network').count()==1
             page.click('#rotate-crystal-design')
             assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
+            assert page.evaluate("COFdrawScience.viewer.atoms.length===8*COFdrawScience.structure.atoms.length")
+            assert [page.locator('#display-'+k).input_value() for k in 'abc']==['2','2','2']
             page.click('#close-science')
             assert not any(name=='model' for name,_ in calls[start:]),(preset,calls[start:])
         print(f'{len(presets)} named presets generated from editable SMILES; zero catalog loads during selection or 3D switch.',flush=True)
@@ -61,6 +65,14 @@ def main():
         assert page.locator('#card-a').is_visible() and page.locator('#card-b').is_visible()
         assert page.locator('#preset-a').input_value()=='tapm' and page.locator('#preset-b').input_value()=='ta'
         screenshot("COF-300-drawing.png")
+        page.select_option('#crystal-drawing-view','Chemical drawing + periodic network')
+        with page.expect_download() as download:
+            page.click('#save-crystal-drawing')
+        svg=ElementTree.parse(download.value.path()).getroot()
+        network=svg.find(".//*[@data-view='periodic-network']")
+        assert int(network.attrib['data-source-sites'])*8==int(network.attrib['data-displayed-sites'])
+        assert len(network)>16 and svg.find('{http://www.w3.org/2000/svg}svg') is not None
+        screenshot('COF-300-drawing-and-network.png')
         page.click("#rotate-crystal-design")
         wait_for("COFdrawScience.structure?.provenance?.kind==='monomer_dia_design'")
         assert page.locator("#structure-canvas").is_visible()
@@ -101,6 +113,12 @@ def main():
         assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
         assert page.evaluate("COFdrawScience.viewer.model.periodic")
         screenshot("TAPM-DMTA-cell.png")
+        page.select_option('#display-a','1')
+        wait_for("COFdrawScience.viewer.atoms.length===4*COFdrawScience.structure.atoms.length")
+        page.select_option('#crystal-scene','blockA')
+        page.click('#close-science')
+        page.click('#rotate-crystal-design')
+        assert page.locator('#display-a').input_value()=='1' and page.locator('#crystal-scene').input_value()=='blockA'
         page.click("#close-science")
         page.select_option("#preset-b","ta")
         ready()
@@ -110,6 +128,8 @@ def main():
         ready()
         assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.net==='lon' && COFdrawCrystalDesign.report.cell_validation.junction_coordination_sequence[2]===25")
         assert page.locator('#crystal-drawing-view').input_value()=='Framework drawing'
+        page.select_option('#crystal-drawing-view','Chemical drawing + periodic network')
+        screenshot('lon-drawing-and-network.png')
         page.select_option('#dia-net-count','3')
         ready()
         assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.network_count===3")
@@ -136,6 +156,17 @@ def main():
         assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.kind==='monomer_dia_design'")
         page.click("#leave-crystal-design")
         assert page.locator(".canvas-panel").is_visible() and page.locator("#crystal-drawing-panel").is_hidden()
+        # The optional repeated-cell view can fail independently of a successful
+        # construction. Both the diagram and the primitive model remain usable.
+        repeat_url='**/api/drawing/science/reports/*/view'
+        page.route(repeat_url,lambda route: route.fulfill(status=503,content_type='application/json',body='{"detail":"repeat service unavailable"}'))
+        page.select_option('#cof-preset','crystal:cof-300-c5')
+        ready()
+        assert 'Showing the source cell' in page.locator('#crystal-drawing-progress').inner_text()
+        assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.kind==='monomer_dia_design'")
+        page.click('#rotate-crystal-design')
+        assert page.evaluate("COFdrawScience.viewer.atoms.length===COFdrawScience.structure.atoms.length")
+        page.unroute(repeat_url)
         assert not errors,errors
         print("Passed default 2D selection, rotation, network focus, linker swap, fast reselection, aryl substitution and editor return.")
         browser.close()

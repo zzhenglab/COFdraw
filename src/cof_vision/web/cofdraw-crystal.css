@@ -57,6 +57,21 @@ body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflo
 .crystal-design-active #manual-panel > .source-library,
 .crystal-design-active #manual-panel > .section-heading,
 .crystal-design-active #binary-fields > :not(.combination-field):not(.monomer-card):not(.library-actions):not(#build) { display:none }
+.crystal-card-details { display:none }
+.crystal-design-active .monomer-card {
+  display:grid; grid-template-columns:72px minmax(0,1fr); column-gap:8px; row-gap:5px; padding:9px 10px;
+}
+.crystal-design-active .monomer-card .card-heading,
+.crystal-design-active .monomer-card .field:has(textarea),
+.crystal-design-active .monomer-card .reactivity-inspector,
+.crystal-design-active .monomer-card .monomer-meta { grid-column:1/-1 }
+.crystal-design-active .monomer-card .monomer-preview { min-height:0; height:57px; margin:0; padding:1px }
+.crystal-design-active .monomer-card .monomer-preview img { max-height:54px; width:100%; object-fit:contain }
+.crystal-design-active .monomer-card .field { margin:0; align-self:center; gap:3px }
+.crystal-design-active .monomer-card textarea { height:37px; min-height:37px; padding:4px 6px; line-height:1.3 }
+.crystal-design-active .monomer-card .field select { padding:5px; font-size:12px }
+.crystal-design-active .crystal-card-details { display:block; grid-column:1/-1; justify-self:start; padding:2px 0 }
+.crystal-design-active .monomer-card:not(.properties-open) :is(.reactivity-inspector,.monomer-meta) { display:none }
 #crystal-drawing-panel { min-width:0; align-self:start; background:white; border:1px solid #cddbd5; border-radius:10px; overflow:hidden }
 .crystal-drawing-bar,.crystal-drawing-bottom { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.2rem }
 .crystal-drawing-bar { border-bottom:1px solid #e0e8e3 }

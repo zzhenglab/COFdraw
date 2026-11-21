@@ -9,13 +9,14 @@
   };
   const custom='custom-dia';
   let id=null, edit=null, revision=0, referenceRevision=0, report=null, svgText='', svgDownload='', views=[], timer, failure='';
+  let preparedCells=null;
   let restoredReference=false, comparing=false;
   function blob(text){
     const url=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));previews.push(url);return url;
   }
   function clearPicture(){
     for(const url of previews)URL.revokeObjectURL(url);
-    previews.length=0;report=null;svgText='';svgDownload='';views=[];comparing=false;$('crystal-drawing-view').replaceChildren();
+    previews.length=0;report=null;preparedCells=null;svgText='';svgDownload='';views=[];comparing=false;$('crystal-drawing-view').replaceChildren();
     picture.hidden=true;picture.removeAttribute('src');
     $('save-crystal-drawing').disabled=true;$('rotate-crystal-design').disabled=true;
     $('crystal-drawing-caption').textContent='';
@@ -47,7 +48,7 @@
     comparing=false;referenceRevision++;
     if(!report){lab.status(failure||$('crystal-drawing-progress').textContent||'Waiting for the selected crystal coordinates.');return;}
     if(lab.structure!==report.structure||lab.origin!=='catalog-design')
-      lab.showCatalogDesign(report,restoredReference?id:custom);
+      lab.showCatalogDesign(report,restoredReference?id:custom,preparedCells);
     requestAnimationFrame(()=>lab.viewer.draw());
   }
   function precursor(block){
@@ -144,13 +145,33 @@
   }
   async function present(result,row,token){
       const choices=[];
+      let cells=null;
+      if(!restoredReference){
+        const n=result.structure.atoms.length,counts=[2,2,2];
+        const lengths=result.structure.cell.map(axis=>Math.hypot(...axis));
+        // Prefer repeats along shorter lattice vectors when the full set would exceed the viewer limit.
+        for(const axis of [0,1,2].sort((a,b)=>lengths[b]-lengths[a])){
+          if(n*counts.reduce((p,k)=>p*k,1)<=12000)break;
+          counts[axis]=1;
+        }
+        cells={viewer:result.viewer,repeats:[1,1,1]};
+        if(counts.some(k=>k>1)){
+          try{cells=await studio.api('science/reports/'+result.report_id+'/view',{repeats:counts});}
+          catch(error){cells.warning='Showing the source cell. The repeated view could not be prepared. '+error.message;}
+        }
+        if(token!==revision)return;
+      }
       if(result.chemical_framework_svg)choices.push({label:'Framework drawing',text:result.chemical_framework_svg,url:blob(result.chemical_framework_svg),caption:'Bond-line scheme of a closed 3D framework circuit. Ring geometry is drawn in the plane.'});
+      if(cells&&result.chemical_framework_svg){
+        const text=window.COFdrawChemicalNetworkFigure(result,cells);
+        if(text)choices.push({label:'Chemical drawing + periodic network',text,url:blob(text),caption:'Bond-line scheme and oblique projection of the same model. Faint bonds lie at the back.'});
+      }
       for(const [key,label,caption] of [
         ['chemical_circuit_svg','Projected circuit','Cartesian projection of a closed covalent circuit and its junction branches.'],
         ['chemical_drawing_svg','Linker detail','Local linker connectivity.']
       ]){
         const text=result[key];
-        if(text)choices.push({text,label,url:blob(text),caption:caption+' Stars mark continuation. Bond markings are inferred from the CIF.'});
+        if(text)choices.push({text,label,url:blob(text),caption:caption+' Stars mark continuation. '+(restoredReference?'Bond markings are inferred from the CIF.':'Bond orders follow the reacted precursor graph.')});
       }
       const generatedChoices=choices.length;
       if(row?.source_recipe_id&&!edit){
@@ -160,10 +181,10 @@
           choices.push({label:'Literature drawing (comparison)',download:rendered.downloads.svg,url:rendered.downloads.svg,caption:'Source-annotated drawing for comparison · '+row.model_name});
         }catch(error){if(token!==revision)return;studio.notice('Source annotation unavailable. '+error.message,true);}
       }
-      report=result;views=choices;studio.sync();
+      report=result;preparedCells=cells;views=choices;studio.sync();
       for(const choice of choices)$('crystal-drawing-view').add(new Option(choice.label));
       if(!generatedChoices)$('crystal-drawing-view').selectedIndex=-1;
-      drawView();$('crystal-drawing-progress').textContent=generatedChoices?'':'Periodic cell ready. A chemical projection could not be resolved.';
+      drawView();$('crystal-drawing-progress').textContent=cells?.warning||(generatedChoices?'':'Periodic cell ready. A chemical projection could not be resolved.');
       $('save-crystal-drawing').disabled=!generatedChoices;$('rotate-crystal-design').disabled=false;
       if(!$('science-dialog').hidden&&!comparing)showPeriodic();
   }

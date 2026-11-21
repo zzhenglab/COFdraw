@@ -98,6 +98,7 @@
     $('porosity-results').replaceChildren();exportsFor(result);window.dispatchEvent(new CustomEvent('cofdraw:structure',{detail:result}));
   }
   let displayedReport=null, displayedCounts=[1,1,1], repeatRevision=0;
+  const savedCells=new WeakMap();
   const cellSelects=['a','b','c'].map(axis=>$('display-'+axis));
   function showCounts(){
     cellSelects.forEach((select,i)=>select.value=String(displayedCounts[i]));
@@ -118,6 +119,7 @@
       const result=await S.api('science/reports/'+displayedReport+'/view',{repeats:counts});
       if(job!==repeatRevision)return;
       displayedCounts=result.repeats;
+      if(currentStructure&&origin==='catalog-design')savedCells.set(currentStructure,result);
       viewer.set(result.viewer,true);
       window.dispatchEvent(new Event('cofdraw:display-cells'));
       $('cell-view-status').textContent=counts.join(' × ')+' cells · '+viewer.atoms.length+' atoms displayed.';
@@ -220,17 +222,30 @@
       $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
     }
   }catch(e){status(e.message,true);}}
-  function showCatalogDesign(result, id){
+  let chosenRepresentation=null, firstGeneratedView=true;
+  $('viewer-mode').addEventListener('change',()=>{chosenRepresentation=$('viewer-mode').value;});
+  function showCatalogDesign(result, id, preparedCells=null){
     $('structure-source').value='periodic';sourceMode();
     const select=$('crystal-template'),custom=select.querySelector('option[value="custom-dia"]');
     if(id==='custom-dia'&&!custom)select.add(new Option('Current generated 3D framework',id));
     if(id!=='custom-dia')custom?.remove();
     $('crystal-template').value=id;templateNote();
     const title=result.structure.provenance.model_name;
-    basePeriodic={result,title};display(result,title,'catalog-design');
-    const sites=result.structure.atoms.length;
-    const counts=sites<=400?[2,2,2]:sites<=750?[2,2,1]:[1,1,1];
-    if(counts[0]>1){
+    const saved=savedCells.get(result.structure)||preparedCells;
+    if(preparedCells){
+      $('viewer-mode').value=chosenRepresentation||'ballstick';
+      if(firstGeneratedView){
+        firstGeneratedView=false;
+        if($('viewer-axis').value==='free'&&viewer.theta===-.3&&viewer.phi===.6){viewer.theta=-.60;viewer.phi=.42;}
+        if(!Number($('camera-perspective').value)&&!Number($('camera-fade').value)){
+          $('camera-perspective').value='18';$('camera-fade').value='32';updateCamera();
+        }
+      }
+    }
+    basePeriodic={result,title};display(saved?{...result,viewer:saved.viewer,repeats:saved.repeats}:result,title,'catalog-design');
+    if(saved)$('cell-view-status').textContent=saved.warning||saved.repeats.join(' × ')+' display cells · calculations and exports use the source cell.';
+    const sites=result.structure.atoms.length,counts=sites<=400?[2,2,2]:sites<=750?[2,2,1]:[1,1,1];
+    if(!saved&&counts[0]>1){
       cellSelects.forEach((select,i)=>select.value=String(counts[i]));
       changeCells();
     }
