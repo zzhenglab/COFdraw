@@ -462,6 +462,11 @@
     syncSource();
     if(key===drawingKey)return;
     drawingKey=key;
+    // The editor's debounced first render can finish after a user has opened a
+    // catalog crystal. Its new recipe does not supersede that independent CIF.
+    if($('structure-source').value==='periodic'&&origin!=='monomer'&&origin!=='current-periodic'){
+      $('monomer-results').replaceChildren();return;
+    }
     clearComparison();
     cellNote('');
     currentLayer=null;
