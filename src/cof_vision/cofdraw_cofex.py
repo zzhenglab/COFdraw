@@ -149,6 +149,8 @@ def parse_record(text, catalog_rows):
         a,b = orientation
         for template in TEMPLATES:
             key = template['id']
+            if key=='kgm_4_2' and (link!='imine' or not roles[a].get('kgm_dialdehyde') or not roles[b].get('kgm_etta')):
+                continue
             if (settings.get('template',key) != key or (template['topology_label'] or 'unk') != net
                     or template['allow_pairs'] and counts not in template['allow_pairs']
                     or template['topology_label'] and any(x['geometry_hint']=='tetrahedral' for x in roles)):

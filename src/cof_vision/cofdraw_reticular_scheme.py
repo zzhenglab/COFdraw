@@ -79,34 +79,64 @@ def segment_vertices(lengths):
     return polygon
 
 
-def draw_scheme(mol, backbone, segments, depths=None, blocks=None):
+def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None):
     mol=Chem.Mol(mol)
-    n=len(backbone)
-    layouts=[]
-    lengths=[]
-    for k,fragment in enumerate(segments):
-        a,b=backbone[k],backbone[(k+1)%n]
-        coords=fragment_layout(mol,set(fragment)|{a,b})
-        layouts.append(coords)
-        lengths.append(np.linalg.norm(coords[b]-coords[a]))
-    vertices=segment_vertices(lengths)
+    layouts={}
+    centers={}
+    ring_centers=[]
+    for loop,fragments in rings or [(backbone,segments)]:
+        lengths=[]
+        for a,b,fragment in zip(loop,loop[1:]+loop[:1],fragments):
+            key=tuple(sorted((a,b)))
+            if key not in layouts:
+                layouts[key]=fragment_layout(mol,set(fragment)|{a,b})
+            coords=layouts[key]
+            lengths.append(np.linalg.norm(coords[b]-coords[a]))
+        polygon=dict(zip(loop,segment_vertices(lengths)))
+        if centers:
+            shared=[a for a in loop if a in centers]
+            a,b=max(((i,j) for i in shared for j in shared),key=lambda pair:np.linalg.norm(polygon[pair[0]]-polygon[pair[1]]))
+            proposals=[]
+            for reflection in (1,-1):
+                source={i:xy*[1,reflection] for i,xy in polygon.items()}
+                trial=rotate_to(source,source[a],source[b]-source[a],centers[b]-centers[a],centers[a])
+                midpoint=np.mean(list(trial.values()),axis=0)
+                # Shared edges have two sides. Put the new pore on the unoccupied side.
+                mismatch=sum(np.linalg.norm(trial[i]-centers[i])**2 for i in shared)
+                clearance=min(np.linalg.norm(midpoint-p) for p in ring_centers)
+                proposals.append((mismatch-clearance*.001,trial))
+            polygon=min(proposals,key=lambda p:p[0])[1]
+        ring_centers.append(np.mean(list(polygon.values()),axis=0))
+        for i,p in polygon.items():centers.setdefault(i,p)
+    # Reconcile all shared junctions before rigidly posing their molecular linkers.
+    # Length constraints use lengths of the chemically drawn fragments themselves.
+    for _ in range(150):
+        error=0.
+        for (a,b),coords in layouts.items():
+            d=centers[b]-centers[a]
+            length=np.linalg.norm(d)
+            target=np.linalg.norm(coords[b]-coords[a])
+            error=max(error,abs(length-target))
+            correction=d*(length-target)/max(2*length,1e-8)
+            centers[a]=centers[a]+correction
+            centers[b]=centers[b]-correction
+        if error<1e-6:break
+    if error>.02:raise ValueError("Adjacent molecular circuits could not be flattened without stretching bonds")
     positions={}
-    for k,coords in enumerate(layouts):
-        a,b=backbone[k],backbone[(k+1)%n]
-        moved=rotate_to(coords,coords[a],coords[b]-coords[a],vertices[(k+1)%n]-vertices[k],vertices[k])
-        positions.update(moved)
+    for (a,b),coords in layouts.items():
+        positions.update(rotate_to(coords,coords[a],coords[b]-coords[a],centers[b]-centers[a],centers[a]))
     # Keep both outgoing branches on the exterior. Each fragment has its own
     # conventional bond angles and ring coordinates and receives only a rotation.
     outside=set(range(mol.GetNumAtoms()))-set(positions)
-    for k,center in enumerate(backbone):
+    for center,vertex in centers.items():
         attachments=sorted(a.GetIdx() for a in mol.GetAtomWithIdx(center).GetNeighbors() if a.GetIdx() in outside)
-        side1=vertices[k]-vertices[(k-1)%n]
-        side2=vertices[k]-vertices[(k+1)%n]
-        bisector=side1/np.linalg.norm(side1)+side2/np.linalg.norm(side2)
-        radial=math.atan2(bisector[1],bisector[0])
+        if not attachments:continue
         choices=[]
-        fixed=[positions[a.GetIdx()]-vertices[k] for a in mol.GetAtomWithIdx(center).GetNeighbors() if a.GetIdx() in positions]
+        fixed=[positions[a.GetIdx()]-vertex for a in mol.GetAtomWithIdx(center).GetNeighbors() if a.GetIdx() in positions]
         occupied=[d/np.linalg.norm(d) for d in fixed]
+        angles=sorted(math.atan2(d[1],d[0]) for d in occupied)
+        gap,angle_start=max((end-start,start) for start,end in zip(angles,angles[1:]+[angles[0]+2*math.pi]))
+        radial=angle_start+gap/2
         for rank,first in enumerate(attachments):
             branch={first}
             queue=[first]
@@ -120,7 +150,7 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None):
             outside-=branch
             coords=fragment_layout(mol,branch|{center})
             angle=radial+math.radians((rank-(len(attachments)-1)/2)*84)
-            nearby=np.array([p for i,p in positions.items() if i!=center and np.linalg.norm(p-vertices[k])<12])
+            nearby=np.array([p for i,p in positions.items() if i!=center and np.linalg.norm(p-vertex)<12])
             # A kink at the end of an imine means its aryl ipso bond may deviate
             # from the direction between node centers. Fit the two outward arms
             # against the actual drawing so no separate phenyl rings look fused.
@@ -128,7 +158,7 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None):
             for offset in range(-40,41,4):
                 theta=angle+math.radians(offset)
                 target=np.array([math.cos(theta),math.sin(theta)])
-                trial=rotate_to(coords,coords[center],coords[first]-coords[center],target,vertices[k])
+                trial=rotate_to(coords,coords[center],coords[first]-coords[center],target,vertex)
                 points=np.array([p for i,p in trial.items() if i!=center])
                 distances=np.linalg.norm(points[:,None,:]-nearby[None,:,:],axis=2)
                 penalty=(np.maximum(2.05-distances,0)**2).sum()+.00009*offset**2

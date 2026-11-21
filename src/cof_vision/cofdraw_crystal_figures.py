@@ -6,7 +6,7 @@ import numpy as np
 from xml.etree import ElementTree as ET
 
 
-def _circuit_svg(mol, coordinates, elements, ports):
+def _circuit_svg(mol, coordinates, elements, ports, blocks, rings):
     """Project the traced circuit using depth for crossing order and explicit labels."""
     xy=coordinates[:,:2]
     low,high=xy.min(0),xy.max(0)
@@ -15,10 +15,20 @@ def _circuit_svg(mol, coordinates, elements, ports):
     points=(xy-(low+high)/2)*[scale,-scale]+[w/2,h/2]
     root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox=f"0 0 {w:.2f} {h:.2f}",width=f"{w:.2f}",height=f"{h:.2f}")
     ink={"N":"#185a9b","O":"#b8313f","F":"#267d64","S":"#8b6522","B":"#9a6144"}
+    depths=coordinates[:,2];low_z,high_z=np.percentile(depths,[5,95])
+    depths=np.clip((depths-low_z)/(high_z-low_z),0,1) if high_z-low_z>.001 else np.ones(len(depths))
+    washes=ET.SubElement(root,"g",attrib={"data-ring-washes":"", "display":"none"})
+    for ring in rings:
+        if all(mol.GetAtomWithIdx(a).GetIsAromatic() for a in ring):
+            coords=" ".join(f"{points[a,0]:.2f},{points[a,1]:.2f}" for a in ring)
+            ET.SubElement(washes,"polygon",points=coords,attrib={"data-depth":f"{np.mean(depths[ring]):.3f}",
+                "data-block":blocks[ring[0]] if len({blocks[a] for a in ring})==1 else ""})
     groups=[]
     for bond in mol.GetBonds():
         a,b=bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()
         bond_group=ET.Element("g",stroke="#263842",attrib={"stroke-linecap":"round","stroke-width":"1.35"})
+        bond_group.set("data-depth",f"{(depths[a]+depths[b])/2:.3f}")
+        bond_group.set("data-block",blocks[a] if blocks[a]==blocks[b] else "")
         p,q=points[a],points[b]
         def stroke(u,v,extra=None):
             ET.SubElement(bond_group,"line",x1=f"{u[0]:.2f}",y1=f"{u[1]:.2f}",x2=f"{v[0]:.2f}",y2=f"{v[1]:.2f}",attrib=extra or {})
@@ -40,6 +50,7 @@ def _circuit_svg(mol, coordinates, elements, ports):
             stroke="white",attrib={"paint-order":"stroke","stroke-width":"2.4","font-size":"9",
             "font-family":"Arial, sans-serif","text-anchor":"middle"})
         hydrogens=atom.GetNumExplicitHs()
+        label.set("data-depth",f"{depths[i]:.3f}");label.set("data-block",blocks[i])
         label.text=(str(atom.GetIsotope()) if atom.GetIsotope() else "")+el+("H"+(str(hydrogens) if hydrogens>1 else "") if hydrogens else "")
     return ET.tostring(root,encoding="unicode")
 
@@ -184,7 +195,9 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
         normal=np.asarray(circuit["direction"])
         depths=[((np.asarray(atoms[i]["fractional"])+image)@structure["cell"])@normal for i,image in positions]
         blocks=[atoms[i].get("component","") for i,_ in positions]
-        return draw_scheme(mol,backbone,segments,depths,blocks)
+        rings=[([index(s) for s in r["backbone"]],[[index(s) for s in group] for group in r["linkers"]])
+               for r in circuit.get("rings",[])]
+        return draw_scheme(mol,backbone,segments,depths,blocks,rings)
     if circuit:
         # Preserve the source circuit geometry. A generic 2D macrocycle layout
         # can fold the pore shut and enumerate an enormous set of ring layouts.
@@ -194,7 +207,7 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
         vertical=np.cross(normal,horizontal)
         coords=np.array([(np.array(atoms[i]["fractional"])+image)@structure["cell"] for i,image in positions])
         return _circuit_svg(mol, coords@np.array([horizontal,vertical,normal]).T,
-                            [elements[i] for i,_ in ordered],len(ordered))
+                            [elements[i] for i,_ in ordered],len(ordered),[atoms[i].get("component","") for i,_ in positions],rings)
     else:
         rdDepictor.Compute2DCoords(mol, canonOrient=True)
     draw = rdMolDraw2D.MolDraw2DSVG(800, 590)
@@ -250,8 +263,10 @@ def readable_direction(model, face=None):
     model["direction"] = directions[np.argmax(scores)].tolist()
 
 
-def adjacent_circuits(ring, cell):
-    """Three translates of a traced ring sharing real periodic junction edges."""
+def adjacent_circuits(ring, cell, count=3):
+    """Grow a compact patch of circuits sewn together at real periodic edges."""
+    if count not in (1,2,3,4,7):raise ValueError("Choose 1, 2, 3, 4 or 7 circuits")
+    if count==1:return ring
     loop=[tuple(site) for site in ring["backbone"]]
     edges={tuple(sorted((a,b))) for a,b in zip(loop,loop[1:]+loop[:1])}
     def translate(site,shift):
@@ -263,16 +278,22 @@ def adjacent_circuits(ring, cell):
             shift=tuple(x-y for x,y in zip(a[1:],b[1:]))
             moved={tuple(sorted((translate(u,shift),translate(v,shift)))) for u,v in edges}
             if len(moved&edges)==1:candidates[shift]=moved
-    if len(candidates)<2:return None
-    # Prefer a compact group whose outer circuits also share an edge.
-    # Equivalent choices are broken by distance in the actual lattice metric.
-    pairs=[(p,q) for p in sorted(candidates) for q in sorted(candidates) if p<q]
-    p,q=min(pairs,key=lambda pair:(-len(candidates[pair[0]]&candidates[pair[1]]),
-                                    np.linalg.norm(np.subtract(*pair)@cell),pair))
+    if not candidates:return None
+    shifts=[(0,0,0)]
+    while len(shifts)<count:
+        frontier={tuple(a+b for a,b in zip(p,q)) for p in shifts for q in candidates}-set(shifts)
+        if not frontier:return None
+        def score(q):
+            shared=sum(tuple(a-b for a,b in zip(q,p)) in candidates for p in shifts)
+            spread=sum(np.linalg.norm(np.subtract(q,p)@cell) for p in shifts)
+            return -shared,spread,q
+        shifts.append(min(frontier,key=score))
     sites={(i,*shift) for i,shift in ring["site_images"]}
-    union=sites|{translate(s,d) for s in sites for d in (p,q)}
-    return {"site_images":[[site[0],list(site[1:])] for site in sorted(union)],
-            "direction":ring["direction"],"circuits":3}
+    union={translate(s,d) for s in sites for d in shifts}
+    rings=[{"backbone":[translate(s,d) for s in loop],
+            "linkers":[[translate(s,d) for s in arm] for arm in ring["linkers"]]} for d in shifts]
+    return {**rings[0],"site_images":[[site[0],list(site[1:])] for site in sorted(union)],
+            "direction":ring["direction"],"circuits":count,"rings":rings}
 
 
 def precursor_scenes(structure, edges):

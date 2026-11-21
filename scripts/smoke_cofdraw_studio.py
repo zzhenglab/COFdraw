@@ -54,6 +54,7 @@ def main():
             page.wait_for_function("document.getElementById('linkage').value==='acylhydrazone'")
             assert page.locator('#template').input_value()=='hcb_3_2'
             checks.append('Monomer edit automatically changed linkage and connectivity')
+            page.locator("#combination-search").fill('source:f-cof-1-source-v1')
             page.select_option('#cof-preset','source:f-cof-1-source-v1')
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1' && !window.COFdrawStudio.state.busy")
             page.locator('[data-style="source"]').click();page.wait_for_function("!window.COFdrawStudio.state.busy")

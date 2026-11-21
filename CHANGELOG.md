@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0
+
+- Use the Framework canvas, rendering inspector and single Drawing extent menu for both planar and three-dimensional COFs.
+- Display a calibrated pore arrow together with the precursors and reaction arrow. Add a common name or building-block formula to the exported figure, and double-click the label to edit it.
+- Explore topology-specific neighborhoods and depth-faded circuits. Browse starting structures by chemistry and dimension.
+
 ## 0.9.8
 
 - Add the selected precursors and a horizontal or vertical reaction arrow to the current drawing. SVG and PNG exports include the scheme.

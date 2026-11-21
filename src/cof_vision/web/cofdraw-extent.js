@@ -3,19 +3,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const studio=window.COFdrawStudio, state=studio.state, $=id=>document.getElementById(id);
   const bar=$('extent-bar'), choices=$('extent-options'), feedback=$('extent-feedback');
   let count=1, revision=0, base=null, visible=null, busy=false, summary='', singleExportNote='', cache=new Map();
-  function clean(){return state.recipe&&state.result===base&&!state.inputsDirty&&!state.dirty&&!state.jsonPending;}
+  let crystalPick=null;
+  const inCrystal=()=>Boolean(window.COFdrawCrystalDesign?.active);
+  function clean(){return !inCrystal()&&state.recipe&&state.result===base&&!state.inputsDirty&&!state.dirty&&!state.jsonPending;}
   function options(){return base?.repeat_options?.extents||[{value:1,label:'Original drawing'}];}
+  function populate(rows,selected){
+    choices.replaceChildren(...rows.map(row=>new Option(row.label,String(row.value))));
+    choices.value=String(selected);
+    bar.hidden=!rows.length;
+  }
+  function setCrystalOptions(rows,selected,onChange){
+    if(!inCrystal())return;
+    revision++;busy=false;crystalPick=onChange;visible=null;bar.removeAttribute('aria-busy');
+    populate(rows,selected);
+    choices.disabled=!onChange||rows.length<2;
+    $('pore-color-control').hidden=true;$('pore-type-legend').replaceChildren();feedback.textContent='';
+  }
   function sync(){
+    if(inCrystal())return;
+    if(crystalPick){crystalPick=null;populate(base?options():[],count);}
     const ready=clean();
-    $('pore-color-control').hidden=count===1||state.recipe?.layout_kind==='open_chain';
+    $('pore-color-control').hidden=!ready||count===1||state.recipe?.layout_kind==='open_chain';
     $('color-pore-types').disabled=!ready||state.busy;
-    for(const button of choices.children){
-      button.setAttribute('aria-pressed',String(button.value===String(count)));
-      button.disabled=!ready||state.busy;
-    }
+    choices.value=String(count);choices.disabled=!ready||state.busy||choices.options.length<2;
     if(busy||!ready)for(const button of $('exports').children)button.disabled=true;
     if(state.recipe?.layout_kind==='open_chain')$('measure-pore').disabled=true;
-    else $('measure-pore').disabled=!ready||state.busy||busy;
+    else $('measure-pore').disabled=!ready||state.busy||busy||(count!==1&&!visible?.summary?.measurement_face);
+    $('measure-pore').title=count===1?'Measure the displayed pore':visible?.summary?.measurement_face?
+      'Measure focal pore · '+visible.summary.measurement_face.label:visible?.summary?.measurement_reason||'Waiting for the displayed pore';
   }
   function baseView(){
     $('framework-image').src='.'+base.downloads.svg;
@@ -76,26 +91,34 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }
   $('color-pore-types').addEventListener('change',()=>select(count));
+  choices.addEventListener('change',()=>{
+    if(inCrystal()){crystalPick?.(choices.value);return;}
+    const chosen=options().find(row=>String(row.value)===choices.value);
+    if(chosen)select(chosen.value);
+  });
   function render(event){
+    if(inCrystal())return;
+    crystalPick=null;
     revision++;busy=false;bar.removeAttribute('aria-busy');cache=new Map();base=event.detail;
     summary=$('drawing-summary').textContent;singleExportNote=$('export-note').hidden?'':$('export-note').textContent;
-    choices.replaceChildren();bar.hidden=false;
-    for(const o of options()){
-      const button=document.createElement('button');button.type='button';button.value=o.value;button.textContent=o.label;
-      button.addEventListener('click',()=>select(o.value));choices.append(button);
-    }
+    populate(options(),count);
     select(count);
   }
-  // Geometry edits and a diameter belong to the chosen local pore.
-  for(const id of ['edit-geometry','clean-geometry','measure-pore','undo-geometry']){
+  // Geometry edits apply to the editable local pore. Measurements use the displayed extent.
+  for(const id of ['edit-geometry','clean-geometry','undo-geometry']){
     $(id).addEventListener('click',()=>{
       const closingEditor=id==='edit-geometry'&&$(id).getAttribute('aria-pressed')==='true';
-      if(count!==1&&!closingEditor)select(1);
+      if(!inCrystal()&&count!==1&&!closingEditor)select(1);
     },{capture:true});
   }
   window.addEventListener('cofdraw:rendered',render);
-  window.addEventListener('cofdraw:layoutchanged',()=>{revision++;busy=false;cache.clear();base=null;visible=null;bar.hidden=true;});
+  window.addEventListener('cofdraw:layoutchanged',()=>{
+    if(inCrystal())return;
+    revision++;busy=false;cache.clear();base=null;visible=null;crystalPick=null;bar.hidden=true;
+    $('pore-color-control').hidden=true;$('pore-type-legend').replaceChildren();feedback.textContent='';
+  });
+  window.addEventListener('cofdraw:crystalviewclear',()=>{if(inCrystal())setCrystalOptions([],null,null);});
   window.addEventListener('cofdraw:state',sync);
-  window.COFdrawExtent={get value(){return count;},get expanded(){return count!==1;},get visible(){return clean()?visible:null;},
-    restore(value,color=true){count=[1,'three-pores',2,3,4].includes(value)?value:1;$('color-pore-types').checked=color!==false;}};
+  window.COFdrawExtent={get value(){return count;},get expanded(){return !inCrystal()&&count!==1;},get visible(){return clean()?visible:null;},
+    setCrystalOptions,restore(value,color=true){count=[1,'three-pores','kagome-star','triangle',2,3,4].includes(value)?value:1;$('color-pore-types').checked=color!==false;}};
 });

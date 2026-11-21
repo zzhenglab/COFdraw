@@ -166,8 +166,12 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
         left,right=instances[i],instances[(i+1)%len(instances)]
         edges.append({'a':{'instance':left['id'],'port':left['outgoing_port']},
                       'b':{'instance':right['id'],'port':right['incoming_port']},'bond_order':2})
+    geometry={}
+    if pore_layout=='kgm':
+        from .cofdraw_mixed import kagome_face_geometry
+        geometry=kagome_face_geometry(components,pattern)
     return dict(components=components,instances=instances,connections=edges,linkage='imine',layout_kind=layout,
                 assembly={'monomer_ids':[r['id'] for r in rows], 'linker_sequence':pattern if len(rows)==3 else '',
                           'scope':scope, **({'kind':'self_imine','precursors':[feed_metadata(rows[0])]} if len(rows)==1 else
                              {'kind':'mixed_imine', **({'pore_layout':pore_layout} if pore_layout else {})})},
-                selected_template=None,design_topology=None)
+                selected_template=None,design_topology=None) | geometry

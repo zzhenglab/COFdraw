@@ -28,7 +28,11 @@ def _components(smiles, linkage):
         counts = [f["connectivity"] for f in fragments]
         if sorted(counts) == [2,4]:
             return fragments, counts.index(4)
-    raise ValueError("Choose a four-site tetrahedral precursor and a complementary two-site precursor for this linkage.")
+        if counts == [4,4]:
+            for fragment in fragments:
+                _symmetric_arm(Chem.MolFromSmiles(fragment['fragment_smiles']))
+            return fragments, 0
+    raise ValueError("Choose a four-arm tetrahedral precursor and a complementary two-ended or four-arm tetrahedral precursor.")
 
 
 def _symmetric_arm(node):
@@ -69,13 +73,17 @@ def _symmetric_arm(node):
 
 def _edge_molecule(node, linker, order, node_slot):
     arm = _symmetric_arm(node)
+    paired_hubs = len(_ports(linker)) == 4
+    if paired_hubs:
+        linker = _symmetric_arm(linker)
     for mol, component in ((arm,node_slot), (linker,1-node_slot)):
         for atom in mol.GetAtoms():
             atom.SetProp("_component", "AB"[component])
     arm_size, linker_size = arm.GetNumAtoms(), linker.GetNumAtoms()
     pa, ea = next(iter(_ports(arm).values()))
     paired_ports = list(_ports(linker).values())
-    edge = Chem.RWMol(Chem.CombineMols(Chem.CombineMols(arm,linker),arm))
+    pair = Chem.CombineMols(arm,linker)
+    edge = Chem.RWMol(pair if paired_hubs else Chem.CombineMols(pair,arm))
     excluded = []
     for off,(pl,el) in zip((0,arm_size+linker_size),paired_ports):
         a,b = off+ea, arm_size+el
@@ -146,9 +154,9 @@ def _assemble_edges(edge, ends, cell, junctions, placements):
         atom_rows.append(dict(element=atom.GetSymbol(), fractional=f.tolist(), component=atom.GetProp("_component"),
                               **({"isotope":atom.GetIsotope()} if atom.GetIsotope() else {})))
         return len(atom_rows)-1
-    for origin in junctions:
+    for i,origin in enumerate(junctions):
         f=origin@inv
-        site(ends[0],f-np.floor(f+1e-10))
+        site(ends[i%2],f-np.floor(f+1e-10))
     for start,end,coords in placements:
         frac = coords @ inv
         wraps = np.floor(frac+1e-10).astype(int)
@@ -283,11 +291,13 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
     if any(len(Chem.GetMolFrags(m))!=1 or m.GetNumAtoms()>120 or
            any(a.GetFormalCharge() or a.GetNumRadicalElectrons() for a in m.GetAtoms()) for m in mols):
         raise ValueError("Each precursor must be one neutral closed-shell molecule with at most 120 fragment atoms.")
+    two_nodes = all(f['connectivity']==4 for f in fragments)
+    stoichiometry = [hub_count//2]*2 if two_nodes else [hub_count*(1 if i==node_slot else 2) for i in range(2)]
     counts = Counter()
     for i, mol in enumerate(mols):
         for a in Chem.AddHs(mol).GetAtoms():
             if a.GetAtomicNum():
-                counts[a.GetSymbol(), a.GetIsotope()] += hub_count if i==node_slot else 2*hub_count
+                counts[a.GetSymbol(), a.GetIsotope()] += stoichiometry[i]
     if sum(counts.values()) > 650:
         raise ValueError("The diamond primitive cell exceeds the 650-atom build budget.")
     edge = _edge_molecule(mols[node_slot],mols[1-node_slot],LINKAGE_LIBRARY[linkage]["join_bond_order"],node_slot)
@@ -339,6 +349,7 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
         structure.update(chemical_bonds=bonds,junction_sites=junctions)
         structure["provenance"] = dict(kind="monomer_dia_design",model_name=f"{label_a} + {label_b}",net=topology,
                 network_dimension=3,network_count=network_count,precursors=smiles,linkage=linkage,node_index=node_slot,
+                precursor_connectivities=[f["connectivity"] for f in fragments],
                 packing=pack,
                 conformer_seed=seed,product_geometry="Extended E starting geometry at newly formed imines" if linkage!="secondary_amine" else "Reduced amine",
                 qualification=scope)
@@ -349,7 +360,7 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
                               missing_bonds=0,extra_bonds=0,junction_sites=junctions,tetrahedral_max_angle_error_deg=round(angle,3),
                               network_count=network_count,topology=topology,junction_coordination_sequence=sequence,
                               packing=pack,cell_composition_verified=True,
-                              precursor_stoichiometry=[network_count*hub_count*(1 if i==node_slot else 2) for i in range(2)])
+                              precursor_stoichiometry=[network_count*n for n in stoichiometry])
     if tried_packing:
         raise ValueError(f"No {network_count}-network arrangement passed inter-network contact and periodic bond checks in the sampled conformers and translations. Try a different count or supply a CIF.")
     raise ValueError(f"A connected diamond net could not be fitted to this pair ({best}). The selected molecular geometry may require a different net or conformer.")

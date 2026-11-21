@@ -66,8 +66,8 @@ class RenderDrawing(BaseModel):
 
 
 class RepeatDrawing(RenderDrawing):
-    repeats: int = Field(ge=2, le=4)
-    extent_mode: Literal['pores', 'cells', 'triad'] = 'pores'
+    repeats: int = Field(ge=1, le=4)
+    extent_mode: Literal['pores', 'cells', 'triad', 'star', 'triangle'] = 'pores'
     color_pores: bool = False
 
 
@@ -527,8 +527,9 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         from .cofdraw_self import self_examples
         monomers = decorated_monomers(catalog_monomers(catalog))
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
+        from .cofdraw_starters import topology_catalog
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
-                "templates": TEMPLATES, "topology_catalog": catalog.get("topology_catalog", []),
+                "templates": TEMPLATES, "topology_catalog": topology_catalog(catalog.get("topology_catalog", [])),
                 "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
@@ -861,6 +862,27 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         except (ValueError, KeyError, TypeError, RuntimeError, OSError) as exc:
             raise HTTPException(422, str(exc)) from exc
 
+    @router.post('/repeat/{drawing_id}/measure')
+    def measure_repeat(drawing_id: str):
+        from .cofdraw_measure import measure_aperture
+        if not re.fullmatch(r'[0-9a-f]{32}',drawing_id):
+            raise HTTPException(404,'Drawing not found')
+        path=(outputs/drawing_id/(drawing_id+'.json')).resolve()
+        if not path.is_relative_to(outputs.resolve()) or not path.is_file():
+            raise HTTPException(404,'Drawing not found')
+        record=json.loads(path.read_bytes())
+        audit=record.get('audit',{})
+        if audit.get('graph_scope')!='finite_designed_connected_repeat' or 'drawing_aperture' not in audit:
+            raise HTTPException(422,record.get('summary',{}).get('measurement_reason') or 'Choose a drawing with a resolved pore boundary.')
+        layout=audit['drawing_style']['layout']
+        try:
+            result=measure_aperture(layout['atom_coordinates'],audit['drawing_aperture'])
+        except ValueError as exc:
+            raise HTTPException(422,str(exc)) from exc
+        result['focal_face']=record['summary']['measurement_face']
+        result['method']='Inscribed-circle sampling within the selected molecular pore rim, using all explicit atom sites and their van der Waals radii.'
+        return {'measurement':result,'audit':{'drawing_style':{'layout':layout}},'drawing_id':drawing_id}
+
     def scientific_result(result, operation='calculation', inputs=None):
         from . import __version__
         result=deepcopy(result)
@@ -916,6 +938,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 for row in catalog.get(group,[]):
                     match=substitutions.get(row['id'],{})
                     row['aryl_f_sites']=match.get('substituted_sites',0) if match.get('parent_sha256')==row['sha256'] else 0
+        from .cofdraw_starters import crystal_starters
+        catalog['starter_designs'] = crystal_starters(catalog)
         return catalog
 
     def load_crystal_template(item, manifest):
@@ -972,10 +996,18 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                     joined=adjacent_circuits(circuit,structure['cell'])
                     if joined:
                         result['chemical_three_circuits_svg']=chemical_drawing(structure,network['edges'],circuit=joined)
+                    result['circuit_extents']=[1,2,3,4,7] if joined else [1]
                     try:
                         result['chemical_framework_svg'] = chemical_drawing(structure, network['edges'], circuit=circuit, scheme=True)
                     except ValueError as exc:
                         result.setdefault('warnings',[]).append(f'Conventional circuit layout unavailable: {exc}')
+                elif item is not None:
+                    from .cofdraw_crystal_circuits import joined_reference_circuits
+                    patches=joined_reference_circuits(structure,network['edges'])
+                    if patches:
+                        result['reference_circuit_patches']={str(n):patch for n,patch in patches.items()}
+                        result['circuit_extents']=sorted(patches)
+                        result['chemical_circuit_svg']=chemical_drawing(structure,network['edges'],circuit=patches[1])
         if item is None:
             return result
         result['scope']=item['description']
@@ -991,7 +1023,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
     @router.get('/science/library')
     def scientific_library():
         data=crystal_manifest()
-        return {'templates':data['templates'],'reported_models':data.get('reported_models',[]),'linker_models':data['linker_models'],
+        return {'templates':data['templates'],'reported_models':data.get('reported_models',[]),'linker_models':data['linker_models'],'starter_designs':data['starter_designs'],
                 'curated_models':data.get('curated_models',[]),'methods':['RDKit ETKDG / MMFF or UFF','Periodic probe geometry','BET fit from supplied isotherm']}
 
     @router.get('/science/synthesis-library')
@@ -1287,6 +1319,29 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         data=stored_report(report_id)
         if data is None:raise HTTPException(404,'Scientific report not found or unreadable')
         return data
+
+    @router.post('/science/reports/{report_id}/circuits/{count}')
+    def crystal_circuits(report_id: str, count: int):
+        from .cofdraw_crystal_figures import adjacent_circuits,chemical_drawing
+        report=stored_report(report_id)
+        if report is None:raise HTTPException(404,'Structure report was not found')
+        ring=report.get('crystal_details',{}).get('ring')
+        patch=report.get('reference_circuit_patches',{}).get(str(count))
+        if not ring and not patch:raise HTTPException(422,'No connected circuit of this extent was traced in this crystal')
+        try:
+            structure=report['structure']
+            template=patch or adjacent_circuits(ring,structure['cell'],count)
+            if not template:raise ValueError('These circuits do not share an assigned periodic edge')
+            edges=report['display_edges']
+            if report.get('cell_validation',{}).get('periodic_bonds'):
+                structure={**structure,'chemical_bonds':report['cell_validation']['periodic_bonds']}
+            projected=chemical_drawing(structure,edges,circuit=template)
+            scheme=None
+            if template.get('backbone'):
+                try:scheme=chemical_drawing(structure,edges,circuit=template,scheme=True)
+                except ValueError:pass
+            return {'count':count,'sites':len(template['site_images']),'scheme_svg':scheme,'projection_svg':projected}
+        except (ValueError, KeyError, TypeError, RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/reports/{report_id}/view')
     def repeat_view(report_id: str, request: DisplayCells):

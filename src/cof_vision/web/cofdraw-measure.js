@@ -20,16 +20,19 @@
     return value;
   }
   function clear() {
+    const hadArrow=Boolean(active);
     revision++; active = null; svg.replaceChildren(); svg.toggleAttribute('hidden', true);
     $('pore-annotation-actions')?.remove();
     $('pore-annotation-note')?.remove();
+    if(hadArrow)window.dispatchEvent(new Event('cofdraw:arrowchanged'));
   }
   function invalidate() {
     clear();
     $('pore-measurement').hidden = true;
   }
+  function displayed(){return window.COFdrawExtent ? window.COFdrawExtent.visible : S.state.result;}
   function current(record) {
-    return active === record && record.render === S.state.result && record.recipe === S.state.recipe &&
+    return active === record && record.render === displayed() && record.recipe === S.state.recipe &&
       !S.state.dirty && !S.state.inputsDirty && !S.state.jsonPending;
   }
   function note(message) {
@@ -77,6 +80,10 @@
     if (!response.ok) throw new Error('The drawing export is unavailable. Render it again.');
     const source = await response.text();
     if (!current(record)) throw new Error('The drawing changed while preparing the annotated figure.');
+    return decorate(source,record);
+  }
+  function decorate(source,record=active){
+    if(!record||!current(record))return source;
     const documentSVG = new DOMParser().parseFromString(source, 'image/svg+xml');
     if (documentSVG.querySelector('parsererror')) throw new Error('The drawing SVG could not be read.');
     const root = documentSVG.documentElement;
@@ -91,6 +98,7 @@
     return new XMLSerializer().serializeToString(root);
   }
   async function save(record, format) {
+    if(window.COFdrawScheme?.composed)return window.COFdrawScheme.save(format).catch(e=>S.notice(e.message,true));
     const controls = $('pore-annotation-actions');
     if (!controls || controls.dataset.busy === 'true') return;
     controls.dataset.busy = 'true';
@@ -115,16 +123,17 @@
     } catch (error) {S.notice(error.message, true);}
     finally {controls.dataset.busy = 'false'; controls.querySelectorAll('button').forEach(button => button.disabled = !current(record));}
   }
-  function show({result, audit, recipe}) {
+  function show({result, audit, recipe, render=S.state.result}) {
     clear();
-    if (S.state.dirty || S.state.inputsDirty || S.state.jsonPending || recipe !== S.state.recipe || audit !== S.state.result?.audit) return;
+    if (S.state.dirty || S.state.inputsDirty || S.state.jsonPending || recipe !== S.state.recipe || !audit || render !== displayed()) return;
     try {
       const layout = audit.drawing_style?.layout, points = transform(result, layout);
       const canvasSize = layout.canvas_size, group = makeGroup(result, points, canvasSize);
       svg.setAttribute('viewBox', `0 0 ${canvasSize.join(' ')}`);
       svg.setAttribute('aria-label', `Pore opening, ${result.diameter_nm.toFixed(2)} nanometers`);
       svg.append(group); svg.toggleAttribute('hidden', false);
-      active = {result, group, canvasSize, recipe, render: S.state.result, revision};
+      active = {result, group, canvasSize, recipe, render, revision};
+      window.dispatchEvent(new Event('cofdraw:arrowchanged'));
       const record = active, controls = document.createElement('div');
       controls.id = 'pore-annotation-actions'; controls.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:10px';
       for (const format of ['svg', 'png']) {
@@ -138,9 +147,8 @@
   }
   window.addEventListener('cofdraw:pore-measured', event => show(event.detail));
   window.addEventListener('cofdraw:rendered', invalidate);
-  window.addEventListener('cofdraw:schemeenabled', invalidate);
   window.addEventListener('cofdraw:extentchanged', invalidate);
   window.addEventListener('cofdraw:layoutchanged', invalidate);
   window.addEventListener('cofdraw:state', () => {if (S.state.dirty || S.state.inputsDirty || S.state.jsonPending) invalidate();});
-  window.COFdrawMeasure = {clear, get active() {return active;}};
+  window.COFdrawMeasure = {clear,decorate,save:format=>active&&save(active,format), get active() {return active;}};
 })();

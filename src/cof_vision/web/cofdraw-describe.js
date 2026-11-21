@@ -57,7 +57,11 @@
     document.querySelectorAll('#chat-suggestions button,#chat-actions button').forEach(button=>button.disabled=blocked);
     for(const id of ['describe-text','describe-material-name','describe-mode','describe-service','describe-base-url','describe-model','describe-api-key','describe-edit-text',...Object.values(fields),'mode-describe','mode-manual'])$(id).disabled=blocked;
     $('describe-demos').querySelectorAll('button').forEach(button=>button.disabled=blocked);
-    for(const id of ['edit-geometry','clean-geometry','measure-pore'])$(id).disabled=blocked||!S.state.recipe;
+    for(const id of ['edit-geometry','clean-geometry','measure-pore']){
+      const crystal=window.COFdrawCrystalDesign;
+      const available=id==='measure-pore'&&crystal?.active?crystal.report:S.state.recipe;
+      $(id).disabled=blocked||!available;
+    }
   }
   function startMode(mode,{focus=false}={}){
     if(state.busy||S.state.busy)return;

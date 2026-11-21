@@ -135,18 +135,27 @@
     if(text!==undefined)e.textContent=text;
     return e;
   }
-  function chemicalNetworkFigure(result,displayCells){
-    const model=displayCells.viewer,chem=new DOMParser().parseFromString(result.chemical_framework_svg,'image/svg+xml').documentElement;
-    if(chem.localName!=='svg'||!model?.bonds?.length)return null;
+  function chemicalNetworkFigure(result,displayCells,packingOnly=false){
+    const model=displayCells.viewer;
+    if(!model?.bonds?.length)return null;
     const net=result.structure.provenance.net||'';
     const svg=node('svg',{xmlns:'http://www.w3.org/2000/svg',viewBox:'0 0 1160 580',width:1160,height:580,role:'img'});
     svg.append(node('title',{},result.structure.provenance.model_name+' · chemical drawing and periodic network'),
       node('desc',{},'Left: bond-line diagram. Right: oblique projection of the repeated cell using its periodic bond translations. Depth is encoded by line weight and opacity.'),
-      node('rect',{width:1160,height:580,fill:'white'}));
-    const drawing=document.importNode(chem,true);
-    for(const [key,value] of Object.entries({x:20,y:48,width:535,height:500,preserveAspectRatio:'xMidYMid meet'}))drawing.setAttribute(key,value);
+      node('rect',{width:1160,height:580,fill:'white','data-paper':''}));
     const title=(x,text)=>node('text',{x,y:31,fill:'#203e43','font-family':'sans-serif','font-size':17},text);
-    svg.append(title(28,'Chemical drawing'),drawing,title(594,'Periodic network · '+net+' · '+displayCells.repeats.join(' × ')));
+    if(packingOnly){
+      svg.setAttribute('viewBox','580 0 580 580');svg.setAttribute('width','580');
+      svg.querySelector('title').textContent=result.structure.provenance.model_name+' · periodic packing';
+      svg.querySelector('desc').textContent='Heavy atoms and periodic bonds projected from the selected crystal with depth shading.';
+    }else{
+      const chem=new DOMParser().parseFromString(result.chemical_framework_svg,'image/svg+xml').documentElement;
+      if(chem.localName!=='svg')return null;
+      const drawing=document.importNode(chem,true);
+      for(const [key,value] of Object.entries({x:20,y:48,width:535,height:500,preserveAspectRatio:'xMidYMid meet'}))drawing.setAttribute(key,value);
+      svg.append(title(28,'Chemical drawing'),drawing);
+    }
+    svg.append(title(594,'Periodic network · '+net+' · '+displayCells.repeats.join(' × ')));
     const modelGroup=node('g',{'data-view':'periodic-network','data-displayed-sites':model.atoms.length,
       'data-source-sites':result.structure.atoms.length,'stroke-linecap':'round','stroke-linejoin':'round',fill:'none'});
     svg.append(modelGroup);
@@ -170,14 +179,15 @@
       for(const [i,j] of [[a,b],[b,a]]){
         const z=(3*projected[i][2]+projected[j][2])/4;
         const k=Math.min(steps-1,Math.max(0,Math.floor(steps*(z-bounds[2][0])/range[2])));
-        const shade=color(model.atoms[i]),bucket=paths[k];
-        if(!bucket.has(shade))bucket.set(shade,[]);
-        bucket.get(shade).push('M'+xy[i][0].toFixed(2)+' '+xy[i][1].toFixed(2)+'L'+half[0].toFixed(2)+' '+half[1].toFixed(2));
+        const atom=model.atoms[i],key=atom.element+':'+(atom.component||''),bucket=paths[k];
+        if(!bucket.has(key))bucket.set(key,{atom,lines:[]});
+        bucket.get(key).lines.push('M'+xy[i][0].toFixed(2)+' '+xy[i][1].toFixed(2)+'L'+half[0].toFixed(2)+' '+half[1].toFixed(2));
       }
     }
     paths.forEach((bucket,i)=>{
       const depth=i/(steps-1);
-      for(const [shade,lines] of bucket)modelGroup.append(node('path',{d:lines.join(''),stroke:shade,
+      for(const {atom,lines} of bucket.values())modelGroup.append(node('path',{d:lines.join(''),stroke:color(atom),
+        'data-depth':depth.toFixed(3),'data-block':atom.component||'','data-element':atom.element,
         'stroke-opacity':(.26+.74*depth).toFixed(3),'stroke-width':(.70+1.15*depth).toFixed(2)}));
     });
     return new XMLSerializer().serializeToString(svg);

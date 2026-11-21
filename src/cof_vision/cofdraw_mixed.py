@@ -13,7 +13,7 @@ from .framework_drawing import _ports
 
 
 PANG_DOI = '10.1021/jacs.6b01244'
-ETTA = 'Nc1ccc(C(=C(c2ccc(N)cc2)c2ccc(N)cc2)c2ccc(N)cc2)cc1'
+ETTA = Chem.MolToSmiles(Chem.MolFromSmiles('Nc1ccc(C(=C(c2ccc(N)cc2)c2ccc(N)cc2)c2ccc(N)cc2)cc1'))
 _ARYL_FORMYL = Chem.MolFromSmarts('[c]-[CH1;X3](=[O])')
 TPDA = dict(id='tpda_terphenyl', abbreviation='TPDA', full_name='p-Terphenyl-4,4″-dicarbaldehyde',
             label='TPDA · p-terphenyl-4,4″-dicarbaldehyde', smiles='O=Cc1ccc(-c2ccc(-c3ccc(C=O)cc3)cc2)cc1',
@@ -81,26 +81,26 @@ def _add(a,b):
     return (a[0]+b[0],a[1]+b[1])
 
 
-def _faces(pattern,repeats,kgm,triad=False):
+def _faces(pattern,repeats,kgm,triad=False,single_linker=None):
     """Integer vertex coordinates make neighboring faces share exact graph edges."""
     n = len(pattern)
     if kgm:
         if repeats==1 and n==3:
             i = 0 if pattern=='BBB' else 1
-            return [((_HEX[i],_HEX[(i+1)%6],_add(_HEX[i],_HEX[(i+1)%6])),pattern)]
+            return [((_HEX[i],_HEX[(i+1)%6],_add(_HEX[i],_HEX[(i+1)%6])),(single_linker*3 if single_linker else pattern))]
         faces = {}
         radius=1 if triad else max(1,repeats-1)
         for u,v in product(range(radius),repeat=2):
             center = (4*u+2*v,2*v)
             verts = tuple(_add(center,p) for p in _HEX)
-            faces[frozenset(verts)] = (verts,'BCBCBC')
+            faces[frozenset(verts)] = (verts,single_linker*6 if single_linker else 'BCBCBC')
             if repeats>1:
                 for i,p in enumerate(_HEX):
                     if triad and i>=2:
                         break
                     q = _HEX[(i+1)%6]
                     tri = (_add(center,p),_add(center,q),_add(center,_add(p,q)))
-                    faces[frozenset(tri)] = (tri,'BC'[i%2]*3)
+                    faces[frozenset(tri)] = (tri,(single_linker or 'BC'[i%2])*3)
         return list(faces.values())
     corners = _HEX if n==6 else _SQUARE
     # Opposite sides belong to one edge family. Parity alternates along
@@ -241,7 +241,9 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
     if repeats not in (1,2,3,4) or (kgm and pattern not in ('BBB','CCC','BCBCBC','CBCBCB')) or (
             not kgm and (len(pattern) not in (4,6) or not set(pattern)<=set('BC'))):
         raise ValueError('Choose a supported pore and a drawing extent from one to four.')
-    faces=_faces(pattern,repeats,kgm,triad=triad)
+    binary_kgm=kgm and set(components)=={'A','B'}
+    node='B' if binary_kgm else 'A'
+    faces=_faces(pattern,repeats,kgm,triad=triad,single_linker='A' if binary_kgm else None)
     edge_types={}
     for vertices,sequence in faces:
         for i,letter in enumerate(sequence):
@@ -250,7 +252,7 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
                 raise ValueError('Conflicting linker assignments on a shared edge.')
     nodes=sorted({vertex for edge in edge_types for vertex in edge})
     ix={point:i for i,point in enumerate(nodes)}
-    kinds=['A']*len(nodes)
+    kinds=[node]*len(nodes)
     centers=list(map(np.array,nodes))
     joins=[]; slot_pairs=[]; degrees=Counter()
     linker_ids={}
@@ -260,10 +262,10 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
         kinds.append(letter)
         centers.append(.5*(np.array(edge[0])+edge[1]))
         for p in edge:
-            node=ix[p]
-            joins.append((node,mid))
-            slot_pairs.append((degrees[node],degrees[mid]))
-            degrees[node]+=1; degrees[mid]+=1
+            junction=ix[p]
+            joins.append((junction,mid))
+            slot_pairs.append((degrees[junction],degrees[mid]))
+            degrees[junction]+=1; degrees[mid]+=1
     centers=np.array(centers)*([.5,math.sqrt(3)/2] if kgm or len(pattern)==6 else [1.,1.])
     geo={k:_block(components[k]) for k in set(kinds)}
     if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
@@ -307,7 +309,7 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
         rim=[]
         for i,p in enumerate(vertices):
             edge=tuple(sorted((p,vertices[(i+1)%len(vertices)])))
-            rim.extend((f'A{ix[p]+1}',linker_ids[edge]))
+            rim.extend((f'{node}{ix[p]+1}',linker_ids[edge]))
         pore_faces.append(rim)
     return result,dict(extent=f'{len(faces)} complete pores',template='kgm' if kgm else 'hcb' if len(pattern)==6 else 'sql',
                        atoms=result.GetNumAtoms(),blocks=len(kinds),pores=len(faces),pore_sequences=census,
@@ -315,3 +317,32 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
                        continuation_sites=sum(a.GetAtomicNum()==0 for a in result.GetAtoms()),
                        order_assumption='Separated B and C triangles share edges with alternating hexagons.' if kgm else
                        'A two-cell B/C ordering extends the selected pore. Neighboring pores share each molecular edge.')
+
+
+def kagome_face_geometry(components,pattern):
+    """Keep one editable pore in exactly the same rigid-fragment geometry as larger patches."""
+    mol,summary=pore_patch(components,pattern,1,2,layout='kgm')
+    rim=summary['pore_faces'][0]
+    origins=summary['atom_origin']
+    xy=mol.GetConformer().GetPositions()[:,:2]
+    sites={k:{endpoint:port for port,(_,endpoint) in _ports(Chem.MolFromSmiles(c['fragment_smiles'])).items()}
+           for k,c in components.items()}
+    incidence={}
+    for bond in mol.GetBonds():
+        a=origins[bond.GetBeginAtomIdx()]; b=origins[bond.GetEndAtomIdx()]
+        if a['instance']!=b['instance']:
+            for here,there in ((a,b),(b,a)):
+                incidence[here['instance'],there['instance']]=sites[here['component']][here['fragment_atom_index']]
+    instances=[]; connections=[]
+    for i,name in enumerate(rim):
+        previous,following=rim[i-1],rim[(i+1)%len(rim)]
+        indices=[j for j,o in enumerate(origins) if o['instance']==name]
+        incoming,outgoing=incidence[name,previous],incidence[name,following]
+        instances.append(dict(id=name,component=origins[indices[0]]['component'],incoming_port=incoming,
+                              outgoing_port=outgoing,layout_position=xy[indices].mean(axis=0).tolist()))
+        connections.append(dict(a=dict(instance=name,port=outgoing),
+                                b=dict(instance=following,port=incidence[following,name]),bond_order=2))
+    coords=[dict(instance=o['instance'],fragment_atom_index=o['fragment_atom_index'],xy=point.tolist())
+            for o,point in zip(origins,xy)]
+    return dict(instances=instances,connections=connections,atom_coordinates=coords,
+                coordinate_provenance='Rigid precursor fragments fitted to a Kagome pore')

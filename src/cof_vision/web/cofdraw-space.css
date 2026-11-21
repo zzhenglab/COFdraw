@@ -1,9 +1,8 @@
-.extent-bar{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;margin:2px 0 10px;font-size:12px;color:#38564f}
+.extent-bar{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#38564f;max-width:100%}
 .extent-bar[hidden]{display:none}
-#extent-options{display:flex;gap:2px;flex-wrap:wrap;border:1px solid #c4d5cf;background:#f2f6f4;border-radius:7px;padding:2px}
-#extent-options button{border:0;background:transparent;color:#34534b;border-radius:5px;min-height:28px;padding:4px 10px;font:inherit;cursor:pointer}
-#extent-options button[aria-pressed=true]{background:#225d50;color:white}
-#extent-options button:disabled{opacity:.65}
+#extent-options{width:auto;max-width:18ch;min-height:32px;border:1px solid #c4d5cf;border-radius:6px;padding:3px 4px;background:white;color:#30554a;font:inherit;cursor:pointer}
+.extent-details{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:#38564f}
+.extent-details:has(#pore-color-control[hidden]):has(#pore-type-legend:empty):has(#extent-feedback:empty){display:none}
 #extent-feedback{font-size:11px;color:#526861;max-width:68ch}
 #extent-feedback:empty{display:none}
 #pore-color-control:not([hidden]),#pore-type-legend,#pore-type-legend span,#pore-type-legend button{display:inline-flex;gap:5px;align-items:center}

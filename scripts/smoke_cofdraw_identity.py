@@ -132,6 +132,7 @@ def main():
             assert page.evaluate("COFdrawStudio.state.result.audit.drawing_cofex.text")==exchange
             checks.append("Copy COFex and paste reproduce the editable square design and selected linkage")
 
+            page.locator("#combination-search").fill("source:tppa-pore-v1")
             page.select_option("#cof-preset","source:tppa-pore-v1")
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='tppa-pore-v1' && !window.COFdrawStudio.state.busy")
             expected_source = page.evaluate("window.COFdrawStudio.state.sourceMetadata.cofex_notation")
@@ -143,6 +144,7 @@ def main():
             page.screenshot(path=str(output / "visible-source-record.png"))
             checks.append("Source record displays its exact full notation, unknown net and unverified catenation without constructor rematching")
 
+            page.locator("#combination-search").fill("source:pyurea-source-layout-v1")
             page.select_option("#cof-preset","source:pyurea-source-layout-v1")
             page.wait_for_function("window.COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && !window.COFdrawStudio.state.busy")
             assert page.locator("#identity-string").inner_text() == "Not assigned"
@@ -161,10 +163,10 @@ def main():
             checks.append("Edited inputs clear active source identity and disable copying a stale structure record")
             page.select_option("#cof-preset","crystal:cof-300-c5")
             page.wait_for_function("Boolean(window.COFdrawCrystalDesign?.report)",timeout=120000)
-            page.locator("#crystal-drawing-cofex button").click()
+            page.locator("#copy-drawing-cofex").click()
             exchange=page.evaluate("window.__copiedRecord")
             assert "COFex.dia.cat0;COFdraw/1?" in exchange
-            page.click("#rotate-crystal-design")
+            page.click("#open-science")
             assert page.locator("#model-cofex .code-value").inner_text()==exchange.split(';')[0]
             page.click("#close-science")
             page.click("#open-cofex")

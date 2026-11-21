@@ -25,6 +25,9 @@ NAMED_DESIGNS = {
     "COF-42": ("TFB + DETH acylhydrazone", "10.1021/ja204728y"),
     "COF-43": ("TFPB + DETH acylhydrazone", "10.1021/ja204728y"),
     "COF-76": ("TFPPy + TAPA imine", "10.1021/jacs.9b13971"),
+    "4PE-1P": ("TA + TAPE imine kgm_4_2", "10.1021/ja5092936"),
+    "Py-Azine": ("TFPPy + hydrazine azine", "10.1021/ja4103293"),
+    "H2Por-DETH-COF": ("Por-CHO + DETH acylhydrazone", "10.1038/s41467-021-21527-3"),
 }
 NAMED_PAIRS = {
     "COF-LZU1": ("tfb","pa","imine","hcb_3_2"),
@@ -32,6 +35,9 @@ NAMED_PAIRS = {
     "COF-42": ("tfb","deth","acylhydrazone","hcb_3_2"),
     "COF-43": ("tfpb","deth","acylhydrazone","hcb_3_2"),
     "COF-76": ("tfppy","tapa","imine","alternating_hexagon"),
+    "4PE-1P": ("ta","tape","imine","kgm_4_2"),
+    "Py-Azine": ("tfppy","hydrazine","azine","sql_4_2"),
+    "H2Por-DETH-COF": ("por_cho","deth","acylhydrazone","sql_4_2"),
 }
 CORE_NAMES = {
     "tapp": ["porphyrin tetraamine", "aminophenyl porphyrin", "porphyrin node"],
@@ -510,6 +516,8 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     candidates = [row for row in catalog["templates"] if row.get("allow_pairs") and counts in row["allow_pairs"]]
     if geometries:
         candidates = [row for row in catalog["templates"] if row["id"] in GEOMETRY_TEMPLATES[geometries[0]] and (not row.get("allow_pairs") or counts in row["allow_pairs"])]
+    if linkage!='imine' or not (a.get('kgm_dialdehyde') and b.get('kgm_etta')):
+        candidates = [row for row in candidates if row['id']!='kgm_4_2']
     if instance_counts:
         candidates = [row for row in candidates if row["instances"] == instance_counts[0]]
     if not template_id:

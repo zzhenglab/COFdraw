@@ -43,6 +43,7 @@
   function templateCompatibility(template, linkage, monomers, library) {
     if (template.supported === false) return {compatible: false, reason: template.limits || "Template unavailable."};
     if (Array.isArray(template.linkages) && !template.linkages.includes(linkage)) return {compatible: false, reason: "Not available for this linkage."};
+    if (template.id==="kgm_4_2" && (!monomers.a?.kgm_dialdehyde || !monomers.b?.kgm_etta)) return {compatible:false,reason:"Kagome requires a linear aromatic dialdehyde and the ETTA tetraamine."};
     if (template.topology_label && [monomers.a, monomers.b].some(item => item?.geometry_hint?.startsWith("tetrahedral"))) return {compatible:false, reason:"A tetrahedral node needs explicit 3D incidence. Use an unassigned projection rather than a planar net template."};
     for (const block of ["a", "b"]) {
       const role = roleFor(library, linkage, block);
@@ -159,14 +160,16 @@
       const name=sources.get(preset.source_recipe_id)?.literature_name||named?.name;
       if(a&&b&&!compatibleLinkages(library,a,b).some(c=>c.id===preset.linkage&&(!preset.template_id||c.templates.includes(preset.template_id))))continue;
       const pair=preset.label_a+' + '+preset.label_b;
-      const label=name?name+' · '+pair:preset.label;
-      rows.push({...preset,label,group:name?'Named starting pairs':'Catalog designs',
+      const label=name?pair+' ('+name+')':pair;
+      rows.push({...preset,label,commonName:name,doi:named?.doi,group:name?'Named starting pairs':'Catalog designs',
         search:searchText(label,preset.linkage,library.linkages[preset.linkage]?.label,names(a),names(b))});
       if(a&&b)occupied.add(pairKey(a.canonical_smiles||a.smiles,b.canonical_smiles||b.smiles,preset.linkage));
     }
     for(const source of sources.values()){
-      const label=source.literature_name||source.label;
-      rows.push({id:'source:'+source.recipe_id,source,group:'Recorded drawings',label,
+      const name=source.literature_name||source.label;
+      const pair=(source.monomers||[]).map(m=>m.label).filter(Boolean).join(' + ');
+      const label=pair?pair+' ('+name+')':name;
+      rows.push({id:'source:'+source.recipe_id,source,commonName:name,group:'Recorded drawings',label,
         search:searchText(label,source.label,source.recipe_id,(source.monomers||[]).map(names),(source.monomers||[]).map(m=>m.label))});
     }
     for(const named of nameFor.values()){
@@ -175,8 +178,8 @@
       const key=pairKey(a.canonical_smiles||a.smiles,b.canonical_smiles||b.smiles,named.linkage);
       if(occupied.has(key))continue;
       occupied.add(key);
-      const label=named.name+' · '+pairName(a)+' + '+pairName(b);
-      rows.push({id:'named:'+named.name,label,group:'Named starting pairs',label_a:a.abbreviation,label_b:b.abbreviation,
+      const label=pairName(a)+' + '+pairName(b)+' ('+named.name+')';
+      rows.push({id:'named:'+named.name,label,commonName:named.name,doi:named.doi,group:'Named starting pairs',label_a:a.abbreviation,label_b:b.abbreviation,
         monomer_a:a.smiles,monomer_b:b.smiles,linkage:named.linkage,template_id:template.id,instances:template.instances,
         search:searchText(label,named.linkage,names(a),names(b),named.doi)});
     }
@@ -196,9 +199,65 @@
       generated.push({id:'pair:'+left.id+':'+right.id+':'+plan.id,label,label_a:labelA,label_b:labelB,
         monomer_a:left.smiles,monomer_b:right.smiles,linkage:plan.id,template_id:template.id,instances:template.instances,
         group:(template.id==='chain_2_2'?'Open-chain designs · ':'Matched pairs · ')+plan.label,
+        rank:[left,right].reduce((sum,r)=>sum+(r.id.startsWith('cv_')?4:0)+(r.abbreviation?.length||0)/30,0),
         search:searchText(label,plan.id,plan.label,names(left),names(right),template.label)});
     }
-    return rows.concat(generated.sort((a,b)=>a.group.localeCompare(b.group)||a.label.localeCompare(b.label)));
+    for(const example of library.assembly_examples||[]){
+      const parts=example.monomer_ids.map(id=>byId.get(id));
+      if(parts.some(r=>!r))continue;
+      const name=example.doi?example.label.split(' · ')[0]:null;
+      const feed=parts.map(pairName).join(' + '),label=name?feed+' ('+name+')':feed;
+      const kind=parts[0].assembly_roles?.self_kind;
+      const linkage=kind==='self_boroxine'?'boroxine':kind==='self_triazine'?'triazine':'imine';
+      rows.push({id:'assembly:'+example.id,assembly:example,commonName:name,label,linkage,
+        dimension:example.id==='aba-chain'||example.id==='latent-imine'?1:2,
+        group:'Assembly examples',search:searchText(name,example.label,feed,linkage,parts.map(names),example.doi)});
+    }
+    return rows.concat(generated.sort((a,b)=>a.group.localeCompare(b.group)||a.rank-b.rank||a.label.localeCompare(b.label)));
+  }
+
+  const commonStarts=['named:COF-LZU1','tppa-pore-v1','crystal:cof-300-c5','assembly:cof-1',
+    'design-tfb_deth','assembly:ctf-1','tpb-dmtp-cof-pore-v1','named:4PE-1P','crystal:curated-13040N3','named:Py-Azine'];
+  function starterSections(rows,library,query,current){
+    const words=(query||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const compact=s=>s.toLowerCase().replace(/[\s‐‑–-]/g,'');
+    const order=id=>{const i=commonStarts.indexOf(id);return i<0?commonStarts.length:i;};
+    const groups=new Map(), byId=new Map(), matches=[];
+    for(const row of rows){
+      const dimension=row.dimension||(row.crystal?3:row.template_id==='chain_2_2'||row.commonName==='COF-76'?1:2);
+      const chemistry=library.linkages?.[row.linkage]?.label?.split(' · ')[0]||row.linkage;
+      let section;
+      if(row.crystal)section=row.id==='crystal:custom-dia'?'Current pair':'3D · '+row.net+(row.reference?' · reference CIF':'');
+      else if(row.source)section='Recorded source drawings';
+      else if(dimension===1)section='1D · Chains and ribbons';
+      else section='2D · '+(chemistry||'Frameworks');
+      const text=[row.id,row.search,row.label,section].filter(Boolean).join(' ');
+      if(words.length&&!words.every(w=>text.toLowerCase().includes(w)||compact(text).includes(compact(w))))continue;
+      matches.push(row);
+      if(!groups.has(section))groups.set(section,[]);
+      groups.get(section).push(row);byId.set(row.id,row);
+    }
+    const common=commonStarts.map(id=>byId.get(id)).filter(Boolean);
+    const rank=([k])=>k.startsWith('2D')?0:k.startsWith('3D')?1:k.startsWith('1D')?2:k==='Current pair'?4:3;
+    const visible=new Map();
+    if(common.length)visible.set('Common COFs',common);
+    // A cited reference and a generated model may share a feed. Two generated
+    // entries for the same feed and net describe a single choice.
+    const modelKey=r=>r.crystal&&r.precursors?.length?JSON.stringify([[...r.precursors].sort(),r.net,r.reference]):r.id;
+    const seen=new Set(common.map(modelKey));
+    for(const [name,items] of [...groups].sort((a,b)=>rank(a)-rank(b)||a[0].localeCompare(b[0]))){
+      const unique=items.filter(row=>{
+        const key=modelKey(row);
+        if(seen.has(key))return false;
+        seen.add(key);return true;
+      });
+      const top=unique.slice(0,words.length?24:8);
+      if(top.length)visible.set(name,top);
+    }
+    const active=rows.find(r=>r.id===current);
+    if(active&&![...visible.values()].some(group=>group.includes(active)))visible.set('Current selection',[active]);
+    matches.sort((a,b)=>order(a.id)-order(b.id)||Number(Boolean(b.commonName))-Number(Boolean(a.commonName)));
+    return {visible,matches};
   }
   // Share in-flight work as well as completed previews. Only the caller decides
   // which visible cards to request; a long catalog never starts all at once.
@@ -218,7 +277,7 @@
     }
     return {request};
   }
-  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,startingCombinations,createPreviewCache};
+  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,startingCombinations,starterSections,createPreviewCache};
   scope.COFdrawLibrary = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);

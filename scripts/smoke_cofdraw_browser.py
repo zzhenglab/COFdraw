@@ -356,6 +356,7 @@ def main():
           square=next((item for item in library.get("cof_presets",[]) if item.get("template_id") in ("sql_4_2","sql_4_4")),None)
           if square:
             page.locator("#linkage").select_option(square["linkage"])
+            page.locator("#combination-search").fill(square["id"])
             page.locator("#cof-preset").select_option(square["id"])
             page.wait_for_function("() => !document.querySelector('#build').disabled")
             square_render=build()
@@ -371,12 +372,14 @@ def main():
           else:
             initial=next(item for item in library["cof_presets"] if item["linkage"]=="imine")
             page.locator("#linkage").select_option("imine")
+            page.locator("#combination-search").fill(initial["id"])
             page.locator("#cof-preset").select_option(initial["id"])
             restored=build()
             assert restored.value.status==200,restored.value.text()
           expanded=next((item for item in library.get("cof_presets",[]) if item.get("linkage") in ("acylhydrazone","keto_hydrazide","azine")),None)
           if expanded:
             page.locator("#linkage").select_option(expanded["linkage"])
+            page.locator("#combination-search").fill(expanded["id"])
             page.locator("#cof-preset").select_option(expanded["id"])
             page.wait_for_function("() => !document.querySelector('#build').disabled")
             expanded_render=build()
@@ -394,6 +397,7 @@ def main():
               page.screenshot(path=str(out/f"cofdraw-{category}.png"),full_page=True)
               checks.append(f"Actual {category} presentation rendered with explicit scope notice")
         with page.expect_response("**/api/drawing/render") as source:
+            page.locator("#combination-search").fill("source:tfb-tab-pore-v1")
             page.select_option("#cof-preset","source:tfb-tab-pore-v1")
         assert source.value.status==200,source.value.text();assert source.value.json()["audit"]["cofex_string"]
         if not page.locator('.identity-more').evaluate('element=>element.open'):

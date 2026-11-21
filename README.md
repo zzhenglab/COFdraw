@@ -49,7 +49,7 @@ Release assets include a SHA-256 checksum file. Troubleshooting and export detai
 | Reviewed drawings | 17 source-associated patches, including recovered manual alignments, Pyurea and UCOF |
 | Geometry editing | Bond-angle-aware rigid-block layout, direct atom drag, block editing, undo, and geometry warnings |
 | Presentation | 22 styles, 17 palettes, custom colors, highlights, gradient layers, and shaded spheres |
-| Figure / chemical export | PNG and SVG with optional precursor schemes, plus MOL, SDF, CDXML and editable JSON |
+| Figure / chemical export | PNG and SVG with precursor schemes, editable COF names and pore measurements, plus molecular exports and project JSON |
 | 3D structures | Current-drawing layers, stacking comparisons, multiple representations, periodic templates, CIF import and coordinate export |
 | Network hypotheses | Explicit translated periodic copies with group colors and collision checks; interpenetration remains a qualified hypothesis |
 | Pore geometry | Drawing-plane opening; periodic PLD/LCD bounds, transport-connected probe-center volume and sampled surface, with unresolved-grid status |

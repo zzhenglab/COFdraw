@@ -2,6 +2,7 @@
 from collections import Counter
 from pathlib import Path
 from xml.etree import ElementTree
+import math
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,7 +11,8 @@ from rdkit import Chem
 from cof_vision.cofdraw_chemistry import design_signature, prepare_template
 from cof_vision.cofdraw_desktop import create_desktop_app
 from cof_vision.cofdraw_repeat import repeat_options, repeat_patch
-from cof_vision.framework_drawing import VERSION
+from cof_vision.framework_drawing import VERSION, build_patch
+from cof_vision.cofdraw_mixed import ETTA
 
 
 @pytest.fixture
@@ -54,7 +56,7 @@ def test_actual_kagome_pore_tints_and_v3000_exports(api):
     assert prepared.status_code==200,prepared.text
     body={'recipe':prepared.json()['recipe'],'style_id':'standard','size':500}
     options=api.post('/api/drawing/repeat-options',json=body).json()
-    assert [o['label'] for o in options['extents'][1:]]==['3 pores','7 pores','20 pores']
+    assert [o['label'] for o in options['extents'][1:]]==['3 pores','Hexagon + 6 triangles','20 pores']
     result=api.post('/api/drawing/repeat',json={**body,'repeats':3,'color_pores':True})
     assert result.status_code==200,result.text
     report=result.json()
@@ -116,3 +118,60 @@ def test_three_pore_choice_returns_the_visible_molecule(api,inputs,expected):
     assert sum(p.get('data-pore-fill') is not None for p in svg.iter())==3
     mol=Chem.MolFromMolBlock(api.get(urls['mol']).text,sanitize=False,removeHs=False)
     assert len(Chem.GetMolFrags(mol))==1 and mol.GetNumAtoms()==summary['atoms']
+    measured=api.post('/api/drawing/repeat/'+result['drawing_id']+'/measure')
+    assert measured.status_code==200,measured.text
+    report=measured.json();aperture=report['measurement'];layout=report['audit']['drawing_style']['layout']
+    assert aperture['focal_face']==summary['measurement_face']
+    assert aperture['focal_face']['type'] in expected
+    assert aperture['diameter_nm']>0 and report['drawing_id']==result['drawing_id']
+    for anchor in aperture['annotation']['coordinate_anchors']:
+        assert layout['atom_coordinates'][anchor['atom_index']]==pytest.approx(anchor['xy'],abs=1e-8)
+    assert len(layout['atom_pixels'])==summary['atoms']
+
+
+def test_etta_kagome_hexagon_and_each_shared_triangle():
+    aldehyde='O=Cc1ccc(C=O)cc1'
+    recipe=prepare_template(aldehyde,ETTA,'imine','TPA','ETTA',12,'kgm_4_2')
+    recipe.update(schema_version=VERSION,recipe_id='dual-pore',design_template_signature=design_signature(recipe))
+    assert recipe['design_topology']=='kgm'
+    base,audit=build_patch(recipe)
+    ring,_,_,census,_=repeat_patch(recipe,1,extent_mode='triangle')
+    assert census['pore_counts']=={'triangle':1} and len(Chem.GetMolFrags(ring))==1
+    mol,origins,ports,s,_=repeat_patch(recipe,2)
+    assert s['pore_counts']=={'hexagon':1,'triangle':6}
+    assert s['component_counts']=={'A':18,'B':12} and s['interblock_bonds']==36 and len(ports)==12
+    faces=s['pore_faces']
+    center=next(set(face) for face in faces if len(face)==12)
+    triangles=[set(face) for face in faces if len(face)==6]
+    shared=[center&rim for rim in triangles]
+    assert len(triangles)==6 and len({frozenset(edge) for edge in shared})==6
+    assert all(len(edge)==3 and sum(i.startswith('A') for i in edge)==1 for edge in shared)
+    assert len({(o['instance'],o['fragment_atom_index']) for o in origins})==mol.GetNumAtoms()
+    # Both the local face and full connected neighborhood must keep drawing
+    # scale consistent between internal phenyl bonds and each new imine.
+    for graph,rows in ((mol,origins),(base,audit['atom_origin'])):
+        xy=graph.GetConformer().GetPositions()
+        for bond in graph.GetBonds():
+            a,b=bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()
+            if rows[a]['instance']!=rows[b]['instance']:
+                assert bond.GetBondType()==Chem.BondType.DOUBLE
+                assert {bond.GetBeginAtom().GetSymbol(),bond.GetEndAtom().GetSymbol()}=={'C','N'}
+                assert 1.45<math.dist(xy[a],xy[b])<1.55
+    for a,b in ((aldehyde,'Nc1cc(N)c(N)cc1N'),('O=Cc1cccc(C=O)c1',ETTA)):
+        with pytest.raises(ValueError,match='ETTA and a linear'):
+            prepare_template(a,b,'imine','A','B',12,'kgm_4_2')
+
+
+def test_self_kagome_complete_shell_matches_mixed_kagome_incidence(api):
+    for feed in (['bfbaeb'],['tape','ta','bpda_cho']):
+        request={'monomer_ids':feed}
+        if len(feed)==3:
+            request.update(linker_sequence='CCC',pore_layout='kgm')
+        recipe=api.post('/api/drawing/prepare/assembly',json=request).json()['recipe']
+        choice=next(r for r in repeat_options(recipe)['extents'] if r['label']=='Hexagon + 6 triangles')
+        mol,origins,_,s,_=repeat_patch(recipe,2,extent_mode=choice.get('extent_mode','pores'))
+        faces=sorted(s['pore_faces'],key=len)
+        triangles,center=faces[:-1],set(faces[-1])
+        assert len(triangles)==6 and s['pore_count']==s['interblock_bonds']-s['blocks']+1==7
+        assert all(len(t)*2==len(center) and len(center&set(t))==(2 if len(feed)==1 else 3) for t in triangles)
+        assert len(Chem.GetMolFrags(mol))==1 and len(origins)==choice['atoms']==mol.GetNumAtoms()

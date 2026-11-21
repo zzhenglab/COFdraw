@@ -44,7 +44,7 @@ def _classification(recipe, source_rule=None, source_sha256=None):
     assembly = recipe.get('assembly')
     if not assembly:
         template = (recipe.get('selected_template') or {}).get('id')
-        if template in (*SHEET_TEMPLATES, 'chain_2_2'):
+        if template in (*SHEET_TEMPLATES, 'chain_2_2','kgm_4_2'):
             return template
         raise ValueError('This local ring has no declared rule for sharing edges with adjacent pores.')
     kind = assembly.get('kind')
@@ -297,16 +297,18 @@ def _estimate(recipe, template, n, extent_mode='pores'):
         return sum(counts[i['component']] for i in recipe['instances']) * n - 2*(n*len(recipe['instances'])-1),0
     if template=='self_kagome':
         from .cofdraw_self_kagome import HEX,patch_points
-        nodes = patch_points(n, triad=extent_mode=='triad')
+        nodes = patch_points(n, triad=extent_mode=='triad',star=extent_mode=='star')
         joins = sum((x+dx,y+dy) in nodes for x,y in nodes for dx,dy in HEX[:3])
         return len(nodes)*counts['A'] - 2*joins, joins-len(nodes)+1
     from .cofdraw_mixed import _faces as mixed_faces
-    pattern = recipe['assembly'].get('linker_sequence') or 'BBBBBB'
-    faces = mixed_faces(pattern,n,template=='mixed_kgm',triad=extent_mode=='triad')
+    binary_kgm = template=='kgm_4_2'
+    pattern = ('BBB' if extent_mode=='triangle' else 'BCBCBC') if binary_kgm else (recipe['assembly'].get('linker_sequence') or 'BBBBBB')
+    faces = mixed_faces(pattern,n,template=='mixed_kgm' or binary_kgm,triad=extent_mode=='triad',
+                        single_linker='A' if binary_kgm else None)
     edge_types = {tuple(sorted((p,vertices[(i+1)%len(vertices)]))):sequence[i]
                   for vertices,sequence in faces for i,p in enumerate(vertices)}
     nodes = {p for edge in edge_types for p in edge}
-    return len(nodes)*counts['A'] + sum(counts[k] for k in edge_types.values()) - 4*len(edge_types),len(faces)
+    return len(nodes)*counts['B' if binary_kgm else 'A'] + sum(counts[k] for k in edge_types.values()) - 4*len(edge_types),len(faces)
 
 
 def repeat_options(recipe, source_rule=None, source_sha256=None):
@@ -322,16 +324,27 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
         if template in (*SHEET_TEMPLATES,'self_square'):
             _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
+        if template=='kgm_4_2':
+            options['extents'][0]['label']='One hexagon'
+            atoms,_=_estimate(model,template,1,'triangle')
+            if atoms<=MAX_ATOMS:
+                options['extents'].append(dict(value='triangle',repeats=1,extent_mode='triangle',label='One triangle',pores=1,atoms=atoms))
         if not chain:
             atoms,pores = _estimate(model,template,3,'triad')
             if pores==3 and atoms<=MAX_ATOMS:
                 options['extents'].append({'value':'three-pores','repeats':3,'extent_mode':'triad',
                                            'label':'3 pores','pores':3,'atoms':atoms})
+        if template=='self_kagome':
+            atoms,pores=_estimate(model,template,2,'star')
+            if pores==7 and atoms<=MAX_ATOMS:
+                options['extents'].append(dict(value='kagome-star',repeats=2,extent_mode='star',
+                                               label='Hexagon + 6 triangles',pores=pores,atoms=atoms))
         for n in (2,3,4):
             count,pores = _estimate(model,template,n)
             if count > MAX_ATOMS:
                 continue
-            name = f'{n} chain segments' if chain else f'{pores} pores'
+            name = ('Hexagon + 6 triangles' if template in ('mixed_kgm','kgm_4_2') and n==2 else
+                    f'{n} chain segments' if chain else f'{pores} pores')
             options['extents'].append({'value':n,'label':name,'pores':pores,'atoms':count})
         options.update(available=len(options['extents'])>1,template=template,
                        scope='Finite chemical design with shared building blocks. Larger extents use a new layout.')
@@ -343,11 +356,12 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
 
 
 def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mode='pores'):
-    if repeats not in (2,3,4) or extent_mode not in ('pores','cells','triad'):
-        raise ValueError('Choose a repeat extent from 2 through 4.')
-    if extent_mode=='triad' and repeats!=3:
-        raise ValueError('The three-pore cluster requires repeats=3.')
+    sizes={'pores':(2,3,4),'cells':(2,3,4),'triad':(3,),'star':(2,),'triangle':(1,)}
+    if repeats not in sizes.get(extent_mode,()):
+        raise ValueError('Choose an extent available for this drawing.')
     template = _classification(recipe,source_rule,source_sha256)
+    if ((extent_mode=='star' and template!='self_kagome') or (extent_mode=='triangle' and template!='kgm_4_2')):
+        raise ValueError('Choose a Kagome design for this pore arrangement.')
     assembly = recipe.get('assembly') or {}
     design = recipe
     if not assembly:
@@ -365,14 +379,20 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
         mol,details = _chain(recipe,repeats)
     elif template == 'self_kagome':
         from .cofdraw_self_kagome import kagome_patch
-        mol,details = kagome_patch(recipe,repeats,triad=extent_mode=='triad')
-    elif template in ('mixed_linkers','mixed_kgm','self_boroxine','self_triazine'):
+        mol,details = kagome_patch(recipe,repeats,triad=extent_mode=='triad',star=extent_mode=='star')
+    elif template in ('mixed_linkers','mixed_kgm','kgm_4_2','self_boroxine','self_triazine'):
         from .cofdraw_mixed import pore_patch
-        pattern = 'BBBBBB' if template in ('self_boroxine','self_triazine') else assembly['linker_sequence']
+        pattern = ('BBB' if extent_mode=='triangle' else 'BCBCBC') if template=='kgm_4_2' else (
+            'BBBBBB' if template in ('self_boroxine','self_triazine') else assembly['linker_sequence'])
         if not pattern:
             raise ValueError('The sequence around the selected aperture must be specified.')
         mol,details = pore_patch(design['components'],pattern,repeats,design['connections'][0]['bond_order'],
-                                 layout='kgm' if template=='mixed_kgm' else '',triad=extent_mode=='triad')
+                                 layout='kgm' if template in ('mixed_kgm','kgm_4_2') else '',triad=extent_mode=='triad')
+        if template=='kgm_4_2':
+            details['face_labels']=['triangle' if len(s)==3 else 'hexagon' for s in details['face_labels']]
+            details.pop('pore_sequences')
+            details.update(pore_counts=dict(Counter(details['face_labels'])),
+                           order_assumption='A single imine linker family joins the ETTA nodes of the selected Kagome net.')
     else:
         mol,details = _sheet(design,template,repeats,extent_mode)
     if mol.GetNumAtoms() > MAX_ATOMS or len(Chem.GetMolFrags(mol)) != 1:
@@ -388,8 +408,9 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
     links = [b for b in mol.GetBonds() if origins[b.GetBeginAtomIdx()]['instance'] != origins[b.GetEndAtomIdx()]['instance']]
     fragcount = len(set(o['instance'] for o in origins))
     nfaces = len(links) - fragcount + 1
-    if extent_mode=='triad' and nfaces!=3:
-        raise ValueError('The chosen drawing does not produce three connected pores.')
+    expected={'triad':3,'star':7,'triangle':1}.get(extent_mode)
+    if expected and nfaces!=expected:
+        raise ValueError('The generated pores do not match the selected neighborhood.')
     if nfaces < 0 or details.get('pore_count',details.get('pores',nfaces)) != nfaces:
         raise ValueError('The counted pores disagree with the independent block-graph cycle count.')
     if template in ('self_boroxine','self_triazine'):
@@ -405,7 +426,7 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
                or b.GetBondTypeAsDouble() != 2 for b in links):
             raise ValueError('Every aminoaldehyde junction must join an aldehyde carbon to an amine nitrogen.')
     extent = (f'{repeats} chain segments' if template in ('self_chain','chain_2_2') else
-              f'{repeats} × {repeats} cells' if extent_mode=='cells' else f'{nfaces} connected pores')
+              f'{repeats} × {repeats} cells' if extent_mode=='cells' else 'One triangle' if extent_mode=='triangle' else f'{nfaces} connected pores')
     basis = design.get('source_drawing_basis')
     if basis:
         basis = {k:basis[k] for k in ('recipe_id','recipe_sha256','drawing_doi','template','orientation_assumption') if k in basis}
@@ -417,6 +438,26 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
                'source_drawing_basis':basis,
                'scope':'Finite connected drawing with explicit covalent joins and external continuation ports. The neighboring arrangement is a design hypothesis.'}
     return mol, origins, boundaries, summary, design['components']
+
+
+def _focal_aperture(mol,origins,faces,labels,summary,recipe):
+    """Pick the central occurrence of the selected pore family in the displayed patch."""
+    from .cofdraw_measure import prepare_aperture
+    xy=mol.GetConformer().GetPositions()[:,:2]
+    owners=[o['instance'] for o in origins]
+    centers={name:xy[[i for i,owner in enumerate(owners) if owner==name]].mean(axis=0) for name in set(owners)}
+    positions=np.array([np.mean([centers[name] for name in rim],axis=0) for rim in faces])
+    middle=positions.mean(axis=0)
+    assembly=recipe.get('assembly') or {}
+    preferred=assembly.get('pore_view') or assembly.get('linker_sequence')
+    if summary['extent_mode']=='star' or (summary['pore_count']==7 and summary['template'] in ('kgm_4_2','mixed_kgm')):
+        preferred='BCBCBC' if summary['template']=='mixed_kgm' else 'hexagon'
+    index=min(range(len(faces)),key=lambda i:(bool(preferred and labels[i]!=preferred),float(np.linalg.norm(positions[i]-middle)),i))
+    kind=labels[index]
+    name=({'BBB':'B triangle','CCC':'C triangle','BCBCBC':'Alternating B/C hexagon'}.get(kind)
+          or (kind.capitalize() if not set(kind)<=set('BC') else f'{len(kind)}-sided pore · {kind}'))
+    aperture=prepare_aperture(mol,owners,faces[index])
+    return {**aperture,'label':name,'type':kind,'instances':faces[index],'index':index}
 
 
 def write_repeat(recipe, directory, key, request, *, source_rule=None,source_sha256=None):
@@ -473,6 +514,13 @@ def write_repeat(recipe, directory, key, request, *, source_rule=None,source_sha
                  atoms=mol.GetNumAtoms(),bonds=mol.GetNumBonds(),defined_double_bond_geometry=_double_bond_geometry_audit(mol))
     audit = render_styled(drawing,directory,request.size,request.style_id,request.style_seed,request.style_options,
                           prepared_patch=(mol,audit),recent_styles=request.recent_styles)
+    if faces:
+        try:
+            aperture=_focal_aperture(mol,origins,faces,labels,summary,recipe)
+            audit['drawing_aperture']=aperture
+            summary['measurement_face']={k:aperture[k] for k in ('label','type','index','instances')}
+        except ValueError as exc:
+            summary['measurement_reason']=str(exc)
     extra = export_chemical_formats(directory,key,source_mol=mol,repeated_patch=True)
     chemical = json.loads((directory/f'{key}.chemical-export.json').read_text(encoding='utf8'))
     audit['chemical_exports'] = chemical

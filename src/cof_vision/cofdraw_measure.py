@@ -50,6 +50,12 @@ def measure_drawing(recipe):
     mol, _ = build_patch(recipe)
     if mol.GetNumAtoms() > 1000:
         raise ValueError("Drawing measurement supports at most 1,000 atoms")
+    aperture=prepare_aperture(mol)
+    return measure_aperture(mol.GetConformer().GetPositions()[:,:2],aperture)
+
+
+def prepare_aperture(mol,owners=None,face=None):
+    """Record calibration and a specific molecular rim independently of display style."""
     xy = np.asarray(mol.GetConformer().GetPositions())[:, :2]
     if not np.isfinite(xy).all():
         raise ValueError("Drawing coordinates must be finite")
@@ -63,15 +69,23 @@ def measure_drawing(recipe):
     # conventional calibration, not a crystallographic determination.
     reference_length = 1.40 if aromatic else 1.50
     scale = reference_length / float(np.median(lengths))
-    xy = xy * scale
     rings = [list(r) for r in symmetric_depiction_rings(mol) if len(r) >= 12]
+    if face is not None:
+        target=set(face)
+        rings=[r for r in rings if {owners[i] for i in r}==target]
     if not rings:
         raise ValueError("No closed macrocyclic opening was found. Use a periodic CIF for pore analysis or the 3D atom-distance ruler.")
-    def area(indices):
-        return _polygon_area(xy[indices])
-    ring = max(rings, key=area)
+    ring=max(rings,key=lambda r:_polygon_area(xy[r]))
+    return dict(scale=scale,reference_length=reference_length,ring=ring,
+                elements=[a.GetAtomicNum() for a in mol.GetAtoms()])
+
+
+def measure_aperture(coordinates,aperture):
+    scale=aperture['scale']; ring=aperture['ring']; elements=aperture['elements']
+    xy=np.asarray(coordinates,dtype=float)*scale
     polygon=xy[ring];lo=polygon.min(0);hi=polygon.max(0)
-    if not _simple_polygon(polygon) or area(ring) <= 1e-8:
+    area=_polygon_area(polygon)
+    if not _simple_polygon(polygon) or area <= 1e-8:
         raise ValueError("The largest macrocycle has a crossed or degenerate projection; clean the layout before measuring")
     grid=np.stack(np.meshgrid(np.linspace(lo[0],hi[0],90),np.linspace(lo[1],hi[1],90)),axis=-1).reshape(-1,2)
     inside=np.zeros(len(grid),dtype=bool)
@@ -82,9 +96,13 @@ def measure_drawing(recipe):
         inside ^= crossing & (grid[:,0]<x)
     points=grid[inside]
     if not len(points):raise ValueError("The projected ring has no usable interior")
-    indices=[a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()>0]
+    indices=[i for i,z in enumerate(elements) if z>0]
     table=Chem.GetPeriodicTable()
-    radii=np.array([table.GetRvdw(mol.GetAtomWithIdx(i).GetAtomicNum()) for i in indices])
+    radii=np.array([table.GetRvdw(elements[i]) for i in indices])
+    # More distant sites cannot reach the pore even at its maximum possible radius.
+    margin=.5*min(hi-lo)+max(radii)
+    nearby=np.all((xy[indices]>=lo-margin)&(xy[indices]<=hi+margin),axis=1)
+    indices=np.asarray(indices)[nearby];radii=radii[nearby]
     best=(-np.inf,None)
     for chunk in np.array_split(points,max(1,len(points)//256)):
         distances=np.linalg.norm(chunk[:,None,:]-xy[indices][None,:,:],axis=2)-radii
@@ -96,7 +114,7 @@ def measure_drawing(recipe):
     # This line spans the sampled inscribed circle, not a wall-to-wall chord.
     # Retain the uncalibrated coordinate frame for an exact rendered overlay.
     endpoints = [center + [-radius, 0.], center + [radius, 0.]]
-    anchor_indices = sorted({0, mol.GetNumAtoms() // 2, mol.GetNumAtoms() - 1})
+    anchor_indices = sorted({0, len(elements) // 2, len(elements) - 1})
     annotation = {"coordinate_system": "drawing_xy_cartesian_y_up",
                   "center": center.tolist(), "radius": float(radius),
                   "endpoints": [point.tolist() for point in endpoints],
@@ -107,9 +125,9 @@ def measure_drawing(recipe):
                   "label_qualification": "Pore opening"}
     return {"diameter_angstrom":2*best[0],"diameter_nm":best[0]/5,
             "center_angstrom":best[1].tolist(),"annotation":annotation,
-            "projected_ring_area_angstrom2":area(ring),"ring_atoms":len(ring),
-            "calibration_bond_angstrom":reference_length,"grid_points":len(points),
+            "projected_ring_area_angstrom2":area,"ring_atoms":len(ring),
+            "calibration_bond_angstrom":aperture['reference_length'],"grid_points":len(points),
             "grid_diagonal_angstrom":float(np.linalg.norm((hi-lo)/89)),
-            "sampling_lower_bound":True,"explicit_hydrogens_included":sum(a.GetAtomicNum()==1 for a in mol.GetAtoms()),
+            "sampling_lower_bound":True,"explicit_hydrogens_included":elements.count(1),
             "method":"Largest sampled circle constrained inside the largest projected macrocycle in the bounded symmetric ring basis, excluding all explicit-atom van der Waals disks",
             "scope":"Largest sampled opening in the drawing plane, calibrated by conventional bond lengths. The value is a lower bound for the projected opening. Periodic pore calculations use a cell and its explicit atomic coordinates."}

@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     head.append(heading,copy);section.append(head,value);after.after(section);
     return {section,heading,copy,value};
   }
-  const crystal=footer('crystal-drawing-cofex',document.querySelector('.crystal-drawing-bottom'));
   const model=footer('model-cofex',$('viewer-distance'));
   async function copyText(text,element){
     if(!text)return;
@@ -50,16 +49,32 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   function sync(){
     const design=window.COFdrawCrystalDesign, science=window.COFdrawScience;
-    const record=drawingRecord(),button=$('copy-drawing-cofex');
+    const periodic=design?.active, provenance=design?.report?.structure?.provenance;
+    const record=periodic?provenance?.drawing_cofex:drawingRecord(),button=$('copy-drawing-cofex');
     button.disabled=!record;
     button.onclick=()=>copyText(record?.text,$('identity-string'));
-    setFooter(crystal,design?.report?.structure?.provenance?.drawing_cofex,Boolean(design?.report));
+    if(periodic){
+      $('identity-string').textContent=record?.compact||(design.report?'No precursor COFex is recorded.':'Building the selected framework…');
+      $('identity-heading').textContent=record?.scope==='source'?'Source COFex record':'Design COFex record';
+      $('identity-linkage').textContent=record?.linkage?.replaceAll('_',' ')||'Unassigned';
+      $('identity-template').textContent=record?.net||provenance?.net||'Unassigned';
+      $('identity-key').textContent=record?.id||'Unassigned';
+      $('identity-cat').textContent=record?.compact?.match(/\.(cat\d+)(?:;|$)/)?.[1]||'Unassigned';
+      $('identity-note').textContent=record?.scope==='source'?'Recorded crystal phase. '+(record.doi?'DOI '+record.doi:''):'Generated periodic design from the selected precursors and network count.';
+      $('copy-identity').disabled=!record;
+    }
     const current=Boolean(science?.structure||science?.finiteModel);
     const fromDrawing=current&&['drawing','current-periodic'].includes(science.origin);
     setFooter(model,science?.structure?.provenance?.drawing_cofex||(fromDrawing?record:null),current&&science.origin!=='monomer');
     open.disabled=!studio.state.online;
   }
-  for(const type of ['cofdraw:state','cofdraw:rendered','cofdraw:structure','cofdraw:crystalviewclear'])window.addEventListener(type,sync);
+  $('copy-identity').addEventListener('click',e=>{
+    const d=window.COFdrawCrystalDesign;if(!d?.active)return;
+    e.stopImmediatePropagation();
+    const p=d.report?.structure?.provenance;
+    if(p?.drawing_cofex)copyText(JSON.stringify(p,null,2),$('identity-string'));
+  },true);
+  for(const type of ['cofdraw:crystalviewready','cofdraw:state','cofdraw:rendered','cofdraw:structure','cofdraw:crystalviewclear'])window.addEventListener(type,sync);
   let plans=[],revision=0;
   function reset(){revision++;plans=[];menu.hidden=true;menu.replaceChildren();message.textContent='';draw.textContent='Draw structure';draw.disabled=false;}
   input.addEventListener('input',reset);
@@ -90,7 +105,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       message.textContent='Building the structure…';showDrawing();
       if(plan.crystal_project){
         await window.COFdrawCrystalDesign.restore(plan.crystal_project);
-        if(!window.COFdrawCrystalDesign.report)throw Error($('crystal-drawing-progress').textContent||'The periodic model could not be built.');
+        if(!window.COFdrawCrystalDesign.report)throw Error($('drawing-summary').textContent||'The periodic model could not be built.');
       }else if(plan.assembly_request){
         await studio.applyCofexAssembly(plan.assembly_request);
       }else{

@@ -20,13 +20,14 @@ TEMPLATES = [
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
     {"id":"sql_4_2","label":"Square · 4c + 2c","instances":8,"allow_pairs":[[4,2],[2,4]],"topology_label":"sql","description":"Four tetratopic corners joined by four linear linkers."},
+    {"id":"kgm_4_2","label":"Kagome · hexagons and triangles","instances":12,"allow_pairs":[[2,4]],"topology_label":"kgm","linkages":["imine"],"description":"ETTA nodes joined by linear aromatic dialdehydes. Choose a hexagon, triangle or connected neighborhood."},
     {"id":"sql_4_4","label":"Square · 4c + 4c","instances":4,"allow_pairs":[[4,4]],"topology_label":"sql","description":"Alternating tetratopic vertices; unused sites remain continuation ports."},
     {"id":"hxl_6_2","label":"Triangular · 6c + 2c","instances":6,"allow_pairs":[[6,2],[2,6]],"topology_label":"hxl","description":"Three hexatopic corners and three edge linkers."},
     {"id":"chain_2_2","label":"Open chain · 2c + 2c","instances":6,"allow_pairs":[[2,2]],"topology_label":None,"description":"Six alternating units with two open ends; no 2D net is assigned."},
     {"id":"alternating_hexagon","label":"Custom six-unit ring","instances":6,"allow_pairs":[],"topology_label":None,"description":"Explicit ring design with any supported functionality ≥2; topology remains unknown."},
 ]
 for template in TEMPLATES:
-    template.update(linkages=list(LINKAGE_LIBRARY),periodic_topology_inferred=False,
+    template.update(linkages=template.get("linkages",list(LINKAGE_LIBRARY)),periodic_topology_inferred=False,
                     required_functionalities={"allow_pairs":template["allow_pairs"]})
 
 def inspect_monomer(smiles):
@@ -52,7 +53,10 @@ def inspect_monomer(smiles):
                 roles.append({"linkage":linkage,"role":role,"reactive_sites":count,"compatible":True,
                               "reason":"Recognized functional group; crystallization and reaction conditions are not predicted."})
     tetra=mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4](-[c])(-[c])(-[c])-[c]"))
+    from .cofdraw_mixed import ETTA, linear_dialdehyde
     return {"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,
+            "kgm_etta":any(g["kind"]=="primary_arylamine" and g["count"]==4 for g in groups) and Chem.MolToSmiles(mol)==ETTA,
+            "kgm_dialdehyde":any(g["kind"]=="aryl_aldehyde" and g["count"]==2 for g in groups) and linear_dialdehyde(smiles),
             "geometry_hint":"tetrahedral" if tetra else "unspecified",
             "geometry_note":"Tetrahedral tetraaryl-carbon node: a planar template does not establish a 3D net." if tetra else None}
 
@@ -105,7 +109,8 @@ def decorated_monomers(rows):
                            "catalog_reactive_groups":row.get("reactive_groups", []),
                            "abbreviation":row.get("abbreviation") or row.get("id", ""),
                            "full_name":row.get("full_name") or row.get("label", ""),
-                           "geometry_hint":row.get("geometry_hint") or metadata["geometry_hint"]})
+                           "geometry_hint":metadata["geometry_hint"] if metadata["geometry_hint"]=="tetrahedral"
+                           else row.get("geometry_hint") or metadata["geometry_hint"]})
         except (ValueError,KeyError):
             continue
     return output
@@ -175,6 +180,8 @@ def _assemble_template(components, linkage, instances, template_id):
     if template and template["allow_pairs"] and counts not in template["allow_pairs"]:
         raise ValueError(f"{template['label']} requires {template['allow_pairs']}; these monomers have {counts} reactive sites")
     inspection=[inspect_monomer(s) for s in (monomer_a,monomer_b)]
+    if template_id=="kgm_4_2" and (linkage!="imine" or not inspection[0]["kgm_dialdehyde"] or not inspection[1]["kgm_etta"]):
+        raise ValueError("The Kagome drawing requires ETTA and a linear aromatic dialdehyde with imine linkages.")
     if template and template["topology_label"] and any(x["geometry_hint"]=="tetrahedral" for x in inspection):
         raise ValueError("This tetrahedral monomer needs a source-supported 3D incidence recipe; choose a custom projection without assigning a planar net")
     positions=[]; kinds=[]; angles=[]
@@ -182,7 +189,7 @@ def _assemble_template(components, linkage, instances, template_id):
     open_chain=template_id=="chain_2_2"
     if open_chain:
         positions=[[12*(i-(n-1)/2),0] for i in range(n)]; kinds=["A" if i%2==0 else "B" for i in range(n)]; angles=[180]*n
-    elif template_id in ("hcb_3_2","sql_4_2","hxl_6_2"):
+    elif template_id in ("hcb_3_2","sql_4_2","hxl_6_2","kgm_4_2"):
         corners=n//2; node="A" if counts[0]>counts[1] else "B"; edge="B" if node=="A" else "A"
         vertices=[np.array([25*math.cos(math.pi/2+2*math.pi*i/corners),25*math.sin(math.pi/2+2*math.pi*i/corners)]) for i in range(corners)]
         for i,point in enumerate(vertices):
@@ -198,6 +205,12 @@ def _assemble_template(components, linkage, instances, template_id):
     connections=[{"a":{"instance":items[i]["id"],"port":items[i]["outgoing_port"]},
                   "b":{"instance":items[(i+1)%n]["id"],"port":items[(i+1)%n]["incoming_port"]},"bond_order":rule["join_bond_order"]}
                  for i in range(n-1 if open_chain else n)]
+    geometry={}
+    if template_id=="kgm_4_2":
+        from .cofdraw_mixed import kagome_face_geometry
+        geometry=kagome_face_geometry(components,'BCBCBC')
+        selected=[{'instance':item['id'],'incoming_port':item['incoming_port'],'outgoing_port':item['outgoing_port'],
+                   'basis':'Kagome edge incidence'} for item in geometry['instances']]
     net=template["topology_label"] if template else None
     design_name=re.sub(r"[^A-Za-z0-9_+-]","",f"{label_a}-{label_b}")[:80] or "user-design"
     notation=".".join(sorted({canonical(monomer_a),canonical(monomer_b)}))+f" COFex.{net or 'unk'}.cat0;{design_name}"
@@ -205,4 +218,4 @@ def _assemble_template(components, linkage, instances, template_id):
             "layout_kind":"open_chain" if open_chain else "closed_pore", "selected_template":template,
             "design_topology":net,"design_cofex_notation":notation,"design_catenation":"cat0",
             "design_identity_qualification":"Proposed design notation. Net is the chosen template, cat0 is assumed; neither is experimental identity or a CIF.",
-            "compatibility":{"reactive_site_counts":counts,"roles":rule["roles"],"port_selection":selected,"monomers":inspection}}
+            "compatibility":{"reactive_site_counts":counts,"roles":rule["roles"],"port_selection":selected,"monomers":inspection},**geometry}

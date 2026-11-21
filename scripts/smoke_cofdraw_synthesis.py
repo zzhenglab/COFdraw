@@ -125,6 +125,7 @@ def main():
             assert card.is_hidden() and card.inner_text() == ""
             checks.append("Unapplied recipe JSON clears the old aggregate instead of displaying a stale assessment")
 
+            page.locator("#combination-search").fill("source:ucof-source-layout-v1")
             page.select_option("#cof-preset","source:ucof-source-layout-v1")
             page.wait_for_function("""COFdrawStudio.state.result?.audit.original_recipe_id==='ucof-source-layout-v1'
                 && !COFdrawStudio.state.busy && !COFdrawStudio.state.dirty""")

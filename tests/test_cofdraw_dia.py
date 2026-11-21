@@ -3,6 +3,7 @@ from collections import Counter
 
 import pytest
 from fastapi.testclient import TestClient
+from rdkit import Chem
 
 from cof_vision.cofdraw_desktop import create_desktop_app
 from cof_vision.cofdraw_network import inspect_periodic_network
@@ -12,6 +13,25 @@ from cof_vision.cofdraw_science import import_cif
 
 TAPM = "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
 TETRA_CHO = "O=Cc1ccc(C(c2ccc(C=O)cc2)(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1"
+
+
+@pytest.mark.parametrize("net,reverse,cells", [("dia", False, 1), ("lon", True, 2)])
+def test_two_distinct_tetrahedral_nodes_keep_si_formula_and_input_order(tmp_path, net, reverse, cells):
+    silicon = TETRA_CHO.replace("ccc(C(", "ccc([Si](")
+    feed = [silicon, TAPM] if reverse else [TAPM, silicon]
+    with TestClient(create_desktop_app(tmp_path)) as client:
+        result = client.post("/api/drawing/science/build-reticular",
+                             json=dict(monomer_a=feed[0], monomer_b=feed[1], topology=net))
+        assert result.status_code == 200, result.text
+        model = result.json()
+        structure = model["structure"]
+        assert structure["provenance"]["precursor_connectivities"] == [4,4]
+        assert structure["provenance"]["precursors"] == [Chem.MolToSmiles(Chem.MolFromSmiles(s)) for s in feed]
+        assert model["cell_validation"]["precursor_stoichiometry"] == [cells,cells]
+        assert model["cell_validation"]["network_dimensions"] == [3]
+        assert Counter(a["element"] for a in structure["atoms"]) == {
+            element: n*cells for element,n in {"C":53,"H":36,"N":4,"Si":1}.items()}
+        assert model["cell_validation"]["cell_composition_verified"]
 
 
 @pytest.mark.parametrize("a,b,linkage,counts", [

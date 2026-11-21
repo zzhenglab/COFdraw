@@ -3,6 +3,7 @@ import argparse
 import json
 import time
 from pathlib import Path
+from xml.etree import ElementTree
 
 from playwright.sync_api import sync_playwright
 
@@ -36,11 +37,11 @@ def main():
               return !s.busy&&!s.inputsDirty&&!s.dirty&&s.result&&a&&(!example||ex.value===example)&&
                 (!face||a.pore_view===face)&&(!seq||a.linker_sequence===seq)&&
                 document.querySelector('#framework-image').naturalWidth>0&&
-                document.querySelector('#extent-options button:not(:disabled)');
+                !document.querySelector('#extent-options').disabled;
             }""", arg=[example, face, seq])
 
         def extent(value):
-            page.locator(f'#extent-options button[value="{value}"]').click()
+            page.get_by_role("combobox",name="Drawing extent",exact=True).select_option(str(value))
             wait("""n=>COFdrawExtent.value===n&&!document.querySelector('#extent-bar').hasAttribute('aria-busy')
               && document.querySelector('#framework-image').complete && document.querySelector('#framework-image').naturalWidth>0""", arg=value)
 
@@ -63,6 +64,8 @@ def main():
         ready("bfbaeb-cof", face="triangle")
         assert page.locator("#descriptor-block option").count() == 1
         three_pores()
+        extent("kagome-star")
+        assert page.evaluate("COFdrawExtent.visible.summary.pore_counts")=={"triangle":6,"hexagon":1}
         extent(2)
         page.screenshot(path=args.output / "self-kagome.png")
         save("SVG", "self-kagome.svg")
@@ -70,7 +73,7 @@ def main():
         page.select_option("#assembly-example", "aba-chain")
         ready("aba-chain")
         assert page.locator("#measure-pore").is_disabled()
-        assert not page.locator('#extent-options button[value="three-pores"]').count()
+        assert not page.locator('#extent-options option[value="three-pores"]').count()
         assert "segment" in page.locator("#extent-options").inner_text().lower()
         page.select_option("#assembly-count", "3")
         ready("sioc-cof-1", seq="BCBCBC")
@@ -118,6 +121,7 @@ def main():
         extent(2)
         save("SVG", "edited-linker-neighborhood.svg")
         page.select_option("#assembly-count","2")
+        page.locator("#combination-search").fill("tfb-tab-pore-v1")
         page.locator("#cof-preset").select_option("tfb-tab-pore-v1")
         wait("""() => document.querySelector('#cof-preset').value==='tfb-tab-pore-v1' && !COFdrawStudio.state.busy &&
             !COFdrawStudio.state.inputsDirty && !COFdrawStudio.state.recipe?.assembly && !!COFdrawExtent.visible""")
@@ -125,18 +129,57 @@ def main():
         save("PNG","three-connected-hexagons.png")
         save("SVG","three-connected-hexagons.svg")
         save("MOL","three-connected-hexagons.mol")
+        page.locator("#combination-search").fill("source:pyurea-source-layout-v1")
         page.select_option("#cof-preset","source:pyurea-source-layout-v1")
         wait("""() => COFdrawStudio.state.sourceId==='pyurea-source-layout-v1' && COFdrawExtent.value===1 &&
             !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
-        assert not page.locator('#extent-options button[value="three-pores"]').count()
+        assert not page.locator('#extent-options option[value="three-pores"]').count()
+        page.locator("#combination-search").fill("source:wiley-r198-tppa-so3h-pore-0002")
         page.select_option("#cof-preset","source:wiley-r198-tppa-so3h-pore-0002")
         wait("""() => COFdrawStudio.state.sourceId==='wiley-r198-tppa-so3h-pore-0002' &&
             !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
         three_pores()
+        page.select_option("#cof-preset","named:4PE-1P")
+        wait("""() => COFdrawStudio.state.recipe?.selected_template?.id==='kgm_4_2' &&
+            !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
+        extent("triangle")
+        assert page.evaluate("COFdrawExtent.visible.summary.pore_counts")=={"triangle":1}
+        extent(2)
+        assert page.evaluate("COFdrawExtent.visible.summary.pore_counts")=={"triangle":6,"hexagon":1}
+        assert "Hexagon" in page.locator('#measure-pore').get_attribute('title')
+        page.locator('#measure-pore').click()
+        wait("COFdrawExtent.value===2 && !document.querySelector('#pore-measurement-overlay').hasAttribute('hidden')")
+        assert 'Hexagon opening' in page.locator('#pore-measurement').inner_text()
+        annotated=args.output/'4PE-1P-focal-opening.svg'
+        with page.expect_download() as event:
+            page.get_by_role('button',name='Save annotated SVG').click()
+        event.value.save_as(annotated)
+        graphic=ElementTree.parse(annotated)
+        line=next(el for el in graphic.iter() if el.get('data-measured-diameter'))
+        fills=[el.get('points').split() for el in graphic.iter() if el.get('data-pore-fill')]
+        assert len(fills)==7
+        hexagon=next(points for points in fills if len(points)==12)
+        x,y=zip(*(map(float,p.split(',')) for p in hexagon))
+        for axis,values in [('x',x),('y',y)]:
+            midpoint=(float(line.get(axis+'1'))+float(line.get(axis+'2')))/2
+            assert abs(midpoint-sum(values)/len(values))<.1*(max(values)-min(values))
+        save("SVG","4PE-1P-hexagon-and-six-triangles.svg")
+        save("PNG","4PE-1P-hexagon-and-six-triangles.png")
+        page.select_option("#cof-preset","crystal:cof-300-c5")
+        wait("!!COFdrawCrystalDesign.visible && !document.querySelector('#extent-options').disabled")
+        picker=page.get_by_role('combobox',name='Drawing extent',exact=True)
+        assert picker.count()==1 and 'circuit' in picker.inner_text().lower()
+        picker.select_option('3')
+        wait("COFdrawCrystalDesign.visible?.count===3")
+        page.select_option("#cof-preset","named:4PE-1P")
+        wait("""() => !COFdrawCrystalDesign.active && COFdrawStudio.state.recipe?.selected_template?.id==='kgm_4_2' &&
+            !!COFdrawExtent.visible && !COFdrawStudio.state.busy""")
+        extent("triangle")
         assert not errors, errors
         print(json.dumps({"self_examples":self_examples,"mixed_examples":mixed_examples,"script_errors":errors,
                           "passed":["self faces","chain","three mixed faces","neighboring pores","visible exports","restore","custom linker",
-                                    "three connected hexagons","source switching"]}))
+                                    "three connected hexagons","source switching","Kagome hexagon and six triangles",
+                                    "shared planar and reticular extent picker"]}))
         browser.close()
 
 

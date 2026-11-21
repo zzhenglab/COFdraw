@@ -216,7 +216,7 @@
     }
     select.value=crystalTemplates.find(t=>t.id==='cof-300-c5')?.id||crystalTemplates[0]?.id;templateNote();
     window.dispatchEvent(new CustomEvent('cofdraw:crystal-catalog',{detail:[
-      ...crystalTemplates.filter(r=>r.network_dimension===3||r.id==='dia-imine')]}));
+      ...crystalTemplates.filter(r=>r.network_dimension===3||r.id==='dia-imine'),...(data.starter_designs||[])]}));
     if(new URLSearchParams(location.search).get('workspace')==='crystal'&&!currentStructure&&!origin){
       workspace(true);tab('model');$('structure-source').value='periodic';sourceMode();
       $('crystal-template').value='hcb-imine-aa';templateNote();$('build-crystal').click();
@@ -532,13 +532,16 @@
   $('render-geometry').addEventListener('click',()=>S.render());
   $('clean-geometry').addEventListener('click',async()=>{if(S.state.busy)return;try{remember();const r=await S.api('layout',{...drawingRequest(),operation:'clean'});S.acceptRecipe(r.recipe);await S.render();const review=S.geometryReviewMessage(r.audit?.layout_refinement);geometryMessage(review||'Geometry cleaned as a new design. Source alignment is preserved in the original source recipe.');if(review)S.notice(`Drawing created. ${review}`);}catch(e){S.notice(e.message,true);}});
   $('measure-pore').addEventListener('click',async()=>{
-    const recipe=S.state.recipe,rendered=S.state.result,key=signature();
+    if(window.COFdrawCrystalDesign?.active)return;
+    const recipe=S.state.recipe,rendered=window.COFdrawExtent?.visible,key=signature();
     try{
       if(!rendered||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)throw new Error('Render the current drawing before measuring its pore.');
-      const result=await S.api('science/measure',drawingRequest());
-      if(S.state.recipe!==recipe||S.state.result!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending||window.COFdrawExtent?.expanded)return;
+      const expanded=window.COFdrawExtent.expanded;
+      const report=expanded?await S.api('repeat/'+rendered.drawing_id+'/measure',{}):null;
+      const result=expanded?report.measurement:await S.api('science/measure',drawingRequest());
+      if(S.state.recipe!==recipe||window.COFdrawExtent.visible!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)return;
       const el=$('pore-measurement'),title=document.createElement('strong');
-      title.textContent=`Pore opening · ${fmt(result.diameter_nm,2)} nm`;
+      title.textContent=(result.focal_face?result.focal_face.label+' opening':'Pore opening')+` · ${fmt(result.diameter_nm,2)} nm`;
       const method=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
       method.className='measurement-method';
       summary.textContent='Measurement method';
@@ -546,7 +549,7 @@
       method.append(summary,body);
       el.replaceChildren(title,method);
       el.hidden=false;
-      window.dispatchEvent(new CustomEvent('cofdraw:pore-measured',{detail:{result,audit:rendered.audit,recipe}}));
+      window.dispatchEvent(new CustomEvent('cofdraw:pore-measured',{detail:{result,audit:report?.audit||rendered.audit,recipe,render:rendered}}));
     }catch(e){if(signature()===key)S.notice(e.message,true);}
   });
   window.addEventListener('cofdraw:layoutchanged',()=>{lastRenderedRecipe=null;drawHandles();$('pore-measurement').hidden=true;});

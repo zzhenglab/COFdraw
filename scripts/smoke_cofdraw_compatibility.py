@@ -52,7 +52,7 @@ def main():
         while not server.started and time.monotonic() < deadline:
             time.sleep(.05)
         base = f"http://127.0.0.1:{port}"
-    checks, errors, api_errors = [], [], []
+    checks, errors, api_errors, families = [], [], [], []
     failure = None
     browser = page = None
     try:
@@ -94,6 +94,11 @@ def main():
 
             search=page.locator("#combination-search")
             starts=page.locator("#cof-preset")
+            families=starts.locator('optgroup').evaluate_all("groups=>groups.map(g=>[g.label,g.childElementCount])")
+            assert ["Common COFs",10] in families, families
+            assert any(name.startswith("1D") for name,_ in families)
+            assert any(name.startswith("2D") for name,_ in families)
+            assert any(name.startswith("3D · lon") for name,_ in families)
             assert starts.locator('option[value^="pair:"]').count()>len(library["cof_presets"])
             search.fill("lzu1")
             choices=page.locator("#combination-suggestions")
@@ -327,12 +332,27 @@ def main():
             page.route("**/api/drawing/render", quality_fixture)
             search.fill("")
             with page.expect_response("**/api/drawing/render"):
+                page.locator("#combination-search").fill("source:f-cof-1-source-v1")
                 page.select_option("#cof-preset","source:f-cof-1-source-v1")
             page.wait_for_function("!window.COFdrawStudio.state.busy && window.COFdrawStudio.state.sourceId==='f-cof-1-source-v1'")
             assert "need geometry review" not in page.locator("#notice").inner_text()
             assert "need geometry review" not in page.locator("#geometry-message").inner_text()
             page.unroute("**/api/drawing/render", quality_fixture)
             checks.append("Preserved source drawing does not acquire an automatic-design alignment warning")
+            starts.select_option("crystal:starter-lzu-111")
+            page.wait_for_function("COFdrawCrystalDesign.visible && COFdrawCrystalDesign.report?.structure.provenance.net==='lon'",timeout=90000)
+            assert page.evaluate("COFdrawCrystalDesign.report.structure.provenance.precursor_connectivities")==[4,4]
+            assert page.locator("#smiles-a").input_value()==monomers["tapm"]["smiles"]
+            assert page.locator("#smiles-b").input_value()==monomers["tfs_cho4"]["smiles"]
+            assert page.locator("#science-dialog").is_hidden()
+            starts.select_option("assembly:cof-1")
+            page.wait_for_function("COFdrawStudio.state.recipe?.assembly && !COFdrawStudio.state.busy")
+            assert page.locator("#assembly-count").input_value()=="1"
+            starts.select_option("named:4PE-1P")
+            page.wait_for_function("document.querySelector('#template').value==='kgm_4_2' && COFdrawStudio.state.result && !COFdrawStudio.state.busy")
+            assert page.locator("#assembly-count").input_value()=="2"
+            assert not page.evaluate("COFdrawCrystalDesign.active")
+            checks.append("Ten common examples and dimensional families; LZU-111 lon design, single-feed COF-1 and binary Kagome 4PE-1P switch within the drawing workspace")
             assert not errors, errors
             assert not api_errors, api_errors
             browser.close()
@@ -347,7 +367,7 @@ def main():
         if server is not None:
             server.should_exit = True
             worker.join(timeout=10)
-        report = {"passed": failure is None and not errors and not api_errors, "checks": checks, "browser_errors": errors, "api_errors": api_errors, "failure": failure, "base_url": base, "server_ownership": "existing_service" if args.base_url else "owned_python_thread", "expected_monomers": args.expected_monomers}
+        report = {"passed": failure is None and not errors and not api_errors, "checks": checks, "starter_groups": dict(families), "browser_errors": errors, "api_errors": api_errors, "failure": failure, "base_url": base, "server_ownership": "existing_service" if args.base_url else "owned_python_thread", "expected_monomers": args.expected_monomers}
         (output / "compatibility-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(json.dumps(report, indent=2))
     if not report["passed"]:

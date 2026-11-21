@@ -26,6 +26,17 @@ def test_coordinate_illustrations(filename,has_circuit):
         for a,b in ring["bonds"]:
             assert 1 < np.linalg.norm(xyz[a]-xyz[b]) < 1.9
         assert np.linalg.norm(ring["direction"])==pytest.approx(1)
+    else:
+        from cof_vision.cofdraw_crystal_circuits import joined_reference_circuits
+        edges=inspect_periodic_network(structure)["edges"]
+        patches=joined_reference_circuits(structure,edges)
+        assert list(patches)==[1,2,3,4]
+        sites=set()
+        for n,patch in patches.items():
+            expanded={(i,tuple(image)) for i,image in patch["site_images"]}
+            assert sites < expanded and len(expanded)==len(patch["site_images"])
+            assert patch["circuits"]==n and np.linalg.norm(patch["direction"])==pytest.approx(1)
+            sites=expanded
     assert json.dumps(structure,sort_keys=True)==original
 
 
@@ -76,3 +87,17 @@ def test_generated_circuit_preserves_linker_substitution_and_block_views():
     assert len(site_images)<3*len(ring["site_images"])
     depths=[float(el.attrib["data-depth"]) for el in svg.iter() if "data-depth" in el.attrib]
     assert min(depths)<.1 and max(depths)>.9
+    prior=set()
+    for n in (1,2,3,4,7):
+        patch=adjacent_circuits(ring,model["cell"],n)
+        sites={(i,tuple(image)) for i,image in patch["site_images"]}
+        assert prior<sites
+        prior=sites
+        if n==1:continue
+        assert len(patch["rings"])==n
+        loops=[{tuple(sorted((a,b))) for a,b in zip(r["backbone"],r["backbone"][1:]+r["backbone"][:1])} for r in patch["rings"]]
+        assert all(any(bonds & earlier for earlier in loops[:i]) for i,bonds in enumerate(loops) if i)
+        figure=ET.fromstring(chemical_drawing(model,edges,circuit=patch,scheme=True))
+        assert all(a.get('data-block') in ('','A','B') for a in figure.iter() if 'data-depth' in a.attrib)
+        expected_f=sum(model["atoms"][i]["element"]=="F" for i,_ in sites)
+        assert sum(t.text=="F" for t in figure.findall(".//s:text",ns))==expected_f
