@@ -161,8 +161,12 @@ def main():
         page.click("#rotate-crystal-design")
         assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
         page.click('#crystal-interpenetration')
-        page.select_option('#crystal-build-nets','2')
-        wait_for("COFdrawScience.structure?.provenance?.network_count===2 && COFdrawScience.structure===COFdrawCrystalDesign.report?.structure")
+        page.select_option('#crystal-build-nets','1')
+        wait_for("COFdrawScience.structure?.provenance?.network_count===1 && COFdrawScience.structure===COFdrawCrystalDesign.report?.structure")
+        assert page.locator('#crystal-scene').input_value()=='cell'
+        page.click('#crystal-interpenetration')
+        page.select_option('#crystal-build-nets','3')
+        wait_for("COFdrawScience.structure?.provenance?.network_count===3 && COFdrawScience.structure===COFdrawCrystalDesign.report?.structure")
         assert page.locator('#crystal-scene').input_value()=='spotlight'
         page.click("#close-science")
         page.fill("#smiles-b","CC")
