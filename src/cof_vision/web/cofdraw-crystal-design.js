@@ -133,6 +133,32 @@
         if(color||blockInk&&ink)mark.setAttribute('fill',color||ink);
       }
     }
+    if(count>1&&$('crystal-drawing-view').value==='Framework drawing'){
+      // At a crossing, let the front phenyl silhouette and its bonds occlude
+      // the rear chair. A luminance mask also works on transparent exports.
+      const ns=svg.namespaceURI,box=svg.viewBox.baseVal;
+      const defs=document.createElementNS(ns,'defs'),mask=document.createElementNS(ns,'mask');
+      mask.id='cofdraw-chair-occlusion';mask.setAttribute('maskUnits','userSpaceOnUse');
+      for(const [key,value] of Object.entries({x:box.x,y:box.y,width:box.width,height:box.height}))mask.setAttribute(key,value);
+      const field=document.createElementNS(ns,'rect');
+      for(const key of ['x','y','width','height'])field.setAttribute(key,mask.getAttribute(key));
+      field.setAttribute('fill','white');mask.append(field);
+      for(const mark of svg.querySelectorAll('[data-depth]')){
+        const depth=Number(mark.dataset.depth);
+        if(depth<.33){
+          mark.setAttribute('mask','url(#cofdraw-chair-occlusion)');
+        }else if(depth>.67&&['polygon','g'].includes(mark.localName)){
+          const silhouette=mark.cloneNode(true);
+          silhouette.removeAttribute('data-depth');
+          silhouette.setAttribute('opacity','1');silhouette.setAttribute('color','black');
+          silhouette.setAttribute('fill',mark.localName==='polygon'?'black':'none');
+          silhouette.setAttribute('stroke','black');silhouette.setAttribute('stroke-width',mark.localName==='polygon'?'4':'5');
+          silhouette.setAttribute('stroke-linejoin','round');silhouette.setAttribute('stroke-linecap','round');
+          mask.append(silhouette);
+        }
+      }
+      defs.append(mask);svg.prepend(defs);
+    }
     svg.setAttribute('data-circuit-count',count);svg.setAttribute('data-drawing-style',style);
     if(opt.transparent_background){
       svg.querySelectorAll('rect[data-paper]').forEach(r=>r.remove());
