@@ -149,7 +149,7 @@ def _orient(axes,ports,xy):
     return best[1:]
 
 
-def _fit(geometry,kinds,centers,joins,slot_pairs):
+def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
     """Fit rigid fragments to shared junctions with analytic rotation derivatives."""
     owners=np.array(joins)
     a,b=owners.T
@@ -160,7 +160,7 @@ def _fit(geometry,kinds,centers,joins,slot_pairs):
         d=d/np.linalg.norm(d)
         incident[x].append(d)
         incident[y].append(-d)
-    placed=[_orient(np.array(axes),geometry[k][1],geometry[k][2]) for k,axes in zip(kinds,incident)]
+    placed=orientations or [_orient(np.array(axes),geometry[k][1],geometry[k][2]) for k,axes in zip(kinds,incident)]
     slots=np.array([[placed[k][0][slot] for k,slot in zip(pair,sp)] for pair,sp in zip(joins,slot_pairs)])
     angles=np.array([p[1] for p in placed])
     anchors=np.array([[geometry[kinds[k]][2][geometry[kinds[k]][1][s][1]] for k,s in zip(pair,ss)]
@@ -235,6 +235,47 @@ def _fit(geometry,kinds,centers,joins,slot_pairs):
     return translations,angles,slots
 
 
+def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientations=None):
+    degrees=Counter(k for pair in joins for k in pair)
+    geo={k:_block(components[k]) for k in set(kinds)}
+    if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
+        raise ValueError('This drawing exceeds 2,400 atoms. Use a smaller neighborhood.')
+    if any(degrees[i]>len(geo[k][1]) for i,k in enumerate(kinds)):
+        raise ValueError('The selected node has too few sites for this pore arrangement.')
+    translations,angles,slots=_fit(geo,kinds,centers,joins,slot_pairs,orientations)
+    fragments=[]
+    for i,k in enumerate(kinds):
+        original,ports,local,_=geo[k]
+        mol=Chem.Mol(original)
+        xy=_turn(local,angles[i])+translations[i]
+        for atom,(x,y) in zip(mol.GetAtoms(),xy):
+            atom.SetProp('component',k)
+            atom.SetProp('instance',f'{k}{i+1}')
+            atom.SetIntProp('fragment_atom_index',atom.GetIdx())
+            mol.GetConformer().SetAtomPosition(atom.GetIdx(),(float(x),float(y),0.))
+            if atom.GetAtomicNum()==0:
+                atom.SetAtomMapNum(0)
+        fragments.append(mol)
+    for tag,(pair,pair_slots) in enumerate(zip(joins,slots),1):
+        for k,s in zip(pair,pair_slots):
+            dummy,endpoint=geo[kinds[k]][1][s]
+            mol=fragments[k]
+            if mol.GetBondBetweenAtoms(dummy,endpoint).GetBondTypeAsDouble()!=bond_order:
+                raise ValueError('The reacted fragments have incompatible bond orders.')
+            mol.GetAtomWithIdx(dummy).SetAtomMapNum(tag)
+    joined=fragments[0]
+    for mol in fragments[1:]:
+        joined=Chem.CombineMols(joined,mol)
+    result=Chem.molzip(joined)
+    if len(Chem.GetMolFrags(result))!=1 or result.GetNumAtoms()!=joined.GetNumAtoms()-2*len(joins):
+        raise ValueError('The connected molecular patch failed its boundary and valence checks.')
+    result.UpdatePropertyCache(strict=True)
+    symmetric_depiction_rings(result)
+    origins=[dict(component=a.GetProp('component'),instance=a.GetProp('instance'),
+                  fragment_atom_index=a.GetIntProp('fragment_atom_index')) for a in result.GetAtoms()]
+    return result,origins
+
+
 def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
     """Build a finite molecular graph with shared blocks, labeled outer ports, and pore census."""
     kgm=layout=='kgm'
@@ -267,42 +308,7 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
             slot_pairs.append((degrees[junction],degrees[mid]))
             degrees[junction]+=1; degrees[mid]+=1
     centers=np.array(centers)*([.5,math.sqrt(3)/2] if kgm or len(pattern)==6 else [1.,1.])
-    geo={k:_block(components[k]) for k in set(kinds)}
-    if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
-        raise ValueError('This drawing exceeds 2,400 atoms. Use a smaller neighborhood.')
-    if any(degrees[i]>len(geo[k][1]) for i,k in enumerate(kinds)):
-        raise ValueError('The selected node has too few sites for this pore arrangement.')
-    translations,angles,slots=_fit(geo,kinds,centers,joins,slot_pairs)
-    fragments=[]
-    for i,k in enumerate(kinds):
-        original,ports,local,_=geo[k]
-        mol=Chem.Mol(original)
-        xy=_turn(local,angles[i])+translations[i]
-        for atom,(x,y) in zip(mol.GetAtoms(),xy):
-            atom.SetProp('component',k)
-            atom.SetProp('instance',f'{k}{i+1}')
-            atom.SetIntProp('fragment_atom_index',atom.GetIdx())
-            mol.GetConformer().SetAtomPosition(atom.GetIdx(),(float(x),float(y),0.))
-            if atom.GetAtomicNum()==0:
-                atom.SetAtomMapNum(0)
-        fragments.append(mol)
-    for tag,(pair,pair_slots) in enumerate(zip(joins,slots),1):
-        for k,s in zip(pair,pair_slots):
-            dummy,endpoint=geo[kinds[k]][1][s]
-            mol=fragments[k]
-            if mol.GetBondBetweenAtoms(dummy,endpoint).GetBondTypeAsDouble()!=bond_order:
-                raise ValueError('The reacted fragments have incompatible bond orders.')
-            mol.GetAtomWithIdx(dummy).SetAtomMapNum(tag)
-    joined=fragments[0]
-    for mol in fragments[1:]:
-        joined=Chem.CombineMols(joined,mol)
-    result=Chem.molzip(joined)
-    if len(Chem.GetMolFrags(result))!=1 or result.GetNumAtoms()!=joined.GetNumAtoms()-2*len(joins):
-        raise ValueError('The connected molecular patch failed its boundary and valence checks.')
-    result.UpdatePropertyCache(strict=True)
-    symmetric_depiction_rings(result)
-    origins=[dict(component=a.GetProp('component'),instance=a.GetProp('instance'),
-                  fragment_atom_index=a.GetIntProp('fragment_atom_index')) for a in result.GetAtoms()]
+    result,origins=join_fragments(components,kinds,centers,joins,slot_pairs,bond_order)
     census=dict(sorted(Counter(canonical_sequence(s) for _,s in faces).items()))
     pore_faces=[]
     for vertices,_ in faces:
@@ -322,6 +328,10 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
 def kagome_face_geometry(components,pattern):
     """Keep one editable pore in exactly the same rigid-fragment geometry as larger patches."""
     mol,summary=pore_patch(components,pattern,1,2,layout='kgm')
+    return circuit_geometry(components,mol,summary,'Rigid precursor fragments fitted to a Kagome pore')
+
+
+def circuit_geometry(components,mol,summary,provenance):
     rim=summary['pore_faces'][0]
     origins=summary['atom_origin']
     xy=mol.GetConformer().GetPositions()[:,:2]
@@ -345,4 +355,4 @@ def kagome_face_geometry(components,pattern):
     coords=[dict(instance=o['instance'],fragment_atom_index=o['fragment_atom_index'],xy=point.tolist())
             for o,point in zip(origins,xy)]
     return dict(instances=instances,connections=connections,atom_coordinates=coords,
-                coordinate_provenance='Rigid precursor fragments fitted to a Kagome pore')
+                coordinate_provenance=provenance)

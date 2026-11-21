@@ -82,6 +82,7 @@ def crystal_starters(catalog):
 
 
 def topology_catalog(rows):
+    from .cofdraw_net_graphs import graph_preview, net_keys
     rows = deepcopy(rows)
     if rows:
         for code,stack in (('4h','ABAC'),('6h','ABCACB')):
@@ -116,4 +117,18 @@ def topology_catalog(rows):
                    qualification=description,limitations=[capability.get(code,'A literature assignment applies to the cited phase.')])
         if code in capability:
             row.update(construction_supported=True, construction_note=capability[code])
+    if rows:
+        known={row['id'] for row in rows}
+        for code in sorted(net_keys().keys()-known):
+            rows.append(dict(id=code,label=code,net_code=code,kind='net',construction_supported=False))
+        for row in rows:
+            code=row['id']
+            if code not in net_keys():
+                continue
+            graph=graph_preview(code)
+            row.update(graph=graph,dimension=graph['dimension'])
+            row.setdefault('description','Periodic net with junction degrees '+', '.join(
+                map(str,sorted({node[3] for node in graph['nodes']})))+'.')
+            row.setdefault('source_refs',[]).append(dict(title='RCSR graph · Gavrog archive',
+                url='https://github.com/odf/gavrog/blob/master/src/org/gavrog/apps/systre/rcsr.arc'))
     return rows

@@ -17,6 +17,7 @@ LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "
                   "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
                   "nitrone":"Nitrone · C=N⁺(O⁻)"}
 TEMPLATES = [
+    {"id":"branched_4_3","label":"Tetrahedral + tritopic · connected circuits","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
     {"id":"sql_4_2","label":"Square · 4c + 2c","instances":8,"allow_pairs":[[4,2],[2,4]],"topology_label":"sql","description":"Four tetratopic corners joined by four linear linkers."},
@@ -180,6 +181,8 @@ def _assemble_template(components, linkage, instances, template_id):
     if template and template["allow_pairs"] and counts not in template["allow_pairs"]:
         raise ValueError(f"{template['label']} requires {template['allow_pairs']}; these monomers have {counts} reactive sites")
     inspection=[inspect_monomer(s) for s in (monomer_a,monomer_b)]
+    if template_id=="branched_4_3" and (linkage!="imine" or inspection[counts.index(4)]["geometry_hint"]!="tetrahedral"):
+        raise ValueError("The branched imine design requires a tetrahedral tetratopic monomer and a complementary tritopic monomer.")
     if template_id=="kgm_4_2" and (linkage!="imine" or not inspection[0]["kgm_dialdehyde"] or not inspection[1]["kgm_etta"]):
         raise ValueError("The Kagome drawing requires ETTA and a linear aromatic dialdehyde with imine linkages.")
     if template and template["topology_label"] and any(x["geometry_hint"]=="tetrahedral" for x in inspection):
@@ -206,6 +209,13 @@ def _assemble_template(components, linkage, instances, template_id):
                   "b":{"instance":items[(i+1)%n]["id"],"port":items[(i+1)%n]["incoming_port"]},"bond_order":rule["join_bond_order"]}
                  for i in range(n-1 if open_chain else n)]
     geometry={}
+    if template_id=="branched_4_3":
+        from .cofdraw_branched import branch_patch
+        from .cofdraw_mixed import circuit_geometry
+        mol,summary=branch_patch(components,1)
+        geometry=circuit_geometry(components,mol,summary,"Rigid precursor fragments along a finite (3,4)-connected circuit")
+        selected=[dict(instance=item['id'],incoming_port=item['incoming_port'],outgoing_port=item['outgoing_port'],
+                       basis='Proposed bor incidence') for item in geometry['instances']]
     if template_id=="kgm_4_2":
         from .cofdraw_mixed import kagome_face_geometry
         geometry=kagome_face_geometry(components,'BCBCBC')

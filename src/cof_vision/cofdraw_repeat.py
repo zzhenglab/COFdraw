@@ -44,7 +44,7 @@ def _classification(recipe, source_rule=None, source_sha256=None):
     assembly = recipe.get('assembly')
     if not assembly:
         template = (recipe.get('selected_template') or {}).get('id')
-        if template in (*SHEET_TEMPLATES, 'chain_2_2','kgm_4_2'):
+        if template in (*SHEET_TEMPLATES, 'chain_2_2','kgm_4_2','branched_4_3'):
             return template
         raise ValueError('This local ring has no declared rule for sharing edges with adjacent pores.')
     kind = assembly.get('kind')
@@ -289,6 +289,14 @@ def _estimate(recipe, template, n, extent_mode='pores'):
     """Count actual fragment atoms and bounded faces before allocating a molecular graph."""
     components = recipe['components']
     counts = {k:Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for k,c in components.items()}
+    if template=='branched_4_3':
+        from .cofdraw_branched import circuit_layout,loop_edges
+        faces,_,_,degrees=circuit_layout()
+        faces=faces[:n]
+        by_degree={c['connectivity']:counts[k] for k,c in components.items()}
+        sites={v for face in faces for v in face}
+        edges=set.union(*(loop_edges(face) for face in faces))
+        return sum(by_degree[degrees[v]] for v in sites)-2*len(edges),len(faces)
     if template in (*SHEET_TEMPLATES,'self_square'):
         kinds,_,_,_,faces,nodes = _sheet_layout(recipe,template,n,extent_mode)
         shared = {frozenset((a,b)) for face in faces for a,b in zip(face,face[1:]+face[:1])}
@@ -324,6 +332,14 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
         if template in (*SHEET_TEMPLATES,'self_square'):
             _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
+        if template=='branched_4_3':
+            options['extents'][0]['label']='One circuit'
+            for n in (2,3):
+                atoms,_=_estimate(model,template,n)
+                if atoms<=MAX_ATOMS:
+                    options['extents'].append(dict(value=n,label=f'{n} connected circuits',pores=n,atoms=atoms))
+            options.update(template=template,available=len(options['extents'])>1,scope='Finite (3,4)-connected design')
+            return options
         if template=='kgm_4_2':
             options['extents'][0]['label']='One hexagon'
             atoms,_=_estimate(model,template,1,'triangle')
@@ -377,6 +393,11 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
         if _estimate(recipe,template,repeats)[0] > MAX_ATOMS:
             raise ValueError('This chain exceeds the 2,400-atom drawing limit.')
         mol,details = _chain(recipe,repeats)
+    elif template == 'branched_4_3':
+        from .cofdraw_branched import branch_patch
+        if extent_mode!='pores' or repeats not in (2,3) or _estimate(design,template,repeats)[0]>MAX_ATOMS:
+            raise ValueError('Choose an available two- or three-circuit extent.')
+        mol,details=branch_patch(design['components'],repeats)
     elif template == 'self_kagome':
         from .cofdraw_self_kagome import kagome_patch
         mol,details = kagome_patch(recipe,repeats,triad=extent_mode=='triad',star=extent_mode=='star')

@@ -186,9 +186,15 @@ function constructionCheck(){
 }
 const recentTreatments=[];
 let liveDrawingTimer, selectionRevision=0;
+let standardPair='';
+function currentPairKey(){return JSON.stringify(['a','b'].map(k=>$('smiles-'+k).value.trim()));}
+window.addEventListener('cofdraw:prefer-standard',()=>{standardPair=currentPairKey();});
 function queueDrawing(){
   clearTimeout(liveDrawingTimer);
-  if(window.COFdrawCrystalDesign?.active)return;
+  if(window.COFdrawCrystalDesign?.active){
+    if(window.COFdrawCrystalDesign.active==='custom-dia')window.COFdrawCrystalDesign.inputsChanged();
+    return;
+  }
   const pair=JSON.stringify([$("smiles-a").value,$("smiles-b").value]);
   liveDrawingTimer=setTimeout(()=>{
     if(pair!==JSON.stringify([$("smiles-a").value,$("smiles-b").value])||state.jsonPending||sourceMode())return;
@@ -358,13 +364,13 @@ function sync() {
   const eligible=!multi()&&!crystal?.active&&periodicLinkage(checkedMonomer('a'),checkedMonomer('b'));
   const periodic=$('build-periodic-from-pair');
   const matched=!multi()&&!crystal?.active&&matchedCrystalStarter(checkedMonomer('a'),checkedMonomer('b'));
-  const ref=matched?.starter?.kind==='reference'&&(state.autoChemistry||$('linkage').value===matched.starter.linkage);
+  const ref=!eligible&&matched?.starter?.kind==='reference'&&(state.autoChemistry||$('linkage').value===matched.starter.linkage);
   periodic.hidden=!eligible&&!ref;periodic.disabled=blocked;periodic.dataset.linkage=eligible||'';
   periodic.dataset.reference=ref?matched.id:'';
   periodic.dataset.net=matched?.starter?.kind==='generated'?matched.starter.net:'dia';
   periodic.textContent=ref?'View '+matched.starter.net+' reference · '+matched.starter.common_name:
     matched?.starter?.kind==='generated'?'Build '+matched.starter.net+' design · '+matched.starter.common_name+' precursors':'Build a 3D framework from this pair';
-  if((eligible||ref)&&!state.recipe)$('build').disabled=blocked;
+  if((eligible||ref)&&(!state.recipe||state.inputsDirty&&state.autoChemistry))$('build').disabled=blocked;
   if(crystal?.active){
     $('build').disabled=blocked||!$('smiles-a').value.trim()||!$('smiles-b').value.trim();
     $('build').textContent='Create drawing →';$('build').title='Draw the selected framework.';
@@ -530,7 +536,7 @@ async function render(){
 $("build").addEventListener("click",async()=>{
   clearTimeout(liveDrawingTimer);
   if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.build();return;}
-  if(!state.recipe&&!multi()&&!$('build-periodic-from-pair').hidden){$('build-periodic-from-pair').click();return;}
+  if(currentPairKey()!==standardPair&&(!state.recipe||state.inputsDirty&&state.autoChemistry)&&!multi()&&!$('build-periodic-from-pair').hidden){$('build-periodic-from-pair').click();return;}
   if(state.busy)return;state.busy=true;sync();
   const revision=selectionRevision;
   try{
@@ -855,6 +861,21 @@ $("new-monomer").addEventListener("click",()=>openSketch("a",{smiles:"",full_nam
 function drawTopologies(){
   const search=$("topology-search").value.toLowerCase().trim(),rows=(state.library?.topology_catalog||[]).filter(row=>!search||JSON.stringify([row.id,row.label,row.description,row.dimension,row.net_code,row.point_group,row.kind]).toLowerCase().includes(search));
   const list=$("topology-list");list.replaceChildren();for(const row of rows){const card=document.createElement("article");card.className="topology-card";const title=document.createElement("h3"),description=document.createElement("p"),semantics=document.createElement("small"),badge=document.createElement("span");title.textContent=row.label||row.id;description.textContent=row.description||row.qualification||"";const pairs=row.connectivity||row.reactive_site_counts||[],symmetry=row.point_group||row.node_symmetry||[];semantics.textContent=[row.dimension?`Dimension: ${row.dimension}`:null,pairs.length?`Reactive-site examples: ${pairs.map(pair=>Array.isArray(pair)?pair.join(" + "):pair).join("; ")}`:null,symmetry.length?`Node symmetry / geometry examples: ${Array.isArray(symmetry)?symmetry.join(", "):symmetry}`:null].filter(Boolean).join(". ");badge.className="reference-badge";badge.textContent=row.construction_supported?"Related explicit template available":"Reference only · no automatic construction";card.append(title,description,semantics,badge);
+    if(row.graph){
+      const {nodes,edges,dimension}=row.graph,graph=document.createElementNS(NS,'svg');
+      graph.setAttribute('viewBox','0 0 200 116');graph.setAttribute('role','img');
+      graph.setAttribute('aria-label',row.id+' periodic connectivity graph');
+      graph.style.cssText='width:100%;height:112px;display:block';
+      const mark=(name,attrs)=>{const element=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))element.setAttribute(k,v);graph.append(element);};
+      for(const [a,b] of edges){
+        const [x1,y1,d1]=nodes[a],[x2,y2,d2]=nodes[b];
+        mark('line',{x1,y1,x2,y2,stroke:'#31545c','stroke-width':1.4,opacity:dimension===2?1:.25+.375*(d1+d2)});
+      }
+      for(const [x,y,d,degree] of [...nodes].sort((a,b)=>a[2]-b[2])){
+        mark('circle',{cx:x,cy:y,r:2.4,fill:degree===3?'#b74e40':degree===4?'#176b76':'#78639a',opacity:dimension===2?1:.4+.6*d});
+      }
+      title.after(graph);
+    }
     const limits=document.createElement("small");limits.textContent=Array.isArray(row.limitations)?row.limitations.join(" "):row.limitations||row.qualification||"";card.append(limits);
     for(const ref of row.source_refs||[]){try{const url=new URL(ref.url);if(!["http:","https:"].includes(url.protocol))continue;const a=document.createElement("a");a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";a.textContent=ref.title||"Primary source";card.append(a);}catch{}}
     list.append(card);

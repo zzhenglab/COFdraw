@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.3
+
+- Editing a tetrahedral precursor pair can switch the active drawing between a diamond design and connected 3 + 4 circuits. The latter unfold six- and eight-node paths of a proposed bor net using the selected monomers.
+- The topology browser includes periodic graph previews from the Gavrog RCSR archive.
+- Folded-chair drawings now reserve space between independent tetrahedral junctions.
+
 ## 0.10.2
 
 - Open tetraaryl 3D frameworks on a four-arm junction. Drawing extent expands to connected chairs. Geometry adjusts the junction spread or the circuit camera and saves the projection with the project.

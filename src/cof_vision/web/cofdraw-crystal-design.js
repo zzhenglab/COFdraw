@@ -435,7 +435,7 @@
       await drawView();
     }catch(err){if(token===poreRequest)$('drawing-summary').textContent=err.message;}
   },true);
-  function returnToPatch(){leave();studio.queueDrawing();}
+  function returnToPatch(){window.dispatchEvent(new Event('cofdraw:prefer-standard'));leave();studio.queueDrawing();}
   $('leave-crystal-design').addEventListener('click',returnToPatch);
   $('build-periodic-from-pair').onclick=()=>{
     const button=$('build-periodic-from-pair');

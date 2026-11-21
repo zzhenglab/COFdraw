@@ -135,6 +135,11 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
             turns.extend((a,center,b) for i,a in enumerate(adjacent) for b in adjacent[:i])
         left,mid,right=np.array(turns).T
         angle_weight=.8*np.median(spans)
+        # Two junctions from different chair faces can project to almost the
+        # same point even when all incident arm lengths and angles look good.
+        pairs=[(i,j) for i in range(len(keys)) for j in range(i)
+               if tuple(sorted((keys[i],keys[j]))) not in layouts]
+        clearance=min(15.,.78*np.median(spans))
         for _ in range(36):
             delta=xy[ends[:,0]]-xy[ends[:,1]]
             lengths=np.linalg.norm(delta,axis=1)
@@ -159,7 +164,17 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
             aj[turn_ids,right]=dr
             aj[turn_ids,mid]=-dl-dr
             jac=np.vstack([jac,aj.reshape(len(turns),-1)])
-            gradient=jac.T@np.r_[lengths-spans,angle]+tether**2*(xy-original).ravel()
+            residual=np.r_[lengths-spans,angle]
+            for i,j in pairs:
+                ray=xy[i]-xy[j]
+                distance=np.linalg.norm(ray)
+                if distance>=clearance:continue
+                direction=ray/distance if distance>1e-8 else np.array([1.,0.])
+                row=np.zeros_like(xy)
+                row[i],row[j]=2*direction,-2*direction
+                jac=np.vstack((jac,row.ravel()))
+                residual=np.append(residual,2*(distance-clearance))
+            gradient=jac.T@residual+tether**2*(xy-original).ravel()
             step=np.linalg.solve(jac.T@jac+(tether**2+.1)*identity,gradient).reshape(-1,2)
             xy-=step
             if np.max(np.abs(step))<1e-5:break

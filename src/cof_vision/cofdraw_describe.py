@@ -518,6 +518,9 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         candidates = [row for row in catalog["templates"] if row["id"] in GEOMETRY_TEMPLATES[geometries[0]] and (not row.get("allow_pairs") or counts in row["allow_pairs"])]
     if linkage!='imine' or not (a.get('kgm_dialdehyde') and b.get('kgm_etta')):
         candidates = [row for row in candidates if row['id']!='kgm_4_2']
+    if linkage!='imine' or not any(count==4 and row.get('geometry_hint')=='tetrahedral'
+                                    for count,row in zip(counts,(a,b))):
+        candidates = [row for row in candidates if row['id']!='branched_4_3']
     if instance_counts:
         candidates = [row for row in candidates if row["instances"] == instance_counts[0]]
     if not template_id:

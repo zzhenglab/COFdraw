@@ -41,6 +41,7 @@
     return Number.isInteger(count) && count >= 0 ? count : null;
   }
   function templateCompatibility(template, linkage, monomers, library) {
+    if(template.id==='branched_4_3'&&![monomers.a,monomers.b].some(m=>m?.geometry_hint==='tetrahedral'))return {compatible:false,reason:'Requires a tetrahedral four-connected monomer.'};
     if (template.supported === false) return {compatible: false, reason: template.limits || "Template unavailable."};
     if (Array.isArray(template.linkages) && !template.linkages.includes(linkage)) return {compatible: false, reason: "Not available for this linkage."};
     if (template.id==="kgm_4_2" && (!monomers.a?.kgm_dialdehyde || !monomers.b?.kgm_etta)) return {compatible:false,reason:"Kagome requires a linear aromatic dialdehyde and the ETTA tetraamine."};
@@ -130,7 +131,7 @@
     if(!chosen)return null;
     const raw=library.templates,templates=Array.isArray(raw)?raw:Object.values(raw||{});
     const eligible=templates.filter(template=>chosen.templates.includes(template.id));
-    const template=eligible.find(item=>item.id===preferred?.template_id)||eligible.find(item=>item.allow_pairs?.length)||eligible[0];
+      const template=eligible.find(item=>item.id===preferred?.template_id)||eligible.find(item=>item.id==='kgm_4_2')||eligible.find(item=>item.allow_pairs?.length)||eligible[0];
     return {...chosen,template_id:template?.id||null,choice_count:choices.length};
   }
   function startingCombinations(library) {
