@@ -349,20 +349,6 @@
     }catch(error){if(revision===balanceRevision)$('balance-status').textContent=error.message;}
     finally{if(revision===balanceRevision)$('calculate-balance').disabled=false;}
   });
-  $('tool-jump').addEventListener('change',event=>{
-    const name=event.target.value;event.target.value='';
-    if(name==='balance'){openBalance();return;}
-    if(name==='library'||name.startsWith('sketch-')){
-      window.COFdrawCrystalDesign?.leave();
-      $('mode-manual').click();
-      if(name==='library')$('open-monomer-library').click();
-      else document.querySelector('.sketch-open[data-block="'+name.slice(-1)+'"]').click();
-      return;
-    }
-    if(!name)return;
-    if($('science-dialog').hidden)$('open-science').click();
-    C.tab(name);
-    (name==='inspect'?$('science-inspect').querySelector('summary'):document.querySelector('[data-science-tab="'+name+'"]')).focus();
-  });
+
   syncModelState();
 })();

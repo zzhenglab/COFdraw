@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.1
+
+- Measure periodic cavity bounds on the drawing canvas. Tetrahedral chair projections now trace front and rear faces of a common cage, with a junction graph under Geometry.
+- Edit precursors and use Create drawing across dimensions. The tetrahedral builder also supports hypothetical 4H and 6H polytypes with specified stacking sequences.
+- Selecting monomer properties draws its conformer. Returning to the framework restores its structure. Pore surfaces start hidden.
+
 ## 0.10.0
 
 - Use the Framework canvas, rendering inspector and single Drawing extent menu for both planar and three-dimensional COFs.

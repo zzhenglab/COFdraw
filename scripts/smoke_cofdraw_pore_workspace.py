@@ -65,7 +65,7 @@ def main():
                 page.locator("#preset-b").select_option(second)
             assert rendered.value.ok
             with page.expect_response("**/api/drawing/science/build-periodic", timeout=90000) as model:
-                page.locator("#switch-space").click()
+                page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
             result = model.value.json()
             assert result.get("available"), result.get("reason") or result.get("detail")
             return result
@@ -82,7 +82,10 @@ def main():
         page.locator("#render-toggle").click()
         assert not panel.is_visible()
         page.locator("#render-toggle").click()
+        expect(page.locator("#pore-visible")).not_to_be_checked()
+        page.click("#map-pores")
         expect(page.locator("#pore-visible")).to_be_checked(timeout=120000)
+        page.click('[data-science-tab="model"]')
         assert page.evaluate("window.COFdrawPores.triangleCount > 0")
         assert page.evaluate("window.COFdrawPores.tileCount") == 8
         vertices = page.evaluate("""() => {
@@ -156,7 +159,7 @@ def main():
         assert all(float(row.locator("td").nth(1).inner_text())<=8 for row in rows)
         page.screenshot(path=str(args.output_dir/"low-angle-stacking.png"))
 
-        page.locator("#switch-space").click()
+        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         assert not panel.is_visible()
         drawer = page.locator("#appearance-options > summary")
         drawer.click()
@@ -164,21 +167,24 @@ def main():
         sheet = page.locator("#canvas-viewport").bounding_box()
         assert side["x"] >= sheet["x"] + sheet["width"] - 2, (side, sheet)
         drawer.click()
-        page.locator("#switch-space").click()
+        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         assert page.evaluate("COFdrawPores.structureHash") == signature
         page.locator('[data-science-tab="porosity"]').click()
         page.locator("#probe-radius").fill("2.1")
         assert page.evaluate("COFdrawPores.triangleCount") == 0
         assert not visible.is_checked()
-        page.locator("#switch-space").click()
+        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         result=draw_pair("tfppy","tapa")
         expect(page.locator("#viewer-title")).to_contain_text("COF-76")
         assert result["structure"]["provenance"]["kind"]=="reported_crystal"
+        expect(page.locator("#pore-visible")).not_to_be_checked()
+        page.click("#map-pores")
         expect(page.locator("#pore-visible")).to_be_checked(timeout=120000)
+        page.click('[data-science-tab="model"]')
         assert page.evaluate("COFdrawPores.triangleCount > 0")
         assert page.evaluate("COFdrawPores.structureHash")!=signature
         page.screenshot(path=str(args.output_dir/"cof-76-ribbon.png"))
-        page.locator("#switch-space").click()
+        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         result = draw_pair("cv_18fdac58ad343c87", "hth_s")
         assert len(result["structure"]["atoms"]) == 348
         assert result["cell_validation"]["short_contacts"] == 0
@@ -190,9 +196,9 @@ def main():
         with page.expect_response("**/api/drawing/science/model"):
             page.locator("#build-crystal").click()
         expect(page.locator("#viewer-provenance")).to_contain_text("Independent periodic model")
-        page.locator("#switch-space").click()
+        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         with page.expect_response("**/api/drawing/science/build-periodic"):
-            page.locator("#switch-space").click()
+            page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         expect(page.locator("#viewer-provenance")).to_contain_text("Hth")
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.locator("#science-dialog").evaluate("e => e.scrollWidth <= e.clientWidth + 1")

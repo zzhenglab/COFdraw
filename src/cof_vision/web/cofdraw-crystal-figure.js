@@ -255,7 +255,6 @@
     isFigure=active;sheet.hidden=!active;save.hidden=!active;
     $('model-view').classList.toggle('figure-active',active);
     toggle.textContent=active?'Rotate in 3D':'2D figure';toggle.setAttribute('aria-pressed',String(active));
-    if(!$('science-dialog').hidden)$('switch-space').textContent='2D drawing';
     if(active)paint();else viewer.draw();
   }
   function selectScene(){

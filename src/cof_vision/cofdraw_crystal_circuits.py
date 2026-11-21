@@ -139,6 +139,7 @@ def reference_framework(structure, edges, limit=4):
     while len(loops)<=limit:
         n=len(loops)
         patches[n]=dict(circuits=n,site_images=[[i,[x,y,z]] for i,x,y,z in sorted(site_images)],direction=direction)
+        patches[n]["junction_loops"]=[[(centers[i]+[x,y,z]).tolist() for i,x,y,z in loop] for loop in loops]
         if n==limit:break
         options={}
         for loop in loops:

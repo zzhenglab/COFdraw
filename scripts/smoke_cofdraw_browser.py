@@ -80,7 +80,7 @@ def main():
         assert page.locator('.canvas-panel .identity-summary').is_visible()
         library=page.request.get(f"{base_url}/api/drawing/library").json()
         page.wait_for_function("!document.getElementById('build').disabled")
-        page.locator('#tool-jump').select_option('balance')
+        page.locator('#open-balance').click()
         page.locator('#calculate-balance').click()
         page.get_by_text('Weigh block B',exact=True).wait_for()
         assert page.locator('#balance-results tbody tr,#balance-results tr').count()>=3

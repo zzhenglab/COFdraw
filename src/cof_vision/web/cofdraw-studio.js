@@ -7,6 +7,23 @@
   let revision=0, activeJob=null, origin=null, basePeriodic=null, hypothesis=null, drawingKey='', currentLayer=null, comparisonParent=null;
   const fmt=(x,d=2)=>Number.isFinite(x)?Number(x).toLocaleString(undefined,{maximumFractionDigits:d}):'—';
   const stackLabels={AA:'AA · aligned',AB:'AB · alternating',ABC:'ABC · three-step',slipped:'Slipped · progressive',twisted:'Twisted · rotated'};
+  let lastFramework=null,monomerTab=false;
+  function previewMonomer(){
+    invalidate('',false);
+    $('calculate-monomer').click();
+  }
+  window.addEventListener('cofdraw:science-tab',()=>{
+    const open=!$('science-monomer').hidden&&!$('science-dialog').hidden;
+    if(open===monomerTab)return;
+    monomerTab=open;
+    if(open){previewMonomer();return;}
+    invalidate('',false);
+    if(window.COFdrawCrystalDesign?.active)window.COFdrawCrystalDesign.showPeriodic();
+    else if(lastFramework?.key===signature()){
+      const {result,title,kind,parentLayer}=lastFramework;display(result,title,kind,parentLayer);
+    }else if(drawingReady())generateCurrentCell(true);
+  });
+  for(const id of ['descriptor-block','descriptor-conformers'])$(id).addEventListener('change',()=>{if(monomerTab)previewMonomer();});
   function status(message,error=false){$('science-status').textContent=message;$('science-status').classList.toggle('error',error);}
   function signature(){return JSON.stringify([S.state.sourceId,S.state.recipe,S.state.inputsDirty,S.state.jsonPending,$('smiles-a').value,$('smiles-b').value]);}
   function drawingName(){if(S.state.recipe?.assembly)return "Current design · "+Object.values(S.state.recipe.components).map(c=>c.label).join(" + ");return S.state.sourceId?`Source drawing · ${S.state.sourceMetadata?.label||S.state.recipe?.label||S.state.sourceId}`:`Current design · ${$('label-a').value||'A'} + ${$('label-b').value||'B'}`;}
@@ -37,10 +54,8 @@
     $('space-open').setAttribute('aria-pressed','false');
     $('science-dialog').hidden=!visible;
     document.querySelector('main.studio').hidden=visible;
-    $('switch-space').textContent=visible?'2D drawing':'3D workspace';
-    $('switch-space').setAttribute('aria-pressed',String(visible));
     window.scrollTo(0,0);
-    if(visible)requestAnimationFrame(()=>viewer.draw());
+    if(visible){$('pore-visible').checked=false;requestAnimationFrame(()=>viewer.draw());}
   }
   $('open-science').addEventListener('click',()=>{
     workspace(true);tab('model');
@@ -62,11 +77,7 @@
     }
     requestAnimationFrame(()=>viewer.draw());
   });
-  $('close-science').addEventListener('click',()=>{workspace(false);$('switch-space').focus();});
-  $('switch-space').addEventListener('click',()=>{
-    if($('science-dialog').hidden)$('open-science').click();
-    else $('close-science').click();
-  });
+  $('close-science').addEventListener('click',()=>{workspace(false);$('open-science').focus();});
   window.addEventListener('cofdraw:rendered',()=>{
     if(!$('science-dialog').hidden&&$('structure-source').value==='drawing'&&!origin&&!scienceBusy&&drawingReady())generateCurrentCell();
   });
@@ -78,6 +89,7 @@
   let automaticNetworkColor=false;
   $('viewer-color').addEventListener('change',()=>{automaticNetworkColor=false;});
   function display(result,title,kind='periodic',parentLayer=null){
+    if(kind!=='monomer')lastFramework={result,title,kind,parentLayer,key:signature()};
     if(result.structure?.provenance?.network_dimension===3&&$('viewer-color').value==='element'){
       $('viewer-color').value='network';automaticNetworkColor=true;
     }else if(automaticNetworkColor&&result.structure?.provenance?.network_dimension!==3){

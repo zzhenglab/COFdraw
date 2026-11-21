@@ -16,6 +16,9 @@ def design_record(feeds, mode, linkage, net=None, count=1, **settings):
     smiles = [canonical(row['smiles']) for row in feeds]
     sorted_smiles = sorted(smiles)
     options = [('mode', mode), ('link', linkage), ('order', ','.join(str(sorted_smiles.index(s)) for s in smiles))]
+    if mode=='crystal' and net in ('4h','6h'):
+        settings['polytype']=net
+        net='unk'
     options.extend((k, v) for k, v in settings.items() if v)
     options.extend(('label', str(row.get('label') or chr(65+i))[:100]) for i, row in enumerate(feeds))
     compact = '.'.join(sorted_smiles) + f" COFex.{net or 'unk'}.cat{0 if count == 1 else count}"
@@ -90,7 +93,7 @@ def parse_record(text, catalog_rows):
         if not comment.startswith('COFdraw/1?'):
             raise ValueError('Unsupported COFdraw exchange version.')
         fields = parse_qs(comment.split('?',1)[1], strict_parsing=True, max_num_fields=12)
-        allowed = {'mode','order','label','link','template','face','sequence','layout'}
+        allowed = {'mode','order','label','link','template','face','sequence','layout','polytype'}
         if (fields.keys() - allowed or any(len(v) != 1 for k,v in fields.items() if k != 'label')
                 or not {'mode','order','link'}.issubset(fields)):
             raise ValueError('Invalid or repeated COFdraw exchange fields.')
@@ -111,11 +114,15 @@ def parse_record(text, catalog_rows):
         if s in wanted and s not in relevant:
             relevant[s] = row
     labels = settings.get('labels') or [relevant.get(s, {}).get('abbreviation') or chr(65+i) for i,s in enumerate(smiles)]
-    mode = 'assembly' if len(smiles) != 2 else 'crystal' if net in ('dia','lon') else 'binary'
+    if 'polytype' in settings:
+        if net!='unk' or settings['polytype'] not in ('4h','6h'):
+            raise ValueError('Invalid tetrahedral stacking sequence.')
+        net=settings['polytype']
+    mode = 'assembly' if len(smiles) != 2 else 'crystal' if net in ('dia','lon','4h','6h') else 'binary'
     if settings.get('mode', mode) != mode:
         raise ValueError('Builder mode disagrees with the COFex net or precursor count.')
     specific = set(settings) - {'mode','order','link','labels'}
-    allowed = {'binary':{'template'},'assembly':{'face'} if len(smiles)==1 else {'sequence','layout'},'crystal':set()}
+    allowed = {'binary':{'template'},'assembly':{'face'} if len(smiles)==1 else {'sequence','layout'},'crystal':{'polytype'}}
     if specific - allowed[mode]:
         raise ValueError('The COFdraw exchange fields disagree with the precursor count or net.')
     if mode == 'assembly':

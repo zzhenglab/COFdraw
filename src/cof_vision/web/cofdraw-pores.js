@@ -160,7 +160,6 @@
     $('pore-visible').checked=false;$('pore-visible').disabled=true;
     $('map-status').textContent=periodic?'Calculate the surface for this cell.':'Choose or generate a periodic model to map its pores.';
     C.viewer.draw();
-    if(periodic&&changed)calculate().catch(()=>{});
   }
   window.addEventListener('cofdraw:structure',reset);
   window.addEventListener('cofdraw:display-cells',update);

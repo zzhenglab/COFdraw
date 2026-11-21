@@ -97,9 +97,31 @@ def test_generated_circuit_preserves_linker_substitution_and_block_views():
         prior=sites
         if n==1:continue
         assert len(patch["rings"])==n
+        if n==2:
+            import numpy as np
+            normals=[]
+            for face in patch["rings"]:
+                xyz=np.array([(np.array(model["atoms"][i]["fractional"])+t)@model["cell"] for i,*t in face["backbone"]])
+                normals.append(np.linalg.svd(xyz-xyz.mean(0))[2][-1])
+            assert abs(normals[0]@normals[1])<.9
         loops=[{tuple(sorted((a,b))) for a,b in zip(r["backbone"],r["backbone"][1:]+r["backbone"][:1])} for r in patch["rings"]]
         assert all(any(bonds & earlier for earlier in loops[:i]) for i,bonds in enumerate(loops) if i)
         figure=ET.fromstring(chemical_drawing(model,edges,circuit=patch,scheme=True))
         assert all(a.get('data-block') in ('','A','B') for a in figure.iter() if 'data-depth' in a.attrib)
         expected_f=sum(model["atoms"][i]["element"]=="F" for i,_ in sites)
         assert sum(t.text=="F" for t in figure.findall(".//s:text",ns))==expected_f
+
+
+@pytest.mark.parametrize("net,atoms", [("4h",584),("6h",876)])
+def test_tetrahedral_polytype_build_and_exchange(net,atoms):
+    from cof_vision.cofdraw_dia import build_dia
+    from cof_vision.cofdraw_cofex import parse_record
+    amine="Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+    model,audit=build_dia(amine,"O=Cc1ccc(C=O)cc1",topology=net)
+    assert len(model["atoms"])==atoms
+    assert audit["missing_bonds"]==audit["extra_bonds"]==0
+    assert audit["junction_coordination_sequence"][:2]==[4,12]
+    record=model["provenance"]["drawing_cofex"]
+    assert record["compact"].endswith("COFex.unk.cat0")
+    parsed=parse_record(record["text"],[])
+    assert parsed[0]["crystal_project"]["topology"]==net

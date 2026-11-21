@@ -17,12 +17,29 @@ EDGES = [(0,1,(0,0,0)), (2,3,(0,0,0)),
          (2,1,(0,0,0)), (2,1,(1,0,0)), (2,1,(0,1,0))]
 
 
-def _roll_states(edge, ends, neighbours, base, cell):
+STACKS = {"4h":"ABAC","6h":"ABCACB"}
+
+def polytype_graph(stack):
+    layers = len(stack)
+    hubs = np.array([[x,x,(i+d)/layers] for i,letter in enumerate(stack)
+                     for x in ["ABC".index(letter)/3] for d in (0,.75)])
+    scale = np.array([[math.sqrt(8/3),0,0],[math.sqrt(2/3),math.sqrt(2),0],[0,0,4*layers/3]])
+    edges=[]
+    for a in range(0,len(hubs),2):
+        for b in range(1,len(hubs),2):
+            for shift in np.ndindex(3,3,3):
+                image=np.asarray(shift)-1
+                if abs(np.linalg.norm((hubs[b]+image-hubs[a])@scale)-1)<1e-8:
+                    edges.append((a,b,tuple(map(int,image))))
+    return hubs,edges
+
+
+def _roll_states(edge, ends, neighbours, base, cell, hubs, edges):
     """Score pairs of bridge rolls on each actual junction in the periodic graph."""
     axis = _basis(base[ends[1]])
     positions, at_hub = [], defaultdict(list)
-    for i,(a,b,t) in enumerate(EDGES):
-        target = (HUBS[b]+t-HUBS[a]) @ cell
+    for i,(a,b,t) in enumerate(edges):
+        target = (hubs[b]+t-hubs[a]) @ cell
         dest = _basis(target)
         states = []
         for phi in np.arange(18)*math.pi/9:
@@ -52,13 +69,14 @@ def _roll_states(edge, ends, neighbours, base, cell):
     return positions,costs,angles
 
 
-def lon_candidates(edge, ends, neighbours):
+def lon_candidates(edge, ends, neighbours, topology="lon"):
+    hubs,edges=(HUBS,EDGES) if topology=="lon" else polytype_graph(STACKS[topology])
     xyz = edge.GetConformer().GetPositions()
     base = xyz-xyz[ends[0]]
     length = np.linalg.norm(base[ends[1]])
     a = math.sqrt(8/3)*length
-    cell = np.array([[a,0,0],[a/2,a*math.sqrt(3)/2,0],[0,0,8*length/3]])
-    positions,costs,angles = _roll_states(edge,ends,neighbours,base,cell)
+    cell = np.array([[a,0,0],[a/2,a*math.sqrt(3)/2,0],[0,0,2*len(hubs)*length/3]])
+    positions,costs,angles = _roll_states(edge,ends,neighbours,base,cell,hubs,edges)
     adjacency = defaultdict(list)
     for (i,j), cost in costs.items():
         adjacency[i].append((j,cost))
@@ -66,7 +84,7 @@ def lon_candidates(edge, ends, neighbours):
     rng = np.random.default_rng(7013)
     trials = {}
     for _ in range(40):
-        rolls = rng.integers(0,len(positions[0]),size=len(EDGES))
+        rolls = rng.integers(0,len(positions[0]),size=len(edges))
         for _ in range(12):
             prev = rolls.copy()
             for i in rng.permutation(len(rolls)):
@@ -78,7 +96,7 @@ def lon_candidates(edge, ends, neighbours):
             score = sum(c[rolls[i], rolls[j]] for (i,j),c in costs.items())
             trials[tuple(rolls)] = (score,angle)
     for rolls, (_,angle) in sorted(trials.items(),key=lambda t:t[1])[:6]:
-        centers = HUBS@cell
-        copies = [(a,b,centers[a]+positions[i][rolls[i]]) for i,(a,b,_) in enumerate(EDGES)]
+        centers = hubs@cell
+        copies = [(a,b,centers[a]+positions[i][rolls[i]]) for i,(a,b,_) in enumerate(edges)]
         structure,bonds = _assemble_edges(edge, ends, cell, centers, copies)
         yield angle,structure,bonds

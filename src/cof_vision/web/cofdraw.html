@@ -20,9 +20,7 @@
   <header class="appbar">
     <a class="brand" href="./cofdraw.html" aria-label="COFdraw home"><img class="brand-logo" src="./cofdraw-logo.png" alt="" width="56" height="48"><span>COF<span class="light">draw</span><small>CHEMICAL DRAWING STUDIO</small></span></a>
     <div class="app-state"><span id="engine-dot" class="status-dot"></span><span id="engine-status">Connecting to local engine</span></div>
-    <div class="file-actions"><button id="space-open" class="button outline" aria-controls="space-workspace" aria-pressed="false">Explore COF chemical space</button><button id="switch-space" class="button outline" aria-controls="science-dialog" aria-pressed="false">3D workspace</button><select id="tool-jump" aria-label="Open a tool">
-      <option value="">Tools…</option><optgroup label="Building blocks"><option value="library">Monomer library</option><option value="sketch-a">Sketch block A</option><option value="sketch-b">Sketch block B</option><option value="balance">Reagent balance</option><option value="monomer">Monomer descriptors</option></optgroup>
-      <optgroup label="Structure and characterization"><option value="model">3D structure</option><option value="inspect">Structure check</option><option value="pxrd">Powder diffraction</option><option value="porosity">Pore geometry</option><option value="adsorption">Gas adsorption</option><option value="bet">BET fit</option></optgroup></select><button id="open-project" class="button quiet">Open project</button><button id="save-project" class="button outline" disabled>Save project</button><button id="help-button" class="icon-button" aria-label="Drawing help">?</button></div>
+    <div class="file-actions"><button id="space-open" class="button outline" aria-controls="space-workspace" aria-pressed="false">Explore COF chemical space</button><button id="open-project" class="button quiet">Open project</button><button id="save-project" class="button outline" disabled>Save project</button><button id="help-button" class="icon-button" aria-label="Drawing help">?</button></div>
     <input id="project-file" type="file" accept=".json,application/json" hidden>
   </header>
   <dialog id="cofex-dialog" class="help-dialog" aria-labelledby="cofex-title">
@@ -120,10 +118,8 @@
       <div class="combination-mark" aria-hidden="true">+</div>
       <article class="monomer-card" id="card-b"><div class="card-heading"><span class="block-badge b">B</span><input id="label-b" aria-label="Building block B label" value="TAPB" maxlength="100"><button class="text-button library-open" data-block="b">Library</button><button class="text-button sketch-open" data-block="b">Draw / edit</button></div><button class="monomer-preview sketch-open" data-block="b" aria-label="Open building block B in chemical editor"><img id="preview-b" alt="Building block B structure" hidden><span id="preview-label-b">Monomer preview</span></button><label class="field compact"><span>Choose a monomer</span><select id="preset-b"><option value="">Custom / pasted structure</option></select></label><label class="field compact"><span>SMILES</span><textarea id="smiles-b" rows="2" spellcheck="false" maxlength="4000">Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1</textarea></label><div class="reactivity-inspector" id="inspector-b" aria-live="polite"><span class="role-caption" id="role-b"></span><div class="group-chips" id="groups-b"></div><p id="compatibility-b">Update the preview to inspect reactive groups.</p></div><div class="monomer-meta"><span id="formula-b">Primary arylamine</span><button class="text-button validate-monomer" data-block="b">Update preview</button></div></article>
       <div class="chemistry-options"><label class="field" id="template-field" hidden><span id="template-mode-label">Connectivity &middot; Auto</span><select id="template"></select></label><label class="field" id="pore-field"><span>Chosen pore</span><select id="pore"><option value="6">3 A + 3 B</option><option value="12">6 A + 6 B</option></select></label></div><p id="template-description" class="small-note"></p><button id="open-topology-library" class="text-button" disabled>Browse topology references</button><p class="template-scope">A chosen finite-patch template does not identify a periodic net or crystal structure.</p>
-      <button id="open-balance" type="button" class="text-button">Reagent balance…</button><button id="build" class="button primary full" disabled>Create drawing <span aria-hidden="true">→</span></button><p id="chemistry-note" class="small-note">The pore sequence is an explicit design choice. It does not assign a periodic topology.</p>
-      </div>
       <section id="crystal-design-controls" hidden>
-        <label class="field"><span>Net for a new design</span><select id="reticular-net"><option value="dia">Diamond · dia</option><option value="lon">Hexagonal diamond · lon</option></select></label>
+        <label class="field"><span>Connectivity</span><select id="reticular-net"><option value="dia">Diamond · dia</option><option value="lon">Hexagonal diamond · lon</option><option value="4h">Tetrahedral polytype · 4H (ABAC)</option><option value="6h">Tetrahedral polytype · 6H (ABCACB)</option></select></label>
         <label class="field"><span>Linkage for a new design</span><select id="dia-linkage"><option value="imine">Imine</option><option value="secondary_amine">Reduced imine</option><option value="acylhydrazone">Acylhydrazone</option></select></label>
         <label class="field"><span>Networks in a new design</span><select id="dia-net-count"><option value="1">1 · single net</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select></label>
         <label class="field"><span>Linker and periodic model</span><select id="crystal-linker"></select></label>
@@ -131,6 +127,9 @@
         <button class="text-button" id="compare-crystal-reference" type="button" hidden>Compare reference CIF in 3D</button>
         <button class="text-button" id="leave-crystal-design" type="button">Back to standard drawing</button>
       </section>
+      <button id="open-balance" type="button" class="text-button">Reagent balance…</button><button id="build" class="button primary full" disabled>Create drawing <span aria-hidden="true">→</span></button><p id="chemistry-note" class="small-note">The pore sequence is an explicit design choice. It does not assign a periodic topology.</p>
+      </div>
+
       </section>
     </aside>
     <section class="canvas-panel" aria-labelledby="canvas-title">
@@ -170,7 +169,7 @@
       </section>
       <p id="export-note" class="small-note" role="status" hidden></p>
       <details id="geometry-options" class="geometry-options">
-        <summary>Geometry</summary>
+        <summary>Geometry</summary><svg id="crystal-layout" viewBox="0 0 320 180" role="img" aria-label="Projected framework junctions and their connections"></svg>
         <div class="workspace-tools geometry-tools"><button id="edit-geometry" class="button outline" aria-pressed="false">Move / adjust</button><button id="render-geometry" class="button primary" hidden>Render changes</button><button id="clean-geometry" class="button outline">Clean bond geometry</button><button id="undo-geometry" class="button quiet" disabled>Undo layout</button></div>
       <details class="layout-details" id="layout-details"><summary>Edit building-block positions and connections</summary><p class="small-note">Drag a block or adjust its ports. These are finite-patch connections, not a crystal model.</p><svg id="layout-canvas" viewBox="0 0 640 300" aria-label="Building-block positions" role="img"></svg><div class="table-scroll"><table><thead><tr><th>Block</th><th>x</th><th>y</th><th>In port</th><th>Out port</th><th>Reflect</th></tr></thead><tbody id="layout-rows"></tbody></table></div><button id="render-changes" class="button primary" disabled>Render changes</button></details>
       </details>

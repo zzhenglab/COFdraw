@@ -11,12 +11,15 @@
   let id=null, edit=null, revision=0, referenceRevision=0, report=null, visible=null, timer, failure='';
   let preparedCells=null, preferredView='Framework drawing',count=1,job=0,patchStyle=null,scope='';
   const cache=new Map();
+  let poreText='', poreRequest=0;
   const styles=[
     ['reticular_depth','Depth fade · ink and ring wash','layered','Farther bonds fade with their depth in the crystal.'],
     ['reticular_blocks','Depth fade · two building blocks','layered','Blue and amber distinguish the reacted precursors.'],
     ['standard','Standard chemical drawing','chemical','Conventional chemical bonds and continuation marks.'],
     ['red_blue','Colored building blocks','chemical','Trace each assigned precursor with its own ink.'],
     ['ring_fill','Ring highlights','chemical','Shade molecular rings beneath the bond-line drawing.'],
+    ['element_compact','Colored atoms · compact labels','chemical','Color heteroatoms and omit inferable hydrogen labels.'],
+    ['depth_ink','Front and back ink','layered','Use the first palette color for near bonds and the second for rear bonds.'],
     ['bold_color','Bold chemical drawing','chemical','Emphasize bonds and heteroatom labels.']
   ].map(([id,label,category,description])=>({id,label,category,description,preview_kind:id}));
   let restoredReference=false, comparing=false;
@@ -29,6 +32,7 @@
     window.dispatchEvent(new Event('cofdraw:crystalviewclear'));
   }
   function clearPicture(){
+    poreText='';poreRequest++;$('crystal-layout').replaceChildren();
     job++;report=null;preparedCells=null;cache.clear();comparing=false;clearImage();
     $('crystal-drawing-view').replaceChildren();$('representation-note').hidden=true;
   }
@@ -96,31 +100,31 @@
     const svg=new DOMParser().parseFromString(text,'image/svg+xml').documentElement;
     const {style,styleOptions:opt,library}=studio.state;
     const colors=opt.custom_palette||library?.style_controls?.palette_colors?.[opt.palette]||['#2768b0','#bd741e'];
-    const depthFade=style.startsWith('reticular_'), wash=depthFade||style==='ring_fill';
+    const depthFade=style.startsWith('reticular_')||style==='depth_ink', wash=depthFade||style==='ring_fill';
     const blockInk=['reticular_blocks','red_blue','bold_color'].includes(style);
     const elementInk={jewel:{N:'#5944a6',O:'#c64059',F:'#10857d',S:'#ab7213'},conventional:{N:'#245bd1',O:'#d82c2c',F:'#268a4b',S:'#b18d0c'},deep_ink:{N:'#244487',O:'#ad3540',F:'#207458',S:'#946c09'}}[opt.element_scheme]||{};
     if(wash)svg.querySelectorAll('[data-ring-washes]').forEach(g=>g.removeAttribute('display'));
     const parentWidth=Number(svg.querySelector('g[stroke-width]')?.getAttribute('stroke-width'))||1.65;
     for(const mark of svg.querySelectorAll('[data-depth]')){
-      const block=mark.dataset.block, ink=block==='A'?colors[0]:block==='B'?colors[1]||colors[0]:null;
-      const visible=depthFade?.14+.86*Number(mark.dataset.depth)**.85:1;
+      const block=mark.dataset.block, ink=style==='depth_ink'?colors[Number(mark.dataset.depth)<.48?1:0]:block==='A'?colors[0]:block==='B'?colors[1]||colors[0]:null;
+      const visible=depthFade?.19+.81/(1+Math.exp(-9*(Number(mark.dataset.depth)-.48))):1;
       if(mark.localName==='polygon'){
-        mark.setAttribute('fill',style==='reticular_depth'?'#abbad8':ink||'#94aaca');
+        mark.setAttribute('fill',ink&&style!=='reticular_depth'?ink:opt.palette||opt.custom_palette?colors[0]:'#abbad8');
         mark.setAttribute('opacity',((opt.fill_opacity??.35)*visible).toFixed(3));
       }else if(mark.localName==='g'){
         mark.setAttribute('opacity',visible.toFixed(3));
-        if(blockInk&&ink)mark.setAttribute('stroke',ink);
+        if((blockInk||style==='depth_ink')&&ink)mark.setAttribute('stroke',ink);
         mark.setAttribute('stroke-width',parentWidth*(opt.bond_scale||1)*(style==='bold_color'?1.65:1));
       }else if(mark.localName==='path'){
         mark.setAttribute('stroke-opacity',visible.toFixed(3));
         mark.setAttribute('stroke-width',Number(mark.getAttribute('stroke-width'))*(opt.bond_scale||1)*(style==='bold_color'?1.65:1));
-        if(blockInk&&ink)mark.setAttribute('stroke',ink);
+        if((blockInk||style==='depth_ink')&&ink)mark.setAttribute('stroke',ink);
         else if(elementInk[mark.dataset.element])mark.setAttribute('stroke',elementInk[mark.dataset.element]);
       }else if(mark.localName==='text'){
         mark.setAttribute('opacity',visible.toFixed(3));
         if(opt.font_family)mark.setAttribute('font-family',opt.font_family);
         if(opt.font_scale)mark.setAttribute('font-size',opt.font_scale*Number(mark.getAttribute('font-size')||mark.parentNode.getAttribute('font-size')||14));
-        if(opt.hydrogen_labels==='compact')mark.textContent=mark.textContent.replace(/^(N|O|S)H$/,'$1');
+        if((opt.hydrogen_labels||(style==='element_compact'?'compact':'show'))==='compact')mark.textContent=mark.textContent.replace(/^(N|O|S)H$/,'$1');
         const color=elementInk[mark.textContent[0]];
         if(color)mark.setAttribute('fill',color);
       }
@@ -131,7 +135,35 @@
     }else if(!svg.querySelector('rect[data-paper]')){
       const bg=document.createElementNS(svg.namespaceURI,'rect');bg.setAttribute('width','100%');bg.setAttribute('height','100%');bg.setAttribute('fill','white');svg.prepend(bg);
     }
+    if(poreText){
+      const box=svg.viewBox.baseVal,h=box.height,w=box.width,strip=Math.max(30,w*.057);
+      const label=document.createElementNS(svg.namespaceURI,'text');
+      label.setAttribute('x',w/2);label.setAttribute('y',h+strip*.68);label.setAttribute('text-anchor','middle');
+      label.setAttribute('font-size',strip*.39);label.setAttribute('font-family','Arial,sans-serif');label.setAttribute('fill','#205558');label.textContent=poreText;
+      svg.append(label);svg.setAttribute('viewBox','0 0 '+w+' '+(h+strip));svg.setAttribute('height',h+strip);
+    }
+    const box=svg.viewBox.baseVal;
+    if(box.width&&box.height){svg.setAttribute('width',box.width);svg.setAttribute('height',box.height);}
     return new XMLSerializer().serializeToString(svg);
+  }
+  function drawGeometry(source){
+    const svg=$('crystal-layout');svg.replaceChildren();
+    if(!source.junction_loops?.length)return;
+    const n=source.direction,axis=Math.abs(n[2])<.85?[0,0,1]:[1,0,0];
+    const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+    const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+    const u=cross(axis,n),v=cross(n,u),cell=report.structure.cell;
+    const loops=source.junction_loops.map(loop=>loop.map(f=>{
+      const xyz=n.map((_,i)=>f.reduce((s,t,j)=>s+t*cell[j][i],0));
+      return [dot(xyz,u),-dot(xyz,v),dot(xyz,n)];
+    }));
+    const points=loops.flat(),bounds=[0,1,2].map(i=>[Math.min(...points.map(p=>p[i])),Math.max(...points.map(p=>p[i]))]);
+    const scale=Math.min(270/(bounds[0][1]-bounds[0][0]||1),150/(bounds[1][1]-bounds[1][0]||1));
+    const pos=p=>[160+scale*(p[0]-(bounds[0][0]+bounds[0][1])/2),90+scale*(p[1]-(bounds[1][0]+bounds[1][1])/2)];
+    function add(tag,attrs){const el=document.createElementNS(svg.namespaceURI,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);svg.append(el);}
+    const edges=loops.flatMap(loop=>loop.map((p,i)=>[p,loop[(i+1)%loop.length]])).sort((a,b)=>a[0][2]+a[1][2]-b[0][2]-b[1][2]);
+    for(const [p,q] of edges){const [x1,y1]=pos(p),[x2,y2]=pos(q);add('line',{x1,y1,x2,y2,stroke:'#407077','stroke-width':2,opacity:.25+.75*((p[2]+q[2])/2-bounds[2][0])/(bounds[2][1]-bounds[2][0]||1)});}
+    for(const p of points){const [cx,cy]=pos(p);add('circle',{cx,cy,r:3.5,fill:'#295861'});}
   }
   function circuitOptions(){
     const type=$('crystal-drawing-view').value;
@@ -145,6 +177,7 @@
     clearImage();$('canvas-empty').classList.add('hidden');circuitOptions();
     let source=cache.get(count),text='',caption='';
     try{
+      if(!source&&!model.circuit_extents?.length)source={};
       if(!source){
         $('drawing-summary').textContent='Tracing neighboring circuits…';
         source=studio.api('science/reports/'+model.report_id+'/circuits/'+count,{});
@@ -152,6 +185,7 @@
       }
       source=await source;
       if(token!==job||model!==report)return;
+      drawGeometry(source);
       if(type==='Framework drawing'){
         text=source.scheme_svg||source.projection_svg;caption=source.scheme_svg?'Bond-line geometry · crystal depth':'Cartesian projection';
       }else if(type==='Projected circuit'){text=source.projection_svg;caption='Cartesian projection · actual atomic coordinates';}
@@ -226,11 +260,13 @@
   }
   function inputsChanged(){
     if(!id)return;
-    if(restoredReference&&entries.get(id)?.starter?.kind==='reference'){
+    const match=studio.periodicPair();
+    if(!match&&(studio.planarPair()||restoredReference)){
       leave();studio.queueDrawing();
       studio.notice('The reference model has been closed. The new precursors are editable in the drawing workspace.');
       return;
     }
+    if(match&&studio.state.autoChemistry&&$('dia-linkage').value!==match&&$('dia-linkage').value!=='secondary_amine')$('dia-linkage').value=match;
     startCustom();
     if(!precursor('a').smiles||!precursor('b').smiles){
       $('drawing-summary').textContent='Choose or draw both building blocks.';return;
@@ -239,6 +275,7 @@
   }
   async function build(){
     if(!id)return;
+    if(restoredReference)return drawView();
     startCustom();
     await generate(null,revision);
   }
@@ -301,12 +338,12 @@
         }
         if(token!==revision)return;
       }
-      if(result.chemical_framework_svg)choices.push('Framework drawing');
+      if(result.chemical_circuit_svg)choices.push('Framework drawing');
       if(result.chemical_circuit_svg)choices.push('Projected circuit');
       if(cells&&result.chemical_framework_svg)choices.push('Chemical drawing + periodic network');
       if(cells?.viewer?.bonds?.length)choices.push('Periodic packing');
       if(result.chemical_drawing_svg)choices.push('Linker detail');
-      report=result;preparedCells=cells;cache.set(1,{scheme_svg:result.chemical_framework_svg,projection_svg:result.chemical_circuit_svg});
+      report=result;preparedCells=cells;
       if(!availableStyles().some(s=>s.id===studio.state.style))studio.state.style='reticular_depth';
       studio.refreshStyles();
       const selector=$('crystal-drawing-view');selector.replaceChildren(...choices.map(label=>new Option(label)));
@@ -322,10 +359,21 @@
   picker.addEventListener('change',()=>{if(picker.value==='aryl_f'){picker.value=id;selectInViewer(id,'aryl_f');}else select(picker.value);});
   $('compare-crystal-reference').onclick=()=>selectInViewer(id);
   $('crystal-drawing-view').addEventListener('change',e=>{preferredView=e.target.value;drawView();});
-  $('measure-pore').addEventListener('click',e=>{
+  $('measure-pore').addEventListener('click',async e=>{
     if(!id)return;
     e.preventDefault();e.stopImmediatePropagation();
-    if(report){$('open-science').click();lab.tab('porosity');}
+    if(!report)return;
+    const model=report,token=++poreRequest;
+    if(poreText){poreText='';await drawView();return;}
+    $('drawing-summary').textContent='Measuring the periodic cavity…';
+    try{
+      const r=await studio.api('science/geometry',{structure:model.structure,grid_spacing:.8,surface_samples:32,refinement:false,include_map:false,probe_radius:1.82});
+      if(token!==poreRequest||model!==report)return;
+      const range=r.lcd_bounds_angstrom;
+      if(!range?.every(Number.isFinite))throw Error('Cavity size was unresolved for this model.');
+      poreText='Periodic cavity (LCD)  '+range.map(v=>(v/10).toFixed(2)).join('–')+' nm';
+      await drawView();
+    }catch(err){if(token===poreRequest)$('drawing-summary').textContent=err.message;}
   },true);
   function returnToPatch(){leave();studio.queueDrawing();}
   $('leave-crystal-design').addEventListener('click',returnToPatch);
@@ -350,7 +398,7 @@
       const count=project.network_count??1;
       if(!Number.isInteger(count)||count<1||count>7)throw Error('Diamond network count must be between 1 and 7.');
       const topology=project.topology||'dia';
-      if(!['dia','lon'].includes(topology))throw Error('Unknown reticular net.');
+      if(!['dia','lon','4h','6h'].includes(topology))throw Error('Unknown reticular net.');
       id=custom;enterDrawing();$('reticular-net').value=topology;$('dia-linkage').value=linkage;$('dia-net-count').value=String(count);startCustom();studio.setCrystalMonomers(project.monomers);await build();
     }else if(!entries.has(project.template_id)||![null,'aryl_f'].includes(project.linker_edit??null))
       throw new Error('Unknown crystal model or linker modification in this project.');

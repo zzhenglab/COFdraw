@@ -15,7 +15,7 @@ function checkedMonomer(block){
   const value=state.monomers[block];
   if(!value||value.input!==$('smiles-'+block).value.trim())return null;
   const named=state.library?.monomer_presets?.find(row=>row.canonical_smiles===value.smiles);
-  return named?{...value,binary_roles:named.binary_roles,binary_eligible:named.binary_eligible,canonical_smiles:value.smiles}:value;
+  return named?{...named,...value,geometry_hint:named.geometry_hint||value.geometry_hint,binary_roles:named.binary_roles,binary_eligible:named.binary_eligible,canonical_smiles:value.smiles}:value;
 }
 function checkedMonomers(){return {a:checkedMonomer("a"),b:checkedMonomer("b")};}
 function matchedCrystalStarter(a,b){
@@ -50,8 +50,7 @@ function periodicLinkage(a,b){
   return null;
 }
 function monomerChoice(item,block,other){
-  if(block!=='editor'&&window.COFdrawCrystalDesign?.active&&!window.COFdrawCrystalDesign.isReference)
-    return window.COFdrawCrystalDesign.choice(item,other);
+  
   if(block!=='editor'&&periodicLinkage(item,other))return {compatible:true,reason:'This pair supports a tetrahedral periodic framework.'};
   if(block!=='editor'&&item.binary_eligible===false)return {compatible:false,reason:item.qualification||'Outside the supported pair constructor.'};
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
@@ -369,9 +368,11 @@ function sync() {
     matched?.starter?.kind==='generated'?'Build '+matched.starter.net+' design · '+matched.starter.common_name+' precursors':'Build a 3D framework from this pair';
   const customOption=$('cof-preset').querySelector('option[value="crystal:custom-dia"]');
   if(customOption)customOption.hidden=!eligible&&!crystal?.active;
+  if((eligible||ref)&&!state.recipe)$('build').disabled=blocked;
   if(crystal?.active){
     $('build').disabled=blocked||!$('smiles-a').value.trim()||!$('smiles-b').value.trim();
-    $('build').textContent='Build 3D framework';$('build').title='Generate the selected net from the two editable precursors.';
+    $('build').textContent='Create drawing →';$('build').title='Draw the selected framework.';
+    if(crystal.isReference&&crystal.report)$('build').disabled=blocked;
   }else if($('build').textContent==='Build 3D framework')$('build').textContent='Create drawing →';
   $("assembly-build").disabled=$("build").disabled;
   for(const id of ['assembly-count','assembly-example','assembly-a','assembly-b','assembly-c','assembly-pattern','self-face','mixed-layout','assembly-arrangement'])$(id).disabled=blocked;
@@ -532,6 +533,7 @@ async function render(){
 $("build").addEventListener("click",async()=>{
   clearTimeout(liveDrawingTimer);
   if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.build();return;}
+  if(!state.recipe&&!multi()&&!$('build-periodic-from-pair').hidden){$('build-periodic-from-pair').click();return;}
   if(state.busy)return;state.busy=true;sync();
   const revision=selectionRevision;
   try{
@@ -657,7 +659,7 @@ function drawStyleControls(){
   const lists=[['palette','Color palette',spec.palettes||[]],['element_scheme','Atom colors',spec.element_schemes||['style_default']],['hydrogen_labels','Functional-group H',spec.hydrogen_labels||['show','compact']],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
   const names={show:'Show H labels',compact:'Hide inferable H labels',style_default:"Style default",conventional:"Conventional elements",deep_ink:"Deep ink",jewel:"Jewel tones",classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   const crystal=window.COFdrawCrystalDesign?.active;
-  const usesBlockColors=!crystal||['reticular_blocks','red_blue','bold_color'].includes(state.style)&&!window.COFdrawCrystalDesign.isReference;
+  const usesBlockColors=!crystal||['depth_ink','reticular_depth','ring_fill'].includes(state.style)||['reticular_blocks','red_blue','bold_color'].includes(state.style)&&!window.COFdrawCrystalDesign.isReference;
   function changed(key,value){state.styleOptions[key]=value;if(state.recipe&&!crystal)state.dirty=true;sync();}
   for(const[key,label,values]of lists){if(crystal&&(['edge_style','abbreviation_mode'].includes(key)||(key==='palette'&&!usesBlockColors)))continue;const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
   const swatches=document.createElement('div');swatches.className='palette-swatches';
@@ -1061,6 +1063,9 @@ function selectedFigureName(){
   const row=combinations.find(r=>r.id===key);
   return state.sourceMetadata?.literature_name||row?.commonName||null;
 }
-window.COFdrawStudio={state,selectedFigureName,refreshStyles(){drawStyles();setStyleDescription();drawStyleControls();},loadSource,precursorSVG:async smiles=>(await libraryPreviews.request(smiles)).result.svg,showExports,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
+function selectedCatalogPair(){
+  return ['a','b'].map(block=>{const input=$('smiles-'+block).value.trim();return state.library?.monomer_presets?.find(row=>row.smiles===input||row.canonical_smiles===input)||checkedMonomer(block);});
+}
+window.COFdrawStudio={state,periodicPair:()=>periodicLinkage(...selectedCatalogPair()),planarPair:()=>L.compatibleLinkages(state.library||{},...selectedCatalogPair()).length>0,selectedFigureName,refreshStyles(){drawStyles();setStyleDescription();drawStyleControls();},loadSource,precursorSVG:async smiles=>(await libraryPreviews.request(smiles)).result.svg,showExports,selectedDescriptor,api,notice,render,acceptRecipe,removeIdentity,syncJSON,sync,drawLayout,drawLayoutTable,changedLayout,saveText,saveExport,chooseStyle,refreshChemistry,showSourceMonomers,drawStyleControls,applyDescriptionPlan,geometryReviewMessage,setCrystalMonomers,queueDrawing};
 window.COFdrawStudio.applyCofexAssembly=applyCofexAssembly;
 initialize();

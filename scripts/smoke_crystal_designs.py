@@ -94,9 +94,9 @@ def main():
         page.click('#random-style')
         assert page.evaluate("COFdrawStudio.state.style!=='reticular_depth'")
         page.click('#measure-pore')
-        assert page.locator('[data-science-tab="porosity"]').get_attribute('aria-selected')=='true'
-        assert page.evaluate("COFdrawScience.structure===COFdrawCrystalDesign.report.structure")
-        page.click('#close-science')
+        assert page.locator('#science-dialog').is_hidden()
+        wait_for("COFdrawCrystalDesign.visible?.text.includes('Periodic cavity (LCD)')")
+        page.click('#measure-pore')
         page.locator('#appearance-options summary').first.click()
         page.click('#style-list [data-style="reticular_blocks"]')
         wait_for("COFdrawCrystalDesign.visible?.text.includes('data-drawing-style=\\\"reticular_blocks\\\"')")
@@ -167,7 +167,7 @@ def main():
         page.select_option("#crystal-net-index",index=1)
         assert page.evaluate("COFdrawScience.viewer.model.highlightNetwork")==1
         screenshot("COF-300-network.png")
-        page.click("#switch-space")
+        page.click("#close-science")
         ready()
         page.select_option("#crystal-linker","design-dia-dmta")
         ready()

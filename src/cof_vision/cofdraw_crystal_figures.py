@@ -197,7 +197,12 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False):
         blocks=[atoms[i].get("component","") for i,_ in positions]
         rings=[([index(s) for s in r["backbone"]],[[index(s) for s in group] for group in r["linkers"]])
                for r in circuit.get("rings",[])]
-        return draw_scheme(mol,backbone,segments,depths,blocks,rings)
+        anchors=None
+        if rings:
+            u=np.cross(np.eye(3)[np.argmin(np.abs(normal))],normal);u/=np.linalg.norm(u)
+            basis=np.column_stack([u,np.cross(normal,u)])
+            anchors={j:((np.array(atoms[i]["fractional"])+t)@structure["cell"])@basis for (i,t),j in ids.items()}
+        return draw_scheme(mol,backbone,segments,depths,blocks,rings,anchors)
     if circuit:
         # Preserve the source circuit geometry. A generic 2D macrocycle layout
         # can fold the pore shut and enumerate an enormous set of ring layouts.
@@ -268,6 +273,8 @@ def adjacent_circuits(ring, cell, count=3):
     if count not in (1,2,3,4,7):raise ValueError("Choose 1, 2, 3, 4 or 7 circuits")
     if count==1:return ring
     loop=[tuple(site) for site in ring["backbone"]]
+    if ring.get("junction_arms"):
+        return _chair_patch(ring, loop, count, np.asarray(cell))
     edges={tuple(sorted((a,b))) for a,b in zip(loop,loop[1:]+loop[:1])}
     def translate(site,shift):
         return (site[0],*(a+b for a,b in zip(site[1:],shift)))
@@ -294,6 +301,70 @@ def adjacent_circuits(ring, cell, count=3):
             "linkers":[[translate(s,d) for s in arm] for arm in ring["linkers"]]} for d in shifts]
     return {**rings[0],"site_images":[[site[0],list(site[1:])] for site in sorted(union)],
             "direction":ring["direction"],"circuits":count,"rings":rings}
+
+
+def _chair_patch(ring, first, count, cell):
+    """Follow different chair faces through the same real tetrahedral cage."""
+    basis=ring["junction_arms"]
+    def move(site,origin):
+        return (site[0],*(site[k]+origin[k] for k in (1,2,3)))
+    @lru_cache(None)
+    def neighbors(site):
+        return {move(end,site):arm for end,arm in basis[str(site[0])]}
+    def edges(loop):
+        return {tuple(sorted(pair)) for pair in zip(loop,loop[1:]+loop[:1])}
+    def xyz(v):
+        return (np.array(ring["junction_fractional"][str(v[0])])+v[1:])@cell
+    normal=np.array(ring["direction"])
+    focus=np.mean([xyz(v) for v in first],axis=0)
+    used=edges(first)
+    loops=[first]
+    seen={frozenset(first)}
+    while len(loops)<count:
+        candidates={}
+        for a,b in sorted(used):
+            pending=[(a,b)]
+            while pending:
+                path=pending.pop()
+                if len(path)==len(first):
+                    key=frozenset(path)
+                    if a in neighbors(path[-1]) and key not in seen and not edges(list(path))<=used:
+                        candidates.setdefault(key,list(path))
+                    continue
+                pending.extend((*path,v) for v in neighbors(path[-1]) if v not in path)
+        if not candidates:return None
+        def rank(path):
+            offset=np.mean([xyz(v) for v in path],axis=0)-focus
+            shared=len(edges(path)&used)
+            # Prefer the folded rear face of the same cage over an outward tile.
+            return (-shared, round(np.linalg.norm(offset),5), round(offset@normal,5),path)
+        chosen=min(candidates.values(),key=rank)
+        loops.append(chosen);seen.add(frozenset(chosen));used.update(edges(chosen))
+    sites={(i,*shift) for i,shift in ring["site_images"]}
+    rings=[]
+    for loop in loops:
+        arms=[[move(v,a) for v in neighbors(a)[b]] for a,b in zip(loop,loop[1:]+loop[:1])]
+        sites.update(loop)
+        for arm in arms:sites.update(arm)
+        rings.append(dict(backbone=loop,linkers=arms))
+    # View between the normals of the front and rear faces. A face-on
+    # projection of the first chair can hide a whole rear linker behind it.
+    faces=[np.array([xyz(v) for v in loop]) for loop in loops]
+    normals=np.array([np.linalg.svd(f-f.mean(0))[2][-1] for f in faces])
+    vertices=np.array([xyz(v) for v in sorted({v for loop in loops for v in loop})])
+    i,j=np.triu_indices(len(vertices),1)
+    delta=vertices[i]-vertices[j]
+    length=max(np.linalg.norm(faces[0][1]-faces[0][0]),1.)
+    k=np.arange(256)+.5
+    z=1-2*k/256;r=np.sqrt(1-z*z)
+    cameras=np.column_stack((r*np.cos(k*2.399963),r*np.sin(k*2.399963),z))
+    gaps=np.sqrt(np.maximum((delta*delta).sum(1)[:,None]-(delta@cameras.T)**2,0))/length
+    exposure=np.abs(normals@cameras.T)
+    scores=exposure.min(0)+.6*np.minimum(gaps.min(0),.5)+.15*exposure.mean(0)
+    view=cameras[scores.argmax()]
+    if view@normal<0:view=-view
+    return {**rings[0],"rings":rings,"circuits":count,"direction":view.tolist(),
+            "site_images":[[s[0],list(s[1:])] for s in sorted(sites)]}
 
 
 def precursor_scenes(structure, edges):
@@ -517,6 +588,8 @@ def crystal_details(structure, edges):
             details["ring"] = molecular(atoms)
             details["ring"]["site_images"] = [[i,[x,y,z]] for i,x,y,z in sorted(atoms)]
             details["ring"]["backbone"]=loop[:-1]
+            details["ring"]["junction_arms"]={str(i):[[end,sorted(arm)] for end,arm in arms((i,0,0,0)).items()] for i in site_ids}
+            details["ring"]["junction_fractional"]={str(i):sites[i]["fractional"] for i in site_ids}
             details["ring"]["linkers"]=[sorted(arms(a)[b]) for a,b in zip(loop,loop[1:])]
             ring_index={site:i for i,site in enumerate(sorted(atoms))}
             details["cage_overlay"]={k:details["ring"][k] for k in ("atoms","bonds")}

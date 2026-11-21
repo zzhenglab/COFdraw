@@ -125,7 +125,7 @@ class DiamondDesign(BaseModel):
     label_a: str = Field(default="Monomer A", max_length=180)
     label_b: str = Field(default="Monomer B", max_length=180)
     linkage: Literal["imine","secondary_amine","acylhydrazone"] = "imine"
-    topology: Literal["dia","lon"] = "dia"
+    topology: Literal["dia","lon","4h","6h"] = "dia"
     network_count: int = Field(default=1,ge=1,le=7,strict=True)
     repeats: list[Annotated[int, Field(ge=1,le=4)]] = Field(default=[1,1,1], min_length=3, max_length=3)
 
@@ -1342,7 +1342,12 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             if template.get('backbone'):
                 try:scheme=chemical_drawing(structure,edges,circuit=template,scheme=True)
                 except ValueError:pass
-            return {'count':count,'sites':len(template['site_images']),'scheme_svg':scheme,'projection_svg':projected}
+            loops=template.get('junction_loops')
+            if loops is None:
+                loops=[[[f+t for f,t in zip(structure['atoms'][i]['fractional'],shift)] for i,*shift in r['backbone']]
+                       for r in template.get('rings',[template])]
+            return {'count':count,'sites':len(template['site_images']),'scheme_svg':scheme,'projection_svg':projected,
+                    'junction_loops':loops,'direction':template['direction']}
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
     @router.post('/science/reports/{report_id}/view')

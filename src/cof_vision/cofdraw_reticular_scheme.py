@@ -79,7 +79,7 @@ def segment_vertices(lengths):
     return polygon
 
 
-def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None):
+def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, projected=None):
     mol=Chem.Mol(mol)
     layouts={}
     centers={}
@@ -92,6 +92,9 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None):
                 layouts[key]=fragment_layout(mol,set(fragment)|{a,b})
             coords=layouts[key]
             lengths.append(np.linalg.norm(coords[b]-coords[a]))
+        if projected is not None:
+            centers.update((i,projected[i]) for i in loop)
+            continue
         polygon=dict(zip(loop,segment_vertices(lengths)))
         if centers:
             shared=[a for a in loop if a in centers]
@@ -110,7 +113,8 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None):
         for i,p in polygon.items():centers.setdefault(i,p)
     # Reconcile all shared junctions before rigidly posing their molecular linkers.
     # Length constraints use lengths of the chemically drawn fragments themselves.
-    for _ in range(150):
+    error=0.
+    for _ in range(0 if projected is not None else 150):
         error=0.
         for (a,b),coords in layouts.items():
             d=centers[b]-centers[a]
@@ -124,6 +128,11 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None):
     if error>.02:raise ValueError("Adjacent molecular circuits could not be flattened without stretching bonds")
     positions={}
     for (a,b),coords in layouts.items():
+        if projected is not None:
+            # Foreshorten an entire molecular arm uniformly in the oblique
+            # view. Every aromatic ring retains its internal bond angles.
+            ratio=np.linalg.norm(centers[b]-centers[a])/np.linalg.norm(coords[b]-coords[a])
+            coords={i:p*ratio for i,p in coords.items()}
         positions.update(rotate_to(coords,coords[a],coords[b]-coords[a],centers[b]-centers[a],centers[a]))
     # Keep both outgoing branches on the exterior. Each fragment has its own
     # conventional bond angles and ring coordinates and receives only a rotation.

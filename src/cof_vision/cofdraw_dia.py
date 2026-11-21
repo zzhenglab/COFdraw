@@ -282,9 +282,10 @@ def _pack(structure, bonds, count, hubs):
 def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_b="Monomer B", network_count=1, topology="dia"):
     if type(network_count) is not int or not 1<=network_count<=7:
         raise ValueError("Choose one to seven networks.")
-    if topology not in ("dia","lon"):
-        raise ValueError("Choose the cubic diamond (dia) or hexagonal diamond (lon) net.")
-    hub_count = 2 if topology=="dia" else 4
+    from .cofdraw_lon import STACKS, polytype_graph, lon_candidates
+    if topology not in ("dia","lon",*STACKS):
+        raise ValueError("Choose dia, lon, 4H or 6H tetrahedral connectivity.")
+    hub_count = {"dia":2,"lon":4,"4h":8,"6h":12}[topology]
     smiles = [canonical(s) for s in (monomer_a,monomer_b)]
     fragments, node_slot = _components(smiles,linkage)
     mols = [Chem.MolFromSmiles(f["fragment_smiles"]) for f in fragments]
@@ -298,15 +299,15 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
         for a in Chem.AddHs(mol).GetAtoms():
             if a.GetAtomicNum():
                 counts[a.GetSymbol(), a.GetIsotope()] += stoichiometry[i]
-    if sum(counts.values()) > 650:
-        raise ValueError("The diamond primitive cell exceeds the 650-atom build budget.")
+    if sum(counts.values()) > (1800 if topology in STACKS else 650):
+        raise ValueError("The selected periodic repeat exceeds the atom budget for this builder.")
     edge = _edge_molecule(mols[node_slot],mols[1-node_slot],LINKAGE_LIBRARY[linkage]["join_bond_order"],node_slot)
     ends = [a.GetIdx() for a in edge.GetAtoms() if a.HasProp("_diaCenter")]
     neighbours = [next(a.GetIdx() for a in edge.GetAtomWithIdx(i).GetNeighbors() if a.GetAtomicNum()!=1) for i in ends]
     best = "no extended tetrahedral conformer"
     tried_packing = False
-    from .cofdraw_lon import lon_candidates
-    cell_candidates = _diamond_candidates if topology=="dia" else lon_candidates
+    from functools import partial
+    cell_candidates = _diamond_candidates if topology=="dia" else partial(lon_candidates,topology=topology)
     for seed in (49, 511, 3289, 7717, 27011):
         params=AllChem.ETKDGv3()
         params.randomSeed=seed
@@ -335,7 +336,12 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
             raise ValueError("The constructed cell failed the independent reacted-monomer composition check.")
         junctions=list(range(hub_count))
         sequence = _junction_sequence(net["edges"],junctions)
-        if sequence != {"dia":[4,12,24,42,64],"lon":[4,12,25,44,67]}[topology]:
+        if topology in STACKS:
+            _,spans=polytype_graph(STACKS[topology])
+            expected_seq=_junction_sequence([dict(a=a,b=b,translation=t) for a,b,t in spans],junctions)
+        else:
+            expected_seq={"dia":[4,12,24,42,64],"lon":[4,12,25,44,67]}[topology]
+        if sequence != expected_seq:
             raise ValueError("The periodic junction graph disagrees with the specified diamond net.")
         pack={}
         if network_count>1:

@@ -50,6 +50,13 @@ def crystal_starters(catalog):
 
 def topology_catalog(rows):
     rows = deepcopy(rows)
+    if rows:
+        for code,stack in (('4h','ABAC'),('6h','ABCACB')):
+            rows.append(dict(id=code,label=f'{code.upper()} tetrahedral polytype', dimension=3,
+                kind='polytype',connectivity=[[4,2],[4,4]],construction_supported=True,
+                description=f'Build a tetrahedral network with the {stack} stacking sequence.',
+                qualification='Ideal tetrahedral design. The sequence specifies the junction net across the cell.',
+                source_refs=[dict(title='Tetrahedral stacking sequences',url='https://journals.iucr.org/j/issues/2013/01/00/kk5117/')]))
     capability = {
         'kgm':'Finite binary, self-condensed and mixed-linker Kagome drawings for supported precursor geometries.',
         'dia':'Editable periodic model for tetrahedral C/Si nodes with complementary ditopic spacers or a second tetrahedral node.',
