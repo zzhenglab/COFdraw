@@ -544,7 +544,7 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         return _finish(result, catalog)
     a, b = ordered[0]
     if [a["id"], b["id"]] != monomer_ids:
-        assumptions.append("Order the building blocks by their reactive roles in the selected linkage.")
+        assumptions.append("Reorder the two building blocks to match their reactive roles in the selected linkage.")
     roles = supported[linkage]["roles"]
     counts = [next(item["reactive_sites"] for item in row["compatible_roles"] if item["linkage"] == linkage and item["role"] == role) for row, role in zip((a, b), roles)]
     candidates = [row for row in catalog["templates"] if row.get("allow_pairs") and counts in row["allow_pairs"]]

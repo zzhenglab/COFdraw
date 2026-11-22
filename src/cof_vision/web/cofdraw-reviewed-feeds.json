@@ -1324,6 +1324,23 @@
     ]
   },
   {
+    "id": "feed_b7ebfcb346ca",
+    "abbreviation": "BTDADA",
+    "full_name": "2,1,3-benzothiadiazole-4,7-diboronic acid",
+    "smiles": "OB(O)c1ccc(B(O)O)c2nsnc12",
+    "source_dois": [
+      "10.1021/ja2052396"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/ja2052396",
+        "source_label": "benzothiadiazole diboronic acid BTDADA",
+        "framework_annotation": "source-acs-ja2052396-NiPc-BTDA",
+        "molecule_annotation": "acs-wave3-test-061"
+      }
+    ]
+  },
+  {
     "id": "feed_b991b30ce813",
     "abbreviation": "TTHB",
     "full_name": "1,3,5-tris(3'-tert-butyl-4'-hydroxy-5'-formylphenyl)benzene",
