@@ -30,16 +30,19 @@ SPATIAL={key:dict(code=code,shapes=shapes,degrees=degrees,instances=n,label=labe
 
 
 def templates():
+    extra_linkages={'ctn_4_3':['alkyl_ketoenamine','boronate_ester'], 'dia_4_2':['reduced_alkyl_imine']}
     return [dict(id=key,label=f'3D {r["code"]} · {r["label"]}',instances=r['instances'],
                  allow_pairs=[list(x) for x in dict.fromkeys((r['degrees'],r['degrees'][::-1]))],
                  shape_pair=list(r['shapes']),dimension=3,parent_net=r['code'],topology_label=None,
-                 linkages=['imine','boronate_ester'] if key=='ctn_4_3' else ['imine'],
+                 linkages=['imine','alkyl_imine',*extra_linkages.get(key,[])],
                  description=f'Unfolded molecular circuits traced from the {r["code"]} graph. The monomer pair and drawing do not establish a crystal phase.')
             for key,r in SPATIAL.items()]
 
 
 _ADAMANTANE=Chem.MolFromSmiles('C1C2CC3CC1CC(C2)C3')
 _ARYL_CENTER=Chem.MolFromSmarts('[C,Si;X4](-c)(-c)(-c)-c')
+_BICYCLO_OCTANE=Chem.MolFromSmiles('C1CC2CCC1CC2')
+_TRANS_14=Chem.MolFromSmarts('[N]-[C@H]1-[C;X4;R]-[C;X4;R]-[C@H](-[N])-[C;X4;R]-[C;X4;R]-1')
 
 
 def site_shapes(mol):
@@ -49,12 +52,30 @@ def site_shapes(mol):
     cage=mol.GetSubstructMatch(_ADAMANTANE)
     bridgeheads={cage[a.GetIdx()] for a in _ADAMANTANE.GetAtoms() if a.GetDegree()==3} if cage else set()
     shapes={}
-    from .framework_drawing import ARYL_BORONIC, catechol_pairs
+    from .framework_drawing import ALKYL_ALDEHYDE, ALKYL_AMINE, ARYL_BORONIC, catechol_pairs
     groups={role:mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)) for role,pattern in
             [('aryl_aldehyde','[c][CH1](=O)'),('primary_arylamine','[c][NX3;H2;+0]'),('aryl_boronic_acid',ARYL_BORONIC)]}
     groups['aryl_vicinal_diol']=catechol_pairs(mol)
+    groups['primary_alkylamine']=mol.GetSubstructMatches(Chem.MolFromSmarts(ALKYL_AMINE))
+    alkyl_formyl=mol.GetSubstructMatches(Chem.MolFromSmarts(ALKYL_ALDEHYDE))
+    if alkyl_formyl:
+        groups['carbon_aldehyde']=groups['aryl_aldehyde']+alkyl_formyl
     for role,hits in groups.items():
         if not 2<=len(hits)<=6:continue
+        if role in ('primary_alkylamine','carbon_aldehyde'):
+            anchors={h[0] for h in hits}
+            shapes[role]='unresolved_alkyl'
+            if len(hits)==4 and anchors==bridgeheads:
+                shapes[role]='tetrahedral'
+            if len(hits)==2:
+                for cage_match in mol.GetSubstructMatches(_BICYCLO_OCTANE):
+                    heads={cage_match[a.GetIdx()] for a in _BICYCLO_OCTANE.GetAtoms() if a.GetDegree()==3}
+                    if anchors==heads:
+                        shapes[role]='linear'
+                if role=='primary_alkylamine' and any(
+                    {m[0],m[5]}=={h[1] for h in hits} for m in mol.GetSubstructMatches(_TRANS_14,useChirality=True)):
+                    shapes[role]='linear'
+            continue
         if len(hits)==4:
             distinct_center=False
             for center,*arms in centers:
@@ -89,6 +110,8 @@ def site_shapes(mol):
         if len(hits)==3 and min(gaps)>88 and max(gaps)<147:shapes[role]='triangular'
         if len(hits)==6 and min(gaps)>36 and max(gaps)<86:shapes[role]='hexagonal'
         if len(hits)==4 and min(gaps)>43 and max(gaps)<140:shapes[role]='quadrangular'
+    if not alkyl_formyl and 'aryl_aldehyde' in shapes:
+        shapes['carbon_aldehyde']=shapes['aryl_aldehyde']
     return shapes
 
 
@@ -109,6 +132,8 @@ def prismatic_sites(mol,hits):
 
 
 def matches(template, shapes):
+    if template.get('topology_label') and 'unresolved_alkyl' in shapes:
+        return False
     expected=template.get('shape_pair')
     return not expected or shapes==expected or shapes[::-1]==expected
 

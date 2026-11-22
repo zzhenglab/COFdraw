@@ -1,4 +1,4 @@
-"""Finite Kagome imine drawings of the two-in-one monomers in Li et al., Fig. 6.
+"""Finite Kagome imine drawings from the geometry of a two-in-one precursor.
 
 Each vertex has two opposite aldehyde ports and two opposite amine ports.
 Three rigidly rotated copies close the triangle, with the opposite arm of
@@ -11,8 +11,9 @@ import math
 import numpy as np
 from rdkit import Chem
 
-from .cofdraw_depiction import compute_2d_coords
-from .cofdraw_self import LI_DOI, feed_metadata
+from .cofdraw_depiction import compute_2d_coords, coordgen_coords
+from .cofdraw_self import feed_metadata
+from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _ports
 
 
@@ -27,38 +28,219 @@ def _rotation(theta):
     return np.array([[c,s],[-s,c]])
 
 
-@lru_cache(maxsize=8)
+def _opposed_aryl_hub(mol, ports, classes):
+    """Four independent aryl arms on a 1,2,4,5 hub; each role occupies opposite positions."""
+    for ring in mol.GetRingInfo().AtomRings():
+        if len(ring)!=6 or not all(mol.GetAtomWithIdx(i).GetIsAromatic() and
+                                    mol.GetRingInfo().NumAtomRings(i)==1 for i in ring):
+            continue
+        ends={}
+        for group in classes:
+            attachments=[]
+            for port in group:
+                target=ports[port][1]
+                paths=[Chem.GetShortestPath(mol,i,target) for i in ring]
+                route=min(paths,key=len)
+                if (len(route)<5 or any(not (mol.GetAtomWithIdx(i).GetIsAromatic()
+                        or mol.GetAtomWithIdx(i).GetHybridization() in (Chem.HybridizationType.SP,Chem.HybridizationType.SP2))
+                        for i in route[1:-1])):
+                    break
+                # Require a single direct exit from the hub, and the actual
+                # shortest path to this arm must originate at that exit.
+                if any(i in ring for i in route[1:]) or sum(len(p)==len(route) for p in paths)!=1:
+                    break
+                attachments.append(ring.index(route[0]))
+                ends[port]=(route[0],route[1])
+            if len(attachments)!=2 or abs(attachments[0]-attachments[1])!=3:
+                break
+        else:
+            if len({hub for hub, arm in ends.values()})==4:
+                return ends
+    return {}
+
+
+@lru_cache(maxsize=128)
+def _hub_branches(smiles, roles):
+    mol=Chem.MolFromSmiles(smiles)
+    ports=_ports(mol)
+    classes=tuple([n for n,r in roles if r==role] for role in ('aldehyde','amine'))
+    if any(len(group)!=2 for group in classes):
+        return {}
+    branches={}
+    for n,(hub,first) in _opposed_aryl_hub(mol,ports,classes).items():
+        # Cutting this one bond must isolate exactly one arm. This prevents
+        # removal through a fused ring or a bridge to another attachment.
+        pending=[first]
+        branch=set()
+        while pending:
+            i=pending.pop()
+            if i in branch:
+                continue
+            branch.add(i)
+            pending.extend(a.GetIdx() for a in mol.GetAtomWithIdx(i).GetNeighbors()
+                           if not (i==first and a.GetIdx()==hub) and a.GetIdx() not in branch)
+        dummy=ports[n][0]
+        if hub in branch or {i for i,_ in ports.values() if i in branch}!={dummy}:
+            return {}
+        branches[dummy]=(hub,first,branch-{dummy})
+    return branches
+
+
+def _crop_at_hubs(mol,recipe,origins):
+    if (recipe.get('assembly') or {}).get('kind')!='self_kagome':
+        return None
+    part=recipe.get('components',{}).get('A',{})
+    if len(origins)!=mol.GetNumAtoms() or not part.get('reactive_sites'):
+        return None
+    roles=tuple(sorted((r['port'],r['site_role']) for r in part['reactive_sites'] if 'site_role' in r))
+    branches=_hub_branches(part['fragment_smiles'],roles)
+    if not branches:
+        return None
+    indices={(o['instance'],o['fragment_atom_index']):i for i,o in enumerate(origins)}
+    clipped=Chem.RWMol(mol)
+    removed=set()
+    count=0
+    for port in mol.GetAtoms():
+        if port.GetAtomicNum() or port.GetDegree()!=1:
+            continue
+        i=port.GetIdx()
+        origin=origins[i]
+        branch=branches.get(origin['fragment_atom_index'])
+        if not branch:
+            continue
+        instance=origin['instance']
+        hub,first,arm=branch
+        if (instance,hub) not in indices or any((instance,j) not in indices for j in arm):
+            return None
+        cut={indices[(instance,j)] for j in arm}
+        clipped.AddBond(indices[(instance,hub)],i,Chem.BondType.SINGLE)
+        for conf in clipped.GetConformers():
+            conf.SetAtomPosition(i,conf.GetAtomPosition(indices[(instance,first)]))
+        removed.update(cut)
+        count+=1
+    if not count:
+        return None
+    clipped.BeginBatchEdit()
+    for i in removed:
+        clipped.RemoveAtom(i)
+    clipped.CommitBatchEdit()
+    clipped.UpdatePropertyCache(strict=True)
+    symmetric_depiction_rings(clipped)
+    return clipped.GetMol(),removed,count
+
+
+def hub_boundary(mol,recipe,origins=None):
+    """Figure-only copy, retaining the port and visible hub on each open arm."""
+    if origins is None:
+        if not all(a.HasProp('instance') and a.HasProp('fragment_atom_index') for a in mol.GetAtoms()):
+            return None
+        origins=[dict(instance=a.GetProp('instance'),fragment_atom_index=a.GetIntProp('fragment_atom_index'))
+                 for a in mol.GetAtoms()]
+    result=_crop_at_hubs(mol,recipe,origins)
+    return result[0] if result else None
+
+
+def hub_figure(mol,audit,recipe):
+    from .cofdraw_boundary import remap_figure
+    result=_crop_at_hubs(mol,recipe,audit['atom_origin'])
+    if result:
+        cropped,removed,count=result
+        return (*remap_figure(mol,cropped,removed,audit,recipe),count)
+    return None
+
+
+def _clear_neighborhood(heavy_xy,step,rot):
+    # All three Kagome vertex types are related by rotation. Include nearby
+    # unconnected vertices and translated copies, particularly for long side chains.
+    lattice=np.stack([step,-step@rot@rot])
+    radius=np.max(np.linalg.norm(heavy_xy,axis=1))
+    reach=2*radius+1.2
+    limit=math.ceil(reach/np.linalg.svd(lattice,compute_uv=False).min())
+    shapes=(heavy_xy,heavy_xy@rot,heavy_xy@rot@rot)
+    for x,y in product(range(-limit,limit+1),repeat=2):
+        kind=_kind((x,y))
+        if kind==3 or (x==0 and y==0):
+            continue
+        offset=np.array([x,y])@lattice
+        if np.linalg.norm(offset)>reach:
+            continue
+        delta=heavy_xy[:,None,:]-(shapes[kind]+offset)
+        if np.any(np.sum(delta*delta,axis=2)<1.2**2):
+            return False
+    return True
+
+
+def _placements(xy, ports, classes, rot, heavy):
+    if any(np.max(np.abs(xy[list(ports[i])]+xy[list(ports[j])])) > .05 for i,j in classes):
+        return []
+    choices=[]
+    for aldehyde,amine in product(*classes):
+        d1,a1=ports[aldehyde]
+        d2,a2=ports[amine]
+        tangent=xy[d1]-xy[a1]
+        receiving=(xy[a2]-xy[d2]) @ rot
+        cosine=np.dot(tangent,receiving)/(np.linalg.norm(tangent)*np.linalg.norm(receiving))
+        if cosine>=math.cos(math.radians(12)):
+            direction=tangent+receiving
+            step=xy[a1]-xy[a2]@rot + 1.5*direction/np.linalg.norm(direction)
+            if np.linalg.norm(step)<1.5 or not _clear_neighborhood(xy[heavy],step,rot):
+                continue
+            choices.append((float(np.linalg.norm(step)),aldehyde,amine,step,xy))
+    return choices
+
+
+def _alternating_imine_ends(mol, xy, ports, classes):
+    # Keep the entire chemical scaffold rigid. Each terminal trigonal atom
+    # can draw its outward double bond 60 degrees either side of its aryl axis.
+    for turns in product((-math.pi/3, math.pi/3), repeat=2):
+        trial=xy.copy()
+        for group,angle in zip(classes,turns):
+            for port in group:
+                dummy,anchor=ports[port]
+                aryl=next(a.GetIdx() for a in mol.GetAtomWithIdx(anchor).GetNeighbors() if a.GetIdx()!=dummy)
+                axis=xy[anchor]-xy[aryl]
+                trial[dummy]=xy[anchor]+1.5*(axis@_rotation(angle))/np.linalg.norm(axis)
+        yield trial
+
+
+@lru_cache(maxsize=128)
 def _cell(fragment_smiles, roles):
-    mol = Chem.MolFromSmiles(fragment_smiles)
-    ports = _ports(mol)
-    compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
-    xy = mol.GetConformer().GetPositions()[:, :2].copy()
-    xy -= xy[[a for _,a in ports.values()]].mean(axis=0)
-    aldehydes = [p for p,r in roles if r=='aldehyde']
-    amines = [p for p,r in roles if r=='amine']
+    mol=Chem.MolFromSmiles(fragment_smiles)
+    ports=_ports(mol)
+    aldehydes=[p for p,r in roles if r=='aldehyde']
+    amines=[p for p,r in roles if r=='amine']
+    classes=(aldehydes,amines)
     if len(aldehydes)!=2 or len(amines)!=2:
         raise ValueError('This Kagome arrangement requires two aldehyde arms and two amine arms.')
-    # The opposed ends must overlay by inversion, including the terminal
-    # bond direction. This is a molecular symmetry check on these drawings.
-    for i,j in (aldehydes,amines):
-        if np.max(np.abs(xy[list(ports[i])]+xy[list(ports[j])])) > .05:
-            raise ValueError('The selected fragment does not have opposed equivalent reactive arms.')
-    rot = _rotation(math.tau/3)
-    choices = []
-    for aldehyde,amine in product(aldehydes,amines):
-        d1,a1 = ports[aldehyde]
-        d2,a2 = ports[amine]
-        tangent = xy[d1]-xy[a1]
-        receiving = (xy[a2]-xy[d2]) @ rot
-        cosine = np.dot(tangent,receiving) / (np.linalg.norm(tangent)*np.linalg.norm(receiving))
-        if cosine < math.cos(math.radians(12)):
-            continue
-        direction = tangent+receiving
-        step = xy[a1]-xy[a2]@rot + 1.5*direction/np.linalg.norm(direction)
-        choices.append((float(np.linalg.norm(step)),aldehyde,amine,step))
+    # A flat drawing of an sp3 junction cannot establish planar four-arm
+    # connectivity. Leave substituents outside the conjugated arms unrestricted.
+    anchors=[a for _,a in ports.values()]
+    for i,a in enumerate(anchors):
+        for b in anchors[i+1:]:
+            if any(mol.GetAtomWithIdx(j).GetHybridization() not in
+                   (Chem.HybridizationType.SP,Chem.HybridizationType.SP2)
+                   for j in Chem.GetShortestPath(mol,a,b)):
+                raise ValueError('The reactive arms must share a conjugated planar backbone.')
+    rot=_rotation(math.tau/3)
+    compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
+    heavy=[a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()>1]
+    xy=mol.GetConformer().GetPositions()[:,:2].copy()
+    xy-=xy[anchors].mean(axis=0)
+    choices=_placements(xy,ports,classes,rot,heavy)
+    if not choices and _opposed_aryl_hub(mol,ports,classes):
+        for use_coordgen in (False,True):
+            if use_coordgen:
+                coordgen_coords(mol)
+                xy=mol.GetConformer().GetPositions()[:,:2].copy()
+                xy-=xy[anchors].mean(axis=0)
+            for projection in (xy,xy*np.array([-1.,1.])):
+                for trial in _alternating_imine_ends(mol,projection,ports,classes):
+                    choices.extend(_placements(trial,ports,classes,rot,heavy))
+            if choices:
+                break
     if not choices:
-        raise ValueError('No head-to-tail imine placement fits this Kagome drawing.')
-    _,ald,ami,step = max(choices,key=lambda choice:choice[:3])
+        raise ValueError('No opposed, head-to-tail imine placement fits this Kagome drawing.')
+    _,ald,ami,step,xy=max(choices,key=lambda choice:choice[:3])
     # Align the row of hexagons with the page while preserving every bond.
     align = _rotation(-math.atan2(step[1],step[0]))
     lattice = np.stack([step, -step@rot@rot])@align
@@ -121,9 +303,9 @@ def kagome_recipe(row,component,pore):
                 coordinate_provenance='generated Kagome layer from rotated precursor fragments',
                 layout_kind='closed_pore',linkage='imine',selected_template=None,design_topology=None,
                 assembly=dict(monomer_ids=[row['id']],kind='self_kagome',precursors=[feed_metadata(row)],linker_sequence='',
-                              pore_view=pore,source_doi=LI_DOI,
+                              pore_view=pore,
                               scope='A '+('hexagonal' if pore=='hexagon' else 'triangular')
-                              +' pore in the reported Kagome arrangement. Rigid molecular blocks with head-to-tail imine bonds.'))
+                              +' pore of a proposed Kagome sheet. Rigid molecular blocks with head-to-tail imine bonds.'))
 
 
 def patch_points(repeats,triad=False,star=False):

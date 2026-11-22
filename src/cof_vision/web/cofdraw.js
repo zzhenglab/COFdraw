@@ -299,7 +299,7 @@ function refreshCombinations(force=false,desired=null){
   const custom=Boolean(periodicLinkage(checkedMonomer('a'),checkedMonomer('b'))),key=JSON.stringify([query,linkage,current,custom]);
   if(!force&&combinationFilter===key)return;
   combinationFilter=key;
-  const binary=combinations.filter(row=>row.source||row.assembly||(linkage?row.linkage===linkage:row.linkage!=='secondary_amine'));
+  const binary=combinations.filter(row=>row.source||row.assembly||(linkage?row.linkage===linkage:!state.library?.linkages?.[row.linkage]?.explicit_only));
   const {visible,matches}=L.starterSections([...binary,...crystalStarts()],state.library||{},query,current);
   const fragment=document.createDocumentFragment();
   fragment.append(option(current==='crystal:custom-dia'?current:'custom','Custom monomers'));
@@ -409,6 +409,8 @@ function sync() {
   $("open-topology-library").disabled=blocked||!(state.library?.topology_catalog?.length);
   document.querySelectorAll("#style-controls input,#style-controls select,#style-controls button").forEach(b=>b.disabled=blocked);
   $("apply-style-options").disabled=blocked||!state.recipe||state.inputsDirty||state.jsonPending;
+  const boundaryControl=$('style-boundary_cut');
+  if(boundaryControl)boundaryControl.disabled=state.busy;
   for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
   $("auto-chemistry").checked=state.autoChemistry;$("auto-chemistry").disabled=state.busy;
   for(const id of ['linkage','linkage-search','template','pore'])$(id).disabled=state.busy||state.autoChemistry;
@@ -546,6 +548,8 @@ async function render(){
     const exportNote=$("export-note"),exportAudit=audit.chemical_exports||{};
     exportNote.hidden=Boolean(result.downloads.cdxml);
     exportNote.textContent=result.downloads.cdxml?"":exportAudit.cdxml==="unavailable_in_this_rdkit_build"?"CDXML is unavailable in this local chemistry engine. Use MOL or SDF for chemical editing.":`CDXML was omitted${exportAudit.reason?`: ${exportAudit.reason}`:" because its export could not be validated"}. MOL and SDF remain available.`;
+    const boundaryNote=audit.drawing_style?.boundary?.note;
+    if(boundaryNote){exportNote.textContent=[boundaryNote,exportNote.textContent].filter(Boolean).join(' ');exportNote.hidden=false;}
     const chosen=audit.drawing_style;if(chosen){state.style=chosen.id||state.style;state.seed=chosen.seed??state.seed;state.resolvedStyleOptions=clone(chosen.options||{});if(wasRandom)state.styleOptions=clone(chosen.options||{});if(recentTreatments.at(-1)!==state.style){recentTreatments.push(state.style);if(recentTreatments.length>4)recentTreatments.shift();}$("canvas-sheet").classList.toggle("transparent-preview",Boolean(chosen.options?.transparent_background));setStyleDescription();drawStyleControls();}
     updateIdentity();window.dispatchEvent(new CustomEvent('cofdraw:rendered',{detail:result}));const review=state.sourceId?'':geometryReviewMessage(audit.layout_refinement);notice(state.sourceId?"Source drawing rendered with its qualified reference record. Style changes leave the graph intact.":review?`Drawing created. ${review}`:"Drawing ready. Inspect the connections and continuation ports before saving.");return result;
   }catch(error){notice(error.message,true);return null;}finally{state.busy=false;sync();}
@@ -689,6 +693,11 @@ function drawStyleControls(){
   const lists=[['palette','Color palette',spec.palettes||[]],['element_scheme','Atom colors',spec.element_schemes||['style_default']],['hydrogen_labels','Functional-group H',spec.hydrogen_labels||['show','compact']],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
   const names={show:'Show H labels',compact:'Hide inferable H labels',style_default:"Style default",conventional:"Conventional elements",deep_ink:"Deep ink",jewel:"Jewel tones",classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   const crystal=window.COFdrawCrystalDesign?.active;
+  if(!crystal&&spec.boundary_cuts&&state.style!=='cartoon_nodes'){
+    const cuts=spec.boundary_cuts.filter(cut=>cut!=='hub'||state.recipe?.assembly?.kind==='self_kagome'||current.boundary_cut==='hub');
+    lists.splice(4,0,['boundary_cut','Draw continuation from',cuts]);
+    Object.assign(names,{linkage:'Terminal linkage (full)',aryl:'Adjacent aryl ring',hub:'Aromatic hub'});
+  }
   const highlighted=['node_highlight','glow_outline','pastel_blocks'].includes(state.style);
   const usesBlockColors=!crystal||highlighted||['depth_ink','reticular_depth','ring_fill','reticular_blocks','red_blue','bold_color'].includes(state.style);
   function changed(key,value){
@@ -697,6 +706,7 @@ function drawStyleControls(){
     if(state.recipe&&!crystal)state.dirty=true;
     sync();
     if(crystal)window.COFdrawCrystalDesign.redraw();
+    else if(key==='boundary_cut'&&state.recipe&&!state.inputsDirty&&!state.jsonPending)render();
   }
   for(const[key,label,values]of lists){if(crystal&&(key==='abbreviation_mode'||key==='edge_style'&&!window.COFdrawCrystalDesign.visible?.text?.includes('data-cut=')||(key==='palette'&&!usesBlockColors)))continue;const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
   const swatches=document.createElement('div');swatches.className='palette-swatches';
@@ -715,9 +725,9 @@ function setStyleDescription(){
   note.textContent=special?(item.representation_scope||item.limits||(item.category==="layered"?"Layered depiction: illustrative offset copies of one finite chemical patch, not a crystal packing prediction.":"Schematic depiction: simplified building blocks. Chemical graph exports retain the explicit atom/bond record.")):"";
 }
 function portableInkOptions(next){
-  if(next==='random')return {};
+  if(next==='random')return state.styleOptions.boundary_cut?{boundary_cut:state.styleOptions.boundary_cut}:{};
   if(state.style===next)return {...state.styleOptions};
-  return Object.fromEntries(Object.entries(state.styleOptions).filter(([key])=>['palette','custom_palette','element_scheme'].includes(key)));
+  return Object.fromEntries(Object.entries(state.styleOptions).filter(([key])=>['palette','custom_palette','element_scheme','boundary_cut'].includes(key)));
 }
 function chooseStyle(id,seed=null){if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.chooseStyle(id);return;}state.styleOptions=portableInkOptions(id);state.style=id;state.seed=seed;state.resolvedStyleOptions={};setStyleDescription();drawStyleControls();if(state.recipe){state.dirty=true;sync();render();}else sync();}
 $("apply-style-options").addEventListener("click",()=>window.COFdrawCrystalDesign?.active?window.COFdrawCrystalDesign.redraw():render());

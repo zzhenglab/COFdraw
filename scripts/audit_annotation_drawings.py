@@ -10,6 +10,8 @@ import csv
 from functools import lru_cache
 import hashlib
 import json
+import math
+from statistics import median
 import os
 from pathlib import Path
 import re
@@ -19,20 +21,22 @@ import sys
 from rdkit import Chem, RDLogger
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from cof_vision.cofdraw_boundary import aryl_boundary
 from cof_vision.cofdraw_assembly import assemble
 from cof_vision.cofdraw_chemistry import decorated_monomers, design_signature, prepare_template
 from cof_vision.cofdraw_cofex import parse_record, recipe_record
 from cof_vision.cofdraw_repeat import repeat_patch
+from cof_vision.cofdraw_self_kagome import hub_boundary
 from cof_vision.depiction_rings import symmetric_depiction_rings
 from cof_vision.drawing_api import validate_recipe
-from cof_vision.framework_drawing import VERSION, build_patch
+from cof_vision.framework_drawing import VERSION, build_patch, matches_linkage_family
 
 
 LINKAGES = {
     'imine': 'imine', 'aldimine': 'imine', 'aryl c=n imines':'imine', 'imine as drawn':'imine',
     'phenolic imine':'imine', 'enol–imine':'imine', 'acylhydrazone': 'acylhydrazone',
     'oxalyl bis(acylhydrazone)':'acylhydrazone',
-    'β-ketoenamine': 'beta_ketoenamine', 'beta-ketoenamine': 'beta_ketoenamine',
+    'β-ketoenamine': 'beta_ketoenamine', 'beta-ketoenamine': 'beta_ketoenamine', 'beta_ketoenamine':'beta_ketoenamine',
     'azine': 'azine', 'secondary amine': 'secondary_amine', 'nitrone': 'nitrone',
     'cyanovinylene': 'cyano_vinylene_sp2_carbon', 'cyano-vinylene': 'cyano_vinylene_sp2_carbon',
     'α-cyanovinylene':'cyano_vinylene_sp2_carbon', 'cyano-substituted vinylene': 'cyano_vinylene_sp2_carbon',
@@ -54,7 +58,78 @@ def precursor(smiles):
     return Chem.MolToSmiles(mol)
 
 
-def inventory_targets(path):
+def length_spread(lengths):
+    """Percent of skeletal bonds outside 65% to 135% of the drawing's median."""
+    if len(lengths)<3 or not all(math.isfinite(d) for d in lengths):
+        return ''
+    scale=median(lengths)
+    if scale<=0:
+        return ''
+    return round(100*sum(d<.65*scale or d>1.35*scale for d in lengths)/len(lengths),2)
+
+
+DRAWN_ELEMENTS={'B','C','N','O','F','Si','P','S','Cl','Br','I'}
+
+
+def drawn_bond_spread(model):
+    if not model.GetNumConformers():
+        return ''
+    positions=model.GetConformer().GetPositions()
+    if any(abs(z)>.001 for z in positions[:,2]):
+        return ''
+    xy=positions[:,:2]
+    return length_spread([math.dist(xy[b.GetBeginAtomIdx()],xy[b.GetEndAtomIdx()]) for b in model.GetBonds()
+                         if {b.GetBeginAtom().GetSymbol(),b.GetEndAtom().GetSymbol()}<=DRAWN_ELEMENTS])
+
+
+def verified_file(record,root,suffix):
+    if not isinstance(record,dict) or not isinstance(record.get('path'),str) or not record.get('sha256'):
+        return None
+    try:
+        path=Path(record['path']).resolve()
+        if not path.is_relative_to(root) or path.suffix.lower()!=suffix or not path.is_file() or path.stat().st_size>12_000_000:
+            return None
+        data=path.read_bytes()
+    except (OSError, ValueError, RuntimeError):
+        return None
+    return data if hashlib.sha256(data).hexdigest()==record['sha256'] else None
+
+
+def reference_spread(patch,root):
+    if root is None or not isinstance(patch,dict):
+        return ''
+    # Stored annotation geometry is independent of the builder. Read only
+    # hash-identified local drawing assets and never supply them to prepare.
+    records=[patch.get('molfile'),patch.get('mol')]
+    if not any(records):
+        graph=verified_file(patch.get('graph'),root,'.json')
+        if graph:
+            try:
+                data=json.loads(graph)
+            except (UnicodeDecodeError, ValueError):
+                return ''
+            if isinstance(data,dict):
+                records=[data.get('molfile'),data.get('mol')]
+    for record in records:
+        block=verified_file(record,root,'.mol')
+        if not block:
+            continue
+        lines=block.decode('utf-8-sig',errors='replace').splitlines()
+        if len(lines)<5 or 'V2000' not in lines[3] or '3D' in lines[1]:
+            continue
+        try:
+            n,m=int(lines[3][:3]),int(lines[3][3:6])
+            atoms=[(float(line[:10]),float(line[10:20]),float(line[20:30]),line[31:34].strip()) for line in lines[4:4+n]]
+            bonds=[(int(line[:3])-1,int(line[3:6])-1) for line in lines[4+n:4+n+m]]
+            if len(atoms)!=n or len(bonds)!=m or any(abs(x[2])>.001 for x in atoms) or any(min(i,j)<0 or max(i,j)>=n for i,j in bonds):
+                continue
+            return length_spread([math.dist(atoms[i][:2],atoms[j][:2]) for i,j in bonds if {atoms[i][3],atoms[j][3]}<=DRAWN_ELEMENTS])
+        except (ValueError,IndexError):
+            continue
+    return ''
+
+
+def inventory_targets(path,reference_root=None):
     with path.open(encoding='utf-8-sig') as handle:
         for line in handle:
             row=json.loads(line)
@@ -92,7 +167,8 @@ def inventory_targets(path):
                            source_linkage=declared,linkage=linkage,source_net=net,reported_topology=reported,
                            reported_catenation=target.get('catenation',''),precursor_smiles=smiles,complete=complete,
                            source_record=source,source_record_field=field,identity_conflict=conflict,
-                           single_network_design_query=query,annotated_graph=bounded)
+                           single_network_design_query=query,annotated_graph=bounded,
+                           annotated_mol_bond_outliers_pct=reference_spread(patch,reference_root))
 
 
 def same_graph(model,target):
@@ -144,41 +220,6 @@ def same_graph(model,target):
     return compare(left,right)
 
 
-def aryl_boundary(mol):
-    """Clip only unsubstituted terminal linkage stubs between aryl rings and ports."""
-    cuts=[]
-    for port in mol.GetAtoms():
-        if port.GetAtomicNum()!=0 or port.GetDegree()!=1:
-            continue
-        middle=port.GetNeighbors()[0]
-        if (middle.GetAtomicNum() not in (6,7) or middle.GetDegree()!=2 or middle.GetIsAromatic()
-                or middle.GetFormalCharge() or middle.GetIsotope() or middle.GetNumRadicalElectrons()
-                or middle.GetChiralTag()!=Chem.ChiralType.CHI_UNSPECIFIED):
-            continue
-        inside=next(a for a in middle.GetNeighbors() if a.GetIdx()!=port.GetIdx())
-        if inside.GetAtomicNum()!=6 or not inside.GetIsAromatic():
-            continue
-        bond=mol.GetBondBetweenAtoms(inside.GetIdx(),middle.GetIdx())
-        terminal=port.GetBonds()[0]
-        if bond.GetBondType()!=Chem.BondType.SINGLE:
-            continue
-        if middle.GetAtomicNum()==6 and terminal.GetBondType()!=Chem.BondType.DOUBLE:
-            continue
-        cuts.append((middle.GetIdx(),inside.GetIdx(),port.GetIdx()))
-    if not cuts:
-        return None
-    clipped=Chem.RWMol(mol)
-    for old,inside,port in cuts:
-        clipped.AddBond(inside,port,Chem.BondType.SINGLE)
-        for conf in clipped.GetConformers():
-            conf.SetAtomPosition(port,conf.GetAtomPosition(old))
-    for i in sorted({c[0] for c in cuts},reverse=True):
-        clipped.RemoveAtom(i)
-    clipped.UpdatePropertyCache(strict=True)
-    symmetric_depiction_rings(clipped)
-    return clipped.GetMol()
-
-
 @lru_cache(maxsize=128)
 def target_graph(smiles,atoms):
     if not isinstance(smiles,str) or not smiles:
@@ -202,15 +243,42 @@ def target_graph(smiles,atoms):
     return mol.ToBinary()
 
 
+def local_aromatic_graph(molecule):
+    # RDKit's global aromaticity model can mark an entire small COF pore
+    # aromatic, including genuine amide junctions. Apply identical local
+    # ring perception to both graphs for a separate representation check.
+    mol=Chem.Mol(molecule)
+    mol.UpdatePropertyCache(strict=True)
+    symmetric_depiction_rings(mol)
+    Chem.Kekulize(mol,clearAromaticFlags=True)
+    Chem.SetAromaticity(mol,Chem.AromaticityModel.AROMATICITY_SIMPLE)
+    Chem.AssignRadicals(mol)
+    mol.UpdatePropertyCache(strict=True)
+    return mol
+
+
+def compare_bounded(model, smiles):
+    target=target_graph(smiles,model.GetNumAtoms())
+    if target is None:
+        return 'No parseable bounded target'
+    if isinstance(target,bytes):
+        if same_graph(model,Chem.Mol(target)):
+            return 'Exact bounded connectivity, stereo unscored'
+        original=Chem.MolFromSmiles(smiles,sanitize=False)
+        if same_graph(local_aromatic_graph(model),local_aromatic_graph(original)):
+            return 'Matching connectivity under local aromaticity, stereo unscored'
+    return 'Different bounded graph or depiction extent'
+
+
 @lru_cache(maxsize=128)
-def construct(smiles,link,net,star,exchange=''):
+def construct(smiles,link,net,star,exchange='',hub_cut=False):
     choices=parse_record(exchange or smiles+' COFex.'+(net or 'unk')+'.cat0',[])
     errors=[]
     for plan in sorted(choices,key=lambda p:'crystal_project' in p):
         try:
             if 'prepare_request' in plan:
                 request=plan['prepare_request']
-                if request['linkage']!=link:
+                if not matches_linkage_family(link,request['linkage']):
                     continue
                 recipe=prepare_template(**request)
             elif 'assembly_request' in plan:
@@ -221,16 +289,16 @@ def construct(smiles,link,net,star,exchange=''):
                 ordered=[by_id[k] for k in request['monomer_ids']]
                 recipe=assemble(ordered,request.get('linker_sequence') or '',request.get('pore_view'),request.get('pore_layout'))
                 recipe['assembly']['precursors']=[dict(smiles=r['smiles'],label=r['abbreviation'],id=r['id']) for r in ordered]
-                if recipe['linkage']!=link:
+                if not matches_linkage_family(link,recipe['linkage']):
                     continue
             elif 'crystal_project' in plan:
                 project=plan['crystal_project']
-                if project['linkage']!=link:
+                if not matches_linkage_family(link,project['linkage']):
                     continue
                 from cof_vision.cofdraw_dia import build_dia
                 from cof_vision.cofdraw_crystal_figures import junction_patch,chemical_drawing
                 a,b=project['monomers']
-                cell,review=build_dia(a['smiles'],b['smiles'],link,a['label'],b['label'],project['network_count'],net)
+                cell,review=build_dia(a['smiles'],b['smiles'],project['linkage'],a['label'],b['label'],project['network_count'],net)
                 edges=review['periodic_bonds']
                 if '<svg' not in chemical_drawing(cell,edges,circuit=junction_patch(cell,edges)):
                     raise ValueError('Molecular projection unavailable')
@@ -247,6 +315,11 @@ def construct(smiles,link,net,star,exchange=''):
                 if summary['pore_count']!=7:
                     raise ValueError('Seven-pore neighborhood unavailable')
                 extent='Hexagon and six adjacent triangles'
+                if hub_cut:
+                    mol=hub_boundary(mol,recipe)
+                    if mol is None:
+                        raise ValueError('No valid outer node boundary for this star')
+                    extent+=' with the outer arms cut at their hubs'
             else:
                 mol,_=build_patch(recipe)
                 extent='Default molecular patch'
@@ -258,7 +331,7 @@ def construct(smiles,link,net,star,exchange=''):
 
 def with_status(row,status,detail=''):
     return {**{k:v for k,v in row.items() if k!='annotated_graph'},'status':status,'detail':detail,
-            'design_cofex':'','editable_record':'','atoms':'','tested_extent':'','target_comparison':'','aryl_cut_comparison':''}
+            'design_cofex':'','editable_record':'','atoms':'','drawn_bond_outliers_pct':'','tested_extent':'','target_comparison':'','aryl_cut_comparison':'','star_comparison':'','matched_star_extent':''}
 
 
 def check(row):
@@ -280,17 +353,27 @@ def check(row):
     else:
         model=Chem.Mol(binary)
         result['atoms']=model.GetNumAtoms()
+        result['drawn_bond_outliers_pct']=drawn_bond_spread(model)
         try:
-            target=target_graph(row['annotated_graph'],result['atoms'])
-            result['target_comparison']=('No parseable bounded target' if target is None else
-                'Exact bounded connectivity, stereo unscored' if isinstance(target,bytes) and same_graph(model,Chem.Mol(target))
-                else 'Different bounded graph or depiction extent')
-            if target=='different atom count':
+            result['target_comparison']=compare_bounded(model,row['annotated_graph'])
+            if result['target_comparison']=='Different bounded graph or depiction extent':
                 clipped=aryl_boundary(model)
                 if clipped is not None:
-                    other=target_graph(row['annotated_graph'],clipped.GetNumAtoms())
-                    if isinstance(other,bytes) and same_graph(clipped,Chem.Mol(other)):
+                    comparison=compare_bounded(clipped,row['annotated_graph'])
+                    if comparison.startswith('Exact'):
                         result['aryl_cut_comparison']='Exact bounded connectivity at aryl cuts, stereo unscored'
+                    elif comparison.startswith('Matching'):
+                        result['aryl_cut_comparison']=comparison
+                if row['source_net']=='kgm' and '.' not in row['precursor_smiles'] and not result['aryl_cut_comparison']:
+                    for hub_cut in (False, True):
+                        try:
+                            _,binary,scope=construct(row['precursor_smiles'],row['linkage'],'kgm',True,hub_cut=hub_cut)
+                        except (ValueError, KeyError, IndexError, RuntimeError):
+                            continue
+                        comparison=compare_bounded(Chem.Mol(binary),row['annotated_graph'])
+                        if comparison.startswith(('Exact','Matching')):
+                            result.update(star_comparison=comparison,matched_star_extent=scope)
+                            break
         except (ValueError,RuntimeError) as error:
             result.update(target_comparison='Bounded comparison unavailable',detail=str(error))
     return result
@@ -375,13 +458,17 @@ def main():
         parser.add_argument('output',type=Path,help='Destination MOL file with the drawing coordinates')
         parser.add_argument('--linkage',required=True,help='Reaction rule ID, e.g. imine or cyano_vinylene_sp2_carbon')
         parser.add_argument('--star',action='store_true',help='A Kagome hexagon with its six neighboring triangles')
-        parser.add_argument('--aryl-cut',action='store_true',help='Place continuation marks at outer aryl carbons where possible')
+        cut=parser.add_mutually_exclusive_group()
+        cut.add_argument('--aryl-cut',action='store_true',help='Place continuation marks at outer aryl carbons where possible')
+        cut.add_argument('--hub-cut',action='store_true',help='Trim outward arms to their braced hubs in a self-condensed Kagome star')
         args=parser.parse_args(sys.argv[2:])
         _job=limit_worker_memory()
         match=RECORD.fullmatch(args.record.strip())
         if not match:
             parser.error('A precursor COFex record is required.')
-        record,binary,extent=construct(match[1],args.linkage,match[2],args.star,args.record)
+        if args.hub_cut and not args.star:
+            parser.error('--hub-cut requires --star')
+        record,binary,extent=construct(match[1],args.linkage,match[2],args.star,args.record,hub_cut=args.hub_cut)
         if not binary:
             parser.error('This construction is a periodic model. Use its 3D workspace for crystal exports.')
         mol=Chem.Mol(binary)
@@ -395,12 +482,13 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest',type=Path)
     parser.add_argument('output',type=Path)
+    parser.add_argument('--reference-root',type=Path,help='Directory containing hash-verified annotated MOL/graph files for optional drawing-quality comparison.')
     parser.add_argument('--workers',type=int,default=2)
     parser.add_argument('--timeout',type=int,default=30,help='Seconds before retrying a target in isolation.')
     args=parser.parse_args()
     if args.workers<1 or args.timeout<1:
         parser.error('Workers and timeout must be positive.')
-    targets=list(inventory_targets(args.manifest))
+    targets=list(inventory_targets(args.manifest,args.reference_root.resolve() if args.reference_root else None))
     if not targets:
         parser.error('Manifest contains no framework or formation targets.')
     pending=[]

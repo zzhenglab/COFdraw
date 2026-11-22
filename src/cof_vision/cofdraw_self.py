@@ -1,11 +1,12 @@
 """Single-feed chemistry for finite COF drawings."""
+from functools import lru_cache
 import math
 
 import numpy as np
 from rdkit import Chem
 
 from .cofdraw_depiction import compute_2d_coords
-from .framework_drawing import VERSION, _ports
+from .framework_drawing import VERSION, _ports, linkage_fragment
 
 
 LI_DOI = '10.1021/jacs.9b03463'
@@ -18,7 +19,6 @@ KAGOME_PRECURSORS = {
     'bfbaepy': ('BFBAEPy', '1,6-Bis(4-formylphenyl)-3,8-bis[(4-aminophenyl)ethynyl]pyrene',
                 'Nc1ccc(C#Cc2cc(-c3ccc(C=O)cc3)c3ccc4c(C#Cc5ccc(N)cc5)cc(-c5ccc(C=O)cc5)c5ccc2c3c45)cc1'),
 }
-KAGOME_SMILES = frozenset(Chem.MolToSmiles(Chem.MolFromSmiles(smi)) for _,_,smi in KAGOME_PRECURSORS.values())
 
 
 def additional_precursors():
@@ -35,6 +35,8 @@ SELF_EXAMPLES = (
     ('py-cof', 'Py-COF · rhombic imine', 'bfbapy', 'Four two-in-one pyrene precursors surround a single local pore.', LI_DOI),
     ('bfbaeb-cof', 'BFBAEB-COF · triangle and hexagon', 'bfbaeb', 'Self-condensed benzene nodes in the reported Kagome arrangement.', LI_DOI),
     ('bfbaepy-cof', 'BFBAEPy-COF · triangle and hexagon', 'bfbaepy', 'Self-condensed pyrene nodes in the reported Kagome arrangement.', LI_DOI),
+    ('cof-953', 'COF-953 · Kagome', 'feed_a633d27d4963', 'Choose Hexagon + 6 triangles to see the surrounding pores.', '10.1002/adma.202308251'),
+    ('cof-954', 'COF-954 · Kagome', 'feed_f955f8b23f7a', 'Self-condensing aminoaldehyde with vinylene spacers.', '10.1002/adma.202308251'),
     ('latent-imine', 'Latent aminoaldehyde · pyridyl imine', 'cv_e0efd03afb224b2a', 'Two dimethyl acetals unmask the aldehydes of this reported precursor. The pore drawn is a design.', CHEN_DOI),
     ('aba-chain', '4-Aminobenzaldehyde · linear chain', 'cv_4e35cbcca820334e', 'One aldehyde and one amine make an open-chain model with two continuation sites.', None),
 )
@@ -67,9 +69,67 @@ def _spacer(mol, matches):
     return spacer
 
 
+@lru_cache(maxsize=256)
+def can_tile_kagome(smiles):
+    from .cofdraw_self_kagome import _cell
+    try:
+        part=linkage_fragment(smiles,'imine','self_imine')
+        roles=tuple(sorted((r['port'],r['site_role']) for r in part['reactive_sites']))
+        _cell(part['fragment_smiles'],roles)
+    except (ValueError,RuntimeError):
+        return False
+    return True
+
+
+@lru_cache(maxsize=128)
+def can_tile_rhombus(smiles):
+    from .cofdraw_repeat import _fit_sheet
+    part=linkage_fragment(smiles,'imine','self_imine')
+    fragments=(('A',part['fragment_smiles'],part['connectivity']),)
+    return part['connectivity']==4 and _fit_sheet('self_square',fragments,2) is not None
+
+
+def rhombus_recipe(row,component):
+    """Take one face from the same molecular SQL tiling used for larger extents."""
+    from .cofdraw_repeat import _sheet
+    recipe={'components':{'A':component},'connections':[{'bond_order':2}]}
+    mol,summary=_sheet(recipe,'self_square',1,'pores')
+    face,=summary['pore_faces']
+    port_for_atom={a:n for n,(_,a) in _ports(Chem.MolFromSmiles(component['fragment_smiles'])).items()}
+    positions=mol.GetConformer().GetPositions()[:,:2]
+    atoms={p:[] for p in face}
+    names={p:f'A{i+1}' for i,p in enumerate(face)}
+    coordinates=[]
+    for atom,xy in zip(mol.GetAtoms(),positions):
+        owner=atom.GetProp('instance')
+        atoms[owner].append(xy)
+        coordinates.append(dict(instance=names[owner],fragment_atom_index=atom.GetIntProp('fragment_atom_index'),
+                                xy=xy.tolist()))
+    slots={}
+    for bond in mol.GetBonds():
+        a,b=bond.GetBeginAtom(),bond.GetEndAtom()
+        p,q=a.GetProp('instance'),b.GetProp('instance')
+        if p!=q:
+            slots[p,q]=port_for_atom[a.GetIntProp('fragment_atom_index')]
+            slots[q,p]=port_for_atom[b.GetIntProp('fragment_atom_index')]
+    instances=[]
+    connections=[]
+    for i,p in enumerate(face):
+        previous,q=face[i-1],face[(i+1)%len(face)]
+        instances.append(dict(id=names[p],component='A',incoming_port=slots[p,previous],outgoing_port=slots[p,q],
+                              layout_position=np.mean(atoms[p],axis=0).tolist()))
+        connections.append(dict(a=dict(instance=names[p],port=slots[p,q]),b=dict(instance=names[q],port=slots[q,p]),
+                                bond_order=2))
+    return dict(components=recipe['components'],instances=instances,connections=connections,linkage='imine',
+                layout_kind='closed_pore',atom_coordinates=coordinates,selected_template=None,design_topology=None,
+                coordinate_provenance='generated from the fitted self-condensed square lattice',
+                assembly=dict(monomer_ids=[row['id']],precursors=[feed_metadata(row)],kind='self_imine',linker_sequence='',
+                              pore_view='rhombus',scope='One rhombic aperture of a proposed self-condensed sql sheet.'))
+
+
 def self_kind(row, mol, self_imine):
     if self_imine:
-        return 'self_kagome' if Chem.MolToSmiles(mol) in KAGOME_SMILES else 'self_imine'
+        return 'self_kagome' if not row.get('self_activation') and can_tile_kagome(Chem.MolToSmiles(mol)) else 'self_imine'
     if row.get('catalog_use') == 'synthetic_intermediate' or row.get('annotation_only'):
         return None
     for kind,query in TRIMER_QUERY.items():

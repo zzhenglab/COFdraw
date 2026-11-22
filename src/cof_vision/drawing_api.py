@@ -43,7 +43,7 @@ class AssemblyDrawing(BaseModel):
     model_config = ConfigDict(extra="forbid")
     monomer_ids: list[Annotated[str, Field(min_length=1,max_length=150)]] = Field(min_length=1,max_length=3)
     linker_sequence: str = Field(default="",max_length=6,pattern="^[BC]*$")
-    pore_view: Literal["triangle", "hexagon"] | None = None
+    pore_view: Literal["triangle", "hexagon", "rhombus"] | None = None
     pore_layout: Literal["kgm"] | None = None
     custom_precursors: list[AssemblyPrecursor] = Field(default_factory=list, max_length=3)
 
@@ -387,7 +387,7 @@ def validate_recipe(recipe: dict) -> None:
 
 
 def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -> APIRouter:
-    from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, render_recipe, build_patch
+    from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, matches_linkage_family, render_recipe, build_patch
     from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
     from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
     from .cofdraw_styles import PALETTES, FONTS, ELEMENT_SCHEMES, style_configuration
@@ -517,7 +517,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 template = legacy.get('selected_template')
                 linkage = legacy.get('linkage')
                 choices = [p for p in choices if ('prepare_request' not in p or
-                    ((not linkage or p['prepare_request']['linkage']==linkage) and
+                    ((not linkage or matches_linkage_family(linkage,p['prepare_request']['linkage'])) and
                      (not isinstance(template,dict) or p['prepare_request']['template_id']==template.get('id'))))]
                 if not choices:
                     raise ValueError('Saved linkage and connectivity disagree with the COFex notation.')
@@ -549,7 +549,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         from .cofdraw_starters import topology_catalog
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": topology_catalog(catalog.get("topology_catalog", [])),
-                "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
+                "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],"boundary_cuts":["linkage","aryl","hub"],
                                    "element_colors":{scheme:{Chem.GetPeriodicTable().GetElementSymbol(z):color for z,color in colors.items()} for scheme,colors in ELEMENT_SCHEMES.items()},
                                    "defaults":{s['id']:style_configuration(s['id'])[2] for s in STYLES},
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
@@ -771,7 +771,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             recipe["design_template_signature"] = design_signature(recipe)
             validate_recipe(recipe)
             return {"recipe": recipe, "status": "designed_variant", "selected_template": recipe.get("selected_template"),
-                    "compatibility": recipe.get("compatibility"), "limits": LINKAGE_LIBRARY[request.linkage]["limits"]}
+                    "compatibility": recipe.get("compatibility"), "limits": LINKAGE_LIBRARY[recipe['linkage']]["limits"]}
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
 

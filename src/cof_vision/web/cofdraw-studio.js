@@ -552,7 +552,21 @@
   // Edit the exact displayed coordinates; graph connectivity is not rewritten.
   function remember(){if(!S.state.recipe)return;geometryHistory.push({recipe:copy(S.state.recipe),sourceId:S.state.sourceId,metadata:copy(S.state.sourceMetadata)});if(geometryHistory.length>20)geometryHistory.shift();$('undo-geometry').disabled=false;}
   function geometryMessage(message){$('geometry-message').textContent=message;$('geometry-message').hidden=!message;}
-  function drawHandles(){const overlay=$('geometry-overlay');overlay.replaceChildren();overlay.toggleAttribute('hidden',!geometryMode);$('render-geometry').hidden=!geometryMode;if(!geometryMode)return;const layout=S.state.result?.audit?.drawing_style?.layout;if(!layout||layout.display_projection||lastRenderedRecipe!==S.state.recipe){geometryMessage('Use a flat chemical style to adjust atom positions.');return;}overlay.setAttribute('viewBox',`0 0 ${layout.canvas_size.join(' ')}`);overlay.setAttribute('preserveAspectRatio','xMidYMid meet');for(const [i,p] of (layout.atom_pixels||[]).entries()){const circle=document.createElementNS(NS,'circle');circle.setAttribute('cx',p[0]);circle.setAttribute('cy',p[1]);circle.setAttribute('r',Math.max(4,layout.canvas_size[0]*.004));circle.classList.add('geometry-handle');circle.dataset.atom=i;overlay.append(circle);}geometryMessage('Drag an atom to adjust its position, then Render changes. Connectivity stays fixed. Undo restores the previous layout.');}
+  function drawHandles(){
+    const overlay=$('geometry-overlay');
+    overlay.replaceChildren();overlay.toggleAttribute('hidden',!geometryMode);$('render-geometry').hidden=!geometryMode;
+    if(!geometryMode)return;
+    const layout=S.state.result?.audit?.drawing_style?.layout;
+    if(!layout||layout.display_projection||lastRenderedRecipe!==S.state.recipe){geometryMessage('Use a flat chemical style to adjust atom positions.');return;}
+    overlay.setAttribute('viewBox',`0 0 ${layout.canvas_size.join(' ')}`);overlay.setAttribute('preserveAspectRatio','xMidYMid meet');
+    const pixels=layout.atom_pixels||[], indices=layout.editing_atom_indices||pixels.keys();
+    for(const i of indices){
+      const p=pixels[i],circle=document.createElementNS(NS,'circle');
+      circle.setAttribute('cx',p[0]);circle.setAttribute('cy',p[1]);circle.setAttribute('r',Math.max(4,layout.canvas_size[0]*.004));
+      circle.classList.add('geometry-handle');circle.dataset.atom=i;overlay.append(circle);
+    }
+    geometryMessage('Drag an atom to adjust its position, then Render changes. Connectivity stays fixed. Undo restores the previous layout.');
+  }
   $('edit-geometry').addEventListener('click',()=>{if(!S.state.result||S.state.inputsDirty||S.state.jsonPending||lastRenderedRecipe!==S.state.recipe)return S.notice('Render the current drawing before adjusting its atoms.',true);geometryMode=!geometryMode;$('edit-geometry').setAttribute('aria-pressed',String(geometryMode));drawHandles();});
   $('geometry-overlay').addEventListener('pointerdown',e=>{const target=e.target.closest('[data-atom]');if(!target||S.state.busy||S.state.inputsDirty||S.state.jsonPending||lastRenderedRecipe!==S.state.recipe)return;remember();geometryDrag={index:Number(target.dataset.atom),layout:copy(S.state.result.audit.drawing_style.layout),circle:target};e.currentTarget.setPointerCapture(e.pointerId);e.preventDefault();});
   $('geometry-overlay').addEventListener('pointermove',e=>{if(!geometryDrag)return;const overlay=e.currentTarget,p=new DOMPoint(e.clientX,e.clientY).matrixTransform(overlay.getScreenCTM().inverse()),{index,layout,circle}=geometryDrag,origin=layout.atom_pixels[index],world=layout.atom_coordinates[index],ratio=layout.pixels_per_unit;const xy=[world[0]+(p.x-origin[0])/ratio,world[1]-(p.y-origin[1])/ratio];if(xy.some(v=>!Number.isFinite(v)||Math.abs(v)>500))return;const recipe=S.state.recipe;S.removeIdentity();recipe.layout_refinement='manual';if(recipe.explicit_graph){recipe.explicit_graph.atoms[index].xy=xy;}else{if(!recipe.atom_coordinates)recipe.atom_coordinates=layout.atom_keys.map((key,i)=>{const at=S.state.result.audit.atom_origin[i];return {instance:at.instance,fragment_atom_index:at.fragment_atom_index,xy:layout.atom_coordinates[i]};});const key=S.state.result.audit.atom_origin[index],row=recipe.atom_coordinates.find(a=>a.instance===key.instance&&a.fragment_atom_index===key.fragment_atom_index);if(!row)return;row.xy=xy;}circle.setAttribute('cx',p.x);circle.setAttribute('cy',p.y);circle.classList.add('active');S.state.dirty=true;S.syncJSON();S.sync();});

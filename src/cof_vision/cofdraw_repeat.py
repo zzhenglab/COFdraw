@@ -73,9 +73,9 @@ def _classification(recipe, source_rule=None, source_sha256=None):
         return 'mixed_linkers'
     if set(recipe['components']) == {'A'} and recipe['components']['A'].get('role') == 'self_imine':
         if kind=='self_kagome':
-            from .cofdraw_self import KAGOME_SMILES
-            if recipe['components']['A']['monomer_smiles'] not in KAGOME_SMILES:
-                raise ValueError('This aminoaldehyde has no registered triangular/hexagonal assembly rule.')
+            from .cofdraw_self import can_tile_kagome
+            if not can_tile_kagome(recipe['components']['A']['monomer_smiles']):
+                raise ValueError('This aminoaldehyde has no compatible triangular/hexagonal assembly.')
             return kind
         return 'self_chain' if recipe['layout_kind'] == 'open_chain' else 'self_square'
     raise ValueError('This assembly has no defined neighboring-pore rule.')
@@ -532,6 +532,8 @@ def write_repeat(recipe, directory, key, request, *, source_rule=None,source_sha
     drawing = dict(recipe_id=key,components=components,layout_kind=recipe.get('layout_kind'),repeat_faces=faces,
                    repeat_face_colors=[colors[k] for k in labels] if request.color_pores else [],
                    designed_variant=True,ground_truth=False)
+    if summary['template'] == 'self_kagome':
+        drawing['assembly'] = recipe['assembly']
     if source_sha256:
         style = recipe.get('source_style') or {}
         # Atom indices and instance names from the witnessed drawing do not
@@ -550,6 +552,7 @@ def write_repeat(recipe, directory, key, request, *, source_rule=None,source_sha
                  atoms=mol.GetNumAtoms(),bonds=mol.GetNumBonds(),defined_double_bond_geometry=_double_bond_geometry_audit(mol))
     audit = render_styled(drawing,directory,request.size,request.style_id,request.style_seed,request.style_options,
                           prepared_patch=(mol,audit),recent_styles=request.recent_styles)
+    summary['figure_boundary'] = audit['drawing_style']['boundary']
     if faces:
         try:
             aperture=_focal_aperture(mol,origins,faces,labels,summary,recipe)

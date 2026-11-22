@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlencode
 from rdkit import Chem
 
 from .cofdraw_chemistry import LINKAGE_LABELS, TEMPLATES, decorated_monomers, inspect_monomer, kagome_match
-from .framework_drawing import LINKAGE_LIBRARY, canonical
+from .framework_drawing import LINKAGE_LIBRARY, canonical, matches_linkage_family
 
 
 def design_record(feeds, mode, linkage, net=None, count=1, **settings):
@@ -56,9 +56,13 @@ def recipe_record(recipe, metadata=None, source=False):
             return None
         kind = assembly.get('kind')
         net = 'kgm' if kind == 'self_kagome' or assembly.get('pore_layout') == 'kgm' else None
+        if kind in ('self_boroxine','self_triazine'):
+            net='hcb'
+        elif kind=='self_imine' and assembly.get('pore_view')=='rhombus':
+            net='sql'
         return design_record(feeds, 'assembly', recipe['linkage'], net,
                              sequence=assembly.get('linker_sequence'), layout=assembly.get('pore_layout'),
-                             face=assembly.get('pore_view') if kind == 'self_kagome' else None)
+                             face=assembly.get('pore_view') if kind in ('self_imine','self_kagome') else None)
     template = recipe.get('selected_template') or {}
     if not template or not all(k in recipe.get('components', {}) for k in ('A','B')):
         # Unregistered explicit graphs and edited connections have no matching builder recipe.
@@ -138,7 +142,7 @@ def parse_record(text, catalog_rows):
     choices = []
     roles = [inspect_monomer(s) for s in smiles]
     for link, rule in LINKAGE_LIBRARY.items():
-        if settings.get('link',link) != link:
+        if not matches_linkage_family(settings.get('link',link),link):
             continue
         orientation = next((order for order in ((0,1),(1,0)) if all(
             any(r['linkage']==link and r['role']==role and r['reactive_sites']>=2 for r in roles[i]['compatible_roles'])
@@ -168,6 +172,8 @@ def parse_record(text, catalog_rows):
                 continue
             if not matches(template,[roles[i]['site_shapes'].get(r) for i,r in zip(orientation,rule['roles'])]):
                 continue
+            if template.get('topology_label') and any(roles[i]['site_shapes'].get(r)=='tetrahedral' for i,r in zip(orientation,rule['roles'])):
+                continue
             if settings.get('template') != key and template.get('topology_label') and any(roles[i]['site_shapes'].get(r) in ('spiro','spatial_unspecified','prismatic') for i,r in zip(orientation,rule['roles'])):
                 continue
             if key=='branched_4_3' and not any(
@@ -192,7 +198,7 @@ def parse_record(text, catalog_rows):
 
 
 def _assembly_choices(smiles, labels, catalog, net, cat, settings):
-    if cat or net not in ('unk','kgm','hcb'):
+    if cat or net not in ('unk','kgm','hcb','sql') or (net=='sql' and len(smiles)!=1):
         raise ValueError('This assembly cannot establish the requested net or catenation.')
     rows, custom = [], []
     for s,label in zip(smiles,labels):
@@ -212,7 +218,11 @@ def _assembly_choices(smiles, labels, catalog, net, cat, settings):
         link = {'self_boroxine':'boroxine','self_triazine':'triazine'}.get(kind,'imine')
         if settings.get('link',link) != link or net=='kgm' and kind!='self_kagome' or net=='hcb' and kind not in ('self_boroxine','self_triazine'):
             raise ValueError('The self-condensation rule disagrees with the linkage or net.')
-        faces = ['triangle','hexagon'] if kind=='self_kagome' else [None]
+        faces=[p['id'] for p in rows[0]['assembly_roles']['self_pores']] if kind=='self_kagome' else [None]
+        if net=='kgm':
+            faces=[face for face in faces if face in ('hexagon','triangle')]
+        if net=='sql':
+            faces=[face for face in faces if face=='rhombus']
         for face in faces:
             if settings.get('face',face) == face:
                 choices.append({'label':link.capitalize() + (' · '+face if face else ''),'assembly_request':dict(

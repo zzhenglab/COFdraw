@@ -93,7 +93,7 @@ STYLE_FAMILIES = {
 def style_configuration(style_id, seed=None, options=None, recent_styles=()):
     options=dict(options or {})
     allowed={"palette","font_family","font_scale","bond_scale","layer_count","layer_opacity","fill_opacity","edge_style","transparent_background","abbreviation_mode",
-             "element_scheme", "hydrogen_labels", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale"}
+             "element_scheme", "hydrogen_labels", "custom_palette", "highlight_width", "glow_strength", "layer_spacing", "projection_tilt", "sphere_scale", "boundary_cut"}
     if set(options)-allowed: raise ValueError("Unknown style options: "+", ".join(sorted(set(options)-allowed)))
     if style_id=="random":
         seed=random.SystemRandom().randrange(2**31) if seed is None else seed
@@ -114,7 +114,7 @@ def style_configuration(style_id, seed=None, options=None, recent_styles=()):
     defaults={"palette":"classic","font_family":"Times New Roman" if style_id=="serif" else "Arial","font_scale":1.,"bond_scale":1.,
               "layer_count":3,"layer_opacity":.24,"fill_opacity":.18,"edge_style":"dashed" if style_id=="mono_dashed" else "crossbar" if style_id=="serif" else "wavy_cross",
               "transparent_background":False,"abbreviation_mode":"condensed" if style_id=="compact_labels" else "explicit"}
-    defaults.update(element_scheme="style_default", hydrogen_labels="show", custom_palette=None, highlight_width=1., glow_strength=.55,
+    defaults.update(element_scheme="style_default", hydrogen_labels="show", boundary_cut="linkage", custom_palette=None, highlight_width=1., glow_strength=.55,
                     layer_spacing=.04, projection_tilt=35., sphere_scale=1.)
     if style_id in ('pastel_blocks', 'cartoon_overlay'):
         defaults['palette'] = 'lavender_mint'
@@ -133,6 +133,8 @@ def style_configuration(style_id, seed=None, options=None, recent_styles=()):
     elif style_id == 'sphere_cutaway':
         defaults.update(palette='orchid', sphere_scale=1.)
     defaults.update(options)
+    if defaults["boundary_cut"] not in ('linkage', 'aryl', 'hub'):
+        raise ValueError("Choose linkage, aryl or hub for the figure boundary")
     if defaults["hydrogen_labels"] not in ("show","compact"):
         raise ValueError("Choose show or compact for functional-group H labels")
     if defaults["element_scheme"] not in ("style_default", *ELEMENT_SCHEMES):
@@ -275,7 +277,8 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
         if child.tag.endswith('rect') and child.get('width')=='100%':continue
         chemical.append(deepcopy(child))
     root=ET.Element(tag('svg'),{"width":str(size),"height":str(size),"viewBox":f"0 0 {size} {size}",
-        'data-drawing-style':style_id,'data-graph-sha256':audit['fragment_serialization_sha256']})
+        'data-drawing-style':style_id,'data-graph-sha256':audit['fragment_serialization_sha256'],
+        'data-boundary-cut':options['boundary_cut'], 'data-figure-atoms':str(mol.GetNumAtoms())})
     defs=ET.SubElement(root,tag('defs'))
     for child in original:
         if child.tag.endswith('defs'):

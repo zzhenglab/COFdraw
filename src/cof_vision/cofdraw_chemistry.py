@@ -9,14 +9,17 @@ from functools import lru_cache
 import numpy as np
 from rdkit import Chem
 from .cofdraw_depiction import compute_2d_coords
-from .framework_drawing import ARYL_HYDROXYLAMINE_SMARTS, ARYL_BORONIC, CARBON_SITES, CYCLIC_ANHYDRIDE, LINKAGE_LIBRARY, TP, canonical, catechol_pairs, linkage_fragment, _ports
+from .framework_drawing import ALKYL_ALDEHYDE, ALKYL_AMINE, ALKYL_VARIANTS, ARYL_HYDROXYLAMINE_SMARTS, ARYL_BORONIC, CARBON_SITES, CYCLIC_ANHYDRIDE, LINKAGE_LIBRARY, TP, canonical, catechol_pairs, linkage_fragment, _ports
 
 ROLE_LABELS = {"aryl_aldehyde":"Aromatic aldehyde", "primary_arylamine":"Primary aromatic amine",
+               "primary_alkylamine":"Primary aliphatic amine","alkyl_aldehyde":"Aliphatic aldehyde","carbon_aldehyde":"Aromatic or aliphatic aldehyde",
                "tp_trialdehyde":"Tp trialdehyde", "acylhydrazide":"Terminal acylhydrazide", "hydrazine":"Hydrazine",
                "aryl_hydroxylamine":"Aromatic hydroxylamine · Ar–NH–OH","aryl_acetonitrile":"Arylacetonitrile · Ar–CH₂–CN",
                "methyltriazine":"Methyl on 1,3,5-triazine","aryl_carboxyl":"Aromatic carboxylic acid or acyl chloride",
                "aryl_cyclic_anhydride":"Aromatic cyclic anhydride","aryl_vicinal_diol":"Aromatic ortho-diol pair","aryl_boronic_acid":"Arylboronic acid"}
 LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "acylhydrazone":"Acylhydrazone · C=N–NH–CO",
+                  "alkyl_imine":"Alkylamine-derived imine","alkyl_ketoenamine":"Alkylamine-derived β-ketoenamine",
+                  "reduced_alkyl_imine":"Reduced alkylamine-derived imine",
                   "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
                   "nitrone":"Nitrone · C=N⁺(O⁻)","cyano_vinylene_sp2_carbon":"Cyanovinylene · CH=C(CN)",
                   "vinylene_methyltriazine":"Vinylene · methyltriazine condensation","amide":"Amide · C(O)–NH",
@@ -29,7 +32,7 @@ TEMPLATES = [
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
     {"id":"sql_4_2","label":"Square · 4c + 2c","instances":8,"allow_pairs":[[4,2],[2,4]],"topology_label":"sql","description":"Four tetratopic corners joined by four linear linkers."},
-    {"id":"kgm_4_2","label":"Kagome · hexagons and triangles","instances":12,"allow_pairs":[[2,4],[4,2]],"topology_label":"kgm","linkages":["imine","cyano_vinylene_sp2_carbon","nitrone"],"description":"Four independently functionalized tetraarylethene arms joined by a linear ditopic spacer. Choose a hexagon, triangle or connected neighborhood."},
+    {"id":"kgm_4_2","label":"Kagome · hexagons and triangles","instances":12,"allow_pairs":[[2,4],[4,2]],"topology_label":"kgm","linkages":["imine","alkyl_imine","cyano_vinylene_sp2_carbon","nitrone"],"description":"Four independently functionalized tetraarylethene arms joined by a linear ditopic spacer. Choose a hexagon, triangle or connected neighborhood."},
     {"id":"sql_4_4","label":"Square · 4c + 4c","instances":4,"allow_pairs":[[4,4]],"topology_label":"sql","description":"Alternating tetratopic vertices; unused sites remain continuation ports."},
     {"id":"hxl_6_2","label":"Triangular · 6c + 2c","instances":6,"allow_pairs":[[6,2],[2,6]],"topology_label":"hxl","description":"Three hexatopic corners and three edge linkers."},
     {"id":"chain_2_2","label":"Open chain · 2c + 2c","instances":6,"allow_pairs":[[2,2]],"topology_label":None,"description":"Six alternating units with two open ends; no 2D net is assigned."},
@@ -82,6 +85,7 @@ def _inspect_monomer(smiles):
     mol=Chem.MolFromSmiles(smiles)
     if mol is None: raise ValueError("Invalid monomer SMILES")
     patterns={"aryl_aldehyde":"[c][CH1](=[O])", "primary_arylamine":"[c][NX3;H2;+0]",
+              "primary_alkylamine":ALKYL_AMINE,"alkyl_aldehyde":ALKYL_ALDEHYDE,
               "aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS,
               "acylhydrazide":"[NX3;H2]-[NX3;H1]-[CX3](=[OX1])",
               "boronic_acid":"[B]([OH1])[OH1]", "aryl_boronic_acid":ARYL_BORONIC, "nitrile":"[C]#[N]", "aryl_cyclic_anhydride":CYCLIC_ANHYDRIDE, **CARBON_SITES}
@@ -89,7 +93,8 @@ def _inspect_monomer(smiles):
     for kind,pattern in patterns.items():
         # Symmetric OH permutations must not count a boronic acid twice.
         hits=mol.GetSubstructMatches(Chem.MolFromSmarts(pattern))
-        count=len({hit[0] for hit in hits})
+        # Distinct formyl carbons or nitrogens can share a saturated carbon.
+        count=len({hit[1 if kind in ('primary_alkylamine','alkyl_aldehyde') else 0] for hit in hits})
         if count: groups.append({"kind":kind,"label":ROLE_LABELS.get(kind,kind.replace('_',' ').title()),"count":count})
     diols=catechol_pairs(mol)
     if diols:groups.append(dict(kind='aryl_vicinal_diol',label=ROLE_LABELS['aryl_vicinal_diol'],count=len(diols)))
@@ -99,13 +104,23 @@ def _inspect_monomer(smiles):
     for linkage,rule in LINKAGE_LIBRARY.items():
         for role in rule["roles"]:
             count=next((g["count"] for g in groups if g["kind"]==role),0)
+            if role=="carbon_aldehyde":
+                count=sum(g["count"] for g in groups if g["kind"] in ("aryl_aldehyde","alkyl_aldehyde"))
             if count:
                 roles.append({"linkage":linkage,"role":role,"reactive_sites":count,"compatible":True,
                               "reason":"Recognized functional group; crystallization and reaction conditions are not predicted."})
     shapes=spatial.site_shapes(mol)
+    if any(g['kind']=='tp_trialdehyde' for g in groups):
+        shapes['tp_trialdehyde']='triangular'
+    kagome=kagome_roles(mol,patterns)
+    if 'aryl_aldehyde' in kagome and not any(g['kind']=='alkyl_aldehyde' for g in groups):
+        kagome['carbon_aldehyde']=kagome['aryl_aldehyde']
+    for role in ('carbon_aldehyde','primary_alkylamine'):
+        if shapes.get(role)=='linear':
+            kagome[role]='spacer'
     tetra='tetrahedral' in shapes.values() and mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4;!R](-[c])(-[c])(-[c])-[c]"))
     from .cofdraw_mixed import ETTA, linear_dialdehyde
-    return {"site_shapes":shapes,"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,"kagome_roles":kagome_roles(mol,patterns),
+    return {"site_shapes":shapes,"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,"kagome_roles":kagome,
             "kgm_etta":any(g["kind"]=="primary_arylamine" and g["count"]==4 for g in groups) and Chem.MolToSmiles(mol)==ETTA,
             "kgm_dialdehyde":any(g["kind"]=="aryl_aldehyde" and g["count"]==2 for g in groups) and linear_dialdehyde(smiles),
             "geometry_hint":"tetrahedral" if tetra else "tetrahedral_cage" if "tetrahedral" in shapes.values() else "unspecified",
@@ -130,8 +145,11 @@ def enable_reviewed_feed(row):
     """Re-evaluate an intact archived feed when its reaction family becomes drawable."""
     if not str(row.get('catalog_use','')).startswith('reference_only') or not row.get('source_dois') or row.get('annotation_only'):
         return row
-    donor_roles={'aryl_acetonitrile','methyltriazine','aryl_carboxyl','aryl_cyclic_anhydride','aryl_boronic_acid','aryl_vicinal_diol'}
-    for r in _inspect_monomer(row['smiles'])['compatible_roles']:
+    donor_roles={'aryl_acetonitrile','methyltriazine','aryl_carboxyl','aryl_cyclic_anhydride','aryl_boronic_acid','aryl_vicinal_diol','primary_alkylamine'}
+    inspected=_inspect_monomer(row['smiles'])
+    if any(g['kind']=='alkyl_aldehyde' for g in inspected['reactive_groups']):
+        donor_roles.add('carbon_aldehyde')
+    for r in inspected['compatible_roles']:
         if r['role'] not in donor_roles or r['reactive_sites']<2:
             continue
         try:
@@ -143,7 +161,7 @@ def enable_reviewed_feed(row):
     return row
 
 def decorated_monomers(rows):
-    from .cofdraw_self import self_kind
+    from .cofdraw_self import self_kind, can_tile_rhombus
     from .cofdraw_mixed import linear_dialdehyde
     output=[]
     for row in rows:
@@ -171,8 +189,10 @@ def decorated_monomers(rows):
             roles = {k:next((e['reactive_sites'] for e in candidates if e['linkage']=='imine' and e['role']==k),0)
                      for k in ('aryl_aldehyde','primary_arylamine')}
             kind = self_kind(row,mol,self_imine) if complete else None
-            pores = ([{'id':'hexagon','label':'Hexagonal pore'}, {'id':'triangle','label':'Triangular pore'}]
+            pores = ([{'id':'hexagon','label':'Kagome · hexagonal pore'}, {'id':'triangle','label':'Kagome · triangular pore'}]
                      if kind=='self_kagome' else [])
+            if pores and can_tile_rhombus(canonical(row['smiles'])):
+                pores.append({'id':'rhombus','label':'Square lattice · rhombic pore'})
             output.append({**row,**metadata,'binary_eligible':bool(candidates),'binary_roles':candidates,
                            'canonical_smiles':canonical(row['smiles']), 'assembly_roles':{**roles,'self_imine':self_imine,
                            'self_kind':kind,'self_pores':pores,
@@ -239,6 +259,10 @@ def refresh_design_identity(recipe):
 
 def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,template_id=None):
     if linkage not in LINKAGE_LIBRARY: raise ValueError("This linkage is searchable but has no automatic construction rule")
+    if linkage in ALKYL_VARIANTS:
+        donors={row['kind']:row['count'] for row in _inspect_monomer(monomer_b)['reactive_groups']}
+        if donors.get('primary_alkylamine',0)>=2 and donors.get('primary_arylamine',0)<2:
+            linkage=ALKYL_VARIANTS[linkage]
     rule=LINKAGE_LIBRARY[linkage]
     components={key:{**linkage_fragment(smiles,linkage,role),"label":label}
                 for key,smiles,role,label in zip(("A","B"),(monomer_a,monomer_b),rule["roles"],(label_a,label_b))}

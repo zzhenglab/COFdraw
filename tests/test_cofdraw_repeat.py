@@ -22,6 +22,62 @@ def api(tmp_path):
         yield client
 
 
+@pytest.mark.parametrize(('endpoint', 'style', 'extra'), [
+    ('render', 'ring_fill', {}), ('repeat', 'half_space_stack', {'repeats': 3, 'extent_mode': 'triad'})])
+def test_aryl_figure_cut_keeps_the_substituted_connected_model(api, endpoint, style, extra):
+    prepared = api.post('/api/drawing/prepare', json={
+        'monomer_a': 'O=Cc1cc(C=O)cc(C=O)c1', 'monomer_b': 'Nc1ccc(N)c(F)c1',
+        'linkage': 'imine', 'template_id': 'hcb_3_2', 'instances': 12,
+    })
+    assert prepared.status_code == 200, prepared.text
+    body = {'recipe': prepared.json()['recipe'], 'size': 500, 'style_id': style, **extra}
+    exports = {}
+    for mode in ('linkage', 'aryl'):
+        response = api.post('/api/drawing/' + endpoint, json={**body, 'style_options': {'boundary_cut': mode}})
+        assert response.status_code == 200, response.text
+        urls = response.json()['downloads']
+        exports[mode] = {key: api.get(urls[key]) for key in ('json', 'svg', 'mol', 'sdf', 'png')}
+    base, short = exports['linkage'], exports['aryl']
+    doc = short['json'].json()
+    audit = doc['audit']
+    boundary = audit['drawing_style']['boundary']
+    svg = ElementTree.fromstring(short['svg'].content)
+    assert svg.get('data-boundary-cut') == 'aryl'
+    assert int(svg.get('data-figure-atoms')) == audit['atoms'] - boundary['shortened_sites']
+    assert boundary['shortened_sites'] > 0 and base['png'].content != short['png'].content
+    assert short['mol'].content == base['mol'].content and short['sdf'].content == base['sdf'].content
+    model = Chem.MolFromMolBlock(short['mol'].text)
+    assert len(Chem.GetMolFrags(model)) == 1 and model.GetNumAtoms() == audit['atoms']
+    assert any(atom.GetAtomicNum() == 9 for atom in model.GetAtoms())
+    assert audit['fragment_smiles'] == base['json'].json()['audit']['fragment_smiles']
+    assert len(audit['drawing_style']['layout']['atom_pixels']) == model.GetNumAtoms()
+    assert len(audit['drawing_style']['layout']['editing_atom_indices']) < boundary['figure_atoms']
+    if endpoint == 'render':
+        assert audit['design_cofex_notation'] == base['json'].json()['audit']['design_cofex_notation']
+    else:
+        assert doc['summary']['figure_boundary'] == boundary
+        assert doc['summary']['pore_count'] == 3
+
+
+def test_kagome_star_cuts_only_its_open_arms_in_the_figure(api):
+    prep = api.post('/api/drawing/prepare/assembly', json={'monomer_ids': ['feed_38117f8076cd']})
+    assert prep.status_code == 200, prep.text
+    recipe = prep.json()['recipe']
+    choice = next(row for row in repeat_options(recipe)['extents'] if row['label'] == 'Hexagon + 6 triangles')
+    response = api.post('/api/drawing/repeat', json={
+        'recipe': recipe, 'repeats': choice['repeats'], 'extent_mode': choice['extent_mode'],
+        'size': 500, 'style_id': 'foreground_pore', 'style_options': {'boundary_cut': 'hub'}})
+    assert response.status_code == 200, response.text
+    summary, urls = response.json()['summary'], response.json()['downloads']
+    cut = summary['figure_boundary']
+    assert cut['shortened_sites'] == 12 and cut['figure_atoms'] < cut['model_atoms'] - 12
+    assert summary['pore_count'] == 7 and summary['continuation_sites'] == 12
+    mol = Chem.MolFromMolBlock(api.get(urls['mol']).text)
+    assert mol.GetNumAtoms() == cut['model_atoms'] and len(Chem.GetMolFrags(mol)) == 1
+    svg = ElementTree.fromstring(api.get(urls['svg']).content)
+    assert svg.get('data-boundary-cut') == 'hub' and int(svg.get('data-figure-atoms')) == cut['figure_atoms']
+
+
 def test_binary_shared_faces_keep_isotopes_and_stereochemistry():
     recipe = prepare_template('O=Cc1cc([13CH]=O)cc(C=O)c1',
                               'Nc1cc([C@H](F)Cl)c(N)cc1/C=C/F','imine','node A','linker B',12,'hcb_3_2')

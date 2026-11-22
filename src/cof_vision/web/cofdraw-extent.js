@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     const s=result.summary, downloads=result.downloads||{svg:result.svg};
     $('framework-image').src='.'+downloads.svg;
     $('drawing-summary').textContent=[s.extent,s.blocks+' blocks',s.atoms+' atoms',s.continuation_sites+' outward sites'].join(' · ');
-    studio.showExports(downloads);$('export-note').textContent=s.cdxml_note||'';$('export-note').hidden=!s.cdxml_note;
+    studio.showExports(downloads);
+    const exportNote=[s.figure_boundary?.note,s.cdxml_note].filter(Boolean).join(' ');
+    $('export-note').textContent=exportNote;$('export-note').hidden=!exportNote;
     const legend=$('pore-type-legend');legend.replaceChildren();
     const familyNames={triangle:'Triangle',hexagon:'Hexagon',square:'Square'};
     for(const [type,n] of Object.entries(s.pore_sequences||s.pore_counts||{})){

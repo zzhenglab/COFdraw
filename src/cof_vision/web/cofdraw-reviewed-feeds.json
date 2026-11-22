@@ -405,6 +405,40 @@
     ]
   },
   {
+    "id": "feed_38b62007569d",
+    "abbreviation": "Me-OH-DFP",
+    "full_name": "2,6-diformyl-4-methylphenol",
+    "smiles": "Cc1cc(C=O)c(O)c(C=O)c1",
+    "source_dois": [
+      "10.1021/acsami.8b05849"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acsami.8b05849",
+        "source_label": "Me-OH-DFP",
+        "framework_annotation": "source-acs-acsami-8b05849-TrzPOP-2",
+        "molecule_annotation": "source-acs-acsami-8b05849-Me-OH-DFP"
+      }
+    ]
+  },
+  {
+    "id": "feed_38f50feb0031",
+    "abbreviation": "BODA",
+    "full_name": "bicyclo[2.2.2]octane-1,4-dicarbaldehyde",
+    "smiles": "O=CC12CCC(C=O)(CC1)CC2",
+    "source_dois": [
+      "10.1021/jacs.4c13256"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/jacs.4c13256",
+        "source_label": "BODA",
+        "framework_annotation": "source-acs-jacs-4c13256-NUS-119-main2",
+        "molecule_annotation": "acs-wave3-015-013"
+      }
+    ]
+  },
+  {
     "id": "feed_3ad1e0881dbe",
     "abbreviation": "CHO-C4A",
     "full_name": "5,11,17,23-tetraformyl-25,26,27,28-tetrahydroxycalix[4]arene",
@@ -435,6 +469,23 @@
         "source_label": "2,7-PTDCA",
         "framework_annotation": "source-wiley-anie-202115020-sp2c-COF-6-pore",
         "molecule_annotation": "source-wiley-anie-202115020-TDA-Br-to-27-PTDCA-2,7-PTDCA"
+      }
+    ]
+  },
+  {
+    "id": "feed_3f30878e4213",
+    "abbreviation": "p-Xylylenediamine",
+    "full_name": "p-Xylylenediamine",
+    "smiles": "NCc1ccc(CN)cc1",
+    "source_dois": [
+      "10.1002/anie.201914424"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.201914424",
+        "source_label": "p-Xylylenediamine",
+        "framework_annotation": "C-2151-main-p02-figure1-framework",
+        "molecule_annotation": "C-2151-main-p02-figure1-p-xylylenediamine"
       }
     ]
   },
@@ -657,6 +708,23 @@
     ]
   },
   {
+    "id": "feed_5f7c9660e964",
+    "abbreviation": "Pa-TFSIH",
+    "full_name": "2,5-diamino-N-((trifluoromethyl)sulfonyl)benzenesulfonamide",
+    "smiles": "Nc1ccc(N)c(S(=O)(=O)NS(=O)(=O)C(F)(F)F)c1",
+    "source_dois": [
+      "10.1021/acsenergylett.4c01941"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acsenergylett.4c01941",
+        "source_label": "Pa-TFSIH",
+        "framework_annotation": "source-acs-acsenergylett-4c01941-COF-TFSI-Li",
+        "molecule_annotation": "source-acs-acsenergylett-4c01941-Pa-TFSIH"
+      }
+    ]
+  },
+  {
     "id": "feed_5f8bfa741b98",
     "abbreviation": "11,14-dibromohexahelicene-1,8-dicarbaldehyde",
     "full_name": "11,14-dibromohexahelicene-1,8-dicarbaldehyde",
@@ -704,6 +772,23 @@
         "source_label": "BTEBA",
         "framework_annotation": "source-acs-acsmaterialslett-4c02315-HIAM-0021",
         "molecule_annotation": "source-acs-acsmaterialslett-4c02315-BTEBA-Fig1"
+      }
+    ]
+  },
+  {
+    "id": "feed_66b25f6840b9",
+    "abbreviation": "trans-CHDA",
+    "full_name": "trans-Cyclohexane-1,4-diamine",
+    "smiles": "N[C@H]1CC[C@H](N)CC1",
+    "source_dois": [
+      "10.1021/jacs.3c03614"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/jacs.3c03614",
+        "source_label": "CHDA",
+        "framework_annotation": "r330-product-TFPB-CHDA",
+        "source_description": "The authors identify the reagent as trans-1,4-diaminocyclohexane. The framework annotation supplies its stereochemical SMILES."
       }
     ]
   },
@@ -789,6 +874,23 @@
         "source_label": "o-Pda",
         "framework_annotation": "source-wiley-anie-202404077-o-Pda-pore",
         "molecule_annotation": "source-wiley-anie-202404077-o-Pda-feed-o-Pda"
+      }
+    ]
+  },
+  {
+    "id": "feed_7892e47d4ede",
+    "abbreviation": "2,5-bis(3-methoxypropoxy)benzene-1,4-diamine",
+    "full_name": "2,5-bis(3-methoxypropoxy)benzene-1,4-diamine",
+    "smiles": "COCCCOc1cc(N)c(OCCCOC)cc1N",
+    "source_dois": [
+      "10.1021/acsami.5c01219"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acsami.5c01219",
+        "source_label": "2,5-bis(3-methoxypropoxy)benzene-1,4-diamine",
+        "framework_annotation": "source-acs-acsami-5c01219-functional-diamine-final-arrow",
+        "molecule_annotation": "source-acs-acsami-5c01219-5-route"
       }
     ]
   },
@@ -970,6 +1072,23 @@
     ]
   },
   {
+    "id": "feed_8da844d11cb5",
+    "abbreviation": "(R,R)-DACH",
+    "full_name": "(1R,2R)-cyclohexane-1,2-diamine",
+    "smiles": "N[C@@H]1CCCC[C@H]1N",
+    "source_dois": [
+      "10.1021/jacs.7b04008"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/jacs.7b04008",
+        "source_label": "(R,R)-DACH",
+        "framework_annotation": "acs-jacs-7b04008-C01",
+        "molecule_annotation": "acs-jacs-7b04008-M03"
+      }
+    ]
+  },
+  {
     "id": "feed_9149ef9a4eac",
     "abbreviation": "O-NHNH2",
     "full_name": "2,5-bis(2-ethoxyethoxy)terephthalohydrazide",
@@ -1116,6 +1235,23 @@
         "source_label": "F-TAM",
         "framework_annotation": "source-wiley-anie-202113348-pore-1",
         "molecule_annotation": "source-wiley-anie-202113348-F-TAM"
+      }
+    ]
+  },
+  {
+    "id": "feed_a182f237051c",
+    "abbreviation": "SL-1",
+    "full_name": "1,4-bis(4,6-diamino-1,3,5-triazin-2-yl)benzene",
+    "smiles": "Nc1nc(N)nc(-c2ccc(-c3nc(N)nc(N)n3)cc2)n1",
+    "source_dois": [
+      "10.1021/acsami.8b05849"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acsami.8b05849",
+        "source_label": "SL-1",
+        "framework_annotation": "source-acs-acsami-8b05849-TrzPOP-1",
+        "molecule_annotation": "source-acs-acsami-8b05849-SL-1"
       }
     ]
   },
@@ -1375,6 +1511,23 @@
     ]
   },
   {
+    "id": "feed_bac38dd87c2c",
+    "abbreviation": "PDI",
+    "full_name": "N,N'-bis(2-aminoethyl)terephthalaldimine",
+    "smiles": "NCCN=Cc1ccc(C=NCCN)cc1",
+    "source_dois": [
+      "10.1021/acssuschemeng.4c09481"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acssuschemeng.4c09481",
+        "source_label": "PDI",
+        "framework_annotation": "acs-acssuschemeng-4c09481-C01",
+        "molecule_annotation": "acs-acssuschemeng-4c09481-M03"
+      }
+    ]
+  },
+  {
     "id": "feed_bacea613b0df",
     "abbreviation": "DPTA",
     "full_name": "2,5-di(pyridin-4-yl)terephthalaldehyde",
@@ -1562,6 +1715,23 @@
         "source_label": "HZ-E",
         "framework_annotation": "source-wiley-smll-202102630-mixed-E",
         "molecule_annotation": "source-wiley-smll-202102630-HZ-E-SI"
+      }
+    ]
+  },
+  {
+    "id": "feed_ca1830558c98",
+    "abbreviation": "3B2CN",
+    "full_name": "(2Z,2′Z)-2,2′-(1,4-phenylene)bis[3-(4-formylphenyl)acrylonitrile]",
+    "smiles": "N#C/C(=C\\c1ccc(C=O)cc1)c1ccc(/C(C#N)=C/c2ccc(C=O)cc2)cc1",
+    "source_dois": [
+      "10.1021/acsnano.3c08313"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acsnano.3c08313",
+        "source_label": "3B2CN",
+        "framework_annotation": "source-acs-acsnano-3c08313-CityU-4",
+        "molecule_annotation": "source-acs-acsnano-3c08313-3B2CN"
       }
     ]
   },
@@ -2001,6 +2171,23 @@
         "source_label": "TM",
         "framework_annotation": "source-wiley-chem-201903733-PA-pore",
         "molecule_annotation": "source-wiley-chem-201903733-TM"
+      }
+    ]
+  },
+  {
+    "id": "feed_f5db2b43be74",
+    "abbreviation": "EDOT-2CHO",
+    "full_name": "4,4′-(ethylenedioxythiophene-2,5-diyl)dibenzaldehyde",
+    "smiles": "O=Cc1ccc(-c2sc(-c3ccc(C=O)cc3)c3c2OCCO3)cc1",
+    "source_dois": [
+      "10.1021/acscatal.3c01281"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1021/acscatal.3c01281",
+        "source_label": "EDOT-2CHO",
+        "framework_annotation": "source-acs-acscatal-3c01281-EDOT-CTF-patch",
+        "molecule_annotation": "source-acs-acscatal-3c01281-CTF-dialdehyde"
       }
     ]
   },

@@ -64,6 +64,9 @@ def expand_material_names(text):
 
 LINKAGE_ALIASES = {
     "imine": ["imine", "C=N"],
+    "alkyl_imine": ["alkyl imine", "aliphatic imine"],
+    "reduced_alkyl_imine": ["reduced alkyl imine","reduced aliphatic imine"],
+    "alkyl_ketoenamine": ["alkyl ketoenamine","aliphatic ketoenamine"],
     "beta_ketoenamine": ["beta ketoenamine", "beta-ketoenamine", "keto-enamine", "ketoenamine", "beta keto enamine"],
     "acylhydrazone": ["acylhydrazone", "acyl hydrazone"],
     "nitrone": ["nitrone", "nitrone linkage"],
@@ -125,8 +128,8 @@ FILLER.update("png svg mol sdf cdxml format file files output outputs".split())
 FILLER.update("net sheet lattice projection projected schematic".split())
 COUNT_WORDS = {"di": 2, "tri": 3, "tetra": 4, "hexa": 6, "two": 2, "three": 3, "four": 4, "six": 6,
                "eight": 8, "twelve": 12}
-ROLE_GROUPS = {"amine": "primary_arylamine", "aldehyde": "aryl_aldehyde", "hydrazide": "acylhydrazide",
-               "hydroxylamine": "aryl_hydroxylamine"}
+ROLE_GROUPS = {"amine": ("primary_arylamine","primary_alkylamine"), "aldehyde": ("aryl_aldehyde","alkyl_aldehyde"),
+               "hydrazide": ("acylhydrazide",), "hydroxylamine": ("aryl_hydroxylamine",)}
 
 
 def _normal(text):
@@ -319,8 +322,9 @@ def _explicit_requirements(text):
 
 def _check_functionality(requirements, monomers, unresolved):
     for role, count in requirements:
-        actual = sorted({int(group["count"]) for row in monomers for group in row.get("functionality", [])
-                         if group.get("kind") == ROLE_GROUPS[role]})
+        counts = {sum(int(group["count"]) for group in row.get("functionality", [])
+                      if group.get("kind") in ROLE_GROUPS[role]) for row in monomers}
+        actual = sorted(counts-{0})
         if count not in actual:
             unresolved.append(f"The explicit {count}-site {role} requirement does not match the selected catalog monomers (recognized counts: {actual or 'none'}).")
 
@@ -521,7 +525,11 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         def valid(row, role):
             return any(item.get("linkage") == link and item.get("role") == role and item.get("reactive_sites", 0) >= 2 for item in row.get("binary_roles",row.get("compatible_roles", [])))
         return [(left, right) for left, right in ((a, b), (b, a)) if valid(left, roles[0]) and valid(right, roles[1])]
-    options = [key for key in supported if key != "secondary_amine" and orientations(key)]
+    from .framework_drawing import ALKYL_VARIANTS,LINKAGE_LIBRARY
+    options = [key for key in supported if not LINKAGE_LIBRARY[key].get('explicit_only') and orientations(key)]
+    variant=ALKYL_VARIANTS.get(linkage)
+    if variant in supported and linkage in supported and not orientations(linkage) and orientations(variant):
+        linkage=variant
     if not linkage:
         preferences = {row.get("linkage") for row in library.get("cof_presets", [])
                        if {row.get("monomer_a_id"), row.get("monomer_b_id")} == set(monomer_ids)

@@ -10,7 +10,7 @@ from cof_vision.cofdraw_assembly import assemble
 from cof_vision.cofdraw_chemistry import decorated_monomers
 from cof_vision.cofdraw_core import read_catalog,catalog_monomers
 from cof_vision.cofdraw_self import self_examples
-from cof_vision.cofdraw_self_kagome import kagome_patch
+from cof_vision.cofdraw_self_kagome import kagome_patch, hub_boundary
 from cof_vision.framework_drawing import VERSION,build_patch
 
 
@@ -86,3 +86,59 @@ def test_pore_choice_and_feed_are_graph_specific(examples):
     for smiles in ['CB(O)O','N#Cc1cc(C#N)ccc1','OB(O)c1ccc(B2OCCO2)cc1']:
         row=decorated_monomers([dict(id='edit',label='Edited linker',smiles=smiles)])[0]
         assert not row['assembly_roles']['self_kind']
+
+
+# The same reaction geometry occurs with vinylene spacers on opposite types
+# of arm in COF-953 and COF-954 and without spacers in p-TetPB-COF-K.
+TETPB='Nc1ccc(-c2cc(-c3ccc(C=O)cc3)c(-c3ccc(N)cc3)cc2-c2ccc(C=O)cc2)cc1'
+
+
+@pytest.mark.parametrize('smiles,figure_atoms',[
+    ('Nc1ccc(/C=C/c2cc(-c3ccc(C=O)cc3)c(/C=C/c3ccc(N)cc3)cc2-c2ccc(C=O)cc2)cc1',372),
+    ('Nc1ccc(-c2cc(/C=C/c3ccc(C=O)cc3)c(-c3ccc(N)cc3)cc2/C=C/c2ccc(C=O)cc2)cc1',372),
+    (TETPB,336),
+    (TETPB.replace('c2cc(', 'c2c(F)c(',1),348),
+    (TETPB.replace('c2cc(', 'c2c(C)c(',1),348),
+])
+def test_self_kagome_from_custom_precursor(smiles,figure_atoms):
+    from scipy.spatial import KDTree
+    row=decorated_monomers([dict(id='custom',label='Custom',smiles=smiles)])[0]
+    recipe=assemble([row],'',pore_view='hexagon')
+    mol,summary=kagome_patch(recipe,2,star=True)
+    xy=mol.GetConformer().GetPositions()
+    origins=summary['atom_origin']
+    assert summary['pore_counts']=={'hexagon':1,'triangle':6} and len(Chem.GetMolFrags(mol))==1
+    for i,j in KDTree(xy).query_pairs(1.49):
+        assert origins[i]['instance']==origins[j]['instance'] or mol.GetBondBetweenAtoms(i,j)
+    for b in mol.GetBonds():
+        i,j=b.GetBeginAtomIdx(),b.GetEndAtomIdx()
+        assert np.linalg.norm(xy[i]-xy[j])==pytest.approx(1.5,abs=.002)
+        if origins[i]['instance']!=origins[j]['instance']:
+            assert {b.GetBeginAtom().GetSymbol(),b.GetEndAtom().GetSymbol()}=={'C','N'}
+            assert b.GetBondType()==Chem.BondType.DOUBLE and b.GetStereo()==Chem.BondStereo.STEREONONE
+    if '/C=C/' in smiles:
+        assert sum(b.GetStereo()==Chem.BondStereo.STEREOE for b in mol.GetBonds())==24
+    figure=hub_boundary(mol,recipe)
+    assert figure.GetNumAtoms()==figure_atoms and mol.GetNumAtoms()>figure_atoms
+    assert sum(a.GetAtomicNum()==0 for a in figure.GetAtoms())==12
+    if any(p['id']=='rhombus' for p in row['assembly_roles']['self_pores']):
+        square,audit=build(assemble([row],'',pore_view='rhombus'))
+        xy=square.GetConformer().GetPositions()
+        assert not audit['layout_refinement']['source_coordinates_preserved']
+        assert all(1.1<np.linalg.norm(xy[b.GetBeginAtomIdx()]-xy[b.GetEndAtomIdx()])<1.7
+                   for b in square.GetBonds())
+
+
+def test_self_net_choice_resolves_pasted_structure():
+    from cof_vision.cofdraw_cofex import parse_record,recipe_record
+    row=decorated_monomers([dict(id='custom',label='Sample',smiles=TETPB)])[0]
+    assert {r['id'] for r in row['assembly_roles']['self_pores']}=={'triangle','hexagon','rhombus'}
+    for face,net in [('rhombus','sql'),('triangle','kgm')]:
+        record=recipe_record(assemble([row],'',pore_view=face))
+        assert record['net']==net
+        plan,=parse_record(record['text'],[])
+        assert plan['assembly_request']['pore_view']==face
+    for smiles in ('Nc1ccc(C(c2ccc(N)cc2)(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1',
+                   'Nc1ccc(-c2cc(-c3ccc(C=O)cc3)c(-c3ccc(C=O)cc3)cc2-c2ccc(N)cc2)cc1'):
+        with pytest.raises(ValueError):
+            parse_record(smiles+' COFex.kgm.cat0',[])

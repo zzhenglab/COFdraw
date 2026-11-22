@@ -38,6 +38,9 @@ CARBON_SITES = {
 CYCLIC_ANHYDRIDE = '[O,o;X2;+0;r5,r6](@[C,c;X3](=O)@[c])@[C,c;X3](=O)@[c]'
 ARYL_BORONIC = '[c]-[B;X3;+0]([OH1;+0])[OH1;+0]'
 CATECHOL = '[OH1;+0]-[c;r6]:[c;r6]-[OH1;+0]'
+ALKYL_AMINE = '[C;X4;+0]-[N;X3;H2;D1;+0;!$(*-[#1])]'
+ALKYL_ALDEHYDE = '[C;X4;+0]-[CH1;X3;+0]=[O;X1;+0]'
+CARBON_ALDEHYDE = '[$([c]),$([C;X4;+0])]-[CH1;X3;+0]=[O;X1;+0]'
 
 
 def catechol_pairs(mol):
@@ -101,10 +104,31 @@ LINKAGE_LIBRARY.update({
     "azine": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","hydrazine"],"join_bond_order":2,
               "bond_changes":"Hydrazine terminal nitrogens form C=N-N=C connections.",
               "limits":"Exact neutral hydrazine only; reagents/counterions, E/Z and synthetic feasibility are not inferred."},
-    "secondary_amine": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","primary_arylamine"],"join_bond_order":1,
+    "secondary_amine": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","primary_arylamine"],"join_bond_order":1,"explicit_only":True,
                         "bond_changes":"Reduced imine product connectivity Ar-CH2-NH-Ar.",
                         "limits":"Explicit reduced-imine product design; not a direct aldehyde/amine reaction prediction. Reduction evidence and conditions are required for a literature assignment."},
+    "alkyl_imine": {"version":1,"status":"implemented_scoped","roles":["carbon_aldehyde","primary_alkylamine"],
+        "site_smarts":{"carbon_aldehyde":CARBON_ALDEHYDE,"primary_alkylamine":ALKYL_AMINE},"join_bond_order":2,
+        "bond_changes":"Remove the aldehyde oxygen and connect its carbon to primary alkylamine nitrogen by C=N.",
+        "limits":"Free NH2 on saturated carbon and a carbon-bound aldehyde. Imine E/Z and crystal geometry require separate evidence.",
+        "source_doi":"10.1002/anie.201310500"},
+    "reduced_alkyl_imine": {"version":1,"status":"implemented_scoped","roles":["carbon_aldehyde","primary_alkylamine"],
+        "join_bond_order":1,"explicit_only":True,"bond_changes":"Use the reduced aldehyde–alkylamine linkage, CH₂–NH.",
+        "limits":"Postsynthetic reduction of the imine must be selected explicitly. Crystal coordinates and conversion require separate evidence.",
+        "source_doi":"10.1021/jacs.4c13256"},
+    "alkyl_ketoenamine": {"version":1,"status":"implemented_scoped","roles":["tp_trialdehyde","primary_alkylamine"],
+        "join_bond_order":1,"bond_changes":"Convert Tp to its keto tautomer and join each exocyclic CH to NH–alkyl.",
+        "limits":"Exact Tp and free primary alkylamine. The product tautomer is an explicit design choice.",
+        "source_doi":"10.1002/anie.201310500"},
 })
+
+
+ALKYL_VARIANTS={'imine':'alkyl_imine','beta_ketoenamine':'alkyl_ketoenamine','secondary_amine':'reduced_alkyl_imine'}
+
+
+def matches_linkage_family(reported, actual):
+    """Accept a literature family name or the precise construction rule."""
+    return reported == actual or reported in ALKYL_VARIANTS and ALKYL_VARIANTS[reported]==actual
 
 
 def canonical(value):
@@ -159,8 +183,9 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
                 raise ValueError('Isotopic donor nitrogen or hydrogen requires explicit imide atom mapping.')
             sites.append(aryl)
             removed.append(nitrogen)
-    elif role == "primary_arylamine":
-        sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NX3;H2;+0]"))]
+    elif role in ("primary_arylamine","primary_alkylamine"):
+        pattern=ALKYL_AMINE if role=="primary_alkylamine" else "[c][NX3;H2;+0]"
+        sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts(pattern))]
     elif role == "aryl_hydroxylamine":
         for _, nitrogen, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts(ARYL_HYDROXYLAMINE_SMARTS)):
             sites.append(nitrogen)
@@ -179,8 +204,9 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
             sites.append(match[1])
             if role == "aryl_carboxyl":
                 removed.append(match[3])
-    elif role in ("aryl_aldehyde","self_imine"):
-        for _, carbon, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][CH1](=[O])")):
+    elif role in ("aryl_aldehyde","carbon_aldehyde","self_imine"):
+        pattern=CARBON_ALDEHYDE if role=="carbon_aldehyde" else "[c][CH1](=[O])"
+        for _, carbon, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)):
             sites.append(carbon); removed.append(oxygen)
         if role == "self_imine":
             aldehydes = set(sites)
@@ -529,7 +555,7 @@ def build_patch(recipe: dict):
             raise ValueError('Atom coordinates must be finite xy pairs')
         refinement = {'method': 'explicit_atom_coordinates', 'applied': False, 'source_coordinates_preserved': True}
         assembly=recipe.get('assembly') or {}
-        if (assembly.get('kind')=='self_kagome' or assembly.get('pore_layout')=='kgm'
+        if (assembly.get('kind')=='self_kagome' or assembly.get('pore_view')=='rhombus' or assembly.get('pore_layout')=='kgm'
                 or (recipe.get('selected_template') or {}).get('id')=='kgm_4_2'):
             refinement.update(source_coordinates_preserved=False, coordinate_provenance=recipe.get('coordinate_provenance'))
     conf = Chem.Conformer(mol.GetNumAtoms())

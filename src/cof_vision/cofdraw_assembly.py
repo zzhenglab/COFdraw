@@ -79,7 +79,7 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
         from .cofdraw_self import feed_metadata, trimer_assembly
         row = rows[0]
         kind = row['assembly_roles'].get('self_kind')
-        if pore_view is not None and not (kind == 'self_kagome' and pore_view in ('hexagon','triangle')):
+        if pore_view is not None and pore_view not in {p['id'] for p in row['assembly_roles'].get('self_pores',[])}:
             raise ValueError('This pore view is unavailable for the selected self-condensation.')
         if kind in ('self_boroxine','self_triazine'):
             result = trimer_assembly(row,kind)
@@ -88,6 +88,9 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
         if not row['assembly_roles']['self_imine']:
             raise ValueError('Choose a self-condensing aminoaldehyde, linear aryl diboronic acid or linear aryl dinitrile.')
         comp = components['A'] = _fragment(row, 'self_imine')
+        if pore_view=='rhombus':
+            from .cofdraw_self import rhombus_recipe
+            return rhombus_recipe(row,comp)
         if kind == 'self_kagome':
             from .cofdraw_self_kagome import kagome_recipe
             return kagome_recipe(row,comp,pore_view or 'hexagon')

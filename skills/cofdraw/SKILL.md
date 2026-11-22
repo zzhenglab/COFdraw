@@ -23,7 +23,11 @@ For precursor-only reconstruction, use the actual feed SMILES and the reported p
 
 To compare a local reviewed inventory with the builder, run `python scripts/audit_annotation_drawings.py manifest.jsonl coverage.csv` from the repository. The table retains incomplete targets and identity conflicts. An exact bounded connectivity match scores the molecular graph at the tested extent and omits stereochemistry and layout.
 
-To export an independently selected finite motif with continuation marks on the outer aryl carbons, run `python scripts/audit_annotation_drawings.py draw "<precursor COFex>" output.mol --linkage imine --aryl-cut`. Supply the actual linkage ID. Add `--star` for a Kagome hexagon sharing edges with six triangles. The crop changes where the finite fragment ends and retains its interior chemistry.
+The audit reports a separate result when the graphs agree only after applying the same local aromaticity model to both. This can occur when whole-pore aromaticity perception changes the bond flags on amide junctions. Keep these results distinct from exact as-parsed matches. With `--reference-root /path/to/curation-data`, the CSV also compares skeletal bond-length outliers against available hash-verified 2D annotation MOL files. A blank metric means that geometry was unavailable.
+
+To export a finite motif ending at the outer aryl carbons, run `python scripts/audit_annotation_drawings.py draw "<precursor COFex>" output.mol --linkage imine --aryl-cut`. Use the actual linkage ID. For a self-condensed Kagome hexagon sharing edges with six triangles, use `--star`. Add `--hub-cut` to end the outer arms at their central hubs.
+
+In Studio or the drawing API, `style_options.boundary_cut` controls the PNG and SVG only. Choose `linkage` for the full model, `aryl` for adjacent aryl carbons, or `hub` for the central hubs of an eligible self-condensed Kagome drawing. Read the applied cut count and model/figure atom counts in `drawing_style.boundary` or the repeat result's `summary.figure_boundary`. Molecular exports retain the full model.
 
 For a prose request, use the local description workflow in [agent-workflows.md](references/agent-workflows.md) to obtain a reviewable, catalog-bound plan. Rules mode is the default. Use an optional provider API only when the user has explicitly chosen that mode and supplied its settings; never discover or reuse ambient credentials. An LLM proposal selects IDs and still passes the local chemistry checks.
 

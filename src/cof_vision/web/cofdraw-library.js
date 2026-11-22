@@ -42,6 +42,7 @@
   }
   function templateCompatibility(template, linkage, monomers, library) {
     const shapes=['a','b'].map(block=>monomers[block]?.site_shapes?.[roleFor(library,linkage,block)]);
+    if(template.topology_label&&shapes.includes('unresolved_alkyl'))return {compatible:false,reason:'The attachment directions of this aliphatic building block are unassigned. Choose a local projection.'};
     if(template.shape_pair&&!template.shape_pair.every((value,i)=>value===shapes[i])&&
        !template.shape_pair.every((value,i)=>value===shapes[1-i]))return {compatible:false,reason:'The reactive arms do not match this spatial arrangement.'};
     if(template.topology_label&&(shapes.includes('spiro')||shapes.includes('spatial_unspecified')))return {compatible:false,reason:'This node has out-of-plane arms. Its geometry needs a separate connectivity assignment.'};
@@ -120,7 +121,7 @@
       }
     }
     // Product-state reduction is never an automatic replacement for condensation.
-    const order=['beta_ketoenamine','keto_hydrazide','imine','acylhydrazone','azine','nitrone','secondary_amine'];
+    const order=['beta_ketoenamine','alkyl_ketoenamine','keto_hydrazide','imine','alkyl_imine','acylhydrazone','azine','nitrone','secondary_amine'];
     return results.sort((a,b)=>(order.indexOf(a.id)<0?99:order.indexOf(a.id))-(order.indexOf(b.id)<0?99:order.indexOf(b.id)));
   }
   function automaticChoice(library,item,block,other) {
@@ -134,7 +135,7 @@
   function automaticPlan(library,a,b,preferred=null) {
     const choices=compatibleLinkages(library,a,b);
     // A reduced product state always requires an explicit manual choice.
-    const allowed=choices.filter(choice=>choice.id!=='secondary_amine');
+    const allowed=choices.filter(choice=>choice.id!=='secondary_amine'&&!library.linkages[choice.id]?.explicit_only);
     const chosen=allowed.find(choice=>choice.id===preferred?.linkage)||allowed[0];
     if(!chosen)return null;
     const raw=library.templates,templates=Array.isArray(raw)?raw:Object.values(raw||{});

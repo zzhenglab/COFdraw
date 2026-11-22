@@ -69,3 +69,23 @@ def test_source_comparison_preserves_substitution_and_distinguishes_a_boundary_c
     assert same_graph(clipped,Chem.RenumberAtoms(target,list(reversed(range(target.GetNumAtoms())))))
     assert not same_graph(clipped,Chem.MolFromSmiles('*c1ccc(C=C(C#N)c2cccc(*)c2)cc1'))
     assert not same_graph(target,Chem.MolFromSmiles('*c1ccc(C=C([13C]#N)c2ccc(*)cc2)cc1'))
+
+def test_bond_spread_is_scale_independent_and_skips_continuation_ports():
+    from scripts.audit_annotation_drawings import drawn_bond_spread
+    mol=Chem.MolFromSmiles('CCCCC*')
+    for scale in (1,4):
+        conf=Chem.Conformer(mol.GetNumAtoms())
+        conf.Set3D(False)
+        for i,x in enumerate([0,1,2,3,5,50]):
+            conf.SetAtomPosition(i,(scale*x,0,0))
+        mol.RemoveAllConformers()
+        mol.AddConformer(conf)
+        assert drawn_bond_spread(mol)==25.0
+
+
+def test_local_aromaticity_comparison_retains_bond_order_and_isotopes():
+    from scripts.audit_annotation_drawings import compare_bounded
+    imine=Chem.MolFromSmiles('N=Cc1ccccc1')
+    assert compare_bounded(imine,'N=CC1=CC=CC=C1').startswith('Exact')
+    assert compare_bounded(imine,'NCc1ccccc1').startswith('Different')
+    assert compare_bounded(imine,'[15NH]=Cc1ccccc1').startswith('Different')

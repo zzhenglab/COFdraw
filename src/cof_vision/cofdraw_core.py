@@ -180,7 +180,7 @@ def chosen_style(style_id: str, seed=None):
     return selected,seed
 
 
-def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
+def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size, model_coordinates=None):
     """Use RDKit's chemical label and bond placement for every presentation.
 
     Native SVG paths retain wedge/stereo geometry and clip bonds at the actual
@@ -243,8 +243,10 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
             opt.atomLabels[i] = ''
     drawer.DrawMolecule(draw_mol)
     drawer.FinishDrawing()
-    xy = np.array([[drawer.GetDrawCoords(Point2D(float(p[0]), float(p[1]))).x,
-                    drawer.GetDrawCoords(Point2D(float(p[0]), float(p[1]))).y] for p in original_xy])
+    def project(points):
+        pixels = [drawer.GetDrawCoords(Point2D(float(x), float(y))) for x, y in points]
+        return np.array([(p.x, p.y) for p in pixels])
+    xy = project(original_xy)
     root = ET.fromstring(drawer.GetDrawingText())
     defs = ET.Element(tag('defs')); root.insert(0, defs)
     atom_colors = {}
@@ -324,11 +326,12 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size):
             ET.SubElement(root, tag('path'), {'d': 'M '+' L '.join(f'{a:.3f},{b:.3f}' for a, b in samples),
                 'fill': 'none', 'stroke': atom_colors.get(old_to_new.get(j), '#171717'),
                 'stroke-width': str(opt.bondLineWidth), 'stroke-linecap': 'round', 'data-continuation': str(i)})
-    return ET.tostring(root, encoding='unicode'), xy
+    return ET.tostring(root, encoding='unicode'), xy, xy if model_coordinates is None else project(model_coordinates)
 
 
 def render_styled(recipe, directory, size, style_id, seed=None, style_options=None, *, prepared_patch=None, recent_styles=()):
     from .framework_drawing import build_patch, render_recipe
+    from .cofdraw_boundary import aryl_cut_sites, aryl_figure
     if style_id == 'source':
         source_options = {key: recipe.get('source_style', {})[key] for key in ('abbreviation_mode','edge_style') if key in recipe.get('source_style', {})}
         source_options.update(style_options or {})
@@ -341,6 +344,26 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
         prepared_patch = build_patch(recipe)
     audit = render_recipe(recipe, directory, size=size, draw_images=False, prepared_patch=prepared_patch)
     mol, _ = prepared_patch
+    model_mol, model_audit = mol, audit
+    boundary_mode = options['boundary_cut']
+    shortened = 0
+    if boundary_mode == 'aryl':
+        cuts = aryl_cut_sites(mol)
+        if cuts:
+            mol, audit, recipe = aryl_figure(mol, audit, recipe, cuts)
+            shortened = len(cuts)
+    elif boundary_mode == 'hub':
+        from .cofdraw_self_kagome import hub_figure
+        figure = hub_figure(mol, audit, recipe)
+        if figure is not None:
+            mol, audit, recipe, shortened = figure
+    model_coordinates = None
+    editing_indices = None
+    if shortened:
+        model_coordinates = np.asarray(model_mol.GetConformer().GetPositions())[:, :2]
+        kept = np.asarray(audit['model_indices'])
+        positions = np.asarray(mol.GetConformer().GetPositions())[:, :2]
+        editing_indices = kept[np.isclose(positions, model_coordinates[kept], atol=1e-8).all(axis=1)].tolist()
     xy = np.array(mol.GetConformer().GetPositions())[:, :2]; xy[:, 1] *= -1
     span = np.ptp(xy, axis=0)
     scale = size * .82 / max(float(max(span)), 1)
@@ -393,8 +416,12 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
                                "hidden_atoms": [key(i) for i in hit[1:]]}); used.update(hit)
         style["collapsed_groups"] = groups
     stem = directory / recipe["recipe_id"]
-    chemical_svg, xy = _native_styled_svg(mol, audit, recipe, style_id, options, style, size)
+    chemical_svg, xy, model_pixels = _native_styled_svg(mol, audit, recipe, style_id, options, style, size, model_coordinates)
     svg=decorate_svg(chemical_svg,mol,audit,recipe,xy,style_id,options,size)
+    figure_atoms = mol.GetNumAtoms()
+    # Geometry editing, pore measurements and all chemical files use the original
+    # connected model. Project those atoms with the same drawer used for the figure.
+    mol, audit, xy = model_mol, model_audit, model_pixels
     stem.with_suffix(".svg").write_text(svg,encoding="utf-8")
     import resvg_py
     stem.with_suffix(".png").write_bytes(resvg_py.svg_to_bytes(svg_string=svg, background=None if options["transparent_background"] else "white"))
@@ -403,6 +430,14 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
                               "category":descriptor["category"],"representation_scope":descriptor["representation_scope"],
                               "source_registered": bool(recipe.get('source_style',{}).get('source_registered')) if style_id=='source' else False, "chemistry_changed": False,
                               "graph_exports":"Underlying single finite chemical graph; visual layers and cartoon symbols are presentation only."}
+    note = ''
+    if shortened:
+        location = 'aryl rings' if boundary_mode == 'aryl' else 'aromatic hubs'
+        note = f"PNG and SVG cut at the {location}. Chemical files retain the full terminal groups."
+    elif boundary_mode != 'linkage':
+        note = "This patch has no eligible terminal groups for the selected cut."
+    audit["drawing_style"]["boundary"] = {"mode": boundary_mode, "shortened_sites": shortened,
+        "figure_atoms": figure_atoms, "model_atoms": mol.GetNumAtoms(), "note": note}
     original_xy = np.asarray(mol.GetConformer().GetPositions())[:, :2]
     atom_keys = [f"{o['instance']}:{o['fragment_atom_index']}" for o in audit['atom_origin']]
     names = list(dict.fromkeys(o['instance'] for o in audit['atom_origin']))
@@ -418,6 +453,8 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
         'coordinate_system': 'cartesian_y_up',
         'display_projection': descriptor['category'] == 'layered' and not descriptor.get('flat_foreground', False),
         'editing_scope': 'Atom pixels describe the unprojected chemical layer; use flat chemical styles for coordinate editing.'}
+    if editing_indices is not None:
+        audit['drawing_style']['layout']['editing_atom_indices'] = editing_indices
     return audit
 
 
