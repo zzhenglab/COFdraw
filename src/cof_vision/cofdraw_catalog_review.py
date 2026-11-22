@@ -26,6 +26,13 @@ MASKED_SELF = {'cv_05cbf00025a2d4a1':'dimethyl_acetal','cv_e0efd03afb224b2a':'di
 
 
 def reviewed_row(row):
+    if row['id']=='aminal_a1':
+        doi='10.1021/acs.chemmater.2c01726'
+        row={**row,'abbreviation':'TFBE','full_name':'Tetrakis(4′-formyl[1,1′-biphenyl]-4-yl)ethene',
+             'label':'TFBE · tetra(biphenyl)ethene tetraaldehyde',
+             'aliases':list(dict.fromkeys([*row.get('aliases',[]),row['abbreviation'],'TFBE'])),
+             'source_dois':sorted(set(row.get('source_dois',[]))|{doi}),
+             'source_evidence':[*row.get('source_evidence',[]),dict(source_doi=doi,source_label='TFBE',location='TFBE–PDAN framework feed')]}
     alias = row.get('abbreviation', '')
     intermediate = '10.1021/acs.chemmater.4c01292' in row.get('source_dois',[]) and alias in INTERMEDIATES
     name = INTERMEDIATES[alias] if intermediate else NAMES.get(row['id'])

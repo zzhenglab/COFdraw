@@ -104,11 +104,11 @@ function fillAssembly(saved=null){
   if(mixed){
     const nodeAmine=countFor(node,'primary_arylamine')>=3;
     const other=nodeAmine?'aryl_aldehyde':'primary_arylamine';
-    const layout=$('mixed-layout'),hasKagome=assemblyExamples().some(e=>e.pore_layout==='kgm'&&e.monomer_ids[0]===node.id);
+    const layout=$('mixed-layout'),hasKagome=node.kagome_roles?.[nodeAmine?'primary_arylamine':'aryl_aldehyde']==='node';
     $('mixed-layout-field').hidden=!hasKagome;
     if(saved||!hasKagome)layout.value=hasKagome&&saved?.pore_layout==='kgm'?'kgm':'local';
     const kgm=layout.value==='kgm', n=countFor(node,nodeAmine?'primary_arylamine':'aryl_aldehyde')===3?6:4;
-    const links=rows.filter(r=>r.id!==node.id&&!r.assembly_roles?.self_imine&&countFor(r,other)===2&&(!kgm||r.assembly_roles.kgm_linear_dialdehyde));
+    const links=rows.filter(r=>r.id!==node.id&&!r.assembly_roles?.self_imine&&countFor(r,other)===2&&(!kgm||r.kagome_roles?.[other]==='spacer'));
     const b=choose('b',links,nodeAmine?'ta':'pa');
     const c=choose('c',links.filter(r=>r.canonical_smiles!==b?.canonical_smiles),nodeAmine?'bpda_cho':'benzidine');
     chosen=[node,b,c];
@@ -1045,7 +1045,7 @@ async function applySketch(){
         const rows=[...state.library.monomer_presets,...customAssemblyRows.values()],node=rows.find(r=>r.id===ids[0]);
         const required=node.assembly_roles.primary_arylamine>=3?'aryl_aldehyde':'primary_arylamine';
         if(roles[required]!==2||roles.self_imine)throw new Error('This linker needs two complementary '+required.replaceAll('_',' ')+' sites.');
-        if($('mixed-layout').value==='kgm'&&!roles.kgm_linear_dialdehyde)throw new Error('The Kagome arrangement needs a linear dialdehyde. Use Local pore design for a bent linker.');
+        if($('mixed-layout').value==='kgm'&&item.kagome_roles?.[required]!=='spacer')throw new Error('Choose a linear ditopic spacer for this Kagome sheet.');
         if(rows.find(r=>r.id===ids[3-index])?.canonical_smiles===item.canonical_smiles)throw new Error('Choose two chemically distinct linkers.');
       }
     }

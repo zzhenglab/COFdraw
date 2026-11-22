@@ -323,6 +323,17 @@ def select_with_llm(text: str, library: dict, *, base_url: str | None, model: st
         ids = set.union(*groups.values())
         catalog["monomers"] = [row for row in catalog["monomers"] if row["id"] in ids]
         allowed["monomers"] = ids
+    elif len(json.dumps(catalog, ensure_ascii=False).encode("utf-8")) > MAX_REQUEST_BYTES // 2:
+        # Resolve synonyms locally; unrelated options only need a selectable
+        # ID and a human-readable name. Larger libraries stay within budget.
+        named = {item["id"] for item in matches}
+        catalog["monomers"] = [
+            row if row["id"] in named else
+            {"id": row["id"], "label": row.get("abbreviation") or row.get("label") or row.get("full_name") or row["id"],
+             "sites": sorted({f"{role['role']}:{role['reactive_sites']}" for role in row.get("compatible_roles", [])
+                              if "role" in role and "reactive_sites" in role})}
+            for row in catalog["monomers"]
+        ]
     if material_matches:
         catalog["named_material_matches"] = material_matches
     user_input = {"description": text, "catalog": catalog}

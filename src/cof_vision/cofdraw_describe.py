@@ -70,7 +70,10 @@ LINKAGE_ALIASES = {
     "keto_hydrazide": ["keto hydrazide", "keto-enamine-hydrazide"],
     "azine": ["azine"], "secondary_amine": ["reduced imine", "reduced-imine", "secondary amine"],
     "boronate_ester": ["boronate", "boronate ester"],
-    "cyano_vinylene_sp2_carbon": ["cyano-vinylene", "cyano vinylene"],
+    "cyano_vinylene_sp2_carbon": ["cyano-vinylene", "cyano vinylene", "cyanovinylene"],
+    "vinylene_methyltriazine": ["methyltriazine condensation", "methyltriazine vinylene"],
+    "amide": ["amide", "amide-linked", "amidation"],
+    "imide": ["imide", "polyimide", "imide-linked"],
     "vinylene_review_routes": ["vinylene", "sp2 carbon", "sp2-carbon"],
     "urea_containing_cof": ["urea linkage", "urea-linked", "urea linked"],
 }
@@ -112,6 +115,10 @@ for template, code in [(key, row[0]) for key,row in PLANAR.items()] + [
     GEOMETRY_TEMPLATES.setdefault(code, set()).add(template)
 GEOMETRIES['kgd'].append('rhombille')
 GEOMETRIES['kgm'].append('kagome')
+for shape in ('square', 'hexagon', 'octagon'):
+    template = 'local_' + shape
+    GEOMETRIES[template] = ['local ' + shape, 'local ' + shape + ' ring']
+    GEOMETRY_TEMPLATES[template] = {template}
 FILLER = set("please draw drawing depict render make create show me a an the this that my our some cof cofs framework pore patch finite chemical structure design designed new from using use with and plus of for in on as into to it its is be would like want need can could you i we style styles palette colors colours color colour colored coloured soft pretty beautiful clean publication ready high quality nice two monomers monomer building blocks block linkage linked bonds bond geometry topology template layout source catalog registered original look illustration illustrative diagram model highlight region regions by select choose selected chemistry supported units alternating 2d review proposal proposed only".split())
 FILLER.update("open load get retrieve display redraw sketch visualize visualise generate prepare export save download give produce add apply drawn drawing shown opening loading rendering figure image picture diagram schematic version please also then just kindly".split())
 FILLER.update("png svg mol sdf cdxml format file files output outputs".split())
@@ -226,7 +233,8 @@ def describe_catalog(library):
         {"id": "source_style", "label": "Recorded source colors", "text": "Draw F-COF-1 in source style", "expected_status": "ready"},
         {"id": "hydrazone", "label": "Acylhydrazone design", "text": "Draw a hexagonal acylhydrazone COF from TFB and DETH with teal orange highlights", "expected_status": "ready"},
         {"id": "square", "label": "Square design", "text": "Draw TFPPy and Pa with imine linkage in a square template and lavender mint colors", "expected_status": "ready"},
-        {"id": "unsupported", "label": "Unsupported transform", "text": "Draw a boronate ester COF from BDBA and HHTP", "expected_status": "unsupported"},
+        {"id": "boronate", "label": "Boronate ester sheet", "text": "Draw a boronate ester COF from BDBA and HHTP", "expected_status": "ready"},
+        {"id": "unsupported", "label": "Unsupported transform", "text": "Draw azo-linked TFB and TAPB", "expected_status": "unsupported"},
         {"id": "choose", "label": "Choose a material", "text": "Draw a COF", "expected_status": "needs_input"},
     ]
     return {"sources": sources, "monomers": monomers, "linkages": linkages, "templates": templates,
@@ -536,7 +544,7 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
         return _finish(result, catalog)
     a, b = ordered[0]
     if [a["id"], b["id"]] != monomer_ids:
-        assumptions.append("Reorder the two monomers to match the transform's aldehyde/node and amine/linker roles.")
+        assumptions.append("Order the building blocks by their reactive roles in the selected linkage.")
     roles = supported[linkage]["roles"]
     counts = [next(item["reactive_sites"] for item in row["compatible_roles"] if item["linkage"] == linkage and item["role"] == role) for row, role in zip((a, b), roles)]
     candidates = [row for row in catalog["templates"] if row.get("allow_pairs") and counts in row["allow_pairs"]]
@@ -548,9 +556,10 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     candidates = [row for row in candidates if matches(row, shapes)
                   and (not row["linkages"] or linkage in row["linkages"])
                   and not (row["topology_label"] and out_of_plane)]
-    if linkage!='imine' or not (a.get('kgm_dialdehyde') and b.get('kgm_etta')):
+    from .cofdraw_chemistry import kagome_match
+    if not kagome_match([a,b],roles):
         candidates = [row for row in candidates if row['id']!='kgm_4_2']
-    if linkage!='imine' or not any(count==4 and row.get('geometry_hint')=='tetrahedral'
+    if not any(count==4 and row.get('geometry_hint')=='tetrahedral'
                                     for count,row in zip(counts,(a,b))):
         candidates = [row for row in candidates if row['id']!='branched_4_3']
     if instance_counts:

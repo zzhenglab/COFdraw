@@ -9,7 +9,7 @@ from rdkit import Chem
 
 from .cofdraw_mixed import _block, _orient, join_fragments
 from .cofdraw_net_graphs import neighbors, quotient
-from .cofdraw_planar import PLANAR, face_layout
+from .cofdraw_planar import LOCAL_FACES, PLANAR, face_layout, local_faces
 
 
 def loop_edges(loop):
@@ -73,6 +73,11 @@ def circuit_layout():
 
 
 def graph_for(components,count,key):
+    if key in LOCAL_FACES:
+        if min(c['connectivity'] for c in components.values())<3:
+            raise ValueError('Sharing this molecular edge requires a third reactive site at both ends.')
+        faces,edges,xy,kinds=local_faces(LOCAL_FACES[key])
+        return faces[:count],edges,xy,kinds
     from .cofdraw_spatial import SPATIAL,patch_graph
     if key in SPATIAL:
         from .cofdraw_chemistry import inspect_monomer
@@ -103,6 +108,8 @@ def _draw_patch(components,count,key):
     from .cofdraw_spatial import SPATIAL
     faces,edges,xy,kinds=graph_for(components,count,key)
     geo={k:_block(c) for k,c in components.items()}
+    fragment,ports,_,_=geo['A']
+    order=fragment.GetBondBetweenAtoms(*ports[0]).GetBondTypeAsDouble()
     sites=sorted({v for face in faces for v in face})
     index={site:i for i,site in enumerate(sites)}
     kept=sorted(set.union(*(loop_edges(face) for face in faces)))
@@ -119,9 +126,9 @@ def _draw_patch(components,count,key):
             orientations.append(([slots[adjacent.index(other)] for other in used],theta))
             ports.update({(site,other):i for i,other in enumerate(used)})
         slot_pairs=[(ports[a,b],ports[b,a]) for a,b in kept]
-        return join_fragments(components,[kinds[s] for s in sites],points[sites],joins,slot_pairs,2,orientations,geometry)
+        return join_fragments(components,[kinds[s] for s in sites],points[sites],joins,slot_pairs,order,orientations,geometry)
     mol,origins=place(xy,geo)
-    if key in SPATIAL or key in PLANAR:
+    if key in SPATIAL or key in PLANAR or key in LOCAL_FACES:
         from .cofdraw_spatial import check_projection,clear_junctions
         try:
             check_projection(mol)
@@ -146,6 +153,7 @@ def _draw_patch(components,count,key):
             else:raise issue
     rims=[[f'{kinds[v]}{index[v]+1}' for v in face] for face in faces]
     code=PLANAR[key][0] if key in PLANAR else SPATIAL.get(key,{}).get('code','bor')
-    labels=[f'{len(f)}-node '+('pore' if key in PLANAR else 'circuit') for f in faces]
+    labels=[f'{len(f)}-node '+('pore' if key in PLANAR or key in LOCAL_FACES else 'circuit') for f in faces]
     return mol,dict(pores=count,pore_faces=rims,face_labels=labels,pore_counts=dict(Counter(labels)),
-                    atom_origin=origins,order_assumption=f'Finite circuits of a proposed {code} net. The crystal phase requires independent validation.')
+                    atom_origin=origins,order_assumption=('Adjacent local rings share a user-selected molecular edge. Periodic topology is unspecified.'
+                    if key in LOCAL_FACES else f'Finite circuits of a proposed {code} net. The crystal phase requires independent validation.'))

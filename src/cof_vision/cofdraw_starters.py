@@ -123,6 +123,7 @@ def topology_catalog(rows):
         papers={'mtf':('COF-432 and the voided square grid','10.1021/jacs.9b13094'),
                 'kgd':('Reticular synthesis of COF-360','10.1021/jacs.9b05626'),
                 'fjh':('Conformational design of COF-790','10.1021/jacs.0c11064'),
+                'pto':('Reported pto model of TFPA–TAPP-COF','10.1002/anie.202425668'),
                 'acs':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
                 'ceq':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
                 'stp':('JUC-564 and its stp net','10.1021/jacs.0c06485')}
@@ -138,7 +139,7 @@ def topology_catalog(rows):
                         if code=='mtf' else 'Hexagonal and trigonal junctions form rhombic pore boundaries.')
                 row.update(construction_supported=True, connectivity=[degrees], description=detail,
                            construction_note='Finite imine sheet with one to three edge-sharing pores.')
-            if code in ('fjh','ctn','tbo'):
+            if code in ('fjh','ctn','tbo','pto'):
                 row.update(construction_supported=True, construction_note='Finite imine circuits from compatible precursors.',
                            connectivity=[[4,3]])
             if code in papers:

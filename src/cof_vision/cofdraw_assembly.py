@@ -127,11 +127,10 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
         if any(r['assembly_roles']['self_imine'] for r in rows):
             raise ValueError('Competing aminoaldehyde roles require an explicit selective reaction design.')
         if pore_layout=='kgm':
-            from .cofdraw_mixed import ETTA, linear_dialdehyde
-            if rows[0]['canonical_smiles']!=Chem.MolToSmiles(Chem.MolFromSmiles(ETTA)):
-                raise ValueError('This kagome arrangement requires the four planar ethylenetetraaniline (ETTA) arms.')
-            if not all(linear_dialdehyde(r['canonical_smiles']) for r in rows[1:]):
-                raise ValueError('Choose two linear dialdehydes with outward-facing formyl groups for this kagome design.')
+            if rows[0].get('kagome_roles',{}).get(node_role)!='node':
+                raise ValueError('Choose a four-arm tetraarylethene such as ETTA.')
+            if not all(r.get('kagome_roles',{}).get(edge_role)=='spacer' for r in rows[1:]):
+                raise ValueError('Choose two linear ditopic spacers with outward-facing reactive groups.')
             if pattern not in ('BBB','CCC','BCBCBC','CBCBCB'):
                 raise ValueError('Choose the B triangle, C triangle, or alternating hexagon.')
             corners=len(pattern)

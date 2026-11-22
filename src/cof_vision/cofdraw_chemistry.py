@@ -1,5 +1,6 @@
 """Reactive-site inspection and explicit, user-chosen drawing templates."""
 from __future__ import annotations
+from copy import deepcopy
 import math
 import re
 import hashlib
@@ -8,46 +9,90 @@ from functools import lru_cache
 import numpy as np
 from rdkit import Chem
 from .cofdraw_depiction import compute_2d_coords
-from .framework_drawing import ARYL_HYDROXYLAMINE_SMARTS, LINKAGE_LIBRARY, TP, canonical, linkage_fragment, _ports
+from .framework_drawing import ARYL_HYDROXYLAMINE_SMARTS, ARYL_BORONIC, CARBON_SITES, CYCLIC_ANHYDRIDE, LINKAGE_LIBRARY, TP, canonical, catechol_pairs, linkage_fragment, _ports
 
 ROLE_LABELS = {"aryl_aldehyde":"Aromatic aldehyde", "primary_arylamine":"Primary aromatic amine",
                "tp_trialdehyde":"Tp trialdehyde", "acylhydrazide":"Terminal acylhydrazide", "hydrazine":"Hydrazine",
-               "aryl_hydroxylamine":"Aromatic hydroxylamine · Ar–NH–OH"}
+               "aryl_hydroxylamine":"Aromatic hydroxylamine · Ar–NH–OH","aryl_acetonitrile":"Arylacetonitrile · Ar–CH₂–CN",
+               "methyltriazine":"Methyl on 1,3,5-triazine","aryl_carboxyl":"Aromatic carboxylic acid or acyl chloride",
+               "aryl_cyclic_anhydride":"Aromatic cyclic anhydride","aryl_vicinal_diol":"Aromatic ortho-diol pair","aryl_boronic_acid":"Arylboronic acid"}
 LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "acylhydrazone":"Acylhydrazone · C=N–NH–CO",
                   "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
-                  "nitrone":"Nitrone · C=N⁺(O⁻)"}
+                  "nitrone":"Nitrone · C=N⁺(O⁻)","cyano_vinylene_sp2_carbon":"Cyanovinylene · CH=C(CN)",
+                  "vinylene_methyltriazine":"Vinylene · methyltriazine condensation","amide":"Amide · C(O)–NH",
+                  "imide":"Imide · cyclized dianhydride–amine","boronate_ester":"Boronate ester · cyclic B(O)₂"}
 from . import cofdraw_spatial as spatial
 from . import cofdraw_planar as planar
 
 TEMPLATES = [
-    {"id":"branched_4_3","label":"3D bor · tetrahedral + tritopic","dimension":3,"parent_net":"bor","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
+    {"id":"branched_4_3","label":"3D bor · tetrahedral + tritopic","dimension":3,"parent_net":"bor","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine","boronate_ester"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
     {"id":"sql_4_2","label":"Square · 4c + 2c","instances":8,"allow_pairs":[[4,2],[2,4]],"topology_label":"sql","description":"Four tetratopic corners joined by four linear linkers."},
-    {"id":"kgm_4_2","label":"Kagome · hexagons and triangles","instances":12,"allow_pairs":[[2,4]],"topology_label":"kgm","linkages":["imine"],"description":"ETTA nodes joined by linear aromatic dialdehydes. Choose a hexagon, triangle or connected neighborhood."},
+    {"id":"kgm_4_2","label":"Kagome · hexagons and triangles","instances":12,"allow_pairs":[[2,4],[4,2]],"topology_label":"kgm","linkages":["imine","cyano_vinylene_sp2_carbon","nitrone"],"description":"Four independently functionalized tetraarylethene arms joined by a linear ditopic spacer. Choose a hexagon, triangle or connected neighborhood."},
     {"id":"sql_4_4","label":"Square · 4c + 4c","instances":4,"allow_pairs":[[4,4]],"topology_label":"sql","description":"Alternating tetratopic vertices; unused sites remain continuation ports."},
     {"id":"hxl_6_2","label":"Triangular · 6c + 2c","instances":6,"allow_pairs":[[6,2],[2,6]],"topology_label":"hxl","description":"Three hexatopic corners and three edge linkers."},
     {"id":"chain_2_2","label":"Open chain · 2c + 2c","instances":6,"allow_pairs":[[2,2]],"topology_label":None,"description":"Six alternating units with two open ends; no 2D net is assigned."},
     {"id":"alternating_hexagon","label":"Custom six-unit ring","instances":6,"allow_pairs":[],"topology_label":None,"description":"Explicit ring design with any supported functionality ≥2; topology remains unknown."},
 ]
 TEMPLATES[-1:-1]=planar.templates()+spatial.templates()
+TEMPLATES.extend(dict(id=key,label=f'Local drawing · {n}-block ring',instances=n,allow_pairs=[],topology_label=None,
+                      description='An explicitly chosen finite ring. Adjacent rings can share an edge when both junctions have a spare site.')
+                 for key,n in planar.LOCAL_FACES.items())
 for template in TEMPLATES:
     template.update(linkages=template.get("linkages",list(LINKAGE_LIBRARY)),periodic_topology_inferred=False,
                     required_functionalities={"allow_pairs":template["allow_pairs"]})
 
+_TETRAARYLETHENE = Chem.MolFromSmarts('[c]-[C;!R](-[c])=[C;!R](-[c])-[c]')
+
+
+def kagome_roles(mol, patterns):
+    """Each of the four arms must terminate in a different reactive site."""
+    from .cofdraw_mixed import linear_arms
+    cores=mol.GetSubstructMatches(_TETRAARYLETHENE)
+    roles={}
+    for role in ('aryl_aldehyde','primary_arylamine','aryl_acetonitrile','aryl_hydroxylamine'):
+        hits=mol.GetSubstructMatches(Chem.MolFromSmarts(patterns[role]))
+        if len(hits)==2 and linear_arms(mol,hits):
+            roles[role]='spacer'
+        if len(hits)!=4:
+            continue
+        for arm1,left,arm2,right,arm3,arm4 in cores:
+            arms={arm1,arm2,arm3,arm4}
+            starts=[]
+            for hit in hits:
+                path=min((Chem.GetShortestPath(mol,center,hit[1]) for center in (left,right)),key=len)
+                starts.append(path[1])
+            if set(starts)==arms:
+                roles[role]='node'
+                break
+    return roles
+
+
+def kagome_match(rows,roles):
+    return {row.get('kagome_roles',{}).get(role) for row,role in zip(rows,roles)}=={'node','spacer'}
+
+
 def inspect_monomer(smiles):
+    return deepcopy(_inspect_monomer(smiles))
+
+
+@lru_cache(maxsize=2048)
+def _inspect_monomer(smiles):
     mol=Chem.MolFromSmiles(smiles)
     if mol is None: raise ValueError("Invalid monomer SMILES")
     patterns={"aryl_aldehyde":"[c][CH1](=[O])", "primary_arylamine":"[c][NX3;H2;+0]",
               "aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS,
               "acylhydrazide":"[NX3;H2]-[NX3;H1]-[CX3](=[OX1])",
-              "boronic_acid":"[B]([OH1])[OH1]", "nitrile":"[C]#[N]"}
+              "boronic_acid":"[B]([OH1])[OH1]", "aryl_boronic_acid":ARYL_BORONIC, "nitrile":"[C]#[N]", "aryl_cyclic_anhydride":CYCLIC_ANHYDRIDE, **CARBON_SITES}
     groups=[]
     for kind,pattern in patterns.items():
         # Symmetric OH permutations must not count a boronic acid twice.
         hits=mol.GetSubstructMatches(Chem.MolFromSmarts(pattern))
         count=len({hit[0] for hit in hits})
         if count: groups.append({"kind":kind,"label":ROLE_LABELS.get(kind,kind.replace('_',' ').title()),"count":count})
+    diols=catechol_pairs(mol)
+    if diols:groups.append(dict(kind='aryl_vicinal_diol',label=ROLE_LABELS['aryl_vicinal_diol'],count=len(diols)))
     if canonical(smiles)==canonical(TP): groups.append({"kind":"tp_trialdehyde","label":"Tp trialdehyde","count":3})
     if canonical(smiles)==canonical("NN"): groups.append({"kind":"hydrazine","label":"Hydrazine terminal nitrogens","count":2})
     roles=[]
@@ -60,7 +105,7 @@ def inspect_monomer(smiles):
     shapes=spatial.site_shapes(mol)
     tetra='tetrahedral' in shapes.values() and mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4;!R](-[c])(-[c])(-[c])-[c]"))
     from .cofdraw_mixed import ETTA, linear_dialdehyde
-    return {"site_shapes":shapes,"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,
+    return {"site_shapes":shapes,"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,"kagome_roles":kagome_roles(mol,patterns),
             "kgm_etta":any(g["kind"]=="primary_arylamine" and g["count"]==4 for g in groups) and Chem.MolToSmiles(mol)==ETTA,
             "kgm_dialdehyde":any(g["kind"]=="aryl_aldehyde" and g["count"]==2 for g in groups) and linear_dialdehyde(smiles),
             "geometry_hint":"tetrahedral" if tetra else "tetrahedral_cage" if "tetrahedral" in shapes.values() else "unspecified",
@@ -77,8 +122,25 @@ def library_linkages(catalog):
     for key,rule in LINKAGE_LIBRARY.items():
         result[key]={**result.get(key,{}),**rule,"label":LINKAGE_LABELS[key],"supported":True,
                      "automatic_prepare_supported":True,"runtime_status":"bounded_monomer_transform",
-                     "category":"Nitrogen linkages","role_labels":[ROLE_LABELS[r] for r in rule["roles"]]}
+                     "category":"Boron linkages" if key=="boronate_ester" else "Carbon–carbon linkages" if key in ("cyano_vinylene_sp2_carbon","vinylene_methyltriazine") else "Nitrogen linkages","role_labels":[ROLE_LABELS[r] for r in rule["roles"]]}
     return result
+
+
+def enable_reviewed_feed(row):
+    """Re-evaluate an intact archived feed when its reaction family becomes drawable."""
+    if not str(row.get('catalog_use','')).startswith('reference_only') or not row.get('source_dois') or row.get('annotation_only'):
+        return row
+    donor_roles={'aryl_acetonitrile','methyltriazine','aryl_carboxyl','aryl_cyclic_anhydride','aryl_boronic_acid','aryl_vicinal_diol'}
+    for r in _inspect_monomer(row['smiles'])['compatible_roles']:
+        if r['role'] not in donor_roles or r['reactive_sites']<2:
+            continue
+        try:
+            donor=linkage_fragment(row['smiles'],r['linkage'],r['role'])
+        except (ValueError,RuntimeError):
+            continue
+        if donor['connectivity']==r['reactive_sites']:
+            return {**row,'catalog_use':'framework_feed','automatic_prepare_supported':True}
+    return row
 
 def decorated_monomers(rows):
     from .cofdraw_self import self_kind
@@ -156,18 +218,23 @@ def design_signature(recipe):
 
 def refresh_design_identity(recipe):
     if recipe.get('assembly'):
+        from .cofdraw_cofex import recipe_record
+        record=recipe_record(recipe) if recipe.get('design_template_signature')==design_signature(recipe) else None
         recipe.update(selected_template=None,design_topology=None,design_cofex_notation=None,
                       design_identity_qualification='Local assembly. Periodic connectivity and catenation are unspecified.')
+        if record:
+            recipe['design_cofex_notation']=record['text']
         return
     selected=recipe.get("selected_template") or {}
     matched=recipe.get("design_template_signature")==design_signature(recipe)
     known=next((t for t in TEMPLATES if t["id"]==selected.get("id")),None) if matched else None
     net=known["topology_label"] if known else None
+    parent=net or (known or {}).get('parent_net') or 'unk'
     components=recipe["components"]
     smiles=sorted({canonical(c["monomer_smiles"]) for c in components.values() if c.get("monomer_smiles")})
     name=re.sub(r"[^A-Za-z0-9_+-]","","-".join(c.get("label",k) for k,c in components.items()))[:80] or "user-design"
     recipe.update(design_topology=net,selected_template=known,
-                  design_cofex_notation=".".join(smiles)+f" COFex.{net or 'unk'}.cat0;{name}" if smiles else None,
+                  design_cofex_notation=".".join(smiles)+f" COFex.{parent}.cat0;{name}" if smiles else None,
                   design_identity_qualification="Proposed design notation. Net is the chosen unchanged template, cat0 is assumed; neither is a literature identity or a CIF.")
 
 def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,template_id=None):
@@ -194,10 +261,10 @@ def _assemble_template(components, linkage, instances, template_id):
     shapes=[row['site_shapes'].get(role) for row,role in zip(inspection,rule['roles'])]
     if template and not spatial.matches(template,shapes):
         raise ValueError("The attachment geometry does not fit this spatial template.")
-    if template_id=="branched_4_3" and (linkage!="imine" or inspection[counts.index(4)]["geometry_hint"]!="tetrahedral"):
-        raise ValueError("The branched imine design requires a tetrahedral tetratopic monomer and a complementary tritopic monomer.")
-    if template_id=="kgm_4_2" and (linkage!="imine" or not inspection[0]["kgm_dialdehyde"] or not inspection[1]["kgm_etta"]):
-        raise ValueError("The Kagome drawing requires ETTA and a linear aromatic dialdehyde with imine linkages.")
+    if template_id=="branched_4_3" and inspection[counts.index(4)]["geometry_hint"]!="tetrahedral":
+        raise ValueError("The branched design requires a tetrahedral tetratopic monomer and a complementary tritopic monomer.")
+    if template_id=="kgm_4_2" and not kagome_match(inspection,rule['roles']):
+        raise ValueError("The Kagome drawing requires a four-arm tetraarylethene such as ETTA and a linear ditopic spacer.")
     if template and template["topology_label"] and any(s=='tetrahedral' for s in shapes):
         raise ValueError("A tetrahedral monomer requires 3D incidence. Choose a spatial connectivity template.")
     positions=[]; kinds=[]; angles=[]
@@ -236,7 +303,8 @@ def _assemble_template(components, linkage, instances, template_id):
                    'basis':'Kagome edge incidence'} for item in geometry['instances']]
     net=template["topology_label"] if template else None
     design_name=re.sub(r"[^A-Za-z0-9_+-]","",f"{label_a}-{label_b}")[:80] or "user-design"
-    notation=".".join(sorted({canonical(monomer_a),canonical(monomer_b)}))+f" COFex.{net or 'unk'}.cat0;{design_name}"
+    parent=net or (template or {}).get('parent_net') or 'unk'
+    notation=".".join(sorted({canonical(monomer_a),canonical(monomer_b)}))+f" COFex.{parent}.cat0;{design_name}"
     return {"components":components,"instances":items,"connections":connections,"linkage":linkage,
             "layout_kind":"open_chain" if open_chain else "closed_pore", "selected_template":template,
             "design_topology":net,"design_cofex_notation":notation,"design_catenation":"cat0",

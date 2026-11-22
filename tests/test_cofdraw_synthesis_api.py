@@ -38,8 +38,8 @@ def test_catalog_and_science_library_score_all_actual_monomers_with_same_support
         else:
             assert score["reason_code"] == "unsupported_elements" and score["score"] is None
         assert score["canonical_smiles"] == synthetic_accessibility(monomer["smiles"])["canonical_smiles"]
-    # Having a score must not promote reference-only boronate chemistry.
-    assert library["linkages"]["boronate_ester"]["supported"] is False
+    assert library["linkages"]["boronate_ester"]["supported"] is True
+    assert library["linkages"]["dioxin"]["supported"] is False
     assert rows["tbpm_boronic"]["synthetic_accessibility"]["available"]
 
 

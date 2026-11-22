@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlencode
 
 from rdkit import Chem
 
-from .cofdraw_chemistry import LINKAGE_LABELS, TEMPLATES, decorated_monomers, inspect_monomer
+from .cofdraw_chemistry import LINKAGE_LABELS, TEMPLATES, decorated_monomers, inspect_monomer, kagome_match
 from .framework_drawing import LINKAGE_LIBRARY, canonical
 
 
@@ -170,10 +170,10 @@ def parse_record(text, catalog_rows):
                 continue
             if settings.get('template') != key and template.get('topology_label') and any(roles[i]['site_shapes'].get(r) in ('spiro','spatial_unspecified','prismatic') for i,r in zip(orientation,rule['roles'])):
                 continue
-            if key=='branched_4_3' and (link!='imine' or not any(
-                    count==4 and roles[i]['geometry_hint']=='tetrahedral' for count,i in zip(counts,orientation))):
+            if key=='branched_4_3' and not any(
+                    count==4 and roles[i]['geometry_hint']=='tetrahedral' for count,i in zip(counts,orientation)):
                 continue
-            if key=='kgm_4_2' and (link!='imine' or not roles[a].get('kgm_dialdehyde') or not roles[b].get('kgm_etta')):
+            if key=='kgm_4_2' and not kagome_match([roles[a],roles[b]],rule['roles']):
                 continue
             requested = settings.get('template')
             legacy_ring = requested == 'alternating_hexagon' and net == 'unk'
@@ -229,10 +229,10 @@ def _assembly_choices(smiles, labels, catalog, net, cat, settings):
             layout = settings.get('layout', 'kgm' if net=='kgm' else None)
             if layout not in (None,'kgm') or bool(layout)!=(net=='kgm'):
                 continue
-            from .cofdraw_mixed import ETTA
             if any(r['assembly_roles']['self_imine'] or r.get('geometry_hint')=='tetrahedral' for r in rows):
                 continue
-            if layout and (rows[a]['canonical_smiles']!=canonical(ETTA) or not all(rows[i]['assembly_roles']['kgm_linear_dialdehyde'] for i in (b,c))):
+            edge_role='aryl_aldehyde' if role=='primary_arylamine' else 'primary_arylamine'
+            if layout and (rows[a]['kagome_roles'].get(role)!='node' or not all(rows[i]['kagome_roles'].get(edge_role)=='spacer' for i in (b,c))):
                 continue
             patterns = ('BBB','CCC','BCBCBC','CBCBCB') if layout else (('BC'*(n//2)), ('B'*(n//2)+'C'*(n//2)))
             for pattern in ([settings['sequence']] if 'sequence' in settings else patterns):

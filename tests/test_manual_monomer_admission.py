@@ -123,7 +123,8 @@ def test_reference_only_monomers_are_inspectable_without_automatic_roles():
         row = decorated[key]
         assert row["catalog_use"] == "reference_only"
         assert row["automatic_prepare_supported"] is False
-        assert not row["compatible_roles"]
+        expected={'ppcn':set(),'tbpm_boronic':{'boronate_ester'},'allyl_tbpa':{'boronate_ester'},'tmc':{'amide'}}
+        assert {item['linkage'] for item in row["compatible_roles"]}==expected[key]
     assert next(x["count"] for x in decorated["ppcn"]["reactive_groups"] if x["kind"] == "nitrile") == 4
     assert next(x["count"] for x in decorated["tbpm_boronic"]["reactive_groups"] if x["kind"] == "boronic_acid") == 4
     assert next(x["count"] for x in decorated["allyl_tbpa"]["reactive_groups"] if x["kind"] == "boronic_acid") == 3

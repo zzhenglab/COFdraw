@@ -237,7 +237,7 @@ def launch_from_explorer(executable, arguments, output):
                             creationflags=subprocess.CREATE_NO_WINDOW)
 
 
-def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_passed", timeout=180, shell_open=False):
+def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_passed", timeout=180, shell_open=False, native_process=False):
     """Launch an existing isolated copy; do not modify its DLLs or configuration."""
     kernel, _ = _windows_api()
     executable = Path(executable).resolve()
@@ -247,14 +247,21 @@ def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_pa
     arguments = ["--smoke-window", "--status-file", str(status_file)]
     report = {"method": "windows_shell_open" if shell_open else "ordinary_explorer_reviewed_shell_link", "expected_status": expected_status,
               "native": None, "process": None, "server_closed": False}
+    if native_process:
+        report["method"] = "ordinary_native_process"
     process = None
+    child = None
     helper = None
     status = None
     try:
-        print("Opening the extracted COFdraw through the Windows shell. If Windows shows a first-run "
-              "confirmation, review the exact COFdraw.exe identity before choosing Run. "
-              "Do not change security settings or unblock DLLs.", flush=True)
-        if shell_open:
+        if native_process:
+            child = subprocess.Popen([str(executable), *arguments], cwd=executable.parent,
+                                     creationflags=subprocess.CREATE_NO_WINDOW)
+            process, evidence = _process_evidence(child.pid, executable)
+            report["process"] = evidence
+            if not evidence["medium_integrity"]:
+                raise AssertionError("Unattended testing requires an ordinary user account")
+        elif shell_open:
             # Use the ordinary Windows shell Open verb, including its first-run
             # UI. Independently verify the application's token and file marks.
             os.startfile(str(executable), "open", subprocess.list2cmdline(arguments), str(executable.parent))
@@ -288,6 +295,8 @@ def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_pa
             raise TimeoutError("Native marked-download launch did not complete")
         status = json.loads(status_file.read_text("utf-8"))
         report["native"] = status
+        if child is not None and status.get("pid") != child.pid:
+            raise AssertionError("Native status came from a different process")
         if status["status"] != expected_status:
             raise AssertionError("Unexpected native startup status: " + str(status["status"]))
         if expected_status == "desktop_smoke_passed" and status.get("native_save_bridge") is not True:
@@ -311,6 +320,9 @@ def launch_medium_smoke(executable, output, *, expected_status="desktop_smoke_pa
                 kernel.TerminateProcess(process, 1)
                 kernel.WaitForSingleObject(process, 10000)
             kernel.CloseHandle(process)
+        if child is not None and child.poll() is None:
+            child.terminate()
+            child.wait(timeout=10)
         # Explorer can hand off to an existing desktop or remain alive. Never
         # terminate Explorer as test cleanup; only the verified test PID above.
         (output / "native-launch-report.json").write_text(json.dumps(report, indent=2) + "\n", "utf-8")
@@ -320,7 +332,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zip", dest="archive", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--shell-open", action="store_true", help="Use the standard Windows Open verb from an ordinary user session")
+    launch = parser.add_mutually_exclusive_group()
+    launch.add_argument("--native-process", action="store_true", help="Test the marked native runtime directly from an ordinary user session")
+    launch.add_argument("--shell-open", action="store_true", help="Use the standard Windows Open verb from an ordinary user session")
     args = parser.parse_args(argv)
     _windows_api()
     output = args.output_dir.resolve()
@@ -332,7 +346,7 @@ def main(argv=None):
         records = mark_downloads(application)
         report["marked_files"] = records
         report["executable_download_mark_before"] = True
-        report["launch"] = launch_medium_smoke(application / "COFdraw.exe", output / "normal-user-native", shell_open=args.shell_open)
+        report["launch"] = launch_medium_smoke(application / "COFdraw.exe", output / "normal-user-native", shell_open=args.shell_open, native_process=args.native_process)
         report.update(verify_after_launch_marks(application, records))
         report["passed"] = True
     except BaseException as exc:

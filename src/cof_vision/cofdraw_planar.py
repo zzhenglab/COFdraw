@@ -11,6 +11,35 @@ PLANAR = {
     'kgd_6_3': ('kgd', (6, 3), ('hexagonal', 'triangular')),
 }
 
+# Explicit finite layouts for schematics whose projected boundary does not
+# follow a shortest circuit of a periodic net. No lattice is assigned.
+LOCAL_FACES={'local_square':4,'local_hexagon':6,'local_octagon':8}
+
+
+@lru_cache(maxsize=3)
+def local_faces(size):
+    angle=np.arange(size)*2*np.pi/size
+    vertices=np.column_stack((np.cos(angle),np.sin(angle)))
+    points=list(vertices)
+    faces=[list(range(size))]
+    kinds=['AB'[i%2] for i in range(size)]
+    for start in (0,size//2):
+        end=(start+1)%size
+        axis=vertices[end]-vertices[start]
+        axis/=np.linalg.norm(axis)
+        reflected=vertices[start]+(vertices-vertices[start])@(2*np.outer(axis,axis)-np.eye(2))
+        face=[]
+        for i,p in enumerate(reflected):
+            if i in (start,end):
+                face.append(i)
+            else:
+                face.append(len(points))
+                points.append(p)
+                kinds.append('AB'[i%2])
+        faces.append(face)
+    edges=sorted({tuple(sorted((v,face[(i+1)%size]))) for face in faces for i,v in enumerate(face)})
+    return faces,edges,np.asarray(points),kinds
+
 
 def templates():
     return [dict(id=key, label=f'{code} sheet · {degrees[0]}c + {degrees[1]}c',

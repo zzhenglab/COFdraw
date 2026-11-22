@@ -29,6 +29,7 @@ PALETTES.update({
 FONTS=["Arial","Times New Roman","Cambria","Calibri","Verdana","Courier New","Segoe UI"]
 STYLES=[
     {"id":"standard","label":"Standard chemical drawing","description":"Conventional black bonds and explicit continuation points.","category":"chemical"},
+    {"id":"foreground_pore","label":"Foreground pore","description":"Trace the first pore in the building-block palette and fade neighbors beyond its boundary.","category":"chemical"},
     {"id":"source","label":"Source drawing style","description":"Retain recorded colors, halos, and faded regions from the source-associated drawing.","category":"chemical"},
     {"id":"mono_dashed","label":"Fine black · dashed edges","description":"Fine lines and dashed continuation bonds.","category":"chemical"},
     {"id":"mono_wave","label":"Black · wavy edges","description":"Transverse wavy continuation marks.","category":"chemical"},

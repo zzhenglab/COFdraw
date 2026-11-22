@@ -33,9 +33,15 @@ def validate_row(row):
     if rdMolDescriptors.CalcMolFormula(mol,separateIsotopes=True)!=row['isotopic_formula']:
         raise ValueError('Isotopic formula disagrees with graph')
     inspection=inspect_monomer(canonical)
-    if row['compatible_roles']!=inspection['compatible_roles'] or row['reactive_groups']!=inspection['reactive_groups']:
+    # This importer verifies the signed 37-monomer selection against the
+    # reaction vocabulary used at its review date. Live capabilities evolve.
+    links={'imine','beta_ketoenamine','keto_hydrazide','acylhydrazone','azine','secondary_amine','nitrone'}
+    kinds={'aryl_aldehyde','primary_arylamine','tp_trialdehyde','acylhydrazide','hydrazine','aryl_hydroxylamine','boronic_acid','nitrile'}
+    roles=[r for r in inspection['compatible_roles'] if r['linkage'] in links]
+    groups=[g for g in inspection['reactive_groups'] if g['kind'] in kinds]
+    if row['compatible_roles']!=roles or row['reactive_groups']!=groups:
         raise ValueError('Runtime functional groups/roles differ from reviewed selection')
-    supported=any(role['reactive_sites']>=2 for role in inspection['compatible_roles'])
+    supported=any(role['reactive_sites']>=2 for role in roles)
     if row['automatic_prepare_supported'] is not supported:
         raise ValueError('Automatic construction scope disagrees with runtime roles')
     if row['catalog_use']!=('scoped_drawing_candidate' if supported else 'reference_only'):

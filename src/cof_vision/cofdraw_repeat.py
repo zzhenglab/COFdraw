@@ -19,9 +19,9 @@ from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _double_bond_geometry_audit, _ports, build_patch
 
 from .cofdraw_spatial import SPATIAL
-from .cofdraw_planar import PLANAR
+from .cofdraw_planar import LOCAL_FACES, PLANAR
 
-BRANCHED=('branched_4_3',*SPATIAL,*PLANAR)
+BRANCHED=('branched_4_3',*SPATIAL,*PLANAR,*LOCAL_FACES)
 MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
 
@@ -63,9 +63,12 @@ def _classification(recipe, source_rule=None, source_sha256=None):
         if pattern != ''.join(i['component'] for i in recipe['instances'] if i['component']!='A'):
             raise ValueError('The declared linker sequence differs from the displayed local pore.')
         if assembly.get('pore_layout') == 'kgm':
-            from .cofdraw_mixed import ETTA
-            if Chem.MolToSmiles(Chem.MolFromSmiles(ETTA)) != recipe['components']['A']['monomer_smiles']:
-                raise ValueError('The selected Kagome rule requires a planar ETTA node.')
+            from .cofdraw_chemistry import inspect_monomer
+            for key,expected in zip('ABC',('node','spacer','spacer')):
+                part=recipe['components'][key]
+                roles=inspect_monomer(part['monomer_smiles'])['kagome_roles']
+                if roles.get(part['role'])!=expected:
+                    raise ValueError('The chosen precursors do not fit the Kagome node and spacer geometry.')
             return 'mixed_kgm'
         return 'mixed_linkers'
     if set(recipe['components']) == {'A'} and recipe['components']['A'].get('role') == 'self_imine':
@@ -310,15 +313,16 @@ def _estimate(recipe, template, n, extent_mode='pores'):
         nodes = patch_points(n, triad=extent_mode=='triad',star=extent_mode=='star')
         joins = sum((x+dx,y+dy) in nodes for x,y in nodes for dx,dy in HEX[:3])
         return len(nodes)*counts['A'] - 2*joins, joins-len(nodes)+1
-    from .cofdraw_mixed import _faces as mixed_faces
+    from .cofdraw_mixed import _faces as mixed_faces, binary_kagome_roles
     binary_kgm = template=='kgm_4_2'
+    node,spacer=binary_kagome_roles(components) if binary_kgm else ('A',None)
     pattern = ('BBB' if extent_mode=='triangle' else 'BCBCBC') if binary_kgm else (recipe['assembly'].get('linker_sequence') or 'BBBBBB')
     faces = mixed_faces(pattern,n,template=='mixed_kgm' or binary_kgm,triad=extent_mode=='triad',
-                        single_linker='A' if binary_kgm else None)
+                        single_linker=spacer)
     edge_types = {tuple(sorted((p,vertices[(i+1)%len(vertices)]))):sequence[i]
                   for vertices,sequence in faces for i,p in enumerate(vertices)}
     nodes = {p for edge in edge_types for p in edge}
-    return len(nodes)*counts['B' if binary_kgm else 'A'] + sum(counts[k] for k in edge_types.values()) - 4*len(edge_types),len(faces)
+    return len(nodes)*counts[node] + sum(counts[k] for k in edge_types.values()) - 4*len(edge_types),len(faces)
 
 
 def repeat_options(recipe, source_rule=None, source_sha256=None):
@@ -335,19 +339,20 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
             _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
         if template in BRANCHED:
-            noun='pore' if template in PLANAR else 'circuit'
+            noun='pore' if template in PLANAR or template in LOCAL_FACES else 'circuit'
             options['extents'][0]['label']='One '+noun
             for n in (2,3):
                 atoms,_=_estimate(model,template,n)
                 if atoms<=MAX_ATOMS:
-                    if template in SPATIAL or template in PLANAR:
+                    if template in SPATIAL or template in PLANAR or template in LOCAL_FACES:
                         from .cofdraw_branched import branch_patch
                         try:branch_patch(model['components'],n,template)
                         except ValueError as error:
                             options['reason']=str(error)
                             continue
                     options['extents'].append(dict(value=n,label=f'{n} connected {noun}s',pores=n,atoms=atoms))
-            scope='Adjacent faces of the chosen sheet' if template in PLANAR else 'Unfolded circuits from the chosen 3D parent net'
+            scope=('Explicitly shared edges in a finite drawing. Periodic net unassigned.' if template in LOCAL_FACES else
+                   'Adjacent faces of the chosen sheet' if template in PLANAR else 'Unfolded circuits from the chosen 3D parent net')
             options.update(template=template,available=len(options['extents'])>1,scope=scope)
             return options
         if template=='kgm_4_2':
@@ -423,7 +428,7 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
             details['face_labels']=['triangle' if len(s)==3 else 'hexagon' for s in details['face_labels']]
             details.pop('pore_sequences')
             details.update(pore_counts=dict(Counter(details['face_labels'])),
-                           order_assumption='A single imine linker family joins the ETTA nodes of the selected Kagome net.')
+                           order_assumption='Four-arm nodes share ditopic spacers along the edges of the selected Kagome sheet.')
     else:
         mol,details = _sheet(design,template,repeats,extent_mode)
     if mol.GetNumAtoms() > MAX_ATOMS or len(Chem.GetMolFrags(mol)) != 1:

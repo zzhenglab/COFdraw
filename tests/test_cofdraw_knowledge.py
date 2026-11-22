@@ -35,8 +35,8 @@ def test_linkage_support_uses_runtime_and_alias_is_not_automatic_equivalence():
     assert beta["record_id"] == "beta_ketoenamine"
     assert beta["support"]["automatic_prepare_supported"] is True
     boronate = query_catalog(DATA, "boronate ester", ["linkage"])["records"][0]
-    assert boronate["support"]["status"] == "reference_only"
-    assert boronate["support"]["automatic_prepare_supported"] is False
+    assert boronate["support"]["status"] == "bounded_automatic_transform"
+    assert boronate["support"]["automatic_prepare_supported"] is True
     hydrazone = next(r for r in query_catalog(DATA, "hydrazone", ["linkage"])["records"] if r["record_id"] == "hydrazone")
     assert hydrazone["support"]["automatic_prepare_supported"] is False
 
@@ -45,6 +45,9 @@ def test_topology_templates_and_crystals_keep_distinct_scope():
     hcb = query_catalog(DATA, "hcb", ["topology"])["records"][0]
     assert set(hcb["support"]["template_ids"]) == {"hcb_3_2", "hcb_3_3"}
     assert hcb["support"]["periodic_net_assignment"] is False
+    pto = next(r for r in query_catalog(DATA, "pto", ["topology"])["records"] if r["record_id"] == "pto")
+    assert pto["support"]["template_ids"] == ["pto_4_3"]
+    assert pto["data"]["dimension"] == 3
     crystals = query_catalog(DATA, "", ["crystal"])
     assert crystals["matched_count"] == 5
     assert all(r["support"]["status"] == "unrelaxed_periodic_design" for r in crystals["records"])
@@ -58,6 +61,8 @@ def test_query_is_deterministic_paginates_and_unknown_query_has_no_invented_answ
     catalog = json.loads((DATA / "framework-drawing/catalog/current.json").read_text(encoding="utf-8"))
     expected_ids = {row["id"] for row in catalog["monomer_presets"]} | {"bfbaeb", "bfbaepy", "tpda_terphenyl"}
     expected_ids.update({"tpb_h","tpb_me","tpb_f","tpb_ome","tpb_ph"})
+    feeds_file = DATA.parent / "src/cof_vision/web/cofdraw-reviewed-feeds.json"
+    expected_ids.update(row["id"] for row in json.loads(feeds_file.read_bytes()))
     assert first["matched_count"] == len(expected_ids)
     assert first["next_offset"] == 7
     assert not {r["id"] for r in first["records"]} & {r["id"] for r in second["records"]}

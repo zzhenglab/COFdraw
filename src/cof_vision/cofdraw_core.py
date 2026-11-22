@@ -7,6 +7,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+from functools import lru_cache
 import math
 from pathlib import Path
 import random
@@ -50,7 +51,14 @@ def read_catalog(data_root: Path) -> dict:
     return value
 
 
+@lru_cache(maxsize=1)
+def _reviewed_feeds():
+    path=Path(__file__).with_name('web')/'cofdraw-reviewed-feeds.json'
+    return json.loads(path.read_text(encoding='utf8'))
+
+
 def catalog_monomers(catalog):
+    from .cofdraw_chemistry import enable_reviewed_feed
     from .cofdraw_catalog_review import reviewed_row
     from .cofdraw_self import additional_precursors
     from .cofdraw_mixed import TPDA
@@ -69,7 +77,18 @@ def catalog_monomers(catalog):
     seen = {row['id'] for row in rows}
     from .cofdraw_starters import tpb_precursors
     rows.extend(row for row in [*additional_precursors(),TPDA,*tpb_precursors()] if row['id'] not in seen)
-    return rows
+    by_smiles={Chem.CanonSmiles(row['smiles']):i for i,row in enumerate(rows)}
+    for feed in _reviewed_feeds():
+        index=by_smiles.get(feed['smiles'])
+        admission=dict(catalog_use='framework_feed',automatic_prepare_supported=True)
+        if index is None:
+            rows.append({**feed,**admission,'label':feed['abbreviation']})
+        else:
+            old=rows[index]
+            rows[index]={**old,**admission,
+                'source_dois':sorted(set(old.get('source_dois',[]))|set(feed['source_dois'])),
+                'source_evidence':[*old.get('source_evidence',[]),*feed['source_evidence']]}
+    return [enable_reviewed_feed(row) for row in rows]
 
 
 def _number(value, limit=10000):
@@ -330,7 +349,7 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
     bond = float(np.median(lengths)); font = min(34, max(12, bond * .50))
     components = list(dict.fromkeys(o["component"] for o in audit["atom_origin"]))
     colors = resolved_palette(options)
-    colored = style_id in ("red_blue","bold_color","stacked_eclipsed","stacked_slipped","perspective")
+    colored = style_id in ("red_blue","bold_color","stacked_eclipsed","stacked_slipped","perspective","foreground_pore")
     style = {"font_family": options["font_family"], "atom_font_size": font*options["font_scale"],
              "bond_width": max(1, size / 800)*options["bond_scale"]*(1.6 if style_id=="bold_color" else 1),
              "double_offset": bond * .065, "ring_double_offset": bond * .16,
@@ -342,6 +361,13 @@ def render_styled(recipe, directory, size, style_id, seed=None, style_options=No
     if style_id == "hetero_colors" or options["element_scheme"] in ELEMENT_SCHEMES:
         atom_palette=ELEMENT_SCHEMES.get(options["element_scheme"], ELEMENT_SCHEMES["conventional"])
         style["atom_colors"]={key(a.GetIdx()):atom_palette[a.GetAtomicNum()] for a in mol.GetAtoms() if a.GetAtomicNum() in atom_palette}
+    if style_id=="foreground_pore" and recipe.get("repeat_faces"):
+        foreground=set(recipe["repeat_faces"][0])
+        ink=style.setdefault("atom_colors",{})
+        for i,origin in enumerate(audit["atom_origin"]):
+            if origin["instance"] not in foreground:
+                color=ink.get(key(i),style["component_colors"][origin["component"]])
+                ink[key(i)]='#'+''.join(f'{round(255*.72+int(color[j:j+2],16)*.28):02x}' for j in (1,3,5))
     if options["abbreviation_mode"] != "explicit":
         groups, used = [], set()
         patterns = [("[OX2]-[CH2]-[CH3]", "OEt"), ("[OX2]-[CH3]", "OMe" if options["abbreviation_mode"]=="OMe" else "OCH3"), ("[SX4](=[OX1])(=[OX1])-[OX2H]", "SO3H")]

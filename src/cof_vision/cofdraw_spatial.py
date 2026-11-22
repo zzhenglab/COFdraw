@@ -20,6 +20,7 @@ DEFINITIONS = [
     ('hea_6_4','hea',('prismatic','tetrahedral'),(6,4),4,'Prismatic + tetrahedral'),
     ('pts_4_4','pts',('tetrahedral','quadrangular'),(4,4),4,'Tetrahedral + quadrangular'),
     ('tbo_4_3','tbo',('quadrangular','triangular'),(4,3),6,'Quadrangular + triangular'),
+    ('pto_4_3','pto',('quadrangular','triangular'),(4,3),8,'Quadrangular + triangular'),
     ('fjh_4_3','fjh',('quadrangular','triangular'),(4,3),8,'Quadrangular + triangular'),
     ('ctn_4_3','ctn',('tetrahedral','triangular'),(4,3),8,'Tetrahedral + triangular'),
     ('nbo_4_2','nbo',('quadrangular','linear'),(4,2),12,'Crossed quadrangular nodes + ditopic spacer'),
@@ -31,7 +32,8 @@ SPATIAL={key:dict(code=code,shapes=shapes,degrees=degrees,instances=n,label=labe
 def templates():
     return [dict(id=key,label=f'3D {r["code"]} · {r["label"]}',instances=r['instances'],
                  allow_pairs=[list(x) for x in dict.fromkeys((r['degrees'],r['degrees'][::-1]))],
-                 shape_pair=list(r['shapes']),dimension=3,parent_net=r['code'],topology_label=None,linkages=['imine'],
+                 shape_pair=list(r['shapes']),dimension=3,parent_net=r['code'],topology_label=None,
+                 linkages=['imine','boronate_ester'] if key=='ctn_4_3' else ['imine'],
                  description=f'Unfolded molecular circuits traced from the {r["code"]} graph. The monomer pair and drawing do not establish a crystal phase.')
             for key,r in SPATIAL.items()]
 
@@ -47,8 +49,11 @@ def site_shapes(mol):
     cage=mol.GetSubstructMatch(_ADAMANTANE)
     bridgeheads={cage[a.GetIdx()] for a in _ADAMANTANE.GetAtoms() if a.GetDegree()==3} if cage else set()
     shapes={}
-    for role,pattern in [('aryl_aldehyde','[c][CH1](=O)'),('primary_arylamine','[c][NX3;H2;+0]')]:
-        hits=mol.GetSubstructMatches(Chem.MolFromSmarts(pattern))
+    from .framework_drawing import ARYL_BORONIC, catechol_pairs
+    groups={role:mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)) for role,pattern in
+            [('aryl_aldehyde','[c][CH1](=O)'),('primary_arylamine','[c][NX3;H2;+0]'),('aryl_boronic_acid',ARYL_BORONIC)]}
+    groups['aryl_vicinal_diol']=catechol_pairs(mol)
+    for role,hits in groups.items():
         if not 2<=len(hits)<=6:continue
         if len(hits)==4:
             distinct_center=False
@@ -76,7 +81,8 @@ def site_shapes(mol):
         work=Chem.Mol(mol)
         compute_2d_coords(work)
         xy=work.GetConformer().GetPositions()[:,:2]
-        rays=np.array([xy[h[1]]-xy[h[0]] for h in hits])
+        rays=(np.array([xy[h[0]]+xy[h[3]]-xy[h[1]]-xy[h[2]] for h in hits]) if role=='aryl_vicinal_diol'
+              else np.array([xy[h[1]]-xy[h[0]] for h in hits]))
         angles=np.sort(np.arctan2(rays[:,1],rays[:,0]))
         gaps=np.degrees(np.diff(np.r_[angles,angles[0]+2*np.pi]))
         if len(hits)==2 and min(gaps)>144:shapes[role]='linear'

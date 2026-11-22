@@ -49,7 +49,10 @@
     if(template.id==='branched_4_3'&&![monomers.a,monomers.b].some(m=>m?.geometry_hint==='tetrahedral'))return {compatible:false,reason:'Requires a tetrahedral four-connected monomer.'};
     if (template.supported === false) return {compatible: false, reason: template.limits || "Template unavailable."};
     if (Array.isArray(template.linkages) && !template.linkages.includes(linkage)) return {compatible: false, reason: "Not available for this linkage."};
-    if (template.id==="kgm_4_2" && (!monomers.a?.kgm_dialdehyde || !monomers.b?.kgm_etta)) return {compatible:false,reason:"Kagome requires a linear aromatic dialdehyde and the ETTA tetraamine."};
+    if (template.id==="kgm_4_2") {
+      const arms=["a","b"].map(block=>monomers[block]?.kagome_roles?.[roleFor(library,linkage,block)]);
+      if (!arms.includes("node") || !arms.includes("spacer")) return {compatible:false,reason:"Choose a four-arm tetraarylethene and a linear ditopic spacer."};
+    }
     if (template.topology_label && [monomers.a, monomers.b].some(item => item?.geometry_hint?.startsWith("tetrahedral"))) return {compatible:false, reason:"A tetrahedral node needs explicit 3D incidence. Use an unassigned projection rather than a planar net template."};
     for (const block of ["a", "b"]) {
       const role = roleFor(library, linkage, block);

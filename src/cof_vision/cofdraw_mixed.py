@@ -55,11 +55,15 @@ def mixed_pore_patterns():
 
 @lru_cache(maxsize=512)
 def linear_dialdehyde(smiles):
-    """Require both outward formyl directions to follow the end-to-end rod."""
     mol=Chem.MolFromSmiles(smiles)
-    matches=mol.GetSubstructMatches(_ARYL_FORMYL)
+    return linear_arms(mol, mol.GetSubstructMatches(_ARYL_FORMYL))
+
+
+def linear_arms(mol, matches):
+    """Require both outgoing attachment directions to follow the end-to-end rod."""
     if len(matches)!=2:
         return False
+    mol=Chem.Mol(mol)
     compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
     xy=mol.GetConformer().GetPositions()[:,:2]
     a,b=matches
@@ -68,7 +72,7 @@ def linear_dialdehyde(smiles):
     if span<1e-8:
         return False
     unit=chord/span
-    directions=[xy[aldehyde]-xy[aryl] for aryl,aldehyde,_ in matches]
+    directions=[xy[site[1]]-xy[site[0]] for site in matches]
     return all(outward@d/np.linalg.norm(d)>math.cos(math.radians(25))
                for outward,d in zip((-unit,unit),directions))
 
@@ -282,6 +286,11 @@ def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientat
     return result,origins
 
 
+def binary_kagome_roles(components):
+    """Find the node and spacer from the active, reacted precursors."""
+    return tuple(next(k for k,c in components.items() if c['connectivity']==n) for n in (4,2))
+
+
 def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
     """Build a finite molecular graph with shared blocks, labeled outer ports, and pore census."""
     kgm=layout=='kgm'
@@ -289,8 +298,8 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
             not kgm and (len(pattern) not in (4,6) or not set(pattern)<=set('BC'))):
         raise ValueError('Choose a supported pore and a drawing extent from one to four.')
     binary_kgm=kgm and set(components)=={'A','B'}
-    node='B' if binary_kgm else 'A'
-    faces=_faces(pattern,repeats,kgm,triad=triad,single_linker='A' if binary_kgm else None)
+    node,spacer=binary_kagome_roles(components) if binary_kgm else ('A',None)
+    faces=_faces(pattern,repeats,kgm,triad=triad,single_linker=spacer)
     edge_types={}
     for vertices,sequence in faces:
         for i,letter in enumerate(sequence):
@@ -344,11 +353,13 @@ def circuit_geometry(components,mol,summary,provenance):
     sites={k:{endpoint:port for port,(_,endpoint) in _ports(Chem.MolFromSmiles(c['fragment_smiles'])).items()}
            for k,c in components.items()}
     incidence={}
+    orders={}
     for bond in mol.GetBonds():
         a=origins[bond.GetBeginAtomIdx()]; b=origins[bond.GetEndAtomIdx()]
         if a['instance']!=b['instance']:
             for here,there in ((a,b),(b,a)):
                 incidence[here['instance'],there['instance']]=sites[here['component']][here['fragment_atom_index']]
+                orders[here['instance'],there['instance']]=int(bond.GetBondTypeAsDouble())
     instances=[]; connections=[]
     for i,name in enumerate(rim):
         previous,following=rim[i-1],rim[(i+1)%len(rim)]
@@ -357,7 +368,7 @@ def circuit_geometry(components,mol,summary,provenance):
         instances.append(dict(id=name,component=origins[indices[0]]['component'],incoming_port=incoming,
                               outgoing_port=outgoing,layout_position=xy[indices].mean(axis=0).tolist()))
         connections.append(dict(a=dict(instance=name,port=outgoing),
-                                b=dict(instance=following,port=incidence[following,name]),bond_order=2))
+                                b=dict(instance=following,port=incidence[following,name]),bond_order=orders[name,following]))
     coords=[dict(instance=o['instance'],fragment_atom_index=o['fragment_atom_index'],xy=point.tolist())
             for o,point in zip(origins,xy)]
     return dict(instances=instances,connections=connections,atom_coordinates=coords,

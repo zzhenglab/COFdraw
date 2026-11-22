@@ -159,8 +159,12 @@ def test_ambiguous_unknown_conflicting_or_negative_prose_never_silently_draws(te
     assert result["prepare_request"] is None and result["source_recipe_id"] is None
 
 
+def test_boronate_request_without_precursors_needs_input(library):
+    assert describe_cof("Draw a boronate COF", library)["status"] == "needs_input"
+
+
 @pytest.mark.parametrize("text", [
-    "Draw a boronate COF", "Draw a boronate ester COF from BDBA and HHTP",
+    "Draw a dioxin-linked COF",
     "Draw azo-linked TFB and TAPB", "Generate a 3D crystal of TpPa", "Draw TpPa and export CIF",
     "Draw TFB and TAPB with DFT optimization", "Draw a COF with a BET area of 2000",
 ])

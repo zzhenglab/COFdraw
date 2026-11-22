@@ -26,6 +26,26 @@ TP = "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
 # hydrogen neighbours need a separate atom-balanced reaction rule, so exclude
 # them rather than silently deleting D/T during the condensation.
 ARYL_HYDROXYLAMINE_SMARTS = "[c]-[NX3;H1;+0;!$(*-[#1])]-[OX2;H1;+0;!$(*-[#1])]"
+# The first two atoms define the outgoing attachment direction. Bare aryl
+# nitriles and unactivated aryl methyl groups do not meet these patterns.
+CARBON_SITES = {
+    "aryl_acetonitrile": "[c]-[CH2;X4;+0;!$(*-[#1])]-[C]#[N]",
+    "methyltriazine": "[c;r6;$([c]1ncncn1)]-[CH3;X4;+0;!$(*-[#1])]",
+    "aryl_carboxyl": "[c]-[C;X3;+0](=[O;X1])-[OH1,Cl;+0]",
+}
+# The ring bonds exclude acyclic mixed anhydrides. RDKit assigns aromatic
+# oxygen in some conjugated dianhydrides, so accept both Kekulé forms.
+CYCLIC_ANHYDRIDE = '[O,o;X2;+0;r5,r6](@[C,c;X3](=O)@[c])@[C,c;X3](=O)@[c]'
+ARYL_BORONIC = '[c]-[B;X3;+0]([OH1;+0])[OH1;+0]'
+CATECHOL = '[OH1;+0]-[c;r6]:[c;r6]-[OH1;+0]'
+
+
+def catechol_pairs(mol):
+    pairs=mol.GetSubstructMatches(Chem.MolFromSmarts(CATECHOL))
+    oxygens=[i for pair in pairs for i in (pair[0],pair[3])]
+    # Pyrogallols have competing pairs sharing an oxygen. Selecting one
+    # requires explicit regioselectivity; a mere count would reuse an atom.
+    return pairs if len(oxygens)==len(set(oxygens)) else ()
 LINKAGE_LIBRARY = {
     "imine": {
         "version": 1, "status": "implemented_scoped",
@@ -48,6 +68,22 @@ LINKAGE_LIBRARY = {
 # These are explicit product-graph construction rules, not claims that any
 # arbitrary pair will form a crystalline framework under a universal recipe.
 LINKAGE_LIBRARY.update({
+    "boronate_ester": {"version":1,"status":"implemented_scoped","roles":["aryl_boronic_acid","aryl_vicinal_diol"],
+        "join_bond_order":1,"bond_changes":"Each arylboronic acid and adjacent aromatic diol form a five-member cyclic boronate ester. Retain both diol oxygens.",
+        "limits":"Unprotected arylboronic acids and disjoint ortho-diphenols. Overlapping diol pairs and isotope-labeled transferred boron require an explicit site mapping."},
+    "imide": {"version":1,"status":"implemented_scoped","roles":["aryl_cyclic_anhydride","primary_arylamine"],
+        "join_bond_order":1,"bond_changes":"Replace the cyclic anhydride O with the donor amine N bonded to both carbonyl carbons and the donor aryl carbon.",
+        "limits":"Aromatic five- or six-member cyclic anhydrides and primary arylamines. The drawing uses the fully cyclized imide. Isotope-labeled donor nitrogen requires an explicit reaction mapping."},
+    "cyano_vinylene_sp2_carbon": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","aryl_acetonitrile"],
+        "join_bond_order":2,"bond_changes":"Join the aldehyde carbon to the benzylic methylene carbon as Ar–CH=C(CN)–Ar. Retain the nitrile.",
+        "limits":"Aryl aldehyde and arylacetonitrile condensation. Alkene stereochemistry requires a separate assignment.",
+        "source_doi":"10.1021/acs.chemmater.2c01726"},
+    "vinylene_methyltriazine": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","methyltriazine"],
+        "join_bond_order":2,"bond_changes":"Join the aldehyde carbon and an exocyclic methyl carbon of 1,3,5-triazine as –CH=CH–.",
+        "limits":"Only methyl groups directly attached to a 1,3,5-triazine ring are activated in this rule. E/Z is unspecified."},
+    "amide": {"version":1,"status":"implemented_scoped","roles":["aryl_carboxyl","primary_arylamine"],
+        "join_bond_order":1,"bond_changes":"Replace the carboxyl OH or acyl chloride Cl with a bond to the amine nitrogen. Preserve the carbonyl.",
+        "limits":"Direct amidation design with aromatic carboxylic acids or acyl chlorides and primary arylamines. Activation and reaction conditions require separate evidence."},
     "nitrone": {"version":1,"status":"implemented_scoped","roles":["aryl_aldehyde","aryl_hydroxylamine"],
                 "site_smarts":{"aryl_aldehyde":"[c][CH1](=[O])","aryl_hydroxylamine":ARYL_HYDROXYLAMINE_SMARTS},
                 "join_bond_order":2,
@@ -98,7 +134,32 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
         raise ValueError("Choose one connected precursor with no attachment placeholders")
     rw = Chem.RWMol(mol)
     sites, removed = [], []
-    if role == "primary_arylamine":
+    if role=="aryl_boronic_acid":
+        for aryl,boron,left,right in mol.GetSubstructMatches(Chem.MolFromSmarts(ARYL_BORONIC)):
+            if mol.GetAtomWithIdx(boron).GetIsotope():
+                raise ValueError('Isotopic boron requires explicit boronate atom mapping.')
+            sites.append(aryl)
+            removed.extend((boron,left,right))
+    elif role=="aryl_vicinal_diol":
+        for left,_,_,right in catechol_pairs(mol):
+            boron=rw.AddAtom(Chem.Atom(5))
+            for oxygen in (left,right):
+                rw.GetAtomWithIdx(oxygen).SetNumExplicitHs(0)
+                rw.AddBond(oxygen,boron,Chem.BondType.SINGLE)
+            sites.append(boron)
+    elif linkage=="imide" and role=="aryl_cyclic_anhydride":
+        for oxygen in sorted({m[0] for m in mol.GetSubstructMatches(Chem.MolFromSmarts(CYCLIC_ANHYDRIDE))}):
+            nitrogen=Chem.Atom(7)
+            nitrogen.SetIsAromatic(mol.GetAtomWithIdx(oxygen).GetIsAromatic())
+            rw.ReplaceAtom(oxygen,nitrogen)
+            sites.append(oxygen)
+    elif linkage=="imide" and role=="primary_arylamine":
+        for aryl,nitrogen in mol.GetSubstructMatches(Chem.MolFromSmarts('[c]-[NX3;H2;+0]')):
+            if mol.GetAtomWithIdx(nitrogen).GetIsotope() or any(a.GetAtomicNum()==1 for a in mol.GetAtomWithIdx(nitrogen).GetNeighbors()):
+                raise ValueError('Isotopic donor nitrogen or hydrogen requires explicit imide atom mapping.')
+            sites.append(aryl)
+            removed.append(nitrogen)
+    elif role == "primary_arylamine":
         sites = [hit[1] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][NX3;H2;+0]"))]
     elif role == "aryl_hydroxylamine":
         for _, nitrogen, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts(ARYL_HYDROXYLAMINE_SMARTS)):
@@ -113,6 +174,11 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
         sites = [hit[0] for hit in mol.GetSubstructMatches(Chem.MolFromSmarts("[NX3;H2]-[NX3;H1]-[CX3](=[OX1])"))]
     elif role == "hydrazine":
         sites = [a.GetIdx() for a in mol.GetAtoms()]
+    elif role in CARBON_SITES:
+        for match in mol.GetSubstructMatches(Chem.MolFromSmarts(CARBON_SITES[role])):
+            sites.append(match[1])
+            if role == "aryl_carboxyl":
+                removed.append(match[3])
     elif role in ("aryl_aldehyde","self_imine"):
         for _, carbon, oxygen in mol.GetSubstructMatches(Chem.MolFromSmarts("[c][CH1](=[O])")):
             sites.append(carbon); removed.append(oxygen)
@@ -152,6 +218,9 @@ def linkage_fragment(smiles: str, linkage: str, role: str) -> dict:
         index = rw.AddAtom(dummy)
         rw.AddBond(atom_id, index, Chem.BondType.DOUBLE if order == 2 else Chem.BondType.SINGLE)
         site_records.append({"port": port, "monomer_atom_index": atom_id, "join_bond_order": order})
+        if role=="aryl_vicinal_diol":
+            site_records[-1].pop("monomer_atom_index")
+            site_records[-1]["monomer_oxygen_indices"]=[a.GetIdx() for a in rw.GetAtomWithIdx(atom_id).GetNeighbors() if a.GetAtomicNum()==8]
         if role == "self_imine":
             site_records[-1]["site_role"] = "aldehyde" if atom_id in aldehydes else "amine"
     for atom_id in sorted(set(removed), reverse=True):
