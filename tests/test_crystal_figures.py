@@ -131,3 +131,57 @@ def test_tetrahedral_polytype_build_and_exchange(net,atoms):
     assert record["compact"].endswith("COFex.unk.cat0")
     parsed=parse_record(record["text"],[])
     assert parsed[0]["crystal_project"]["topology"]==net
+
+
+@pytest.mark.parametrize("example",["COF-105","TA","DMTA"])
+def test_distinct_tetraaryl_arms_and_nonbonded_clearance(example,monkeypatch):
+    from itertools import combinations
+    from cof_vision import cofdraw_reticular_scheme as drawing
+    from cof_vision.cofdraw_crystal_circuits import reference_framework
+    from cof_vision.cofdraw_crystal_figures import adjacent_circuits, chemical_drawing, junction_patch
+    from cof_vision.cofdraw_dia import build_dia
+    from cof_vision.cofdraw_junction_layout import _remote_atoms
+
+    boronate=example=="COF-105"
+    if boronate:
+        cif=Path(__file__).resolve().parents[1]/"data/crystal-models/curated/07012N3.cif"
+        model=import_cif(cif.read_text())
+        model["provenance"]["drawing_cofex"]={"linkage":"boronate_ester"}
+        edges=inspect_periodic_network(model)["edges"]
+        patches=[junction_patch(model,edges),reference_framework(model,edges)[0][2]]
+    else:
+        amine="Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
+        linker={"TA":"O=Cc1ccc(C=O)cc1","DMTA":"COc1cc(C=O)c(OC)cc1C=O"}[example]
+        model,audit=build_dia(amine,linker)
+        edges=audit["periodic_bonds"]
+        ring=crystal_details(model,edges)["ring"]
+        patches=[adjacent_circuits(ring,model["cell"],2)]
+    monkeypatch.setattr(drawing,"vector_art",lambda *args:args)
+    for patch in patches:
+        mol,pos,depth,blocks=chemical_drawing(model,edges,circuit=patch,scheme=True)
+        points=np.array([pos[i] for i in range(mol.GetNumAtoms())])
+        centers=[a for a in mol.GetAtoms() if a.GetAtomicNum() in (6,14) and a.GetDegree()==4]
+        assert centers
+        for center in centers:
+            near=center.GetNeighbors()
+            assert all(a.GetAtomicNum()==6 and any(b.HasProp("drawingRing") for b in a.GetBonds()) for a in near)
+            rays=points[[a.GetIdx() for a in near]]-points[center.GetIdx()]
+            rays/=np.linalg.norm(rays,axis=1)[:,None]
+            assert min(np.degrees(np.arccos(np.clip(p@q,-1,1))) for p,q in combinations(rays,2))>77
+        if boronate:
+            assert all(blocks[a.GetIdx()]=="A" for a in mol.GetAtoms() if a.GetSymbol() in ("B","Si"))
+            assert all(blocks[a.GetIdx()]=="B" for a in mol.GetAtoms() if a.GetSymbol()=="O")
+        if len(centers)>1:
+            pairs=_remote_atoms(mol)
+            remote=np.linalg.norm(points[pairs[:,0]]-points[pairs[:,1]],axis=1)
+            assert remote.min()>1.65
+
+
+def test_bond_crossing_opens_only_the_rear_stroke():
+    from rdkit import Chem
+    from cof_vision.cofdraw_junction_layout import crossing_gaps
+    mol=Chem.MolFromSmiles("CC.CC")
+    xy=np.array([[0.,0.],[20.,20.],[0.,20.],[20.,0.]])
+    depth=np.array([0.,0.,1.,1.])
+    assert set(crossing_gaps(mol,xy,depth))=={0}
+    assert set(crossing_gaps(mol,xy,-depth))=={1}

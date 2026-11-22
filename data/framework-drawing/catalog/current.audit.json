@@ -1,9 +1,9 @@
 {
   "schema_version": "cofdraw-current-catalog-audit-2",
-  "catalog_sha256": "86c4f015e7dd9377ea18f8689440a61e3df7dd05c4bc391a7c9477260eb91585",
+  "catalog_sha256": "c59dd8e5b3b614ed8880db8305ced3748ec49a19c546d63c1d363221e4a6ec28",
   "registry_sha256": "f4af42e525aca6d0ad8c03109959b023c766a21cecd0e2397b7bca93945fa6af",
   "source_count": 17,
-  "monomer_count": 253,
+  "monomer_count": 265,
   "recovered_drawing_audit_sha256": "faf9b09e8aeb4276c4dc1a77ad2c781a4825937a05b9f5ba34bc8536bef0b74b",
   "reviewer_type": "agent",
   "ground_truth": false,
@@ -12,7 +12,8 @@
   "source_layout_revisions_sha256": "f347f74d96471cf98a138c50ed3b795d691496c5beedfa992a7c8c0ed8f5abce",
   "master_key_monomer_admission_sha256": "38352f3aa2a965d8d923ffa7edf158cb21ff277cf831491f9f8153e4ca516da7",
   "literature_monomer_admission_sha256": "37c08e76354b878f5bef82bf1dabde8a7936b9cf3616e1c7d62f39edd6798004",
-  "previous_catalog_sha256": "dc5870b01ddd1e4e41e038eba6d642b352c1184232fe3ce181b5204cc71e6499",
+  "previous_catalog_sha256": "86c4f015e7dd9377ea18f8689440a61e3df7dd05c4bc391a7c9477260eb91585",
   "recent_primary_figure_review": true,
-  "cofvision_census_sha256": "5c18c00ac6c013769b17483d39d9b0f935365a817b2e2c478aac6b907c1d4336"
+  "cofvision_census_sha256": "5c18c00ac6c013769b17483d39d9b0f935365a817b2e2c478aac6b907c1d4336",
+  "reviewed_feed_census_sha256": "e050f188563736cd4913f3ff6cebad2b5936ea27a3ca495d3e3dd94a2e90747c"
 }

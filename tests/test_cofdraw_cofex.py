@@ -90,6 +90,31 @@ def test_reference_junction_and_copy_full_record(client,model,code):
     assert edited['projection_svg']==base['projection_svg']
 
 
+def test_reference_precursor_colors_follow_record_order_and_group_composition(client):
+    from xml.etree import ElementTree as ET
+    from cof_vision.cofdraw_crystal_figures import _reference_components
+    report=post(client,'science/model',{'template_id':'curated-16250N3'})
+    structure=report['structure']
+    record=structure['provenance']['drawing_cofex']
+    endpoint=f"science/reports/{report['report_id']}/circuits/2"
+    def ownership(svg):
+        return {el.get('data-block') for el in ET.fromstring(svg).iter() if el.get('data-block')}
+    base=post(client,endpoint,{})
+    assert ownership(base['scheme_svg'])==ownership(base['projection_svg'])=={'A','B'}
+    tilted=post(client,endpoint,{'tilt':15})
+    assert tilted['scheme_svg']!=base['scheme_svg'] and ownership(tilted['scheme_svg'])=={'A','B'}
+    graph=[[] for atom in structure['atoms']]
+    edges=report['display_edges']
+    for e in edges:
+        a,b,t=e['a'],e['b'],e['translation']
+        graph[a].append((b,t));graph[b].append((a,tuple(-v for v in t)))
+    elements=[a['element'] for a in structure['atoms']]
+    original=_reference_components(record,graph,elements,edges)
+    reversed_record={**record,'precursor_smiles':record['precursor_smiles'][::-1]}
+    reverse=_reference_components(reversed_record,graph,elements,edges)
+    assert set(original)=={'A','B'} and all(x!=y for x,y in zip(original,reverse))
+
+
 @pytest.mark.parametrize('text',[
     '  ', 'C..N COFex.dia.cat2', 'C.C.C.C COFex.hcb.cat0', 'C.[*:1] COFex.sql.cat0',
     'C.N COFex.lon.cat0;COFdraw/1?mode=crystal&order=0%2C0&link=imine',

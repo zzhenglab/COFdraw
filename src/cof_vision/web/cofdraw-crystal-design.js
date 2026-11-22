@@ -12,19 +12,16 @@
   let preparedCells=null, preferredView='Framework drawing',count=1,job=0,patchStyle=null,scope='';
   const cache=new Map();
   let poreText='', poreRequest=0;
-  const styles=[
-    ['reticular_depth','Depth fade · ink and ring wash','layered','Farther bonds fade with their depth in the crystal.'],
-    ['reticular_blocks','Depth fade · two building blocks','layered','Blue and amber distinguish the reacted precursors.'],
-    ['standard','Standard chemical drawing','chemical','Conventional chemical bonds and continuation marks.'],
-    ['red_blue','Colored building blocks','chemical','Trace each assigned precursor with its own ink.'],
-    ['ring_fill','Ring highlights','chemical','Shade molecular rings beneath the bond-line drawing.'],
-    ['element_compact','Colored atoms · compact labels','chemical','Color heteroatoms and omit inferable hydrogen labels.'],
-    ['depth_ink','Front and back ink','layered','Use the first palette color for near bonds and the second for rear bonds.'],
-    ['bold_color','Bold chemical drawing','chemical','Emphasize bonds and heteroatom labels.']
-  ].map(([id,label,category,description])=>({id,label,category,description,preview_kind:id}));
+  const sharedStyles=new Set(['standard','mono_dashed','mono_wave','serif','red_blue','hetero_colors',
+    'element_compact','node_highlight','ring_fill','pastel_blocks','bold_color','glow_outline']);
+  const depthStyles=[
+    ['reticular_depth','Depth fade · ink and ring wash','Fade rear bonds and shade aromatic rings.'],
+    ['reticular_blocks','Depth fade · building blocks','Distinguish assigned precursors with the selected palette.'],
+    ['depth_ink','Front and back ink','Color near and rear bonds by projected depth.']
+  ].map(([id,label,description])=>({id,label,description,category:'layered',preview_kind:id}));
   let restoredReference=false, comparing=false;
   function availableStyles(){
-    return restoredReference&&!report?.chemical_junction_svg?styles.filter(s=>!['reticular_blocks','red_blue'].includes(s.id)):styles;
+    return [...(studio.state.library?.styles||[]).filter(s=>sharedStyles.has(s.id)),...depthStyles];
   }
   function clearImage(){
     if(visible?.url)URL.revokeObjectURL(visible.url);
@@ -40,7 +37,13 @@
     if(!id)return;
     clearTimeout(timer);revision++;id=null;edit=null;failure='';clearPicture();main.classList.remove('crystal-design-active');
     $('crystal-design-controls').hidden=true;$('crystal-view-field').hidden=true;
-    if(patchStyle){Object.assign(studio.state,patchStyle);patchStyle=null;}
+    if(patchStyle){
+      const {style,styleOptions}=studio.state;
+      Object.assign(studio.state,patchStyle);
+      if(sharedStyles.has(style))Object.assign(studio.state,{style,styleCategory:'all',styleOptions,resolvedStyleOptions:{}});
+      else for(const k of ['palette','custom_palette','element_scheme'])if(k in styleOptions)studio.state.styleOptions[k]=styleOptions[k];
+      patchStyle=null;
+    }
     $('canvas-title').textContent='Framework canvas';$('canvas-sheet').classList.remove('transparent-preview');
     $('extent-bar').hidden=true;$('canvas-empty').classList.remove('hidden');studio.refreshStyles();
     const customEntry=$('cof-preset').querySelector('option[value="crystal:custom-dia"]');
@@ -82,6 +85,11 @@
     return {linkage:starter.linkage,feeds:feeds.map(m=>({smiles:m.smiles,label:m.abbreviation||m.label}))};
   }
   function choice(item,partner){
+    const starter=restoredReference&&entries.get(id)?.starter;
+    if(starter){
+      const roleLabel=[starter.net,starter.linkage?.replaceAll('_',' ')].filter(Boolean).join(' · ');
+      return {compatible:true,roleLabel,reason:'Reported precursor for '+(starter.common_name||'this crystal model')+'.'};
+    }
     const linkage=$('dia-linkage').value;
     function roles(m){
       if(!m)return [];
@@ -100,22 +108,48 @@
   }
   function styleSVG(text){
     const svg=new DOMParser().parseFromString(text,'image/svg+xml').documentElement;
-    const {style,styleOptions:opt,library}=studio.state;
-    const colors=opt.custom_palette||library?.style_controls?.palette_colors?.[opt.palette]||['#2768b0','#bd741e'];
+    const {style,styleOptions,library}=studio.state;
+    const spec=library?.style_controls||{};
+    const opt={...(spec.defaults?.[style]||{}),...styleOptions};
+    const colors=opt.custom_palette||spec.palette_colors?.[opt.palette||'classic']||['#d82c2c','#264bd1'];
     const depthFade=style.startsWith('reticular_')||style==='depth_ink', wash=depthFade||style==='ring_fill';
     const junction=$('crystal-drawing-view').value==='Framework drawing'&&count===1&&Boolean(report?.chemical_junction_svg);
-    const blockInk=['reticular_blocks','red_blue','bold_color'].includes(style)||(junction&&style==='reticular_depth');
-    const elementInk={jewel:{N:'#5944a6',O:'#c64059',F:'#10857d',S:'#ab7213'},conventional:{N:'#245bd1',O:'#d82c2c',F:'#268a4b',S:'#b18d0c'},deep_ink:{N:'#244487',O:'#ad3540',F:'#207458',S:'#946c09'}}[opt.element_scheme]||{};
+    const blockInk=['reticular_blocks','red_blue','bold_color'].includes(style);
+    const scheme=opt.element_scheme&&opt.element_scheme!=='style_default'?opt.element_scheme:
+      style==='element_compact'?'jewel':style==='hetero_colors'?'conventional':'';
+    const elementInk=spec.element_colors?.[scheme]||{};
+    const assigned=Boolean(svg.querySelector('[data-block="A"],[data-block="B"]'));
+    const monochrome=['mono_wave','mono_dashed','serif'].includes(style);
+    const highlight=['node_highlight','pastel_blocks','glow_outline'].includes(style);
+    const halos=document.createElementNS(svg.namespaceURI,'g');
+    halos.setAttribute('data-highlights',style);
+    halos.setAttribute('stroke-linecap','round');
+    halos.setAttribute('stroke-linejoin','round');
+    halos.setAttribute('fill','none');
+    if(style==='glow_outline'&&opt.glow_strength>0)halos.style.filter='blur('+(1+2*opt.glow_strength)+'px)';
     if(wash)svg.querySelectorAll('[data-ring-washes]').forEach(g=>g.removeAttribute('display'));
     const parentWidth=Number(svg.querySelector('g[stroke-width]')?.getAttribute('stroke-width'))||1.65;
     for(const mark of svg.querySelectorAll('[data-depth]')){
-      const block=mark.dataset.block, ink=style==='depth_ink'?colors[Number(mark.dataset.depth)<.48?1:0]:block==='A'?colors[0]:block==='B'?colors[1]||colors[0]:null;
+      const block=mark.dataset.block, ink=style==='depth_ink'?colors[Number(mark.dataset.depth)<.48?1:0]:block==='A'?colors[0]:block==='B'?colors[1]||colors[0]:assigned?null:colors[0];
       const floor=junction?.60:.19;
       const visible=depthFade?floor+(1-floor)/(1+Math.exp(-9*(Number(mark.dataset.depth)-.48))):1;
       if(mark.localName==='polygon'){
-        mark.setAttribute('fill',ink&&style!=='reticular_depth'?ink:opt.palette||opt.custom_palette?colors[0]:'#abbad8');
-        mark.setAttribute('opacity',((opt.fill_opacity??.35)*visible).toFixed(3));
+        mark.setAttribute('fill',ink||'#99a3ad');
+        mark.setAttribute('opacity',((opt.fill_opacity??.18)*visible).toFixed(3));
       }else if(mark.localName==='g'){
+        if(mark.dataset.cut){
+          const cut=opt.edge_style||'wavy_cross',wave=mark.querySelector('polyline');
+          if(wave&&cut!=='wavy_cross'){
+            wave.remove();
+            if(cut==='crossbar'){
+              const [x,y]=mark.dataset.cut.split(',').map(Number),[nx,ny]=mark.dataset.cutNormal.split(',').map(Number);
+              const bar=document.createElementNS(svg.namespaceURI,'path');
+              bar.setAttribute('d','M'+(x-4*nx)+','+(y-4*ny)+'l'+(8*nx)+','+(8*ny));
+              mark.append(bar);
+            }else if(cut==='dashed')mark.setAttribute('stroke-dasharray','3 2');
+          }
+        }
+        if(monochrome)mark.setAttribute('stroke','#25282b');
         mark.setAttribute('opacity',visible.toFixed(3));
         if((blockInk||style==='depth_ink')&&ink){mark.setAttribute('stroke',ink);mark.setAttribute('color',ink);}
         mark.setAttribute('stroke-width',parentWidth*(opt.bond_scale||1)*(style==='bold_color'?1.65:1));
@@ -129,10 +163,24 @@
         if(opt.font_family)mark.setAttribute('font-family',opt.font_family);
         if(opt.font_scale)mark.setAttribute('font-size',opt.font_scale*Number(mark.getAttribute('font-size')||mark.parentNode.getAttribute('font-size')||14));
         if((opt.hydrogen_labels||(style==='element_compact'?'compact':'show'))==='compact')mark.textContent=mark.textContent.replace(/^(N|O|S)H$/,'$1');
-        const color=elementInk[mark.textContent[0]];
+        const symbol=mark.dataset.element||mark.textContent.match(/[A-Z][a-z]?/)?.[0];
+        const color=elementInk[symbol]||(monochrome?'#25282b':null);
+        if(style==='bold_color')mark.setAttribute('font-weight','bold');
         if(color||blockInk&&ink)mark.setAttribute('fill',color||ink);
       }
+      if(highlight&&['g','path'].includes(mark.localName)){
+        const halo=mark.cloneNode(true);
+        halo.removeAttribute('data-depth');
+        const width=parentWidth*(opt.highlight_width||1)*(style==='pastel_blocks'?9:6);
+        halo.setAttribute('stroke',ink||'#98a4a7');
+        halo.setAttribute('color',ink||'#98a4a7');
+        halo.setAttribute('stroke-width',width);
+        halo.setAttribute('opacity',opt.fill_opacity??.25);
+        halo.removeAttribute('stroke-opacity');
+        halos.append(halo);
+      }
     }
+    if(halos.childElementCount){const paper=svg.querySelector(':scope > rect[data-paper]');if(paper)paper.after(halos);else svg.prepend(halos);}
     if(count>1&&$('crystal-drawing-view').value==='Framework drawing'){
       // At a crossing, let the front phenyl silhouette and its bonds occlude
       // the rear chair. A luminance mask also works on transparent exports.
@@ -188,9 +236,9 @@
     $('crystal-angle-value').textContent=adjust.value+'°';
     if(junction){
       for(let k=0;k<4;k++){
-        const angle=(12+k*90+(-1)**k*armSpread)*Math.PI/180;
+        const angle=([30,150,230,310][k]+(-1)**k*.3*armSpread)*Math.PI/180;
         const x=160+68*Math.cos(angle),y=90-68*Math.sin(angle);
-        add('line',{x1:160,y1:90,x2:x,y2:y,stroke:'#407077','stroke-width':3,opacity:k===2?.45:1});
+        add('line',{x1:160,y1:90,x2:x,y2:y,stroke:'#407077','stroke-width':k===2?5:3,opacity:k===3?.55:1,'stroke-dasharray':k===3?'3 3':'none'});
         add('circle',{cx:x,cy:y,r:4,fill:'#295861'});
       }
       add('circle',{cx:160,cy:90,r:6,fill:'#295861'});
@@ -253,6 +301,13 @@
       text=styleSVG(text);
       const url=URL.createObjectURL(new Blob([text],{type:'image/svg+xml'}));
       visible={text,url,label:type,caption,count};picture.src=url;picture.hidden=false;
+      if(Boolean(document.getElementById('style-edge_style'))!==text.includes('data-cut='))studio.drawStyleControls();
+      if(['red_blue','reticular_blocks','bold_color','ring_fill','reticular_depth','node_highlight','pastel_blocks','glow_outline'].includes(studio.state.style)){
+        const assigned=['A','B'].filter(block=>text.includes('data-block="'+block+'"'));
+        const unresolved=Number(text.match(/data-unassigned-sites="(\d+)"/)?.[1]||0);
+        if(!assigned.length)caption+=' · Single framework color (precursor assignments unavailable)';
+        else if(unresolved)caption+=' · '+unresolved+' heavy-atom sites have unresolved precursor identity';
+      }
       $('drawing-summary').textContent=[scope,caption,preparedCells?.warning].filter(Boolean).join(' · ');
       $('canvas-sheet').classList.toggle('transparent-preview',Boolean(studio.state.styleOptions.transparent_background));
       $('representation-note').hidden=true;
@@ -283,12 +338,14 @@
   }
   function chooseStyle(style){
     const state=studio.state;
+    const options=portableInkOptions(style);
     if(style==='random'){
-      const family=id=>['reticular_depth','reticular_blocks'].includes(id)?'depth':id;
+      const family=id=>sharedStyles.has(id)&&['standard','mono_dashed','mono_wave','serif'].includes(id)?'ink':
+        ['node_highlight','pastel_blocks'].includes(id)?'highlight':['reticular_depth','reticular_blocks','depth_ink'].includes(id)?'depth':id;
       const options=availableStyles().filter(s=>family(s.id)!==family(state.style));style=options[Math.floor(Math.random()*options.length)].id;
     }
     if(!availableStyles().some(s=>s.id===style))return;
-    state.style=style;state.styleOptions={};state.resolvedStyleOptions={};studio.refreshStyles();drawView();studio.sync();
+    state.style=style;state.styleOptions=options;state.resolvedStyleOptions={};studio.refreshStyles();drawView();studio.sync();
   }
   function enterDrawing(){
     if(!$('science-dialog').hidden)$('close-science').click();
@@ -298,7 +355,8 @@
     if(!patchStyle){
       const state=studio.state;
       patchStyle={style:state.style,styleOptions:state.styleOptions,resolvedStyleOptions:state.resolvedStyleOptions,styleCategory:state.styleCategory};
-      state.style='reticular_depth';state.styleCategory='all';state.styleOptions={};state.resolvedStyleOptions={};count=1;
+      state.style=sharedStyles.has(state.style)&&state.style!=='standard'?state.style:'reticular_depth';
+      state.styleCategory='all';state.styleOptions={...state.styleOptions};state.resolvedStyleOptions={};count=1;
     }
     main.classList.add('crystal-design-active');$('crystal-design-controls').hidden=false;$('crystal-view-field').hidden=false;
     studio.refreshStyles();

@@ -390,7 +390,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
     from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, render_recipe, build_patch
     from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
     from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
-    from .cofdraw_styles import PALETTES, FONTS, ELEMENT_SCHEMES
+    from .cofdraw_styles import PALETTES, FONTS, ELEMENT_SCHEMES, style_configuration
+    from rdkit import Chem
 
     router = APIRouter(prefix="/api/drawing", tags=["COF drawing"])
     root = data_root.resolve()
@@ -538,6 +539,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
                 "templates": TEMPLATES, "topology_catalog": topology_catalog(catalog.get("topology_catalog", [])),
                 "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],
+                                   "element_colors":{scheme:{Chem.GetPeriodicTable().GetElementSymbol(z):color for z,color in colors.items()} for scheme,colors in ELEMENT_SCHEMES.items()},
+                                   "defaults":{s['id']:style_configuration(s['id'])[2] for s in STYLES},
                                    "abbreviation_modes":["explicit","condensed","OMe"],"layer_count":[2,5],"layer_opacity":[.05,.7],
                                    "fill_opacity":[.05,.6],"font_scale":[.6,1.6],"bond_scale":[.5,2.5]},
                 "styles": STYLES, "monomer_presets": monomers,
@@ -871,7 +874,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
 
     @router.post('/repeat/{drawing_id}/measure')
     def measure_repeat(drawing_id: str):
-        from .cofdraw_measure import measure_aperture
+        from .cofdraw_measure import measure_aperture, qualify_circuit_span
         if not re.fullmatch(r'[0-9a-f]{32}',drawing_id):
             raise HTTPException(404,'Drawing not found')
         path=(outputs/drawing_id/(drawing_id+'.json')).resolve()
@@ -887,6 +890,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         except ValueError as exc:
             raise HTTPException(422,str(exc)) from exc
         result['focal_face']=record['summary']['measurement_face']
+        qualify_circuit_span(result,record['summary'].get('template'))
         result['method']='Inscribed-circle sampling within the selected molecular pore rim, using all explicit atom sites and their van der Waals radii.'
         return {'measurement':result,'audit':{'drawing_style':{'layout':layout}},'drawing_id':drawing_id}
 
@@ -1105,6 +1109,10 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             recipe = selected_recipe(request)
             manifest = crystal_manifest()
             with lock:
+                from .cofdraw_spatial import SPATIAL
+                key=(recipe.get('selected_template') or {}).get('id')
+                if key in SPATIAL or key=='branched_4_3':
+                    return {'available':False,'reason':'This spatial design has a building-block net. Atomic coordinates and a validated cell are required for a periodic CIF.'}
                 source_digest=source_recipe(request.source_recipe_id)[1] if request.source_recipe_id else None
                 source_rule=manifest.get('source_layer_designs',{}).get(request.source_recipe_id)
                 if request.source_recipe_id and request.layer_spacing is None and not source_rule:
@@ -1185,7 +1193,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         try:
             from .cofdraw_science import patch_3d
             with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip,twist_degrees=request.twist_degrees)
-            result['scope']='Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.'
+            result.setdefault('scope','Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.')
             return scientific_result(result, 'patch', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc
 
@@ -1349,10 +1357,26 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         try:
             structure=report['structure']
             edges=report['display_edges']
+            provenance=structure.get('provenance',{})
+            record=provenance.get('drawing_cofex',{})
+            restored_order=False
+            if record.get('scope')=='source' and record.get('linkage')=='imine' and not record.get('precursor_smiles'):
+                # Older saved reports retain sorted COFex but lack A/B order.
+                from .cofdraw_starters import PHASES
+                from .framework_drawing import canonical
+                phase=PHASES.get(provenance.get('template'))
+                if phase:
+                    by_id={r['id']:r['smiles'] for r in catalog_monomers(read_catalog(root))}
+                    if all(k in by_id for k in phase[1]):
+                        feeds=[canonical(by_id[k]) for k in phase[1]]
+                        if '.'.join(sorted(feeds))==record.get('text','').partition(' ')[0]:
+                            record={**record,'precursor_smiles':feeds}
+                            structure={**structure,'provenance':{**provenance,'drawing_cofex':record}}
+                            restored_order=True
             if report.get('cell_validation',{}).get('periodic_bonds'):
                 structure={**structure,'chemical_bonds':report['cell_validation']['periodic_bonds']}
             junction=report.get('chemical_junction_svg') if star else None
-            if star and view.arm_spread:
+            if star and (view.arm_spread or restored_order):
                 junction=chemical_drawing(structure,edges,circuit=star,arm_spread=view.arm_spread)
             template=patch or (adjacent_circuits(ring,structure['cell'],count) if ring else None)
             if not template:
@@ -1367,7 +1391,11 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             projected=chemical_drawing(structure,edges,circuit=template)
             scheme=None
             if template.get('backbone') or patch:
-                try:scheme=chemical_drawing(structure,edges,circuit=template,scheme=True)
+                # A reference scheme has its own unobstructed chemical view.
+                # Apply a user's tilt about that fitted view, not a newly
+                # chosen camera after tilting the raw CIF projection.
+                scheme_patch={**patch,'scheme_tilt':view.tilt} if patch and view.tilt and not patch.get('backbone') else template
+                try:scheme=chemical_drawing(structure,edges,circuit=scheme_patch,scheme=True)
                 except ValueError:pass
             loops=template.get('junction_loops')
             if loops is None:

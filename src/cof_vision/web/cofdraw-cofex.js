@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       $('identity-note').textContent=record?.scope==='source'?['Reported phase.',record.qualification,record.doi?'DOI '+record.doi:''].filter(Boolean).join(' '):record?'Generated periodic design from the selected precursors and network count.':'A phase-specific precursor assignment is unavailable.';
       $('copy-identity').disabled=!record;
     }
-    const current=Boolean(science?.structure||science?.finiteModel);
-    const fromDrawing=current&&['drawing','current-periodic'].includes(science.origin);
+    const current=Boolean(science?.structure||science?.finiteModel||science?.origin==='spatial-net');
+    const fromDrawing=current&&['drawing','current-periodic','spatial-net'].includes(science.origin);
     setFooter(model,science?.structure?.provenance?.drawing_cofex||(fromDrawing?record:null),current&&science.origin!=='monomer');
     open.disabled=!studio.state.online;
   }

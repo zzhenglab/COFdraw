@@ -158,12 +158,15 @@
     $('describe-scope').textContent=plan.scope||'This creates a finite chemical drawing. It does not assign a crystal structure or validate synthesis.';
     const feedback=$('describe-feedback');feedback.replaceChildren();list(feedback,'Resolve before drawing',plan.unresolved,true);list(feedback,'Please review',plan.warnings,true);
     const alternatives=plan.alternatives||[];
-    for(const choice of alternatives.filter(row=>row.kind==='monomer_choice')){
-      const button=document.createElement('button');button.type='button';button.className='button outline';button.textContent=choice.label;button.dataset.monomerChoice=choice.id;
+    const selectable=choice=>choice.kind==='monomer_choice'||choice.kind==='template_choice';
+    for(const choice of alternatives.filter(selectable)){
+      const button=document.createElement('button');button.type='button';button.className='button outline';button.textContent=choice.label;
+      if(choice.kind==='monomer_choice')button.dataset.monomerChoice=choice.id;
+      else button.dataset.templateChoice=choice.id;
       button.addEventListener('click',()=>{selectValue(fields[choice.field],choice.id);state.selection=selectionFromFields();state.selectionEdited=true;analyze();});
       feedback.append(button);
     }
-    list(feedback,'Available alternatives',alternatives.filter(row=>row.kind!=='monomer_choice'));
+    list(feedback,'Available alternatives',alternatives.filter(row=>!selectable(row)));
     const evidence=$('describe-evidence-content');evidence.replaceChildren();list(evidence,'Matched catalog records',Array.isArray(plan.matches)?plan.matches:Object.entries(plan.matches||{}).map(([key,value])=>`${key.replaceAll('_',' ')}: ${readable(value)}`));list(evidence,'Model interpretation',plan.interpretation?.explanation);list(evidence,'Assumptions',plan.assumptions);$('describe-evidence').hidden=!evidence.childElementCount;
     message(plan.status==='ready'?'The plan is ready. Review the exact choices, then create your drawing.':plan.status==='unsupported'?'This request is outside the supported drawing workflows. Review the alternatives.':'Some choices need clarification. Edit the description or selections, then analyze again.');
     if(plan.operation==='help')message('Local guidance only. Open a tool to supply inputs and run a calculation.');

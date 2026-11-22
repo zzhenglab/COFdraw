@@ -18,7 +18,7 @@ import uuid
 import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
-VERSION = "0.10.3"
+VERSION = "0.10.4"
 
 
 def validate_synthesis_resources(directory=None):

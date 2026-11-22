@@ -33,11 +33,12 @@ def phase_record(item, catalog_rows):
     by_id = {row['id']:row['smiles'] for row in catalog_rows}
     if any(key not in by_id for key in phase['monomer_ids']):
         return None
-    joined = '.'.join(sorted(canonical(by_id[key]) for key in phase['monomer_ids']))
+    precursors=[canonical(by_id[key]) for key in phase['monomer_ids']]
+    joined = '.'.join(sorted(precursors))
     count=phase['network_count']
     text = joined + f" COFex.{phase['net']}.cat{0 if count==1 else count};{item['model_name']}"
     return {'text':text, 'compact':text, 'scope':'source', 'doi':item['citation_doi'],
-            'net':phase['net'], 'network_count':count, 'linkage':phase['linkage'],
+            'net':phase['net'], 'network_count':count, 'linkage':phase['linkage'], 'precursor_smiles':precursors,
             'qualification':phase.get('qualification')}
 
 
@@ -158,6 +159,11 @@ def parse_record(text, catalog_rows):
         a,b = orientation
         for template in TEMPLATES:
             key = template['id']
+            from .cofdraw_spatial import matches
+            if not matches(template,[roles[i]['site_shapes'].get(r) for i,r in zip(orientation,rule['roles'])]):
+                continue
+            if 'template' not in settings and template.get('topology_label') and any(roles[i]['site_shapes'].get(r)=='prismatic' for i,r in zip(orientation,rule['roles'])):
+                continue
             if key=='branched_4_3' and (link!='imine' or not any(
                     count==4 and roles[i]['geometry_hint']=='tetrahedral' for count,i in zip(counts,orientation))):
                 continue

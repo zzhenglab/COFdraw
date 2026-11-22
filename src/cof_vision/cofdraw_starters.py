@@ -71,6 +71,7 @@ def crystal_starters(catalog):
                                   'boronate_ester' if net in ('ctn','bor') else 'imine')
             if row['id'] in REFERENCE_NETWORKS:
                 note = {"curated-16250N3":"The paper proposes two interpenetrating nets. The bundled coordinate graph resolves one network.",
+                        "curated-17163N3":"The 17163N3 CIF gives C50N2 for each reacted porphyrin residue. The reported precursor gives C48N4 after condensation. Those sites retain the unassigned drawing color.",
                         "curated-21271N3":"One self-penetrated ljh net; no second independent net."}.get(row['id'])
                 row['cofex_phase']=dict(monomer_ids=ids,net=net,network_count=REFERENCE_NETWORKS[row['id']],
                                         linkage=row['starter']['linkage'],qualification=note)
@@ -119,12 +120,20 @@ def topology_catalog(rows):
             row.update(construction_supported=True, construction_note=capability[code])
     if rows:
         known={row['id'] for row in rows}
+        papers={'acs':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
+                'ceq':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
+                'stp':('JUC-564 and its stp net','10.1021/jacs.0c06485')}
         for code in sorted(net_keys().keys()-known):
             rows.append(dict(id=code,label=code,net_code=code,kind='net',construction_supported=False))
         for row in rows:
             code=row['id']
             if code not in net_keys():
                 continue
+            if code in papers:
+                title,doi=papers[code]
+                url='https://doi.org/'+doi
+                if all(ref.get('url')!=url for ref in row.get('source_refs',[])):
+                    row.setdefault('source_refs',[]).append(dict(title=title,url=url))
             graph=graph_preview(code)
             row.update(graph=graph,dimension=graph['dimension'])
             row.setdefault('description','Periodic net with junction degrees '+', '.join(

@@ -51,7 +51,16 @@ def measure_drawing(recipe):
     if mol.GetNumAtoms() > 1000:
         raise ValueError("Drawing measurement supports at most 1,000 atoms")
     aperture=prepare_aperture(mol)
-    return measure_aperture(mol.GetConformer().GetPositions()[:,:2],aperture)
+    result=measure_aperture(mol.GetConformer().GetPositions()[:,:2],aperture)
+    return qualify_circuit_span(result,(recipe.get('selected_template') or {}).get('id'))
+
+
+def qualify_circuit_span(result,template_id):
+    from .cofdraw_spatial import SPATIAL
+    if template_id in SPATIAL or template_id=='branched_4_3':
+        result['quantity_label']='Projected circuit opening'
+        result['scope']='Width of the unfolded drawing, calibrated against its bonds. A physical pore diameter requires an atomistic periodic model.'
+    return result
 
 
 def prepare_aperture(mol,owners=None,face=None):

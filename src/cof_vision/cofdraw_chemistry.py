@@ -16,8 +16,10 @@ ROLE_LABELS = {"aryl_aldehyde":"Aromatic aldehyde", "primary_arylamine":"Primary
 LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "acylhydrazone":"Acylhydrazone · C=N–NH–CO",
                   "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
                   "nitrone":"Nitrone · C=N⁺(O⁻)"}
+from . import cofdraw_spatial as spatial
+
 TEMPLATES = [
-    {"id":"branched_4_3","label":"Tetrahedral + tritopic · connected circuits","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
+    {"id":"branched_4_3","label":"3D bor · tetrahedral + tritopic","dimension":3,"parent_net":"bor","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
     {"id":"hcb_3_3","label":"Hexagonal · 3c + 3c","instances":6,"allow_pairs":[[3,3]],"topology_label":"hcb","description":"Alternating trigonal vertices; one representative pore."},
     {"id":"hcb_3_2","label":"Hexagonal · 3c + 2c","instances":12,"allow_pairs":[[3,2],[2,3]],"topology_label":"hcb","description":"Trigonal nodes at six corners; linear linkers on the six edges."},
     {"id":"sql_4_2","label":"Square · 4c + 2c","instances":8,"allow_pairs":[[4,2],[2,4]],"topology_label":"sql","description":"Four tetratopic corners joined by four linear linkers."},
@@ -27,6 +29,7 @@ TEMPLATES = [
     {"id":"chain_2_2","label":"Open chain · 2c + 2c","instances":6,"allow_pairs":[[2,2]],"topology_label":None,"description":"Six alternating units with two open ends; no 2D net is assigned."},
     {"id":"alternating_hexagon","label":"Custom six-unit ring","instances":6,"allow_pairs":[],"topology_label":None,"description":"Explicit ring design with any supported functionality ≥2; topology remains unknown."},
 ]
+TEMPLATES[-1:-1]=spatial.templates()
 for template in TEMPLATES:
     template.update(linkages=template.get("linkages",list(LINKAGE_LIBRARY)),periodic_topology_inferred=False,
                     required_functionalities={"allow_pairs":template["allow_pairs"]})
@@ -53,13 +56,17 @@ def inspect_monomer(smiles):
             if count:
                 roles.append({"linkage":linkage,"role":role,"reactive_sites":count,"compatible":True,
                               "reason":"Recognized functional group; crystallization and reaction conditions are not predicted."})
-    tetra=mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4](-[c])(-[c])(-[c])-[c]"))
+    shapes=spatial.site_shapes(mol)
+    tetra='tetrahedral' in shapes.values() and mol.HasSubstructMatch(Chem.MolFromSmarts("[C,Si;X4;!R](-[c])(-[c])(-[c])-[c]"))
     from .cofdraw_mixed import ETTA, linear_dialdehyde
-    return {"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,
+    return {"site_shapes":shapes,"functionality":groups,"reactive_groups":groups,"compatible_roles":roles,
             "kgm_etta":any(g["kind"]=="primary_arylamine" and g["count"]==4 for g in groups) and Chem.MolToSmiles(mol)==ETTA,
             "kgm_dialdehyde":any(g["kind"]=="aryl_aldehyde" and g["count"]==2 for g in groups) and linear_dialdehyde(smiles),
-            "geometry_hint":"tetrahedral" if tetra else "unspecified",
-            "geometry_note":"Tetrahedral tetraaryl-carbon node: a planar template does not establish a 3D net." if tetra else None}
+            "geometry_hint":"tetrahedral" if tetra else "tetrahedral_cage" if "tetrahedral" in shapes.values() else "unspecified",
+            "geometry_note":("Four independently attached aryl arms on a tetrahedral center." if tetra else
+                             "Four substituted adamantane bridgeheads form a tetrahedral node." if "tetrahedral" in shapes.values() else
+                             "Six reactive arms occupy the three blades of a triptycene prism." if "prismatic" in shapes.values() else
+                             "The nonplanar core needs an independently chosen connectivity." if {"spiro","spatial_unspecified"}&set(shapes.values()) else None)}
 
 def library_linkages(catalog):
     result={}
@@ -110,7 +117,7 @@ def decorated_monomers(rows):
                            "catalog_reactive_groups":row.get("reactive_groups", []),
                            "abbreviation":row.get("abbreviation") or row.get("id", ""),
                            "full_name":row.get("full_name") or row.get("label", ""),
-                           "geometry_hint":metadata["geometry_hint"] if metadata["geometry_hint"]=="tetrahedral"
+                           "geometry_hint":metadata["geometry_hint"] if metadata["geometry_hint"].startswith("tetrahedral")
                            else row.get("geometry_hint") or metadata["geometry_hint"]})
         except (ValueError,KeyError):
             continue
@@ -181,6 +188,9 @@ def _assemble_template(components, linkage, instances, template_id):
     if template and template["allow_pairs"] and counts not in template["allow_pairs"]:
         raise ValueError(f"{template['label']} requires {template['allow_pairs']}; these monomers have {counts} reactive sites")
     inspection=[inspect_monomer(s) for s in (monomer_a,monomer_b)]
+    shapes=[row['site_shapes'].get(role) for row,role in zip(inspection,rule['roles'])]
+    if template and not spatial.matches(template,shapes):
+        raise ValueError("The attachment geometry does not fit this spatial template.")
     if template_id=="branched_4_3" and (linkage!="imine" or inspection[counts.index(4)]["geometry_hint"]!="tetrahedral"):
         raise ValueError("The branched imine design requires a tetrahedral tetratopic monomer and a complementary tritopic monomer.")
     if template_id=="kgm_4_2" and (linkage!="imine" or not inspection[0]["kgm_dialdehyde"] or not inspection[1]["kgm_etta"]):
@@ -209,13 +219,13 @@ def _assemble_template(components, linkage, instances, template_id):
                   "b":{"instance":items[(i+1)%n]["id"],"port":items[(i+1)%n]["incoming_port"]},"bond_order":rule["join_bond_order"]}
                  for i in range(n-1 if open_chain else n)]
     geometry={}
-    if template_id=="branched_4_3":
+    if template_id=="branched_4_3" or template_id in spatial.SPATIAL:
         from .cofdraw_branched import branch_patch
         from .cofdraw_mixed import circuit_geometry
-        mol,summary=branch_patch(components,1)
-        geometry=circuit_geometry(components,mol,summary,"Rigid precursor fragments along a finite (3,4)-connected circuit")
+        mol,summary=branch_patch(components,1,template_id)
+        geometry=circuit_geometry(components,mol,summary,summary['order_assumption'])
         selected=[dict(instance=item['id'],incoming_port=item['incoming_port'],outgoing_port=item['outgoing_port'],
-                       basis='Proposed bor incidence') for item in geometry['instances']]
+                       basis=summary['order_assumption']) for item in geometry['instances']]
     if template_id=="kgm_4_2":
         from .cofdraw_mixed import kagome_face_geometry
         geometry=kagome_face_geometry(components,'BCBCBC')

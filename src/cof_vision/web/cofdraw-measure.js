@@ -64,14 +64,14 @@
     const width = Math.max(1.5, canvasSize[0] / 500), font = Math.max(20, canvasSize[0] * .034);
     const length = Math.hypot(b[0] - a[0], b[1] - a[1]), head = Math.min(font * .6, length * .15);
     const color = '#205f70', group = node('g', {'data-cofdraw-pore-measurement': '1'});
-    group.append(node('title', {}, `Pore opening · ${result.diameter_nm.toFixed(2)} nm`));
+    group.append(node('title', {}, `${result.quantity_label||'Pore opening'} · ${result.diameter_nm.toFixed(2)} nm`));
     group.append(node('line', {x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: color,
       'stroke-width': width, 'data-measured-diameter': result.diameter_nm}));
     // Triangle tips coincide exactly with the reported diameter endpoints.
     group.append(node('path', {d: `M ${a[0]},${a[1]} L ${a[0]+head},${a[1]-head*.43} L ${a[0]+head},${a[1]+head*.43} Z M ${b[0]},${b[1]} L ${b[0]-head},${b[1]-head*.43} L ${b[0]-head},${b[1]+head*.43} Z`, fill: color}));
     const textStyle = {'text-anchor': 'middle', 'font-family': 'Arial, sans-serif', fill: color,
       stroke: '#ffffff', 'stroke-width': font * .23, 'stroke-linejoin': 'round', 'paint-order': 'stroke'};
-    group.append(node('text', {...textStyle, x: center[0], y: center[1]-font*.62, 'font-size': font, 'font-weight': '600'}, `${result.diameter_nm.toFixed(2)} nm`));
+    group.append(node('text', {...textStyle, x: center[0], y: center[1]-font*.62, 'font-size': font, 'font-weight': '600'}, `${result.diameter_nm.toFixed(2)} nm${result.quantity_label?' (drawing)':''}`));
     return group;
   }
   async function annotatedSVG(record) {
@@ -130,7 +130,7 @@
       const layout = audit.drawing_style?.layout, points = transform(result, layout);
       const canvasSize = layout.canvas_size, group = makeGroup(result, points, canvasSize);
       svg.setAttribute('viewBox', `0 0 ${canvasSize.join(' ')}`);
-      svg.setAttribute('aria-label', `Pore opening, ${result.diameter_nm.toFixed(2)} nanometers`);
+      svg.setAttribute('aria-label', `${result.quantity_label||'Pore opening'}, ${result.diameter_nm.toFixed(2)} nanometers`);
       svg.append(group); svg.toggleAttribute('hidden', false);
       active = {result, group, canvasSize, recipe, render, revision};
       window.dispatchEvent(new Event('cofdraw:arrowchanged'));

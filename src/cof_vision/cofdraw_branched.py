@@ -1,8 +1,11 @@
 """Finite molecular circuits traced through a (3,4)-connected bor design graph."""
 from collections import Counter
+from copy import deepcopy
 from functools import lru_cache
+import json
 
 import numpy as np
+from rdkit import Chem
 
 from .cofdraw_mixed import _block, _orient, join_fragments
 from .cofdraw_net_graphs import neighbors, quotient
@@ -68,29 +71,79 @@ def circuit_layout():
             [len(adjacency[p[0]]) for p in sites])
 
 
-def branch_patch(components,count):
+def graph_for(components,count,key):
+    from .cofdraw_spatial import SPATIAL,patch_graph
+    if key in SPATIAL:
+        from .cofdraw_chemistry import inspect_monomer
+        a=components['A']
+        shape=inspect_monomer(a['monomer_smiles'])['site_shapes'].get(a['role'])
+        return patch_graph(key,shape,count)
     faces,edges,xy,degrees=circuit_layout()
     by_degree={c['connectivity']:k for k,c in components.items()}
     kinds=[by_degree[n] for n in degrees]
+    return faces[:count],edges,xy,kinds
+
+
+def branch_patch(components,count,key='branched_4_3'):
+    fields=('fragment_smiles','monomer_smiles','role','connectivity')
+    signature=json.dumps({k:{f:c[f] for f in fields} for k,c in components.items()},sort_keys=True)
+    mol,details=_cached_patch(signature,count,key)
+    if mol is None:raise ValueError(details)
+    return Chem.Mol(mol),deepcopy(details)
+
+
+@lru_cache(maxsize=48)
+def _cached_patch(signature,count,key):
+    try:return _draw_patch(json.loads(signature),count,key)
+    except ValueError as e:return None,str(e)
+
+
+def _draw_patch(components,count,key):
+    from .cofdraw_spatial import SPATIAL
+    faces,edges,xy,kinds=graph_for(components,count,key)
     geo={k:_block(c) for k,c in components.items()}
-    faces=faces[:count]
     sites=sorted({v for face in faces for v in face})
     index={site:i for i,site in enumerate(sites)}
     kept=sorted(set.union(*(loop_edges(face) for face in faces)))
     joins=[(index[a],index[b]) for a,b in kept]
-    ports={}
-    orientations=[]
-    for site in sites:
-        adjacent=[b if a==site else a for a,b in edges if site in (a,b)]
-        axes=xy[adjacent]-xy[site]
-        _,handles,points,_=geo[kinds[site]]
-        slots,theta=_orient(axes,handles,points)
-        used=[b if a==site else a for a,b in kept if site in (a,b)]
-        orientations.append(([slots[adjacent.index(other)] for other in used],theta))
-        ports.update({(site,other):i for i,other in enumerate(used)})
-    slot_pairs=[(ports[a,b],ports[b,a]) for a,b in kept]
-    mol,origins=join_fragments(components,[kinds[s] for s in sites],xy[sites],joins,slot_pairs,2,orientations)
+    def place(points,geometry):
+        ports={}
+        orientations=[]
+        for site in sites:
+            adjacent=[b if a==site else a for a,b in edges if site in (a,b)]
+            axes=points[adjacent]-points[site]
+            _,handles,local,_=geometry[kinds[site]]
+            slots,theta=_orient(axes,handles,local)
+            used=[b if a==site else a for a,b in kept if site in (a,b)]
+            orientations.append(([slots[adjacent.index(other)] for other in used],theta))
+            ports.update({(site,other):i for i,other in enumerate(used)})
+        slot_pairs=[(ports[a,b],ports[b,a]) for a,b in kept]
+        return join_fragments(components,[kinds[s] for s in sites],points[sites],joins,slot_pairs,2,orientations,geometry)
+    mol,origins=place(xy,geo)
+    if key in SPATIAL:
+        from .cofdraw_spatial import check_projection,clear_junctions
+        try:
+            check_projection(mol)
+        except ValueError as issue:
+            original=Chem.MolToSmiles(mol)
+            alternate={k:_block(c,alternate=True) for k,c in components.items()}
+            for use,flip,shear in [('',1,0),('A',1,0),('B',1,0),('AB',1,0),('',-1,0),('AB',-1,0),
+                                   ('',1,.65),('',1,-.65),('AB',1,.65),('AB',1,-.65)]:
+                retry=bool(use) or flip<0 or shear!=0
+                if retry:
+                    geometry={k:alternate[k] if k in use else g for k,g in geo.items()}
+                    mol,origins=place(xy@np.array([[1.,0],[shear,flip]]),geometry)
+                    if Chem.MolToSmiles(mol)!=original:continue
+                try:
+                    if retry:check_projection(mol)
+                    else:clear_junctions(mol)
+                    break
+                except ValueError:
+                    if retry:
+                        try:clear_junctions(mol);break
+                        except ValueError:pass
+            else:raise issue
     rims=[[f'{kinds[v]}{index[v]+1}' for v in face] for face in faces]
     labels=[f'{len(f)}-node circuit' for f in faces]
     return mol,dict(pores=count,pore_faces=rims,face_labels=labels,pore_counts=dict(Counter(labels)),
-                    atom_origin=origins,order_assumption='Finite circuits of a proposed bor incidence graph. The substrate geometry and crystal phase require independent validation.')
+                    atom_origin=origins,order_assumption=f'Finite circuits of a proposed {SPATIAL.get(key,{}).get("code","bor")} net. The crystal phase requires independent validation.')

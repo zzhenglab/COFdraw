@@ -68,6 +68,5 @@ main:not(.crystal-design-active) #crystal-projection,#crystal-projection[hidden]
 .crystal-design-active #crystal-layout {display:block;width:100%;height:180px}
 .crystal-design-active #geometry-options > :is(.geometry-tools,.layout-details) {display:none}
 #crystal-view-field[hidden],#crystal-net-field[hidden] {display:none}
-.crystal-design-active .drawing-render-body .advanced,
-.crystal-design-active #style-controls .field:has(#style-abbreviation_mode,#style-edge_style,#style-highlight_width) {display:none}
+.crystal-design-active .drawing-render-body .advanced {display:none}
 .crystal-design-active .canvas-panel .representation-note {font-size:.8rem}

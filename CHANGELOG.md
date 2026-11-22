@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.4
+
+- Auto considers reactive-site geometry when offering sheet or spatial imine drawings. Selected spatial hypotheses trace actual net edges and rebuild the molecular circuits after a precursor edit.
+- Open a spatial design in 3D to rotate its building-block graph when atomic coordinates are unavailable. The 2D measurement identifies the opening in the drawn circuit.
+- Crystal drawings share chemical style presets, palette and element colors with the standard canvas. The Rendering panel now offers molecular highlights and glow on crystal bond-line drawings.
+- Updated the COF-105 and tetraaryl projections and added twelve source-reviewed monomers to the library.
+
 ## 0.10.3
 
 - Editing a tetrahedral precursor pair can switch the active drawing between a diamond design and connected 3 + 4 circuits. The latter unfold six- and eight-node paths of a proposed bor net using the selected monomers.

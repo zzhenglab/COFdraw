@@ -18,8 +18,9 @@
     $('viewer-preset').querySelector('[value=projection]').disabled=!periodic;
     for(const id of ['inspect-model-state','pxrd-model-state','porosity-model-state']){
       const root=$(id);root.replaceChildren();root.append(text('span',periodic?'Current view: periodic atomic model with a unit cell.':available?'Current view: finite atoms from the drawing. Checks and finite-cluster scattering are available without a CIF. Density, PLD and periodic Bragg peaks require a periodic cell.':'Generate your drawing in 3D, or select a periodic model.'));
+      if(C.origin==='spatial-net')root.firstChild.textContent='The current view is a building-block net. Import an atomic CIF for diffraction or pore calculations.';
       if(!periodic){const b=text('button','Choose a periodic model','button outline');b.addEventListener('click',()=>{C.tab('model');$('structure-source').value='periodic';$('structure-source').dispatchEvent(new Event('change'));});root.append(b);}
-      if(!periodic&&C.drawingReady()){
+      if(!periodic&&C.drawingReady()&&C.origin!=='spatial-net'){
         const generate=text('button','Build CIF from current drawing','button outline');
         generate.classList.add('build-cif-from-drawing');
         generate.addEventListener('click',C.openCurrentCell);
@@ -308,6 +309,7 @@
   $('show-atom-table').addEventListener('click',()=>{
     const root=$('atom-table-panel');root.hidden=!root.hidden;if(root.hidden)return;root.replaceChildren();
     if(C.structure)table(root,['Site','Element','Fractional x','y','z'],C.structure.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,...a.fractional.map(x=>number(x,5))]));
+    else if(C.origin==='spatial-net')table(root,['Vertex','Building block','Relative x','y','z'],C.viewer.atoms.map((v,i)=>[i+1,v.label,number(v.x,5),number(v.y,5),number(v.z,5)]));
     else table(root,['Atom','Element','x / Å','y / Å','z / Å'],C.viewer.atoms.map((a,i)=>[i+1,(a.isotope||'')+a.element,number(a.x,5),number(a.y,5),number(a.z,5)]));
   });
   function clearAnalysis(){positionTraces=null;$('pattern-spacing').hidden=true;for(const id of ['inspection-results','comparison-results','pxrd-results','pxrd-plot','atom-table-panel'])$(id).replaceChildren();$('atom-table-panel').hidden=true;$('viewer-axis').value='free';}

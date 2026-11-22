@@ -202,6 +202,7 @@ function queueDrawing(){
     if((state.inputsDirty||!state.recipe)&&!$("build").disabled)$("build").click();
   },250);
 }
+let topologyOverride=null;
 function autoMatchChemistry(){
   if(window.COFdrawCrystalDesign?.active)return;
   if(!state.autoChemistry||sourceMode())return;
@@ -212,9 +213,13 @@ function autoMatchChemistry(){
   const match=L.automaticPlan(state.library,pair.a,pair.b,preferred);
   if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
   populateLinkages(match.id);
-  const template=templates().find(item=>item.id===match.template_id);
+  const override=topologyOverride?.pair===currentPairKey()&&topologyOverride.linkage===match.id&&
+    templates().find(t=>t.id===topologyOverride.template&&templateCheck(t).compatible);
+  const saved=!state.inputsDirty&&state.recipe?.linkage===match.id&&
+    templates().find(t=>t.id===state.recipe?.selected_template?.id&&templateCheck(t).compatible);
+  const template=saved||override||templates().find(item=>item.id===match.template_id);
   $("chemistry-match").textContent=`${match.label} · ${template?.label||'finite patch'}`;
-  return match.template_id;
+  return template?.id;
 }
 function populateLinkages(desired=$("linkage").value){
   const search=$("linkage-search").value.trim().toLowerCase().replaceAll("_"," "),rows=Object.entries(state.library?.linkages||{});
@@ -230,8 +235,10 @@ function refreshPresetLists(){
   if(!state.library)return;
   for(const block of["a","b"]){const select=$(`preset-${block}`);select.replaceChildren(option("","Custom / pasted structure"));
     for(const item of state.library.monomer_presets||[]){
-      if(item.binary_eligible===false)continue;
-      const choice=monomerChoice(item,block,checkedMonomer(block==="a"?"b":"a")),selected=item.smiles===$(`smiles-${block}`).value.trim();
+      const selected=item.smiles===$(`smiles-${block}`).value.trim();
+      if(item.binary_eligible===false&&!selected)continue;
+      const reference=selected&&window.COFdrawCrystalDesign?.active&&window.COFdrawCrystalDesign.isReference;
+      const choice=reference?{compatible:true,reason:'Precursor in the published crystal model.'}:monomerChoice(item,block,checkedMonomer(block==="a"?"b":"a"));
       if(block==='b'&&$("smiles-a").value.trim()&&!choice.compatible&&!selected)continue;
       const o=option(item.id,`${L.displayName(item)}${choice.compatible?"":" — unavailable"}`);o.disabled=!choice.compatible;o.title=choice.reason;select.append(o);
     }
@@ -274,7 +281,7 @@ function showSuggestions(){
     item.setAttribute('aria-selected','false');
     const name=document.createElement('strong'),group=document.createElement('small');
     name.textContent=row.label;
-    group.textContent=row.crystal?'3D · '+row.net+(row.reference?' · reference CIF':' · editable design'):row.source?'Recorded drawing':row.assembly?'Assembly':state.library?.linkages?.[row.linkage]?.label||'Drawing';
+    group.textContent=row.crystal?'3D · '+row.net+(row.reference?' · reference CIF':' · editable design'):row.source?'Recorded drawing':row.dimension===3?'3D · '+row.net+' · molecular circuits':row.assembly?'Assembly':state.library?.linkages?.[row.linkage]?.label||'Drawing';
     item.append(name,group);suggestions.append(item);
   }
   if(suggestions.childElementCount){suggestions.hidden=false;comboInput.setAttribute('aria-expanded','true');}
@@ -310,7 +317,9 @@ function refreshTemplates(desired=null){
   $("template-field").hidden=!rows.length;$("pore-field").hidden=Boolean(rows.length);
   if(!rows.length){$("template-description").textContent="Alternating monomers with unconnected outward continuation ports.";return;}
   const select=$("template"),current=desired||select.value;select.replaceChildren();
-  for(const t of available){const check=templateCheck(t),o=option(t.id,t.label||t.id);o.disabled=!check.compatible;o.title=check.reason||t.description||"";select.append(o);}
+  for(const t of available){const check=templateCheck(t),o=option(t.id,t.label||t.id);o.disabled=!check.compatible;o.hidden=state.autoChemistry&&(!check.compatible||!t.allow_pairs?.length);o.dataset.spatial=String(t.dimension===3);
+    if(t.topology_label)o.textContent='2D '+(t.label||t.id);
+    o.title=check.reason||t.description||"";select.append(o);}
   const validCurrent=Array.from(select.options).find(o=>o.value===current&&!o.disabled);const first=Array.from(select.options).find(o=>!o.disabled);
   select.value=validCurrent?.value||first?.value||available[0]?.id||"";
   if(!select.options.length)select.append(option("","No compatible template available"));
@@ -328,7 +337,7 @@ function refreshInspectors(){
     $(`compatibility-${block}`).textContent=source?($(`smiles-${block}`).value.trim()?"Associated precursor for the recorded graph. An automatic construction transform is not implied.":"No associated precursor structure is supplied for this part of the graph."):(!value?"Update preview to inspect reactive functionality.":evidence?.compatible===false?evidence.reason||"This structure cannot supply the selected role.":evidence?`${evidence.reactive_sites??evidence.count??"Supported"} reactive sites for this role. Attachment positions are checked during construction.`:"Structure valid. Reactive compatibility will be checked during construction.")+(value?.geometry_note?` ${value.geometry_note}`:"");
     if(window.COFdrawCrystalDesign?.active){
       const choice=value&&window.COFdrawCrystalDesign.choice(value,checkedMonomer(block==='a'?'b':'a'));
-      $(`role-${block}`).textContent=$('reticular-net').value+' framework · '+$('dia-linkage').selectedOptions[0].textContent;
+      $(`role-${block}`).textContent=choice?.roleLabel||(window.COFdrawCrystalDesign.isReference?'Published crystal model':$('reticular-net').value+' framework · '+$('dia-linkage').selectedOptions[0].textContent);
       $(`compatibility-${block}`).textContent=choice?.reason||'Choose or draw a precursor.';
       $(`inspector-${block}`).classList.toggle('incompatible',Boolean(choice&&!choice.compatible));
     }
@@ -347,7 +356,10 @@ function sync() {
   $("chemistry-note").textContent=source?`${state.sourceId?'Source':'Recorded'} graph loaded. Change presentation or edit the recorded layout; change a precursor to start a new construction.`:linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
   const hideChoices=source||state.autoChemistry;
   document.querySelector('.linkage-first').hidden=hideChoices;
-  document.querySelector('.chemistry-options').hidden=hideChoices;
+  const validTemplates=Array.from($('template').options).filter(o=>!o.disabled&&!o.hidden);
+  const multipleNets=!source&&!multi()&&state.autoChemistry&&Boolean(checkedMonomer('a')&&checkedMonomer('b'))&&
+    validTemplates.length>1&&validTemplates.some(o=>o.dataset.spatial==='true');
+  document.querySelector('.chemistry-options').hidden=hideChoices&&!multipleNets;
   for(const id of ['linkage-roles','template-description'])$(id).hidden=hideChoices;
   document.querySelector('.template-scope').hidden=hideChoices;
   $('chemistry-mode-field').hidden=source;$("combination-search").disabled=state.busy;
@@ -364,7 +376,8 @@ function sync() {
   const eligible=!multi()&&!crystal?.active&&periodicLinkage(checkedMonomer('a'),checkedMonomer('b'));
   const periodic=$('build-periodic-from-pair');
   const matched=!multi()&&!crystal?.active&&matchedCrystalStarter(checkedMonomer('a'),checkedMonomer('b'));
-  const ref=!eligible&&matched?.starter?.kind==='reference'&&(state.autoChemistry||$('linkage').value===matched.starter.linkage);
+  const hasDesign=state.autoChemistry&&selectedTemplate()?.dimension===3;
+  const ref=!hasDesign&&!eligible&&matched?.starter?.kind==='reference'&&(state.autoChemistry||$('linkage').value===matched.starter.linkage);
   periodic.hidden=!eligible&&!ref;periodic.disabled=blocked;periodic.dataset.linkage=eligible||'';
   periodic.dataset.reference=ref?matched.id:'';
   periodic.dataset.net=matched?.starter?.kind==='generated'?matched.starter.net:'dia';
@@ -399,7 +412,8 @@ function sync() {
   $("auto-chemistry").checked=state.autoChemistry;$("auto-chemistry").disabled=state.busy;
   for(const id of ['linkage','linkage-search','template','pore'])$(id).disabled=state.busy||state.autoChemistry;
   $("linkage-mode-label").textContent=state.autoChemistry?'Linkage · Auto':'Linkage · Manual';
-  $("template-mode-label").textContent=state.autoChemistry?'Connectivity · Auto':'Connectivity · Manual';
+  if(multipleNets)$('template').disabled=state.busy;
+  $("template-mode-label").textContent=multipleNets?'Possible framework designs':state.autoChemistry?'Connectivity · Auto':'Connectivity · Manual';
   if(!source&&!state.autoChemistry)$("chemistry-match").textContent='Choose a linkage and a connectivity template.';
   if(crystal?.active){
     $('scope-badge').textContent='3D FRAMEWORK';
@@ -494,6 +508,7 @@ function setCrystalMonomers(items){
   $('linkage-search').value='';populateLinkages('imine');refreshChemistry();
 }
 function setCombination(preset){
+  topologyOverride=null;
   if(multi()){$('assembly-count').value='2';fillAssembly();}
   for(const block of ["a","b"]){$(`smiles-${block}`).value=preset[`monomer_${block}`];$(`label-${block}`).value=preset[`label_${block}`]||block.toUpperCase();$(`preset-${block}`).value="";}
   $("linkage-search").value="";populateLinkages(preset.linkage);$("pore").value=preset.instances;markInputsChanged();const wanted=preset.template_id||templates().find(t=>t.instances===preset.instances&&(!t.linkages||t.linkages.includes(preset.linkage)))?.id;refreshChemistry(wanted);$("cof-preset").value=preset.id;updateIdentity();refreshMonomers().then(queueDrawing);
@@ -550,7 +565,13 @@ $("build").addEventListener("click",async()=>{
       if(revision!==selectionRevision)return;
       acceptRecipe(result.recipe,null,null,true);state.busy=false;await render();return;
     }
-    await Promise.all(["a","b"].map(b=>checkedMonomer(b)||validateMonomer(b,true)));const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);if(revision!==selectionRevision)return;acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();}catch(error){notice(error.message,true);}finally{state.busy=false;sync();}
+    await Promise.all(["a","b"].map(b=>checkedMonomer(b)||validateMonomer(b,true)));const t=selectedTemplate(),check=constructionCheck();if(!check.compatible)throw new Error(check.reason);const order=engineOrder(),payload={linkage:$("linkage").value,monomer_a:$(`smiles-${order[0]}`).value.trim(),monomer_b:$(`smiles-${order[1]}`).value.trim(),label_a:$(`label-${order[0]}`).value.trim(),label_b:$(`label-${order[1]}`).value.trim(),instances:t?.instances||Number($("pore").value)};if(t)payload.template_id=t.id;const result=await api("prepare",payload);if(revision!==selectionRevision)return;acceptRecipe(result.recipe,null,null,true);$("chemistry-note").textContent=result.limits;state.busy=false;await render();
+  }catch(error){
+    if(revision!==selectionRevision)return;
+    const alternative=/overlap|cross in this projection|excessively stretched/i.test(error.message)&&
+      templates().find(t=>t.id!==selectedTemplate()?.id&&t.topology_label&&templateCheck(t).compatible);
+    notice(alternative?error.message+' Under framework designs, try '+alternative.label+'.':error.message,true);
+  }finally{state.busy=false;sync();}
 });
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 function geometryReviewMessage(refinement){return refinement?.quality==='needs_review'?'Some linkage junctions still need geometry review. Inspect the connections and use Move / adjust or Clean bond geometry before saving.':'';}
@@ -600,7 +621,11 @@ $("auto-chemistry").addEventListener("change",()=>{state.autoChemistry=$("auto-c
 $("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry();updateIdentity();});
 $("linkage-search").addEventListener("input",()=>populateLinkages());
 $("pore").addEventListener("change",markInputsChanged);
-$("template").addEventListener("change",()=>{markInputsChanged();refreshTemplates();updateIdentity();});
+$("template").addEventListener("change",()=>{
+  const template=$('template').value;
+  topologyOverride={pair:currentPairKey(),linkage:$('linkage').value,template};
+  markInputsChanged();refreshChemistry(template);updateIdentity();queueDrawing();
+});
 async function loadSource(id){
   window.COFdrawCrystalDesign?.leave();
   if(multi()){$('assembly-count').value='2';fillAssembly();}
@@ -653,24 +678,31 @@ function drawStyles(){
 const styleOptionDefaults={hydrogen_labels:"show",element_scheme:"style_default",palette:"classic",font_family:"Arial",font_scale:1,bond_scale:1,layer_count:3,layer_opacity:.24,fill_opacity:.18,edge_style:"wavy_cross",transparent_background:false,abbreviation_mode:"explicit",highlight_width:1,glow_strength:.55,layer_spacing:.04,projection_tilt:35,sphere_scale:1};
 function drawStyleControls(){
   const spec=state.library?.style_controls,root=$("style-control-fields");$("style-controls").hidden=!spec;if(!spec)return;root.replaceChildren();
-  const styleDefaults=state.style==='element_compact'?{element_scheme:'jewel',hydrogen_labels:'compact'}:
+  const styleDefaults=spec.defaults?.[state.style]||(state.style==='element_compact'?{element_scheme:'jewel',hydrogen_labels:'compact'}:
     state.style==='pore_perspective'?{layer_count:5,layer_spacing:.04,layer_opacity:.64,projection_tilt:12,palette:'cobalt_citrus',transparent_background:true}:
-    state.style==='half_space_stack'||state.style==='gradient_stack'?{layer_count:5,layer_spacing:.044,layer_opacity:.56,projection_tilt:43,palette:'lagoon'}:{};
+    state.style==='half_space_stack'||state.style==='gradient_stack'?{layer_count:5,layer_spacing:.044,layer_opacity:.56,projection_tilt:43,palette:'lagoon'}:{});
   const current={...styleOptionDefaults,...styleDefaults,...state.resolvedStyleOptions,...state.styleOptions};
   const hasLayers=['stacked_eclipsed','stacked_slipped','gradient_stack','half_space_stack','pore_perspective'].includes(state.style);
   const hasSpheres=['molecular_spheres','sphere_cutaway','half_space_stack','pore_perspective'].includes(state.style);
   const lists=[['palette','Color palette',spec.palettes||[]],['element_scheme','Atom colors',spec.element_schemes||['style_default']],['hydrogen_labels','Functional-group H',spec.hydrogen_labels||['show','compact']],['font_family','Atom-label font',spec.fonts||[]],['edge_style','Continuation marks',spec.edge_styles||[]],['abbreviation_mode','Substituent labels',spec.abbreviation_modes||['explicit','condensed','OMe']]];
   const names={show:'Show H labels',compact:'Hide inferable H labels',style_default:"Style default",conventional:"Conventional elements",deep_ink:"Deep ink",jewel:"Jewel tones",classic:"Red / blue",teal_orange:"Teal / orange",purple_gold:"Purple / gold",pastel:"Pastel",ink:"Black",wavy_cross:"Transverse wave",dashed:"Dashed",crossbar:"Crossbar",bond_stub:"Plain bond end",explicit:"Explicit atoms",condensed:"OCH3 / SO3H",OMe:"OMe / OEt / SO3H"};
   const crystal=window.COFdrawCrystalDesign?.active;
-  const usesBlockColors=!crystal||['depth_ink','reticular_depth','ring_fill'].includes(state.style)||['reticular_blocks','red_blue','bold_color'].includes(state.style)&&!window.COFdrawCrystalDesign.isReference;
-  function changed(key,value){state.styleOptions[key]=value;if(state.recipe&&!crystal)state.dirty=true;sync();}
-  for(const[key,label,values]of lists){if(crystal&&(['edge_style','abbreviation_mode'].includes(key)||(key==='palette'&&!usesBlockColors)))continue;const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
+  const highlighted=['node_highlight','glow_outline','pastel_blocks'].includes(state.style);
+  const usesBlockColors=!crystal||highlighted||['depth_ink','reticular_depth','ring_fill','reticular_blocks','red_blue','bold_color'].includes(state.style);
+  function changed(key,value){
+    state.styleOptions[key]=value;
+    if(key==='palette')delete state.styleOptions.custom_palette;
+    if(state.recipe&&!crystal)state.dirty=true;
+    sync();
+    if(crystal)window.COFdrawCrystalDesign.redraw();
+  }
+  for(const[key,label,values]of lists){if(crystal&&(key==='abbreviation_mode'||key==='edge_style'&&!window.COFdrawCrystalDesign.visible?.text?.includes('data-cut=')||(key==='palette'&&!usesBlockColors)))continue;const field=document.createElement("label");field.className="field";const span=document.createElement("span");span.textContent=label;const select=document.createElement("select");select.id=`style-${key}`;select.dataset.styleOption=key;for(const value of values)select.append(option(value,names[value]||value));select.value=current[key];select.addEventListener("change",()=>changed(key,select.value));field.append(span,select);root.append(field);}
   const swatches=document.createElement('div');swatches.className='palette-swatches';
-  for(const [name,colors] of Object.entries(spec.palette_colors||{})){const button=document.createElement('button');button.className='palette-swatch'+(name===current.palette?' selected':'');button.title=name.replaceAll('_',' ');button.setAttribute('aria-label',button.title+' palette');for(const color of colors){const i=document.createElement('i');i.style.background=color;button.append(i);}button.addEventListener('click',()=>{delete state.styleOptions.custom_palette;changed('palette',name);if(crystal){drawStyleControls();window.COFdrawCrystalDesign.redraw();}else if(state.recipe&&!state.inputsDirty&&!state.jsonPending)render();else drawStyleControls();});swatches.append(button);}if(usesBlockColors)root.prepend(swatches);
+  for(const [name,colors] of Object.entries(spec.palette_colors||{})){const button=document.createElement('button');button.className='palette-swatch'+(name===current.palette?' selected':'');button.title=name.replaceAll('_',' ');button.setAttribute('aria-label',button.title+' palette');for(const color of colors){const i=document.createElement('i');i.style.background=color;button.append(i);}button.addEventListener('click',()=>{delete state.styleOptions.custom_palette;changed('palette',name);if(crystal){drawStyleControls();}else if(state.recipe&&!state.inputsDirty&&!state.jsonPending)render();else drawStyleControls();});swatches.append(button);}if(usesBlockColors)root.prepend(swatches);
   const custom=document.createElement('div');custom.className='custom-colors';const title=document.createElement('span');title.textContent='Your colors';custom.append(title);const selected=current.custom_palette||spec.palette_colors?.[current.palette]||['#167d9a','#ee796b','#6796b5','#cfb86d'];
   for(let i=0;i<(crystal?2:4);i++){const input=document.createElement('input');input.type='color';input.value=selected[i%selected.length];input.setAttribute('aria-label',`Custom building-block color ${i+1}`);input.addEventListener('input',()=>changed('custom_palette',[...custom.querySelectorAll('input')].map(x=>x.value)));custom.append(input);}if(usesBlockColors)root.append(custom);
   for(const[key,label,min,max,step]of[['font_scale','Label size',.6,1.6,.05],['bond_scale','Bond weight',.5,2.5,.1],['fill_opacity','Fill opacity',.05,.6,.05],['highlight_width','Highlight width',.5,2.5,.1],...(state.style==='glow_outline'?[['glow_strength','Glow softness',0,1,.05]]:[]),...(hasSpheres?[['sphere_scale','Sphere size',.5,1.6,.05]]:[]),...(hasLayers?[['layer_count','Illustrative layers',2,5,1],['layer_opacity','Back-layer opacity',.05,.7,.05],['layer_spacing','Layer separation',.015,.09,.005]]:[]),...(hasLayers||state.style==='perspective'?[['projection_tilt','Perspective tilt',0,65,1]]:[])]){
-    if(crystal&&(key==='highlight_width'||key==='fill_opacity'&&!['ring_fill','reticular_blocks','reticular_depth'].includes(state.style)))continue;
+    if(crystal&&(key==='highlight_width'&&!highlighted||key==='fill_opacity'&&!highlighted&&!['ring_fill','reticular_blocks','reticular_depth'].includes(state.style)))continue;
     const field=document.createElement("label");field.className="field";const span=document.createElement("span"),output=document.createElement("output"),input=document.createElement("input");input.id=`style-${key}`;input.dataset.styleOption=key;input.type="range";input.min=min;input.max=max;input.step=step;input.value=current[key];span.textContent=label;output.textContent=String(current[key]);span.append(output);input.addEventListener("input",()=>{output.textContent=input.value;changed(key,Number(input.value));});field.append(span,input);root.append(field);
   }
   const label=document.createElement("label");label.className="checkbox-field";const check=document.createElement("input");check.type="checkbox";check.id="style-transparent_background";check.checked=Boolean(current.transparent_background);check.addEventListener("change",()=>changed("transparent_background",check.checked));label.append(check,document.createTextNode("Transparent image background"));root.append(label);
@@ -680,9 +712,14 @@ function setStyleDescription(){
   const special=item&&item.category&&item.category!=="chemical",note=$("representation-note");note.hidden=!special;
   note.textContent=special?(item.representation_scope||item.limits||(item.category==="layered"?"Layered depiction: illustrative offset copies of one finite chemical patch, not a crystal packing prediction.":"Schematic depiction: simplified building blocks. Chemical graph exports retain the explicit atom/bond record.")):"";
 }
-function chooseStyle(id,seed=null){if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.chooseStyle(id);return;}state.style=id;state.seed=seed;state.styleOptions={};state.resolvedStyleOptions={};setStyleDescription();drawStyleControls();if(state.recipe){state.dirty=true;sync();render();}else sync();}
+function portableInkOptions(next){
+  if(next==='random')return {};
+  if(state.style===next)return {...state.styleOptions};
+  return Object.fromEntries(Object.entries(state.styleOptions).filter(([key])=>['palette','custom_palette','element_scheme'].includes(key)));
+}
+function chooseStyle(id,seed=null){if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.chooseStyle(id);return;}state.styleOptions=portableInkOptions(id);state.style=id;state.seed=seed;state.resolvedStyleOptions={};setStyleDescription();drawStyleControls();if(state.recipe){state.dirty=true;sync();render();}else sync();}
 $("apply-style-options").addEventListener("click",()=>window.COFdrawCrystalDesign?.active?window.COFdrawCrystalDesign.redraw():render());
-$("reset-style-options").addEventListener("click",()=>chooseStyle(state.style));
+$("reset-style-options").addEventListener("click",()=>{state.styleOptions={};state.resolvedStyleOptions={};chooseStyle(state.style);});
 $("random-style").addEventListener("click",()=>chooseStyle("random",crypto.getRandomValues(new Uint32Array(1))[0] % 2147483647));
 $("image-size").addEventListener("change",()=>{if(state.recipe&&!window.COFdrawCrystalDesign?.active){state.dirty=true;sync();render();}});
 $("render-changes").addEventListener("click",render);
@@ -861,6 +898,17 @@ $("new-monomer").addEventListener("click",()=>openSketch("a",{smiles:"",full_nam
 function drawTopologies(){
   const search=$("topology-search").value.toLowerCase().trim(),rows=(state.library?.topology_catalog||[]).filter(row=>!search||JSON.stringify([row.id,row.label,row.description,row.dimension,row.net_code,row.point_group,row.kind]).toLowerCase().includes(search));
   const list=$("topology-list");list.replaceChildren();for(const row of rows){const card=document.createElement("article");card.className="topology-card";const title=document.createElement("h3"),description=document.createElement("p"),semantics=document.createElement("small"),badge=document.createElement("span");title.textContent=row.label||row.id;description.textContent=row.description||row.qualification||"";const pairs=row.connectivity||row.reactive_site_counts||[],symmetry=row.point_group||row.node_symmetry||[];semantics.textContent=[row.dimension?`Dimension: ${row.dimension}`:null,pairs.length?`Reactive-site examples: ${pairs.map(pair=>Array.isArray(pair)?pair.join(" + "):pair).join("; ")}`:null,symmetry.length?`Node symmetry / geometry examples: ${Array.isArray(symmetry)?symmetry.join(", "):symmetry}`:null].filter(Boolean).join(". ");badge.className="reference-badge";badge.textContent=row.construction_supported?"Related explicit template available":"Reference only · no automatic construction";card.append(title,description,semantics,badge);
+    const related=templates().filter(t=>t.parent_net===row.id||t.topology_label===row.id);
+    if(related.some(t=>t.parent_net)&&!row.construction_supported)badge.textContent='Molecular circuits and 3D building-block graph';
+    if(!window.COFdrawCrystalDesign?.active&&!multi()&&!sourceMode()&&checkedMonomer('a')&&checkedMonomer('b')){
+      const current=[...$('template').options].find(o=>!o.disabled&&related.some(t=>t.id===o.value));
+      if(current&&current.value!==$('template').value){
+        const use=document.createElement('button');use.type='button';use.className='button outline';
+        use.textContent='Draw '+row.id+' with this pair';
+        use.onclick=()=>{$('topology-dialog').close();$('template').value=current.value;$('template').dispatchEvent(new Event('change'));};
+        card.append(use);
+      }
+    }
     if(row.graph){
       const {nodes,edges,dimension}=row.graph,graph=document.createElementNS(NS,'svg');
       graph.setAttribute('viewBox','0 0 200 116');graph.setAttribute('role','img');

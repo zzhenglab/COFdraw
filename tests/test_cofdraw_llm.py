@@ -234,24 +234,28 @@ def test_read_deadline_is_bounded_and_no_environment_key_is_discovered(monkeypat
         llm._read_response(Response(b"{}"), deadline=99)
 
 
-def test_actual_description_catalog_shape_and_aliases_work(monkeypatch):
-    from cof_vision.cofdraw_describe import describe_catalog
-    from cof_vision.cofdraw_chemistry import TEMPLATES, library_linkages
-    from cof_vision.cofdraw_styles import STYLES, PALETTES
-    data = Path(__file__).resolve().parents[1] / "data/framework-drawing/catalog/current.json"
-    catalog = json.loads(data.read_text(encoding="utf-8"))
-    raw_library = {"monomer_presets": catalog["monomer_presets"],
-        "source_recipes": [{"recipe_id": key, **value} for key, value in catalog["source_metadata"].items()],
-        "linkages": library_linkages(catalog), "templates": TEMPLATES, "styles": STYLES,
-        "style_controls": {"palettes": list(PALETTES)}}
-    descriptor = describe_catalog(raw_library)
+@pytest.mark.parametrize("provider", ["openai", "anthropic"])
+def test_actual_description_catalog_shape_and_aliases_work(monkeypatch, provider):
+    from fastapi.testclient import TestClient
+    from cof_vision.cofdraw_desktop import create_desktop_app
+    data = Path(__file__).resolve().parents[1] / "data"
+    with TestClient(create_desktop_app(data)) as client:
+        descriptor = client.get("/api/drawing/describe/catalog").json()
     proposal = {**PROPOSAL, "selection": {"source_recipe_id": "pyurea-source-layout-v1", "style_id": "source"}}
-    calls = wire(monkeypatch, proposal)
-    assert llm.select_with_llm("Draw Pyurea in source style", descriptor, base_url=URL, model="test-model", api_key=KEY) == proposal
-    prompt_catalog = json.loads(json.loads(calls[0][0].data)["messages"][1]["content"])["catalog"]
+    if provider == "anthropic":
+        response = {"type": "message", "role": "assistant", "stop_reason": "end_turn",
+                    "content": [{"type": "text", "text": json.dumps(proposal)}]}
+        calls = wire(monkeypatch, raw=json.dumps(response).encode(), endpoint="https://api.anthropic.com/v1/messages")
+    else:
+        calls = wire(monkeypatch, proposal, endpoint="https://api.openai.com/v1/chat/completions")
+    assert llm.select_with_llm("Draw Pyurea in source style", descriptor, provider=provider, base_url=None, model="test-model", api_key=KEY) == proposal
+    request = calls[0][0]
+    assert len(request.data) < llm.MAX_REQUEST_BYTES
+    prompt_catalog = json.loads(json.loads(request.data)["messages"][-1]["content"])["catalog"]
     source = next(r for r in prompt_catalog["sources"] if r["id"] == "pyurea-source-layout-v1")
     assert "Pyurea" in source["aliases"]
-    assert all(r["id"] in {key for key, row in raw_library["linkages"].items() if row["supported"]} for r in prompt_catalog["linkages"])
+    assert {r["id"] for r in prompt_catalog["linkages"]} == {r["id"] for r in descriptor["linkages"] if r["supported"]}
+    assert {r["id"] for r in prompt_catalog["monomers"]} == {r["id"] for r in descriptor["monomers"]}
     assert all("smiles" not in row for row in prompt_catalog["monomers"])
 
 

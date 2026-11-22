@@ -41,6 +41,11 @@
     return Number.isInteger(count) && count >= 0 ? count : null;
   }
   function templateCompatibility(template, linkage, monomers, library) {
+    const shapes=['a','b'].map(block=>monomers[block]?.site_shapes?.[roleFor(library,linkage,block)]);
+    if(template.shape_pair&&!template.shape_pair.every((value,i)=>value===shapes[i])&&
+       !template.shape_pair.every((value,i)=>value===shapes[1-i]))return {compatible:false,reason:'The reactive arms do not match this spatial arrangement.'};
+    if(template.topology_label&&(shapes.includes('spiro')||shapes.includes('spatial_unspecified')))return {compatible:false,reason:'This node has out-of-plane arms. Its geometry needs a separate connectivity assignment.'};
+    if(template.topology_label&&shapes.includes('prismatic'))return {compatible:false,reason:'The six arms on this triptycene core form a prism. Choose a spatial net.'};
     if(template.id==='branched_4_3'&&![monomers.a,monomers.b].some(m=>m?.geometry_hint==='tetrahedral'))return {compatible:false,reason:'Requires a tetrahedral four-connected monomer.'};
     if (template.supported === false) return {compatible: false, reason: template.limits || "Template unavailable."};
     if (Array.isArray(template.linkages) && !template.linkages.includes(linkage)) return {compatible: false, reason: "Not available for this linkage."};
@@ -214,7 +219,12 @@
         dimension:example.id==='aba-chain'||example.id==='latent-imine'?1:2,
         group:'Assembly examples',search:searchText(name,example.label,feed,linkage,parts.map(names),example.doi)});
     }
-    return rows.concat(generated.sort((a,b)=>a.group.localeCompare(b.group)||a.rank-b.rank||a.label.localeCompare(b.label)));
+    const starters=rows.concat(generated.sort((a,b)=>a.group.localeCompare(b.group)||a.rank-b.rank||a.label.localeCompare(b.label)));
+    for(const row of starters){
+      const template=templates.get(row.template_id);
+      if(template?.parent_net)Object.assign(row,{dimension:template.dimension,net:template.parent_net});
+    }
+    return starters;
   }
 
   const commonStarts=['named:COF-LZU1','tppa-pore-v1','crystal:cof-300-c5','assembly:cof-1',
@@ -230,6 +240,7 @@
       let section;
       if(row.crystal)section=row.id==='crystal:custom-dia'?'Current pair':'3D · '+row.net+(row.reference?' · reference CIF':'');
       else if(row.source)section='Recorded source drawings';
+      else if(dimension===3)section='3D · '+(row.net||chemistry||'Frameworks')+' · molecular circuits';
       else if(dimension===1)section='1D · Chains and ribbons';
       else section='2D · '+(chemistry||'Frameworks');
       const text=[row.id,row.search,row.label,section].filter(Boolean).join(' ');

@@ -34,6 +34,19 @@ def has_free_base_porphyrin(mol):
     return bool(free_base_porphyrin_core(mol))
 
 
+def has_triptycene_core(mol):
+    return mol.HasSubstructMatch(_TRIPTYCENE)
+
+
+def coordgen_coords(mol):
+    rdCoordGen.AddCoords(mol)
+    conformer=mol.GetConformer()
+    for i in range(mol.GetNumAtoms()):
+        p=conformer.GetAtomPosition(i)
+        conformer.SetAtomPosition(i,(1.5*p.x,1.5*p.y,0.))
+    return conformer.GetId()
+
+
 def compute_2d_coords(mol, **kwargs):
     """Generate new coordinates; callers retain authority over existing ones.
 
@@ -46,11 +59,5 @@ def compute_2d_coords(mol, **kwargs):
     elif not kwargs and mol.HasSubstructMatch(_TRIPTYCENE):
         # CoordGen depicts the three blades separately. Rescale its ~1 Å
         # drawing bonds to the RDKit convention used by the sketch toolbar.
-        rdCoordGen.AddCoords(mol)
-        conformer = mol.GetConformer()
-        for atom in mol.GetAtoms():
-            index = atom.GetIdx()
-            position = conformer.GetAtomPosition(index)
-            conformer.SetAtomPosition(index, (1.5 * position.x, 1.5 * position.y, 0.))
-        return conformer.GetId()
+        return coordgen_coords(mol)
     return rdDepictor.Compute2DCoords(mol, **kwargs)

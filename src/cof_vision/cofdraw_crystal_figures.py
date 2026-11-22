@@ -14,6 +14,8 @@ def _circuit_svg(mol, coordinates, elements, ports, blocks, rings):
     w,h=np.maximum((high-low)*scale,1)+32
     points=(xy-(low+high)/2)*[scale,-scale]+[w/2,h/2]
     root=ET.Element("svg",xmlns="http://www.w3.org/2000/svg",viewBox=f"0 0 {w:.2f} {h:.2f}",width=f"{w:.2f}",height=f"{h:.2f}")
+    if any(blocks):
+        root.set("data-unassigned-sites",str(sum(not blocks[a.GetIdx()] and a.GetAtomicNum()>1 for a in mol.GetAtoms())))
     ink={"N":"#185a9b","O":"#b8313f","F":"#267d64","S":"#8b6522","B":"#9a6144"}
     depths=coordinates[:,2];low_z,high_z=np.percentile(depths,[5,95])
     depths=np.clip((depths-low_z)/(high_z-low_z),0,1) if high_z-low_z>.001 else np.ones(len(depths))
@@ -123,11 +125,74 @@ def junction_patch(structure, edges):
             "outer_sites": [s for s,cost in distance.items() if cost], "direction": [0.,0.,1.]}
 
 
+def _reference_components(record, graph, elements, edges):
+    """Map atoms in a source phase to recorded precursors across the full cell."""
+    from collections import Counter
+    from rdkit import Chem
+    linkage=record.get('linkage')
+    if linkage=='boroxine':return ['A']*len(elements)
+    if linkage not in ('boronate_ester','imine'):return ['']*len(elements)
+    first,second=('B','O') if linkage=='boronate_ester' else ('N','C')
+    letters={first:'A',second:'B'}
+    formulas={}
+    if linkage=='imine':
+        smiles=record.get('precursor_smiles',[])
+        if len(smiles)!=2:return ['']*len(elements)
+        letters={}
+        amine=Chem.MolFromSmarts('[c]-[NH2]')
+        aldehyde=Chem.MolFromSmarts('[c]-[CH1]=O')
+        for letter,s in zip(('A','B'),smiles):
+            precursor=Chem.MolFromSmiles(s)
+            if precursor is None:continue
+            n=len(precursor.GetSubstructMatches(amine))
+            c=len(precursor.GetSubstructMatches(aldehyde))
+            if bool(n)==bool(c):continue
+            letters['N' if n else 'C']=letter
+            formula=Counter(a.GetSymbol() for a in precursor.GetAtoms() if a.GetSymbol()!='H')
+            formula['O']-=c
+            formulas[letter]=+formula
+        if len(letters)!=2:return ['']*len(elements)
+    boundaries=set()
+    seeds={}
+    for row in edges:
+        i,j=row['a'],row['b']
+        if {elements[i],elements[j]}!={first,second}:continue
+        if linkage=='imine':
+            carbon,nitrogen=(i,j) if elements[i]=='C' else (j,i)
+            heavy=lambda k:[p for p,_ in graph[k] if elements[p]!='H']
+            if (sorted(elements[p] for p in heavy(carbon))!=['C','N'] or
+                    sorted(elements[p] for p in heavy(nitrogen))!=['C','C'] or
+                    not 1.18<row.get('distance_angstrom',0.)<1.36):continue
+            # Exclude endocyclic aromatic C=N, including pyridine and porphyrin.
+            seen={carbon}
+            front=set(heavy(carbon))-{nitrogen}
+            for _ in range(6):
+                if nitrogen in front:break
+                seen.update(front)
+                front={p for q in front for p in heavy(q)}-seen
+            if nitrogen in front:continue
+        boundaries.add(tuple(sorted((i,j))))
+        seeds[i]=letters[elements[i]];seeds[j]=letters[elements[j]]
+    owners={}
+    for seed in range(len(elements)):
+        if seed in owners:continue
+        group={seed};queue=[seed]
+        while queue:
+            i=queue.pop()
+            for j,_ in graph[i]:
+                if j not in group and tuple(sorted((i,j))) not in boundaries:
+                    group.add(j);queue.append(j)
+        evidence={seeds[i] for i in group if i in seeds}
+        letter=evidence.pop() if len(evidence)==1 else ''
+        if letter and formulas and Counter(elements[i] for i in group if elements[i]!='H')!=formulas[letter]:
+            letter=''
+        owners.update(dict.fromkeys(group,letter))
+    return [owners[i] for i in range(len(elements))]
+
+
 def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread=0):
     """Depict an unwrapped, connected local chemical graph with continuation ports."""
     from rdkit import Chem
-    from rdkit.Chem import rdDepictor
-    from rdkit.Chem.Draw import rdMolDraw2D
 
     atoms = structure["atoms"]
     elements = [a["element"] for a in atoms]
@@ -197,6 +262,11 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread
                 rw.AddBond(ids[a], ids[b], Chem.BondType.SINGLE)
     mol = rw.GetMol()
     mol.UpdatePropertyCache(strict=False)
+    blocks=[atoms[i].get("component","") for i,_ in positions]
+    record=structure.get("provenance",{}).get("drawing_cofex",{})
+    if not any(blocks) and record:
+        owners=_reference_components(record,graph,elements,edges)
+        blocks=[owners[i] for i,_ in positions]
     # CIF coordinates alone do not determine resonance or bond orders. Mark
     # six-carbon aromatic-like rings only when geometry supports that choice.
     xyz = np.array([(np.array(atoms[i]["fractional"])+image) @ structure["cell"] for i, image in ordered])
@@ -255,9 +325,6 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread
     if circuit and "center" in circuit:
         from .cofdraw_reticular_scheme import junction_scheme
         i,*image = circuit["center"]
-        outer = {tuple(s) for s in circuit["outer_sites"]}
-        single_feed=structure.get("provenance",{}).get("drawing_cofex",{}).get("linkage")=="boroxine"
-        blocks = [atoms[j].get("component") or ("B" if (j,*t) in outer and not single_feed else "A") for j,t in positions]
         return junction_scheme(mol, ids[i,tuple(image)], blocks, arm_spread)
     if scheme and circuit and circuit.get("backbone"):
         from .cofdraw_reticular_scheme import draw_scheme
@@ -269,7 +336,6 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread
         # out with conventional bond angles in the plane of the drawing.
         normal=np.asarray(circuit["direction"])
         depths=[((np.asarray(atoms[i]["fractional"])+image)@structure["cell"])@normal for i,image in positions]
-        blocks=[atoms[i].get("component","") for i,_ in positions]
         rings=[([index(s) for s in r["backbone"]],[[index(s) for s in group] for group in r["linkers"]])
                for r in circuit.get("rings",[])]
         anchors=None
@@ -289,17 +355,11 @@ def chemical_drawing(structure, edges, *, circuit=None, scheme=False, arm_spread
         projected=coords@np.array([horizontal,vertical,normal]).T
         if scheme:
             from .cofdraw_reticular_scheme import reference_scheme
-            return reference_scheme(mol,projected,[atoms[i].get("component","") for i,_ in positions],rings)
-        return _circuit_svg(mol, projected,
-                            [elements[i] for i,_ in ordered],len(ordered),[atoms[i].get("component","") for i,_ in positions],rings)
-    else:
-        rdDepictor.Compute2DCoords(mol, canonOrient=True)
-    draw = rdMolDraw2D.MolDraw2DSVG(800, 590)
-    draw.drawOptions().prepareMolsBeforeDrawing = False
-    draw.drawOptions().padding = .055
-    draw.DrawMolecule(mol)
-    draw.FinishDrawing()
-    return draw.GetDrawingText()
+            return reference_scheme(mol,projected,blocks,rings,circuit.get('scheme_tilt',0))
+        return _circuit_svg(mol,projected,[elements[i] for i,_ in ordered],len(ordered),blocks,rings)
+    from .cofdraw_reticular_scheme import fragment_layout,vector_art
+    coords=fragment_layout(mol,range(mol.GetNumAtoms()))
+    return vector_art(mol,coords,blocks=blocks)
 
 
 def readable_direction(model, face=None):
@@ -468,6 +528,9 @@ def _chair_patch(ring, first, count, cell):
         edge_clearance=np.minimum(edge_clearance,np.sqrt(np.maximum(0,squared)).min(0)/length)
     scores=(exposure.min(0)+.6*np.minimum(gaps.min(0),.5)+.15*exposure.mean(0)
             +.9*np.minimum(clearance,1.25)+2*np.minimum(arm_span,.74)+2*np.minimum(edge_clearance,.43))
+    from .cofdraw_crystal_circuits import bridge_overlap_cost
+    links=[(vertex_ids.index(a),vertex_ids.index(b)) for a,b in sorted(used)]
+    scores-=2*bridge_overlap_cost(vertices,links,cameras)
     view=cameras[scores.argmax()]
     if view@normal<0:view=-view
     return {**rings[0],"rings":rings,"circuits":count,"direction":view.tolist(),

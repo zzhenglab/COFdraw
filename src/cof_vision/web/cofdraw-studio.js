@@ -28,8 +28,16 @@
   function signature(){return JSON.stringify([S.state.sourceId,S.state.recipe,S.state.inputsDirty,S.state.jsonPending,$('smiles-a').value,$('smiles-b').value]);}
   function drawingName(){if(S.state.recipe?.assembly)return "Current design · "+Object.values(S.state.recipe.components).map(c=>c.label).join(" + ");return S.state.sourceId?`Source drawing · ${S.state.sourceMetadata?.label||S.state.recipe?.label||S.state.sourceId}`:`Current design · ${$('label-a').value||'A'} + ${$('label-b').value||'B'}`;}
   function drawingReady(){return Boolean(S.state.recipe&&!S.state.inputsDirty&&!S.state.jsonPending);}
+  function spatialDesign(){const t=S.state.recipe?.selected_template;return drawingReady()&&(t?.dimension===3||t?.id==='branched_4_3');}
   function syncSource(){
     const valid=drawingReady();
+    const spatial=spatialDesign(),graph=origin==='spatial-net';
+    $('current-cell-spacing').closest('label').hidden=spatial;
+    $('finite-view-options').hidden=spatial;
+    $('build-current-cell').textContent=spatial?'Show 3D topology':'Build periodic CIF';
+    $('viewer-measure').disabled=graph;$('viewer-color').disabled=graph;
+    $('show-atom-table').textContent=graph?'Building-block coordinates':'Atom coordinates';
+    if(graph)$('viewer-measure').checked=false;
     $('current-drawing-label').textContent=valid?drawingName():'Create or apply a drawing to generate its model.';
     for(const id of ['build-current-cell','build-patch-3d','compare-stacks']) $(id).disabled=!valid;
   }
@@ -101,6 +109,8 @@
     const provenance = currentStructure?.provenance;
     $('viewer-provenance').textContent=kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='current-periodic'?`${drawingName()} · unrelaxed periodic cell`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration hypothesis':'Independent periodic model / imported CIF';
     $('structure-scope').textContent=result.scope||result.qualification||result.viewer?.scope||(kind==='drawing'?'Finite layers scaled from the 2D drawing; no periodic crystal or optimized stacking is inferred.':'Model coordinates in Å; inspect geometry and provenance before simulation.');
+    if(kind==='spatial-net')$('viewer-provenance').textContent=drawingName()+' · proposed '+result.net+' net';
+    syncSource();
     const warnings=$('structure-warnings'),routine=[];warnings.replaceChildren();for(const warning of result.warnings||[]){if(/^(Finite illustrative layers|No interlayer covalent|Do not use this preview|Translated copies are|The requested number|Inspect contacts and relaxation|Imported\/proposed coordinates|CIF\/extended XYZ retain|PDB is a coordinate)/.test(warning))routine.push(warning);else note(warnings,warning,true);}if(routine.length){const box=document.createElement('details'),summary=document.createElement('summary');box.className='model-notes';summary.textContent=`Model notes (${routine.length})`;box.append(summary);for(const warning of routine)note(box,warning);warnings.append(box);}
     if(Number.isFinite(result.minimum_intercopy_distance_angstrom))metric($('structure-warnings'),'Closest intercopy atoms / Å',fmt(result.minimum_intercopy_distance_angstrom,3));
     if(kind==='current-periodic'&&provenance?.spacing_angstrom) {
@@ -146,6 +156,11 @@
   function patchRequest(stacking=$('patch-stacking').value){return {...drawingRequest(),layers:Number($('patch-layers').value),layer_spacing:Number($('patch-spacing').value),stacking,slip:[Number($('patch-slip-x').value),Number($('patch-slip-y').value)],twist_degrees:Number($('patch-twist').value)};}
   async function showFinite(api){
     const request=patchRequest(), result=await api('science/patch',request);
+    if(result.kind==='spatial_building_block_net'){
+      display(result,result.net+' · building-block topology','spatial-net');
+      cellNote('Atomic coordinates and an experimental or optimized unit cell are required for physical properties.');
+      return;
+    }
     display(result,`Current drawing · ${stackLabels[request.stacking]}`,'drawing');
   }
   function generatePatch(){return work(async api=>{await showFinite(api);status('Finite layers ready.');});}
@@ -155,6 +170,7 @@
   }
   function generateCurrentCell(useFiniteFallback=true){
     return work(async api=>{
+      if(spatialDesign()){await showFinite(api);status('Drag to rotate the proposed topology. Colors identify the selected building blocks.');return;}
       const value=$('current-cell-spacing').value;
       const result=await api('science/build-periodic',{
         ...drawingRequest(), layer_spacing:value===''?null:Number(value), repeats:[2,2,2]
@@ -336,7 +352,8 @@
     contrast:{...elementColors,C:'#424756',N:'#245fa5',O:'#dc532d',F:'#16896d',S:'#c99b12',P:'#a7569f',H:'#f4f3ea'},
     mineral:{...elementColors,C:'#65757a',H:'#f1eee7',N:'#456da8',O:'#be6256',F:'#549a83',S:'#c59a43',P:'#b57d5c',Cl:'#6e986c'}};
   function viewerColors(atoms){
-    const mode=$('viewer-color').value, palette=$('viewer-palette').value, legend=$('viewer-legend');
+    const net=viewer.model?.representation==='building_block_net';
+    const mode=net?'component':$('viewer-color').value, palette=$('viewer-palette').value, legend=$('viewer-legend');
     const colors=new Map(), keys=new Map(), groupColors=groupPalettes[palette]||groupPalette;
     legend.replaceChildren();
     const inferred=mode==='network'&&atoms.every(a=>a.network===undefined);
@@ -347,7 +364,7 @@
         // An isolated network keeps its original color when the other nets are hidden.
         const index=Number.isInteger(key)?key:['A','B','C'].includes(key)?key.charCodeAt(0)-65:keys.has(key)?keys.get(key).index:keys.size;
         color=groupColors[index%groupColors.length];
-        if(!keys.has(key))keys.set(key,{color,index,label:mode==='component'?'Block '+key:(mode==='layer'?'Layer ':inferred?'Inferred component ':'Network ')+(Number(key)+1)});
+        if(!keys.has(key))keys.set(key,{color,index,label:net?atom.label:mode==='component'?'Block '+key:(mode==='layer'?'Layer ':inferred?'Inferred component ':'Network ')+(Number(key)+1)});
       }else if(mode==='element'&&atom.element!=='*'&&!(viewer.hideHydrogen&&atom.element==='H')){
         keys.set(key,{color,label:key});
       }
@@ -458,7 +475,7 @@
         }
       }
       c.globalAlpha=1;
-      if(this.selected.length===2){const [a,b]=this.selected.map(i=>this.projected[i]);c.strokeStyle='#d98c22';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);}c.fillStyle='#82988d';c.font='10px Segoe UI';c.fillText(`${this.atoms.length} atoms · Å`,13,h-14);
+      if(this.selected.length===2){const [a,b]=this.selected.map(i=>this.projected[i]);c.strokeStyle='#d98c22';c.lineWidth=2;c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);}c.fillStyle='#82988d';c.font='10px Segoe UI';c.fillText(this.model.representation==='building_block_net'?`${this.atoms.length} building blocks · relative coordinates`:`${this.atoms.length} atoms · Å`,13,h-14);
     }};
   for(const id of ['viewer-palette','viewer-finish'])$(id).addEventListener('change',()=>viewer.draw());
   viewer.colorsFor=viewerColors;
@@ -553,7 +570,7 @@
       const result=expanded?report.measurement:await S.api('science/measure',drawingRequest());
       if(S.state.recipe!==recipe||window.COFdrawExtent.visible!==rendered||signature()!==key||S.state.dirty||S.state.inputsDirty||S.state.jsonPending)return;
       const el=$('pore-measurement'),title=document.createElement('strong');
-      title.textContent=(result.focal_face?result.focal_face.label+' opening':'Pore opening')+` · ${fmt(result.diameter_nm,2)} nm`;
+      title.textContent=(result.quantity_label||(result.focal_face?result.focal_face.label+' opening':'Pore opening'))+` · ${fmt(result.diameter_nm,2)} nm`;
       const method=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('p');
       method.className='measurement-method';
       summary.textContent='Measurement method';
@@ -586,6 +603,6 @@
   window.addEventListener('cofdraw:state',drawingChanged);
   window.addEventListener('cofdraw:layoutchanged',drawingChanged);
   drawingKey=signature();syncSource();
-  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,invalidateCrystalDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
+  window.COFdrawScience={get structure(){return currentStructure;},get finiteModel(){return !currentStructure&&origin&&origin!=='spatial-net'&&viewer.model?.periodic===false?viewer.model:null;},get revision(){return revision;},get origin(){return origin;},get stackingLayer(){return comparisonParent||(origin==='current-periodic'?currentLayer||currentStructure:currentStructure);},patchRequest,drawingRequest,drawingReady,openCurrentCell,showCatalogDesign,invalidateCrystalDesign,viewer,work,status,metric,note,details,display,tab,invalidate};
   if(S.state.library)loadScience();
 })();

@@ -191,7 +191,7 @@ def describe_catalog(library):
             aliases = [identifier, row.get("label", identifier)]
         linkages.append({"id": identifier, "label": row.get("label", identifier), "aliases": _unique(aliases),
                          "supported": row.get("supported") is True, "roles": list(row.get("roles", []))})
-    templates = [{**{k: deepcopy(row.get(k)) for k in ("id", "label", "allow_pairs", "instances", "topology_label", "description")},
+    templates = [{**{k: deepcopy(row.get(k)) for k in ("id", "label", "allow_pairs", "instances", "topology_label", "description", "shape_pair", "linkages", "dimension")},
                   "aliases": [row["id"], row["id"].replace("_", " ")]} for row in library.get("templates", [])]
     styles = [{"id": row["id"], "label": row.get("label", row["id"]), "category": row.get("category"),
                "description": row.get("description"), "aliases": _unique([row["id"], row.get("label")] + STYLE_ALIASES.get(row["id"], []))}
@@ -516,6 +516,12 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     candidates = [row for row in catalog["templates"] if row.get("allow_pairs") and counts in row["allow_pairs"]]
     if geometries:
         candidates = [row for row in catalog["templates"] if row["id"] in GEOMETRY_TEMPLATES[geometries[0]] and (not row.get("allow_pairs") or counts in row["allow_pairs"])]
+    from .cofdraw_spatial import matches
+    shapes = [row.get("site_shapes", {}).get(role) for row, role in zip((a, b), roles)]
+    out_of_plane = any(shape in {"tetrahedral", "prismatic", "spiro", "spatial_unspecified"} for shape in shapes)
+    candidates = [row for row in candidates if matches(row, shapes)
+                  and (not row["linkages"] or linkage in row["linkages"])
+                  and not (row["topology_label"] and out_of_plane)]
     if linkage!='imine' or not (a.get('kgm_dialdehyde') and b.get('kgm_etta')):
         candidates = [row for row in candidates if row['id']!='kgm_4_2']
     if linkage!='imine' or not any(count==4 and row.get('geometry_hint')=='tetrahedral'
@@ -524,11 +530,17 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     if instance_counts:
         candidates = [row for row in candidates if row["instances"] == instance_counts[0]]
     if not template_id:
+        planar = [row for row in candidates if row["topology_label"]]
         if len(candidates) == 1:
             template_id = candidates[0]["id"]
             assumptions.append("Choose the compatible finite drawing layout " + template_id + "; this is a layout proposal for review, not a prediction of periodic topology.")
+        elif len(planar) == 1 and all(row == planar[0] or row["dimension"] == 3 for row in candidates):
+            template_id = planar[0]["id"]
+            assumptions.append(f"Start with the {planar[0]['topology_label']} sheet drawing. The monomer geometry also allows a spatial arrangement.")
         else:
             unresolved.append("Choose a compatible finite drawing template; monomer degree alone does not determine a unique topology.")
+        result["alternatives"].extend({"kind": "template_choice", "field": "template_id", "id": row["id"], "label": row["label"]}
+                                      for row in candidates if row["id"] != template_id)
     result["selection"].update(monomer_a_id=a["id"], monomer_b_id=b["id"], linkage=linkage, template_id=template_id)
     if template_id:
         template = next(row for row in catalog["templates"] if row["id"] == template_id)

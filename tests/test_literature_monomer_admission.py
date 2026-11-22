@@ -132,14 +132,28 @@ def test_exact_additive_history_and_manifest_bindings(catalog, rows):
     assert len({row['canonical_smiles'] for row in SELECTED.values()}) == 37
     assert set(audit['added_ids']) == set(SELECTED)
     assert set(prior) == {r['id'] for r in baseline['monomer_presets']} | set(SELECTED)
-    old_sha = read(DATA / 'catalog/current.audit.json')['previous_catalog_sha256']
+    review = catalog['master_census_review']
+    refreshed_from = review['previous_catalog_sha256']
+    old_sha = read(DATA / 'catalog/history' / (refreshed_from + '.audit.json'))['previous_catalog_sha256']
     old_path = DATA/'catalog/history'/(old_sha+'.json')
     assert digest(old_path) == old_sha
     previous_rows = {r['id']:r for r in read(old_path)['monomer_presets']}
     assert set(previous_rows) - set(prior) == set(catalog['recent_monomer_update']['added_ids']) == {'dhp_cho4', 'hapt', 'hbc_la12'}
     recent = set(catalog['reviewed_feed_update']['added_ids'])
     assert recent == {'ttba_four_formyl','dmta_23','dva_25','btpha2'}
-    assert set(rows) - set(previous_rows) == set(catalog['cofvision_census']['added_ids']) | recent
+    previous_refresh = read(DATA / 'catalog/history' / (refreshed_from + '.json'))
+    assert {r['id'] for r in previous_refresh['monomer_presets']} - set(previous_rows) == set(catalog['cofvision_census']['added_ids']) | recent
+    assert set(rows) - {r['id'] for r in previous_refresh['monomer_presets']} == set(review['added_ids'])
+    assert all(rows[r['id']] == r for r in previous_refresh['monomer_presets'])
+    for key in review['added_ids']:
+        entry = rows[key]
+        binding = entry['master_binding']
+        assert binding['reference_index_sha256'] == review['reference_index_sha256']
+        assert binding['master_sha256'] == review['master_sha256']
+        assert binding['component_ids'] and binding['record_ids'] and binding['ground_truth'] is False
+        assert entry['source_evidence'][0]['source_crop_sha256'] and entry['source_dois']
+        assert Chem.MolToSmiles(Chem.MolFromSmiles(entry['smiles'])) == entry['canonical_smiles']
+        assert entry['automatic_prepare_supported'] and entry['connection_count'] >= 2
     for identifier in recent:
         assert rows[identifier]['source_evidence'][0]['source_role'] == 'framework_feed'
     assert all(rows[k] == v for k,v in previous_rows.items())

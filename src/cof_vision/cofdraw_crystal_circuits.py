@@ -4,6 +4,45 @@ from collections import deque
 import numpy as np
 
 
+def bridge_overlap_cost(points,links,cameras):
+    """Score nonincident projected bridges, particularly parallel crossings."""
+    costs=np.zeros(len(cameras))
+    lengths=np.array([np.linalg.norm(points[b]-points[a]) for a,b in links])
+    scale=np.median(lengths)
+    for k,(a,b) in enumerate(links):
+        d=points[b]-points[a]
+        dz=cameras@d
+        ld=np.maximum(d@d-dz**2,1.e-9)
+        for i,j in links[:k]:
+            if a in (i,j) or b in (i,j):continue
+            e=points[j]-points[i]
+            ez=cameras@e
+            le=np.maximum(e@e-ez**2,1.e-9)
+            cosine=(e@d-ez*dz)/np.sqrt(ld*le)
+            # Prefer a view that separates complete bridges before flattening
+            # their aryl chemistry. Oblique chairs can often keep all bridges
+            # distinct even when a slightly more face-on view crosses them.
+            baseline=points[i]-points[a]
+            signed=cameras@np.cross(d,e)
+            safe=np.where(np.abs(signed)>1.e-8,signed,np.inf)
+            along=cameras@np.cross(baseline,e)/safe
+            across=cameras@np.cross(baseline,d)/safe
+            crossing=(along>.01)&(along<.99)&(across>.01)&(across<.99)
+            costs+=2.5*crossing
+            # A transverse crossover can be depth-faded. Two aryls running
+            # along the same projected edge can appear to share bonds.
+            proximity=np.zeros(len(cameras))
+            for fraction in (.2,.5,.8):
+                p=points[a]-points[i]+fraction*d
+                pz=cameras@p
+                along=p@e-pz*ez
+                t=np.clip(along/le,0,1)
+                dist=np.sqrt(np.maximum(0,p@p-pz**2-2*t*along+t**2*le))/scale
+                proximity+=np.maximum(.42-dist,0)**2
+            costs+=proximity*(.3+1.7*np.clip(cosine**2,0,1))
+    return costs
+
+
 def reference_framework(structure, edges, limit=4):
     """Contract local molecular rings, then follow bonds between branching residues.
 
@@ -124,6 +163,15 @@ def reference_framework(structure, edges, limit=4):
         for a,b in zip(loop,loop[1:]+loop[:1]):
             target=(b[0],*(v-u for u,v in zip(a[1:],b[1:])))
             cluster.update(translated(p,a) for p in arms[a[0]][target])
+        # A complete tetraaryl node includes the two aryl rings that lead out
+        # of a circuit. Carry each adjacent cyclic residue to the cut so that
+        # continuation marks appear beyond the ring, not on a bare Si or C.
+        for g in loop:
+            if len(groups[g[0]])!=1 or len(net[g[0]])!=4:
+                continue
+            atom=next(iter(groups[g[0]]))[0]
+            if atoms[atom]["element"] in ("C","Si") and all(atoms[j]["element"]=="C" for j,*_ in graph[atom]):
+                cluster.update(s for s in adjacent(g,residue) if len(groups[s[0]])>=6)
         # Complete substituents pendant to these residues, e.g. fluorine or
         # methoxy, without crossing into another ring of the extended net.
         pending=list(cluster)
@@ -149,7 +197,11 @@ def reference_framework(structure, edges, limit=4):
             cameras=np.column_stack((r*np.cos(k*2.399963),r*np.sin(k*2.399963),z))
             exposure=np.abs(normals@cameras.T)
             shortening=np.sqrt(np.maximum(0,1-(unit@cameras.T)**2))
-            direction=cameras[np.argmax(exposure.min(0)+.65*shortening.min(0)+.18*exposure.mean(0))].tolist()
+            vertices=sorted({p for face in loops for p in face})
+            coords=np.array([(centers[i]+[x,y,z])@cell for i,x,y,z in vertices])
+            links=[(vertices.index(a),vertices.index(b)) for a,b in sorted(used)]
+            overlap=bridge_overlap_cost(coords,links,cameras)
+            direction=cameras[np.argmax(exposure.min(0)+.65*shortening.min(0)+.18*exposure.mean(0)-2*overlap)].tolist()
         patches[n]=dict(circuits=n,site_images=[[i,[x,y,z]] for i,x,y,z in sorted(site_images)],direction=direction)
         patches[n]["junction_loops"]=[[(centers[i]+[x,y,z]).tolist() for i,x,y,z in loop] for loop in loops]
         if n==limit:break

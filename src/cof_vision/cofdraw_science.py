@@ -741,7 +741,11 @@ def fit_bet(relative_pressures, uptake_mmol_g, *, fit_min=.05, fit_max=.30, cros
 
 def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15.):
     """Chemically scaled finite drawing layers; explicitly not a periodic crystal."""
+    from .cofdraw_spatial import net_preview
     from .framework_drawing import build_patch
+    spatial=net_preview(recipe)
+    if spatial is not None:
+        return spatial
     layer_count = _integer(layers, "layers", 1, 6)
     spacing = _finite(layer_spacing, "layer_spacing", 1, 20)
     target_bond = _finite(bond_length, "bond_length", 1, 2)

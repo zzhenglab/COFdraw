@@ -115,9 +115,15 @@ def _faces(pattern,repeats,kgm,triad=False,single_linker=None):
     return faces
 
 
-def _block(component):
+def _block(component,alternate=False):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
-    compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
+    from .cofdraw_depiction import has_triptycene_core,has_free_base_porphyrin,coordgen_coords
+    if has_triptycene_core(mol):
+        compute_2d_coords(mol)
+    elif alternate and not has_free_base_porphyrin(mol):
+        coordgen_coords(mol)
+    else:
+        compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
     ports = list(_ports(mol).values())
     endpoints = [site for _,site in ports]
     xy = mol.GetConformer().GetPositions()[:,:2].copy()
@@ -235,9 +241,9 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
     return translations,angles,slots
 
 
-def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientations=None):
+def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientations=None,geometry=None):
     degrees=Counter(k for pair in joins for k in pair)
-    geo={k:_block(components[k]) for k in set(kinds)}
+    geo=geometry or {k:_block(components[k]) for k in set(kinds)}
     if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
         raise ValueError('This drawing exceeds 2,400 atoms. Use a smaller neighborhood.')
     if any(degrees[i]>len(geo[k][1]) for i,k in enumerate(kinds)):

@@ -57,3 +57,37 @@ def test_biphenyl_chairs_keep_distinct_junctions_clear(monkeypatch):
         chairs=adjacent_circuits(ring,model['cell'],n)
         # Two distinct four-aryl junctions require room for both sets of rings.
         assert chemical_drawing(model,edges,circuit=chairs,scheme=True)>12.
+
+
+@pytest.mark.parametrize('key,a,b',[
+    ('acs_6_2','hfptp_f','bpy55'),('acs_6_6','hfptp_h','hapt'),
+    ('stp_6_4','hfptp_h','pytta'),('hea_6_4','hfptp_f','tapm'),
+    ('ceq_6_3','hfptp_h','tapt'),('pts_4_4','tfppy','tapm'),
+    ('nbo_4_2','ta','pytta'),('tbo_4_3','tfppy','tapb'),('dia_4_2','tfpa_adamantane','pa'),
+    ('stp_6_4','recovered_tfbp','hapt'),('pts_4_4','tht_cho4','tapm'),('pts_4_4','tfs_cho4','tapp')])
+def test_spatial_design_regenerates_with_selected_roles(key,a,b):
+    import json
+    from pathlib import Path
+    rows={m['id']:m['smiles'] for m in json.loads((Path(__file__).resolve().parents[1]/
+          'data/framework-drawing/catalog/current.json').read_bytes())['monomer_presets']}
+    recipe=prepare_template(rows[a],rows[b],'imine',a,b,6,key)
+    recipe['design_template_signature']=design_signature(recipe)
+    assert recipe['design_topology'] is None
+    assert repeat_options(recipe)['available']
+    mol,orig,ports,summary,_=repeat_patch(recipe,3)
+    assert len(Chem.GetMolFrags(mol))==1 and summary['pore_count']==3
+    assert len(ports)==sum(recipe['components'][k]['connectivity']*n for k,n in
+                           summary['component_counts'].items())-2*summary['interblock_bonds']
+    assert len(orig)==mol.GetNumAtoms()
+    assert all(k in orig[0] for k in ('component','instance','fragment_atom_index'))
+    from cof_vision.cofdraw_science import patch_3d
+    graph=patch_3d(recipe)
+    assert graph['kind']=='spatial_building_block_net' and 'structure' not in graph
+    vertices=graph['viewer']['atoms']
+    edges=graph['viewer']['bonds']
+    xy=np.array([[v[k] for k in ('x','y','z')] for v in vertices])
+    assert np.linalg.matrix_rank(xy-xy.mean(0))==3
+    assert {v['label'] for v in vertices}=={a,b}
+    assert all(vertices[i]['label']!=vertices[j]['label'] for i,j in edges)
+    for role in ('A','B'):
+        assert max(sum(i in e for e in edges) for i,v in enumerate(vertices) if v['component']==role)==recipe['components'][role]['connectivity']

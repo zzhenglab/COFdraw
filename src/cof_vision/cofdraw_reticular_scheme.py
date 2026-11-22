@@ -295,6 +295,9 @@ def draw_scheme(mol, backbone, segments, depths=None, blocks=None, rings=None, p
             other=[positions[a.GetIdx()]-positions[anchor] for a in mol.GetAtomWithIdx(anchor).GetNeighbors() if a.GetIdx() in positions]
             direction=-np.sum(other,axis=0) if other else np.array([0.,1.])
             positions[i]=positions[anchor]+1.45*direction/max(np.linalg.norm(direction),1e-6)
+    if projected is not None:
+        from .cofdraw_junction_layout import fit_ring_bodies
+        positions=fit_ring_bodies(mol,positions,fragment_layout)
     return vector_art(mol,positions,depths,blocks)
 
 
@@ -316,62 +319,26 @@ def junction_scheme(mol, center, blocks, spread=0):
         if len(members.intersection(arms))!=1:
             raise ValueError("Junction arms reconnect within this fragment")
         coords=fragment_layout(mol,members)
-        angle=math.radians(12+90*k+(-1)**k*spread)
+        # Two plain bonds above the junction, with adjacent near and far
+        # aryls below. Keep the opposing two wedge bonds off a straight line.
+        angle=math.radians((30,150,230,310)[k]+(-1)**k*.3*spread)
         target=np.array([math.cos(angle),math.sin(angle)])
         positions.update(rotate_to(coords,coords[center],coords[first]-coords[center],target,np.zeros(2)))
         for j in members-{center}:
-            depths[j]=(.94,.72,.38,.72)[k]
-        if k in (0,2):
+            depths[j]=(.72,.72,.94,.38)[k]
+        if k in (2,3):
             bond=mol.GetBondBetweenAtoms(center,first)
-            bond.SetProp("junctionDepth","front" if k==0 else "rear")
+            bond.SetProp("junctionDepth","front" if k==2 else "rear")
             bond.SetIntProp("junctionCenter",center)
     return vector_art(mol,positions,depths,blocks)
 
 
-def reference_scheme(mol, xyz, blocks, rings):
+def reference_scheme(mol, xyz, blocks, rings, tilt_degrees=0):
     """Keep fused aromatic rings readable in a projection of a reference CIF."""
+    from .cofdraw_junction_layout import reference_layout
     mol=Chem.Mol(mol)
-    xy=xyz[:,:2].copy()
-    groups=[]
-    for ring in rings:
-        if not all(mol.GetAtomWithIdx(i).GetIsAromatic() for i in ring):continue
-        merged=set(ring)
-        for group in groups.copy():
-            if group & merged:
-                merged.update(group)
-                groups.remove(group)
-        groups.append(merged)
-    constraints={}
-    for group in groups:
-        ids=sorted(group)
-        layout=fragment_layout(mol,ids)
-        local=np.array([layout[i] for i in ids])
-        local-=local.mean(0)
-        points=xy[ids]
-        u,_,vt=np.linalg.svd(local.T@(points-points.mean(0)))
-        xy[ids]=local@(u@vt)+points.mean(0)
-        for i in ids:
-            near=[a.GetIdx() for a in mol.GetAtomWithIdx(i).GetNeighbors() if a.GetIdx() in group]
-            for j in near:
-                for k in [i,*near]:
-                    if k!=j:constraints[tuple(sorted((k,j)))]=np.linalg.norm(layout[k]-layout[j])
-    for bond in mol.GetBonds():
-        a,b=sorted((bond.GetBeginAtomIdx(),bond.GetEndAtomIdx()))
-        constraints.setdefault((a,b),np.linalg.norm(xyz[a]-xyz[b]))
-    ends=np.array(list(constraints));lengths=np.array(list(constraints.values()))
-    # Simultaneous distance relaxation prevents the locally opened rings
-    # from leaving a long bond at their attachment to the rest of the net.
-    original=xy.copy()
-    degree=np.bincount(ends.ravel(),minlength=len(xy)).clip(1)
-    for _ in range(80):
-        d=xy[ends[:,0]]-xy[ends[:,1]]
-        dist=np.linalg.norm(d,axis=1)
-        correction=d*((lengths-dist)/np.maximum(dist,1e-7))[:,None]
-        update=np.zeros_like(xy)
-        np.add.at(update,ends[:,0],correction)
-        np.add.at(update,ends[:,1],-correction)
-        xy+=.72*update/degree[:,None]+.035*(original-xy)
-    return vector_art(mol,dict(enumerate(xy)),xyz[:,2],blocks)
+    positions,depth=reference_layout(mol,xyz,fragment_layout,tilt_degrees)
+    return vector_art(mol,positions,depth,blocks)
 
 
 def vector_art(mol,positions,depths=None,blocks=None):
@@ -389,6 +356,8 @@ def vector_art(mol,positions,depths=None,blocks=None):
         low,high=np.percentile(depths,[5,95])
         depths=np.clip((np.asarray(depths)-low)/(high-low),0,1) if high-low>.001 else np.ones(len(pts))
     blocks=blocks or [""]*len(pts)
+    if any(blocks):
+        root.set("data-unassigned-sites",str(sum(not blocks[a.GetIdx()] and a.GetAtomicNum()>1 for a in mol.GetAtoms())))
     def attributes(indices):
         block=blocks[indices[0]]
         return {"data-depth":f"{np.mean(depths[list(indices)]):.3f}",
@@ -404,8 +373,20 @@ def vector_art(mol,positions,depths=None,blocks=None):
         ring_seen.add(frozenset(ring))
         ET.SubElement(shades,"polygon",points=" ".join(point(pts[k]) for k in ring),attrib=attributes(ring))
     bonds=ET.SubElement(root,"g",fill="none",stroke="#262a30",attrib={"stroke-linecap":"round","stroke-linejoin":"round","stroke-width":"1.65"})
+    from .cofdraw_junction_layout import crossing_gaps
+    crossovers=crossing_gaps(mol,pts,depths)
     def line(a,b,**attrs):
-        ET.SubElement(group,"path",d="M"+point(a)+" L"+point(b),attrib=attrs)
+        segments=[]
+        t0,t1=(a-p)@d/size**2,(b-p)@d/size**2
+        cursor=0.
+        if t1>t0:
+            for lo,hi in sorted(cuts):
+                left=np.clip((lo-t0)/(t1-t0),0,1)
+                if left>cursor:segments.append((cursor,left))
+                cursor=max(cursor,np.clip((hi-t0)/(t1-t0),0,1))
+        if cursor<1:segments.append((cursor,1.))
+        path=" ".join("M"+point(a+u*(b-a))+" L"+point(a+v*(b-a)) for u,v in segments)
+        if path:ET.SubElement(group,"path",d=path,attrib=attrs)
     for b in mol.GetBonds():
         i,j=b.GetBeginAtomIdx(),b.GetEndAtomIdx()
         p,q=pts[i],pts[j]
@@ -413,6 +394,8 @@ def vector_art(mol,positions,depths=None,blocks=None):
         size=np.linalg.norm(d)
         if size<.01:continue
         group=ET.SubElement(bonds,"g",attrib=attributes([i,j]))
+        cuts=crossovers.get(b.GetIdx(),())
+        if cuts:group.set("data-crossover","rear")
         normal=np.array([-d[1],d[0]])/size
         if b.HasProp("junctionDepth"):
             tip,end=(p,q) if i==b.GetIntProp("junctionCenter") else (q,p)
@@ -425,6 +408,8 @@ def vector_art(mol,positions,depths=None,blocks=None):
         elif not mol.GetAtomWithIdx(i).GetAtomicNum() or not mol.GetAtomWithIdx(j).GetAtomicNum():
             end,start=(q,p) if mol.GetAtomWithIdx(i).GetAtomicNum() else (p,q)
             stem=start+(end-start)*.65
+            group.set('data-cut',point(stem))
+            group.set('data-cut-normal',point(normal))
             line(start,stem)
             axis=(end-start)/size
             wave=[stem+normal*t+axis*1.35*math.sin(t*1.5) for t in np.linspace(-4,4,25)]

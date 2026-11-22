@@ -106,7 +106,8 @@ def _catalog(library):
     compact, allowed = {}, {}
     for collection in dict.fromkeys(SELECTION_COLLECTIONS.values()):
         rows = library.get(collection)
-        if not isinstance(rows, list) or len(rows) > 256:
+        collection_limit = 4096 if collection == "monomers" else 256
+        if not isinstance(rows, list) or len(rows) > collection_limit:
             raise LLMSelectionError("The description catalog has an invalid option collection.")
         selected, ids = [], set()
         for row in rows:
@@ -128,6 +129,15 @@ def _catalog(library):
                 items = row.get(field)
                 if isinstance(items, list):
                     value[field] = [v[:250] for v in items[:12] if isinstance(v, str)]
+            if collection == "monomers":
+                # The UI label usually repeats the abbreviation and full name verbatim.
+                names = {name.casefold() for name in (identifier, value.get("abbreviation"), value.get("full_name")) if name}
+                label = value.get("label", "")
+                if label.casefold() in names or label == f"{value.get('abbreviation')} — {value.get('full_name')}":
+                    value.pop("label", None)
+                names.add(label.casefold())
+                if "aliases" in value:
+                    value["aliases"] = [alias for alias in value["aliases"] if alias.casefold() not in names]
             if isinstance(row.get("source_registered"), bool):
                 value["source_registered"] = row["source_registered"]
             if isinstance(row.get("instances"), int) and not isinstance(row["instances"], bool):
@@ -302,7 +312,7 @@ def select_with_llm(text: str, library: dict, *, base_url: str | None, model: st
     if _contains_secret([user_input, model, endpoint], api_key):
         raise LLMSelectionError("Keep API credentials separate from the description, model and endpoint.")
     payload = {"model": model, "messages": [{"role": "system", "content": _PROMPT},
-        {"role": "user", "content": json.dumps(user_input, ensure_ascii=False)}], "stream": False}
+        {"role": "user", "content": json.dumps(user_input, ensure_ascii=False, separators=(",", ":"))}], "stream": False}
     if provider == "anthropic":
         payload["messages"] = payload["messages"][1:]
         payload.update(system=_PROMPT, max_tokens=1500)
