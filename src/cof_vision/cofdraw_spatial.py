@@ -20,6 +20,8 @@ DEFINITIONS = [
     ('hea_6_4','hea',('prismatic','tetrahedral'),(6,4),4,'Prismatic + tetrahedral'),
     ('pts_4_4','pts',('tetrahedral','quadrangular'),(4,4),4,'Tetrahedral + quadrangular'),
     ('tbo_4_3','tbo',('quadrangular','triangular'),(4,3),6,'Quadrangular + triangular'),
+    ('fjh_4_3','fjh',('quadrangular','triangular'),(4,3),8,'Quadrangular + triangular'),
+    ('ctn_4_3','ctn',('tetrahedral','triangular'),(4,3),8,'Tetrahedral + triangular'),
     ('nbo_4_2','nbo',('quadrangular','linear'),(4,2),12,'Crossed quadrangular nodes + ditopic spacer'),
 ]
 SPATIAL={key:dict(code=code,shapes=shapes,degrees=degrees,instances=n,label=label)

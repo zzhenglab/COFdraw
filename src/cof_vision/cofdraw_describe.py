@@ -24,7 +24,9 @@ NAMED_DESIGNS = {
     "Py-1P": ("TA + PyTTA imine", "10.1038/s41467-022-29086-x"),
     "COF-42": ("TFB + DETH acylhydrazone", "10.1021/ja204728y"),
     "COF-43": ("TFPB + DETH acylhydrazone", "10.1021/ja204728y"),
-    "COF-76": ("TFPPy + TAPA imine", "10.1021/jacs.9b13971"),
+    "COF-76": ("TFPPy + TAPA imine alternating_hexagon", "10.1021/jacs.9b13971"),
+    "COF-432": ("TFB + TAPE imine mtf", "10.1021/jacs.9b13094"),
+    "COF-790": ("TTFB + TAPE imine fjh", "10.1021/jacs.0c11064"),
     "4PE-1P": ("TA + TAPE imine kgm_4_2", "10.1021/ja5092936"),
     "Py-Azine": ("TFPPy + hydrazine azine", "10.1021/ja4103293"),
     "H2Por-DETH-COF": ("Por-CHO + DETH acylhydrazone", "10.1038/s41467-021-21527-3"),
@@ -35,6 +37,8 @@ NAMED_PAIRS = {
     "COF-42": ("tfb","deth","acylhydrazone","hcb_3_2"),
     "COF-43": ("tfpb","deth","acylhydrazone","hcb_3_2"),
     "COF-76": ("tfppy","tapa","imine","alternating_hexagon"),
+    "COF-432": ("tfb","tape","imine","mtf_4_3"),
+    "COF-790": ("ttfb_mes","tape","imine","fjh_4_3"),
     "4PE-1P": ("ta","tape","imine","kgm_4_2"),
     "Py-Azine": ("tfppy","hydrazine","azine","sql_4_2"),
     "H2Por-DETH-COF": ("por_cho","deth","acylhydrazone","sql_4_2"),
@@ -53,6 +57,8 @@ def expand_material_names(text):
         text, count = re.subn(pattern, building_blocks, text, flags=re.I)
         if count:
             notes.append(f"{name} uses the published precursors ({building_blocks}). This is a proposed finite drawing. DOI {doi}.")
+            if name=='COF-76':
+                notes.append("Reported COF-76 is a partially condensed 1D ribbon with free amines. The local ring illustrates its precursors only.")
     return text, notes
 
 
@@ -97,9 +103,19 @@ GEOMETRIES = {"hexagonal": ["hexagonal", "hexagon", "hcb", "honeycomb lattice", 
               "custom": ["custom six-unit ring", "custom ring"]}
 GEOMETRY_TEMPLATES = {"hexagonal": {"hcb_3_3", "hcb_3_2"}, "square": {"sql_4_2", "sql_4_4"},
                       "triangular": {"hxl_6_2"}, "chain": {"chain_2_2"}, "custom": {"alternating_hexagon"}}
+from .cofdraw_planar import PLANAR
+from .cofdraw_spatial import SPATIAL
+
+for template, code in [(key, row[0]) for key,row in PLANAR.items()] + [
+        (key, row['code']) for key,row in SPATIAL.items()] + [('branched_4_3','bor'),('kgm_4_2','kgm')]:
+    GEOMETRIES.setdefault(code, [code])
+    GEOMETRY_TEMPLATES.setdefault(code, set()).add(template)
+GEOMETRIES['kgd'].append('rhombille')
+GEOMETRIES['kgm'].append('kagome')
 FILLER = set("please draw drawing depict render make create show me a an the this that my our some cof cofs framework pore patch finite chemical structure design designed new from using use with and plus of for in on as into to it its is be would like want need can could you i we style styles palette colors colours color colour colored coloured soft pretty beautiful clean publication ready high quality nice two monomers monomer building blocks block linkage linked bonds bond geometry topology template layout source catalog registered original look illustration illustrative diagram model highlight region regions by select choose selected chemistry supported units alternating 2d review proposal proposed only".split())
 FILLER.update("open load get retrieve display redraw sketch visualize visualise generate prepare export save download give produce add apply drawn drawing shown opening loading rendering figure image picture diagram schematic version please also then just kindly".split())
 FILLER.update("png svg mol sdf cdxml format file files output outputs".split())
+FILLER.update("net sheet lattice projection projected schematic".split())
 COUNT_WORDS = {"di": 2, "tri": 3, "tetra": 4, "hexa": 6, "two": 2, "three": 3, "four": 4, "six": 6,
                "eight": 8, "twelve": 12}
 ROLE_GROUPS = {"amine": "primary_arylamine", "aldehyde": "aryl_aldehyde", "hydrazide": "acylhydrazide",
@@ -152,7 +168,7 @@ def describe_catalog(library):
             aliases.extend([identifier.replace("_", "-"), identifier.replace("_", " ")])
         monomers.append({"id": identifier, "label": row.get("label", identifier),
                          "abbreviation": row.get("abbreviation", identifier), "full_name": row.get("full_name", ""),
-                         "aliases": _unique(aliases), "compatible_roles": deepcopy(row.get("binary_roles", row.get("compatible_roles", [])))
+                         "aliases": _unique(aliases), "site_shapes": deepcopy(row.get("site_shapes", {})), "compatible_roles": deepcopy(row.get("binary_roles", row.get("compatible_roles", [])))
                          if row.get("automatic_prepare_supported") is not False else []})
         if row.get("smiles"):
             smiles_ids.setdefault(canonical(row["smiles"]), []).append(identifier)
@@ -200,6 +216,7 @@ def describe_catalog(library):
                  "aliases": _unique([value, value.replace("_", " "), value.replace("_", "-")] + PALETTE_ALIASES.get(value, []))}
                 for value in library.get("style_controls", {}).get("palettes", [])]
     demos = [
+        {"id": "mtf_sheet", "label": "Three porphyrin pores", "text": "Draw Por-CHO and TAPA with imine linkage in an mtf sheet with three connected pores", "expected_status": "ready"},
         {"id": "named_py", "label": "Py-1P by name", "text": "Draw Py-1P with gradient layers", "expected_status": "ready"},
         {"id": "porphyrin", "label": "Porphyrin node", "text": "Draw a porphyrin tetraamine with terephthalaldehyde in a square lattice", "expected_status": "ready"},
         {"id": "imine", "label": "Imine design", "text": "Draw TFB and TAPB in pastel colors", "expected_status": "ready"},
@@ -351,6 +368,13 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     geometry_rows = [{"id": key, "label": key, "aliases": aliases} for key, aliases in GEOMETRIES.items()]
     geometry_matches = _find(normalized, geometry_rows, "geometry", blocked + [tuple(m["span"]) for m in template_matches])
     functionality, instance_counts, requirement_matches = _explicit_requirements(normalized)
+    extents = []
+    for phrase in re.finditer(r"\b(one|two|three|four|\d+)\s+(?:connected\s+|adjacent\s+)?(?:pores?|circuits?)\b",normalized,re.I):
+        word=phrase[1].lower()
+        extents.append(int(word) if word.isdigit() and len(word)<4 else {'one':1,'two':2,'three':3,'four':4}.get(word,0))
+        requirement_matches.append(dict(kind='extent',id=word,label=phrase[0],matched_text=phrase[0],span=list(phrase.span())))
+    if len(set(extents))>1:
+        unresolved.append("Choose one drawing extent.")
     result["matches"] = all_matches = source_matches + monomer_matches + linkage_matches + template_matches + style_matches + palette_matches + geometry_matches + requirement_matches
     residual = _mask(normalized, all_matches)
     negated = re.search(r"\b(?:not|no|without|except|instead|rather than|avoid|don't|do not|never|exclude)\b", normalized, re.I)
@@ -440,6 +464,8 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
             resolved_slots.append(next(iter(ids)))
     monomer_ids = _unique(identifier for identifier in resolved_slots if identifier)
     if source_id:
+        if extents and extents[0]!=1:
+            unresolved.append("Load the recorded drawing and check its available extents.")
         source = next(r for r in catalog["sources"] if r["id"] == source_id)
         if any(supplied.get(k) for k in ("monomer_a_id", "monomer_b_id")) or template_id or geometries or linkage:
             unresolved.append("A source drawing preserves its recorded chemistry and incidence. Remove design/template constraints or choose a new design without the source identity.")
@@ -553,12 +579,23 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
             prepared = prepare_template(**request)
             result["compatibility"] = {"reactive_site_counts": prepared["compatibility"]["reactive_site_counts"],
                                        "roles": prepared["compatibility"]["roles"], "validated_by": "prepare_template"}
+            if extents and extents[0] != 1:
+                from .cofdraw_chemistry import design_signature
+                from .cofdraw_repeat import repeat_options
+                prepared['design_template_signature']=design_signature(prepared)
+                extent=next((item for item in repeat_options(prepared)['extents'] if item.get('pores')==extents[0] and extents[0]>0),None)
+                if extent:
+                    result['drawing_extent']=extent
+                else:
+                    unresolved.append(f"This design has no supported {extents[0]}-pore drawing extent.")
         except (ValueError, TypeError, KeyError, RuntimeError) as exc:
             unresolved.append("Chemical/template validation failed: " + str(exc))
         else:
             if not unresolved:
                 result.update(status="ready", prepare_request=request)
                 result["summary"] = f"New finite {linkage} design from {request['label_a']} + {request['label_b']}, using {template['label']}."
+                if result.get('drawing_extent'):
+                    result["summary"] += " Draw " + result['drawing_extent']['label'] + "."
     if unsupported:
         result["status"] = "unsupported"
         result["prepare_request"] = None

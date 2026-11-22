@@ -64,7 +64,7 @@ def recipe_record(recipe, metadata=None, source=False):
         # Unregistered explicit graphs and edited connections have no matching builder recipe.
         return None
     feeds = [dict(smiles=c['monomer_smiles'], label=c.get('label')) for c in (recipe['components'][k] for k in ('A','B'))]
-    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label'), template=template['id'])
+    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label') or template.get('parent_net'), template=template['id'])
 
 
 @lru_cache(maxsize=3000)
@@ -80,6 +80,7 @@ def parse_record(text, catalog_rows):
     if not match:
         raise ValueError('Paste precursor SMILES followed by COFex.net.catN, or a registered source COFex ID.')
     fragments, net, cat, comment = match.groups()
+    net = net.lower()
     strings = fragments.split('.')
     if len(strings) > 3:
         raise ValueError('This builder supports one, two or three connected precursors.')
@@ -122,6 +123,8 @@ def parse_record(text, catalog_rows):
             raise ValueError('Invalid tetrahedral stacking sequence.')
         net=settings['polytype']
     mode = 'assembly' if len(smiles) != 2 else 'crystal' if net in ('dia','lon','4h','6h') else 'binary'
+    if mode == 'crystal' and settings.get('mode') == 'binary' and settings.get('template'):
+        mode = 'binary'
     if settings.get('mode', mode) != mode:
         raise ValueError('Builder mode disagrees with the COFex net or precursor count.')
     specific = set(settings) - {'mode','order','link','labels'}
@@ -143,37 +146,44 @@ def parse_record(text, catalog_rows):
         if orientation is None:
             continue
         if mode == 'crystal':
-            if link not in ('imine','secondary_amine','acylhydrazone') or not any(x['geometry_hint']=='tetrahedral' for x in roles):
+            if link in ('imine','secondary_amine','acylhydrazone') and any(x['geometry_hint']=='tetrahedral' for x in roles):
+                from .cofdraw_dia import _components
+                try:
+                    _components(smiles,link)
+                except ValueError:
+                    pass
+                else:
+                    choices.append({'label': f'{LINKAGE_LABELS[link]} · {net} · {max(int(cat),1)} net(s)', 'crystal_project': {
+                        'template_id':'custom-dia', 'monomers':[dict(smiles=s,label=l) for s,l in zip(smiles,labels)],
+                        'linkage':link, 'topology':net, 'network_count':max(int(cat),1)}})
+            if settings or cat != '0' or net != 'dia':
                 continue
-            from .cofdraw_dia import _components
-            try:
-                _components(smiles,link)
-            except ValueError:
-                continue
-            choices.append({'label': f'{LINKAGE_LABELS[link]} · {net} · {max(int(cat),1)} net(s)', 'crystal_project': {
-                'template_id':'custom-dia', 'monomers':[dict(smiles=s,label=l) for s,l in zip(smiles,labels)],
-                'linkage':link, 'topology':net, 'network_count':max(int(cat),1)}})
-            continue
         counts = [next(r['reactive_sites'] for r in roles[i]['compatible_roles'] if r['linkage']==link and r['role']==role)
                   for i,role in zip(orientation,rule['roles'])]
         a,b = orientation
         for template in TEMPLATES:
             key = template['id']
             from .cofdraw_spatial import matches
+            if link not in template['linkages']:
+                continue
             if not matches(template,[roles[i]['site_shapes'].get(r) for i,r in zip(orientation,rule['roles'])]):
                 continue
-            if 'template' not in settings and template.get('topology_label') and any(roles[i]['site_shapes'].get(r)=='prismatic' for i,r in zip(orientation,rule['roles'])):
+            if settings.get('template') != key and template.get('topology_label') and any(roles[i]['site_shapes'].get(r) in ('spiro','spatial_unspecified','prismatic') for i,r in zip(orientation,rule['roles'])):
                 continue
             if key=='branched_4_3' and (link!='imine' or not any(
                     count==4 and roles[i]['geometry_hint']=='tetrahedral' for count,i in zip(counts,orientation))):
                 continue
             if key=='kgm_4_2' and (link!='imine' or not roles[a].get('kgm_dialdehyde') or not roles[b].get('kgm_etta')):
                 continue
-            if (settings.get('template',key) != key or (template['topology_label'] or 'unk') != net
+            requested = settings.get('template')
+            legacy_ring = requested == 'alternating_hexagon' and net == 'unk'
+            if ((requested and requested != key and not legacy_ring)
+                    or net != 'unk' and (template['topology_label'] or template.get('parent_net')) != net
                     or template['allow_pairs'] and counts not in template['allow_pairs']
                     or template['topology_label'] and any(x['geometry_hint']=='tetrahedral' for x in roles)):
                 continue
-            choices.append({'label': f"{LINKAGE_LABELS[link]} · {template['label']}", 'prepare_request': dict(
+            title = 'Restore original single ring' if legacy_ring and key == requested else template['label']
+            choices.append({'label': f"{LINKAGE_LABELS[link]} · {title}", 'prepare_request': dict(
                 monomer_a=smiles[a], monomer_b=smiles[b], label_a=labels[a], label_b=labels[b],
                 linkage=link, template_id=key, instances=template['instances'])})
     if not choices:

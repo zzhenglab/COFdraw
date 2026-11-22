@@ -142,6 +142,10 @@ def _catalog(library):
                 value["source_registered"] = row["source_registered"]
             if isinstance(row.get("instances"), int) and not isinstance(row["instances"], bool):
                 value["instances"] = row["instances"]
+            if collection == "templates":
+                if row.get("dimension") in (2, 3):
+                    value["dimension"] = row["dimension"]
+                value["shapes"] = [s for s in row.get("shape_pair") or [] if isinstance(s, str) and len(s)<40]
             pairs = row.get("allow_pairs")
             if isinstance(pairs, list):
                 value["allow_pairs"] = [p for p in pairs[:12] if isinstance(p, list) and len(p) == 2
@@ -304,8 +308,21 @@ def select_with_llm(text: str, library: dict, *, base_url: str | None, model: st
     if not isinstance(api_key, str) or len(api_key) > 4096 or any(not 33 <= ord(c) <= 126 for c in api_key):
         raise LLMSelectionError("API credentials must not contain whitespace, control characters or non-ASCII text.")
     catalog, allowed = _catalog(library)
-    from .cofdraw_describe import expand_material_names
-    _, material_matches = expand_material_names(text)
+    from .cofdraw_describe import _find, _normal, expand_material_names
+    expanded, material_matches = expand_material_names(text)
+    # For an explicitly identified pair, give the model the matching building
+    # blocks and chemistry. This also bounds its choice to those precursors.
+    lookup = [dict(id=row["id"], label=row.get("label") or row["id"], abbreviation=row.get("abbreviation"),
+                   aliases=[row["id"],row.get("abbreviation") or row["id"],row.get("full_name") or row["id"],
+                            row.get("label") or row["id"],*row.get("aliases", [])]) for row in catalog["monomers"]]
+    matches = _find(_normal(expanded), lookup, "monomer")
+    groups = {}
+    for match in matches:
+        groups.setdefault(tuple(match["span"]), set()).add(match["id"])
+    if len(groups) == 2 and all(len(ids) == 1 for ids in groups.values()):
+        ids = set.union(*groups.values())
+        catalog["monomers"] = [row for row in catalog["monomers"] if row["id"] in ids]
+        allowed["monomers"] = ids
     if material_matches:
         catalog["named_material_matches"] = material_matches
     user_input = {"description": text, "catalog": catalog}

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       panel.copy.onclick=null;return;
     }
     panel.heading.textContent=record.scope==='source'?'Source COFex'+(record.id?' · '+record.id:record.doi?' · DOI '+record.doi:''):'Design COFex · '+record.linkage.replaceAll('_',' ')+' · '+record.net;
-    panel.value.textContent=record.compact;panel.copy.onclick=()=>copyText(record.text,panel.value);
+    panel.value.textContent=record.compact.split(';',1)[0];panel.copy.onclick=()=>copyText(panel.value.textContent,panel.value);
   }
   function drawingRecord(){
     const state=studio.state;
@@ -52,13 +52,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     const periodic=design?.active, provenance=design?.report?.structure?.provenance;
     const record=periodic?provenance?.drawing_cofex:drawingRecord(),button=$('copy-drawing-cofex');
     button.disabled=!record;
-    button.onclick=()=>copyText(record?.text,$('identity-string'));
+    const compact=record?.compact?.split(';',1)[0];
+    button.onclick=()=>copyText(compact,$('identity-string'));
+    if(record)$('identity-string').textContent=compact;
     if(periodic){
-      $('identity-string').textContent=record?.compact||(design.report?'No precursor COFex is recorded.':'Building the selected framework…');
+      $('identity-string').textContent=compact||(design.report?'No precursor COFex is recorded.':'Building the selected framework…');
       $('identity-heading').textContent=record?.scope==='source'?'Source COFex record':'Design COFex record';
       $('identity-linkage').textContent=record?.linkage?.replaceAll('_',' ')||'Unassigned';
       $('identity-template').textContent=record?.net||provenance?.net||'Unassigned';
-      $('identity-key').textContent=record?.id||(record?'Precursor notation available':'Unassigned');
+      $('identity-key').textContent=record?.id||'';$('identity-key').parentElement.hidden=!record?.id;
       $('identity-cat').textContent=record?.compact?.match(/\.(cat\d+)(?:;|$)/)?.[1]||'Unassigned';
       $('identity-note').textContent=record?.scope==='source'?['Reported phase.',record.qualification,record.doi?'DOI '+record.doi:''].filter(Boolean).join(' '):record?'Generated periodic design from the selected precursors and network count.':'A phase-specific precursor assignment is unavailable.';
       $('copy-identity').disabled=!record;
@@ -102,6 +104,11 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
       }
       const plan=plans[Number(menu.value)||0];
+      while(studio.state.busy){
+        message.textContent='Finishing the current drawing…';
+        await new Promise(resolve=>window.addEventListener('cofdraw:state',resolve,{once:true}));
+        if(token!==revision)return;
+      }
       message.textContent='Building the structure…';showDrawing();
       if(plan.crystal_project){
         await window.COFdrawCrystalDesign.restore(plan.crystal_project);

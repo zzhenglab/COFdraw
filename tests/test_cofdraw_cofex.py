@@ -23,6 +23,30 @@ def post(client,path,payload):
     return result.json()
 
 
+def test_unknown_porphyrin_pair_offers_expandable_sheet_and_legacy_drawing():
+    from cof_vision.cofdraw_chemistry import prepare_template, design_signature
+    from cof_vision.cofdraw_cofex import parse_record, recipe_record
+    from cof_vision.cofdraw_repeat import repeat_patch
+    record = ('Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1.'
+              'O=Cc1ccc(-c2c3nc(c(-c4ccc(C=O)cc4)c4ccc([nH]4)c(-c4ccc(C=O)cc4)'
+              'c4nc(c(-c5ccc(C=O)cc5)c5ccc2[nH]5)C=C4)C=C3)cc1 COFex.unk.cat0')
+    legacy = ';COFdraw/1?mode=binary&link=imine&order=1%2C0&template=alternating_hexagon&label=Por-CHO&label=TAPA'
+    for text in (record, record + legacy):
+        options = [p['prepare_request'] for p in parse_record(text, [])]
+        assert options[0]['template_id'] == 'mtf_4_3'
+        assert {'tbo_4_3','fjh_4_3','alternating_hexagon'} <= {r['template_id'] for r in options}
+        assert all(r['linkage']=='imine' for r in options if r['template_id']=='tbo_4_3')
+    recipe = prepare_template(**options[0])
+    recipe['design_template_signature'] = design_signature(recipe)
+    for extent, sizes in [(2,[4,8]), (3,[4,4,8])]:
+        _, _, _, summary, _ = repeat_patch(recipe, extent)
+        assert sorted(map(len,summary['pore_faces'])) == sizes
+        assert summary['interblock_bonds'] - summary['blocks'] + 1 == extent
+    compact = recipe_record(recipe)['compact']
+    assert compact.endswith('COFex.mtf.cat0')
+    assert {r['prepare_request']['template_id'] for r in parse_record(compact,[])} == {'mtf_4_3'}
+
+
 @pytest.mark.parametrize(('ids','settings'),[
     (['bdba'],{}),
     (['bfbaeb'],{'pore_view':'triangle'}),

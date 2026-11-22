@@ -48,8 +48,7 @@
         <div id="describe-inputs">
         <label class="field describe-prompt"><span>What would you like to draw?</span><textarea id="describe-text" rows="5" maxlength="4000" placeholder="For example: draw TFB and TAPB in pastel colors." spellcheck="false"></textarea></label>
         <label class="field"><span>Start from a COF name</span><select id="describe-material-name"><option value="">Choose a material…</option></select></label>
-        <div class="describe-examples"><p>Try an example</p><div id="describe-demos" class="describe-demos" aria-label="Example descriptions"><span class="small-note">Loading examples…</span></div></div>
-        <details id="describe-provider" class="describe-provider"><summary>Chat provider <span id="describe-mode-label">Local rules</span></summary>
+        <details id="describe-provider" class="describe-provider"><summary>Use GPT or Claude <span id="describe-mode-label">Local rules</span></summary>
           <label class="field"><span>Interpreter</span><select id="describe-mode"><option value="rules">Built-in rules · local</option><option value="llm">GPT, Claude or custom API</option></select></label>
           <p id="describe-local-note" class="small-note">Uses the bundled catalog on this computer. No external request or API key is needed.</p>
           <div id="describe-llm-settings" hidden>
@@ -60,6 +59,7 @@
             <p id="describe-privacy" class="small-note">An explicit model-API send shares your new message and catalog IDs with this provider. Your local drawing, files and conversation history are not sent. Provider charges may apply. The key stays in this session and is never saved in projects, history or browser storage.</p>
           </div>
         </details>
+        <div class="describe-examples"><p>Try an example</p><div id="describe-demos" class="describe-demos" aria-label="Example descriptions"><span class="small-note">Loading examples…</span></div></div>
         </div>
         <button id="describe-analyze" type="button" class="button primary full" disabled>Analyze description <span aria-hidden="true">→</span></button>
         <p id="describe-status" class="describe-status" role="status" aria-live="polite">Connecting to the local description tools…</p>

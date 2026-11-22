@@ -19,8 +19,9 @@ from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _double_bond_geometry_audit, _ports, build_patch
 
 from .cofdraw_spatial import SPATIAL
+from .cofdraw_planar import PLANAR
 
-BRANCHED=('branched_4_3',*SPATIAL)
+BRANCHED=('branched_4_3',*SPATIAL,*PLANAR)
 MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
 
@@ -334,18 +335,20 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
             _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
         if template in BRANCHED:
-            options['extents'][0]['label']='One circuit'
+            noun='pore' if template in PLANAR else 'circuit'
+            options['extents'][0]['label']='One '+noun
             for n in (2,3):
                 atoms,_=_estimate(model,template,n)
                 if atoms<=MAX_ATOMS:
-                    if template in SPATIAL:
+                    if template in SPATIAL or template in PLANAR:
                         from .cofdraw_branched import branch_patch
                         try:branch_patch(model['components'],n,template)
                         except ValueError as error:
                             options['reason']=str(error)
                             continue
-                    options['extents'].append(dict(value=n,label=f'{n} connected circuits',pores=n,atoms=atoms))
-            options.update(template=template,available=len(options['extents'])>1,scope='Unfolded circuits from the chosen 3D parent net')
+                    options['extents'].append(dict(value=n,label=f'{n} connected {noun}s',pores=n,atoms=atoms))
+            scope='Adjacent faces of the chosen sheet' if template in PLANAR else 'Unfolded circuits from the chosen 3D parent net'
+            options.update(template=template,available=len(options['extents'])>1,scope=scope)
             return options
         if template=='kgm_4_2':
             options['extents'][0]['label']='One hexagon'

@@ -17,6 +17,8 @@ Read [local-api.md](references/local-api.md) when setting up a runtime, preparin
 
 ## Drawing workflow
 
+For pasted precursor notation, POST `{"text":"… COFex.unk.cat0"}` to `/api/drawing/cofex/resolve`. Read the returned choices before preparing. An unknown net leaves the choice open. For Por-CHO + TAPA, compare the proposed planar `mtf_4_3` sheet with the spatial `tbo_4_3` and `fjh_4_3` projections. A legacy six-unit ring can also be restored. On a monomer change resolve the new pair again. Read the active recipe’s offered extents before requesting a repeat. A description plan can return `drawing_extent`. Use its `repeats` (or numeric `value`) and `extent_mode` (default `pores`) at `/api/drawing/repeat`. Return `drawing_cofex.compact` for exchange and preserve `drawing_cofex.text` when the exact linkage or drawing recipe matters.
+
 For a prose request, use the local description workflow in [agent-workflows.md](references/agent-workflows.md) to obtain a reviewable, catalog-bound plan. Rules mode is the default. Use an optional provider API only when the user has explicitly chosen that mode and supplied its settings; never discover or reuse ambient credentials. An LLM proposal selects IDs and still passes the local chemistry checks.
 
 The session conversation also supports constrained follow-ups through `/describe/chat`. Carry only its returned allowlisted context. Review each current plan before Create/Apply; a `style_only` intent must match the caller's current drawing revision and be applied to that local recipe without reloading or replacing its custom monomers. Do not send saved recipes, SMILES, CIFs, project files or history to a provider. See [drawing conversations](../../docs/conversation-methods.md).

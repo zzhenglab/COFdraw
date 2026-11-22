@@ -9,6 +9,7 @@ from rdkit import Chem
 
 from .cofdraw_mixed import _block, _orient, join_fragments
 from .cofdraw_net_graphs import neighbors, quotient
+from .cofdraw_planar import PLANAR, face_layout
 
 
 def loop_edges(loop):
@@ -78,7 +79,7 @@ def graph_for(components,count,key):
         a=components['A']
         shape=inspect_monomer(a['monomer_smiles'])['site_shapes'].get(a['role'])
         return patch_graph(key,shape,count)
-    faces,edges,xy,degrees=circuit_layout()
+    faces,edges,xy,degrees=face_layout(PLANAR[key][0]) if key in PLANAR else circuit_layout()
     by_degree={c['connectivity']:k for k,c in components.items()}
     kinds=[by_degree[n] for n in degrees]
     return faces[:count],edges,xy,kinds
@@ -120,7 +121,7 @@ def _draw_patch(components,count,key):
         slot_pairs=[(ports[a,b],ports[b,a]) for a,b in kept]
         return join_fragments(components,[kinds[s] for s in sites],points[sites],joins,slot_pairs,2,orientations,geometry)
     mol,origins=place(xy,geo)
-    if key in SPATIAL:
+    if key in SPATIAL or key in PLANAR:
         from .cofdraw_spatial import check_projection,clear_junctions
         try:
             check_projection(mol)
@@ -144,6 +145,7 @@ def _draw_patch(components,count,key):
                         except ValueError:pass
             else:raise issue
     rims=[[f'{kinds[v]}{index[v]+1}' for v in face] for face in faces]
-    labels=[f'{len(f)}-node circuit' for f in faces]
+    code=PLANAR[key][0] if key in PLANAR else SPATIAL.get(key,{}).get('code','bor')
+    labels=[f'{len(f)}-node '+('pore' if key in PLANAR else 'circuit') for f in faces]
     return mol,dict(pores=count,pore_faces=rims,face_labels=labels,pore_counts=dict(Counter(labels)),
-                    atom_origin=origins,order_assumption=f'Finite circuits of a proposed {SPATIAL.get(key,{}).get("code","bor")} net. The crystal phase requires independent validation.')
+                    atom_origin=origins,order_assumption=f'Finite circuits of a proposed {code} net. The crystal phase requires independent validation.')

@@ -210,7 +210,8 @@ function autoMatchChemistry(){
   const selected=combinations.find(p=>p.id===$("cof-preset").value && p.monomer_a===pair.a.input && p.monomer_b===pair.b.input);
   const molecularIDs=[pair.a,pair.b].map(m=>state.library.monomer_presets.find(p=>p.canonical_smiles===m.smiles)?.id);
   const preferred=selected||state.library.named_pairs?.find(p=>molecularIDs.includes(p.a)&&molecularIDs.includes(p.b));
-  const match=L.automaticPlan(state.library,pair.a,pair.b,preferred);
+  const locked=topologyOverride?.pair===currentPairKey()?topologyOverride:null;
+  const match=(locked&&L.compatibleLinkages(state.library,pair.a,pair.b).find(row=>row.id===locked.linkage))||L.automaticPlan(state.library,pair.a,pair.b,preferred);
   if(!match){$("chemistry-match").textContent="No supported transform matches this pair. Change one monomer or load a source drawing.";return;}
   populateLinkages(match.id);
   const override=topologyOverride?.pair===currentPairKey()&&topologyOverride.linkage===match.id&&
@@ -358,7 +359,7 @@ function sync() {
   document.querySelector('.linkage-first').hidden=hideChoices;
   const validTemplates=Array.from($('template').options).filter(o=>!o.disabled&&!o.hidden);
   const multipleNets=!source&&!multi()&&state.autoChemistry&&Boolean(checkedMonomer('a')&&checkedMonomer('b'))&&
-    validTemplates.length>1&&validTemplates.some(o=>o.dataset.spatial==='true');
+    validTemplates.length>1;
   document.querySelector('.chemistry-options').hidden=hideChoices&&!multipleNets;
   for(const id of ['linkage-roles','template-description'])$(id).hidden=hideChoices;
   document.querySelector('.template-scope').hidden=hideChoices;
@@ -453,11 +454,12 @@ function updateIdentity(){
   if(window.COFdrawCrystalDesign?.active)return;
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
   const key=state.sourceId?(metadata.cofex_id||audit?.cofex_id||state.recipe?.cofex_id):null;
-  const notation=state.inputsDirty||state.jsonPending?null:state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.design_cofex_notation||state.recipe?.design_cofex_notation||audit?.drawing_cofex?.compact);
+  const notation=state.inputsDirty||state.jsonPending?null:state.sourceId?(metadata.cofex_notation||metadata.cofex_string||audit?.cofex_string||state.recipe?.cofex_notation):(audit?.drawing_cofex?.compact||audit?.design_cofex_notation||state.recipe?.design_cofex_notation);
   const pending=!state.recipe||state.inputsDirty;
   $("identity-heading").textContent=state.sourceId?'Source COFex record':'Design COFex record';
   $("identity-linkage").textContent=pending?($("linkage").selectedOptions[0]?.textContent||"Not selected"):(state.library?.linkages?.[state.recipe?.linkage]?.label||state.recipe?.linkage||(sourceMode()?(state.sourceId?"Source-recorded bonds":"Explicit recorded bonds"):$("linkage").selectedOptions[0]?.textContent)||"Unknown");
-  $("identity-key").textContent=key||(state.sourceId?"Not supplied by source":"Unassigned design");$("identity-string").textContent=notation||"Not assigned";
+  $("identity-key").textContent=key||"";$("identity-key").parentElement.hidden=!key;
+  $("identity-string").textContent=notation?.split(';',1)[0]||"Not assigned";
   const topology=audit?audit.design_topology:state.recipe?.design_topology,template=pending?selectedTemplate():audit?audit.selected_template:state.recipe?.selected_template;$("identity-template").textContent=state.sourceId?"Source-visible finite patch":template?.label||(typeof topology==="object"?(topology?.label||topology?.template_id||topology?.name):topology)||"Explicit editable connections";
   const cat=notation?.match(/\sCOFex\.[^.\s]+\.(cat\d+)(?:;|$)/)?.[1]||metadata.catenation||null;
   $("identity-cat").textContent=cat?(state.sourceId?`${cat} · source convention; not independently verified`:`${cat} · design assumption; observed interpenetration unknown`):'Unknown · no catenation assignment';
@@ -576,7 +578,7 @@ $("build").addEventListener("click",async()=>{
 $("build-from-canvas").addEventListener("click",()=>$("build").click());
 function geometryReviewMessage(refinement){return refinement?.quality==='needs_review'?'Some linkage junctions still need geometry review. Inspect the connections and use Move / adjust or Clean bond geometry before saving.':'';}
 for(const block of ["a","b"]){
-  let validationTimer; $(`smiles-${block}`).addEventListener('input',()=>{clearTimeout(validationTimer);validationTimer=setTimeout(()=>{if($(`smiles-${block}`).value.trim()&&!state.busy)validateMonomer(block,true).then(queueDrawing).catch(()=>{});},650);});
+  let validationTimer; $(`smiles-${block}`).addEventListener('input',()=>{clearTimeout(validationTimer);validationTimer=setTimeout(()=>{if($(`smiles-${block}`).value.trim())validateMonomer(block,true).then(queueDrawing).catch(e=>notice(e.message,true));},650);});
   $(`smiles-${block}`).addEventListener("input",()=>{$(`formula-${block}`).textContent="Preview needs update";$(`preview-${block}`).hidden=true;$(`preview-label-${block}`).hidden=false;delete state.monomers[block];$(`preset-${block}`).value="";markInputsChanged();refreshChemistry();});
   $(`label-${block}`).addEventListener("input",markInputsChanged);
   $(`preset-${block}`).addEventListener("change",()=>{const item=state.library?.monomer_presets.find(p=>p.id===$(`preset-${block}`).value);if(!item)return;const choice=monomerChoice(item,block,checkedMonomer(block==='a'?'b':'a'));if(!choice.compatible){refreshPresetLists();notice(choice.reason,true);return;}$(`smiles-${block}`).value=item.smiles;$(`label-${block}`).value=item.abbreviation||item.label?.split(" · ")[0]||item.id;delete state.monomers[block];markInputsChanged();refreshChemistry();validateMonomer(block).then(queueDrawing).catch(e=>notice(e.message,true));});
@@ -618,7 +620,7 @@ $("cof-preset").addEventListener("change",()=>{
   else if(sourceMode()){markInputsChanged();refreshMonomers();}
 });
 $("auto-chemistry").addEventListener("change",()=>{state.autoChemistry=$("auto-chemistry").checked;if(state.autoChemistry)markInputsChanged();refreshChemistry();if(state.autoChemistry)queueDrawing();});
-$("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry();updateIdentity();});
+$("linkage").addEventListener("change",()=>{markInputsChanged();refreshChemistry();updateIdentity();queueDrawing();});
 $("linkage-search").addEventListener("input",()=>populateLinkages());
 $("pore").addEventListener("change",markInputsChanged);
 $("template").addEventListener("change",()=>{
@@ -1074,10 +1076,8 @@ async function applyDescriptionPlan(plan){
       acceptRecipe(source.recipe,plan.source_recipe_id,source.metadata);showSourceMonomers(source.recipe,source.metadata);
     }else{
       const request=clone(plan.prepare_request),prepared=await api('prepare',request);
-      // A reviewed description plan contains explicit choices. Keep those
-      // choices visible and editable rather than silently rematching them.
-      state.autoChemistry=false;
       for(const block of ['a','b']){$(`smiles-${block}`).value=request[`monomer_${block}`];$(`label-${block}`).value=request[`label_${block}`]||block.toUpperCase();$(`preset-${block}`).value='';}
+      topologyOverride={pair:currentPairKey(),linkage:request.linkage,template:request.template_id};
       $('linkage-search').value='';populateLinkages(request.linkage);$('cof-preset').value='custom';
       acceptRecipe(prepared.recipe,null,null,true);await refreshMonomers();refreshChemistry(request.template_id);state.inputsDirty=false;
     }
@@ -1085,6 +1085,12 @@ async function applyDescriptionPlan(plan){
     state.busy=false;sync();
     const result=await render();
     if(!result)throw new Error($('notice').textContent||'The drawing could not be rendered. Review the plan and try again.');
+    if(plan.drawing_extent){
+      const extent=window.COFdrawExtent;
+      await extent.select(plan.drawing_extent.value);
+      if(extent.visible?.summary?.pore_count!==plan.drawing_extent.pores)throw new Error('The requested pore neighborhood could not be drawn.');
+      return extent.visible;
+    }
     return result;
   }finally{state.busy=false;sync();}
 }

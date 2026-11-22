@@ -17,6 +17,7 @@ LINKAGE_LABELS = {"imine":"Imine · C=N", "beta_ketoenamine":"β-Ketoenamine", "
                   "keto_hydrazide":"Tp keto-enamine–hydrazide", "azine":"Azine · C=N–N=C", "secondary_amine":"Reduced imine · CH₂–NH",
                   "nitrone":"Nitrone · C=N⁺(O⁻)"}
 from . import cofdraw_spatial as spatial
+from . import cofdraw_planar as planar
 
 TEMPLATES = [
     {"id":"branched_4_3","label":"3D bor · tetrahedral + tritopic","dimension":3,"parent_net":"bor","instances":6,"allow_pairs":[[3,4],[4,3]],"topology_label":None,"linkages":["imine"],"description":"Finite projection of one to three circuits sharing junctions along a proposed bor incidence graph. The pair alone does not identify its crystal net."},
@@ -29,7 +30,7 @@ TEMPLATES = [
     {"id":"chain_2_2","label":"Open chain · 2c + 2c","instances":6,"allow_pairs":[[2,2]],"topology_label":None,"description":"Six alternating units with two open ends; no 2D net is assigned."},
     {"id":"alternating_hexagon","label":"Custom six-unit ring","instances":6,"allow_pairs":[],"topology_label":None,"description":"Explicit ring design with any supported functionality ≥2; topology remains unknown."},
 ]
-TEMPLATES[-1:-1]=spatial.templates()
+TEMPLATES[-1:-1]=planar.templates()+spatial.templates()
 for template in TEMPLATES:
     template.update(linkages=template.get("linkages",list(LINKAGE_LIBRARY)),periodic_topology_inferred=False,
                     required_functionalities={"allow_pairs":template["allow_pairs"]})
@@ -185,6 +186,8 @@ def _assemble_template(components, linkage, instances, template_id):
     if min(counts)<2: raise ValueError("Each component needs at least two compatible reactive sites")
     template=next((dict(t) for t in TEMPLATES if t["id"]==template_id),None)
     if template_id and not template: raise ValueError("Unknown drawing template")
+    if template and linkage not in template["linkages"]:
+        raise ValueError("This connectivity template has no construction rule for the selected linkage.")
     if template and template["allow_pairs"] and counts not in template["allow_pairs"]:
         raise ValueError(f"{template['label']} requires {template['allow_pairs']}; these monomers have {counts} reactive sites")
     inspection=[inspect_monomer(s) for s in (monomer_a,monomer_b)]
@@ -195,8 +198,8 @@ def _assemble_template(components, linkage, instances, template_id):
         raise ValueError("The branched imine design requires a tetrahedral tetratopic monomer and a complementary tritopic monomer.")
     if template_id=="kgm_4_2" and (linkage!="imine" or not inspection[0]["kgm_dialdehyde"] or not inspection[1]["kgm_etta"]):
         raise ValueError("The Kagome drawing requires ETTA and a linear aromatic dialdehyde with imine linkages.")
-    if template and template["topology_label"] and any(x["geometry_hint"]=="tetrahedral" for x in inspection):
-        raise ValueError("This tetrahedral monomer needs a source-supported 3D incidence recipe; choose a custom projection without assigning a planar net")
+    if template and template["topology_label"] and any(s=='tetrahedral' for s in shapes):
+        raise ValueError("A tetrahedral monomer requires 3D incidence. Choose a spatial connectivity template.")
     positions=[]; kinds=[]; angles=[]
     n=template["instances"] if template else instances
     open_chain=template_id=="chain_2_2"
@@ -219,7 +222,7 @@ def _assemble_template(components, linkage, instances, template_id):
                   "b":{"instance":items[(i+1)%n]["id"],"port":items[(i+1)%n]["incoming_port"]},"bond_order":rule["join_bond_order"]}
                  for i in range(n-1 if open_chain else n)]
     geometry={}
-    if template_id=="branched_4_3" or template_id in spatial.SPATIAL:
+    if template_id=="branched_4_3" or template_id in spatial.SPATIAL or template_id in planar.PLANAR:
         from .cofdraw_branched import branch_patch
         from .cofdraw_mixed import circuit_geometry
         mol,summary=branch_patch(components,1,template_id)

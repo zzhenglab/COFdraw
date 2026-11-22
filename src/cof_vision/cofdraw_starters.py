@@ -120,7 +120,10 @@ def topology_catalog(rows):
             row.update(construction_supported=True, construction_note=capability[code])
     if rows:
         known={row['id'] for row in rows}
-        papers={'acs':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
+        papers={'mtf':('COF-432 and the voided square grid','10.1021/jacs.9b13094'),
+                'kgd':('Reticular synthesis of COF-360','10.1021/jacs.9b05626'),
+                'fjh':('Conformational design of COF-790','10.1021/jacs.0c11064'),
+                'acs':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
                 'ceq':('Triptycene COFs with ceq or acs topology','10.1021/jacs.0c12499'),
                 'stp':('JUC-564 and its stp net','10.1021/jacs.0c06485')}
         for code in sorted(net_keys().keys()-known):
@@ -129,6 +132,15 @@ def topology_catalog(rows):
             code=row['id']
             if code not in net_keys():
                 continue
+            if code in ('mtf','kgd'):
+                degrees=[4,3] if code=='mtf' else [6,3]
+                detail=('Quadrangular and trigonal junctions form four- and eight-node pore boundaries.'
+                        if code=='mtf' else 'Hexagonal and trigonal junctions form rhombic pore boundaries.')
+                row.update(construction_supported=True, connectivity=[degrees], description=detail,
+                           construction_note='Finite imine sheet with one to three edge-sharing pores.')
+            if code in ('fjh','ctn','tbo'):
+                row.update(construction_supported=True, construction_note='Finite imine circuits from compatible precursors.',
+                           connectivity=[[4,3]])
             if code in papers:
                 title,doi=papers[code]
                 url='https://doi.org/'+doi

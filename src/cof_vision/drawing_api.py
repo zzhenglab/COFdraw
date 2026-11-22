@@ -486,13 +486,15 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                     raise ValueError('The copied record contains no assigned COFex notation.')
             catalog = read_catalog(root)
             matches = []
+            def matches_source(identity, notation):
+                return text == identity or (notation and text in (notation, notation.split(';',1)[0]))
             for row in source_records():
                 key = row['recipe_id']
                 meta = catalog.get('source_metadata', {}).get(key, {})
-                if text in (row.get('cofex_id'), meta.get('cofex_notation')):
+                if matches_source(row.get('cofex_id'), meta.get('cofex_notation')):
                     value, digest = source_recipe(key)
                     meta = source_metadata(value,digest)
-                    if text in (value.get('cofex_id'),meta.get('cofex_notation')):
+                    if matches_source(value.get('cofex_id'),meta.get('cofex_notation')):
                         matches.append(dict(source_recipe_id=key, label=meta.get('literature_name') or key))
             monomers = catalog_monomers(catalog)
             manifest = crystal_manifest()
@@ -501,7 +503,16 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 if phase and text in (phase['text'], phase['text'].split(';',1)[0]):
                     matches.append(dict(label=item['model_name']+' · published phase',crystal_project={
                         'template_id':item['id'],'version':2,'reference_only':True}))
-            choices = matches or parse_record(text, monomers)
+            choices = matches
+            if not matches:
+                choices = parse_record(text, monomers)
+            elif ' COFex.' in text and ';' not in text:
+                # Multiple phases may use the same precursors. Also offer an
+                # editable design when this compact notation has a builder.
+                try:
+                    choices.extend(parse_record(text, monomers))
+                except ValueError:
+                    pass
             if legacy.get('design_cofex_notation') and not legacy.get('drawing_cofex'):
                 template = legacy.get('selected_template')
                 linkage = legacy.get('linkage')
