@@ -78,7 +78,7 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
             if Chem.MolToSmiles(actual)!=Chem.MolToSmiles(reference):
                 raise ValueError('Edited product fragments do not match the declared precursor transform')
         checked[key]={**expected,'fragment_smiles':component['fragment_smiles'],'label':key}
-    fresh=_assemble_template(checked,recipe['linkage'],6,selected['id'])
+    fresh=_assemble_template(checked,recipe['linkage'],len(recipe['instances']),selected['id'])
     if fresh['selected_template'] is None:
         raise ValueError('Unknown periodic connectivity template')
 

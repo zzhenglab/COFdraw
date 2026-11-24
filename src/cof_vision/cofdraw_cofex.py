@@ -7,8 +7,12 @@ from urllib.parse import parse_qs, urlencode
 
 from rdkit import Chem
 
-from .cofdraw_chemistry import LINKAGE_LABELS, TEMPLATES, decorated_monomers, inspect_monomer, kagome_match
+from .cofdraw_chemistry import LINKAGE_LABELS, TEMPLATES, decorated_monomers, inspect_monomer, kagome_match, net_geometry_error
 from .framework_drawing import LINKAGE_LIBRARY, canonical, matches_linkage_family
+
+
+# Earlier exchange records for these templates describe a single circuit.
+_CIRCUIT_SIZE = {'dia_4_2': 12, 'pts_4_4': 4, 'kgm_4_2': 12}
 
 
 def design_record(feeds, mode, linkage, net=None, count=1, **settings):
@@ -68,7 +72,8 @@ def recipe_record(recipe, metadata=None, source=False):
         # Unregistered explicit graphs and edited connections have no matching builder recipe.
         return None
     feeds = [dict(smiles=c['monomer_smiles'], label=c.get('label')) for c in (recipe['components'][k] for k in ('A','B'))]
-    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label') or template.get('parent_net'), template=template['id'])
+    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label') or template.get('parent_net'), template=template['id'],
+                         view='molecular_patch' if recipe.get('layout_kind')=='net_patch' else None)
 
 
 @lru_cache(maxsize=3000)
@@ -101,7 +106,7 @@ def parse_record(text, catalog_rows):
         if not comment.startswith('COFdraw/1?'):
             raise ValueError('Unsupported COFdraw exchange version.')
         fields = parse_qs(comment.split('?',1)[1], strict_parsing=True, max_num_fields=12)
-        allowed = {'mode','order','label','link','template','face','sequence','layout','polytype'}
+        allowed = {'mode','order','label','link','template','face','sequence','layout','polytype','view'}
         if (fields.keys() - allowed or any(len(v) != 1 for k,v in fields.items() if k != 'label')
                 or not {'mode','order','link'}.issubset(fields)):
             raise ValueError('Invalid or repeated COFdraw exchange fields.')
@@ -132,9 +137,11 @@ def parse_record(text, catalog_rows):
     if settings.get('mode', mode) != mode:
         raise ValueError('Builder mode disagrees with the COFex net or precursor count.')
     specific = set(settings) - {'mode','order','link','labels'}
-    allowed = {'binary':{'template'},'assembly':{'face'} if len(smiles)==1 else {'sequence','layout'},'crystal':{'polytype'}}
+    allowed = {'binary':{'template','view'},'assembly':{'face'} if len(smiles)==1 else {'sequence','layout'},'crystal':{'polytype'}}
     if specific - allowed[mode]:
         raise ValueError('The COFdraw exchange fields disagree with the precursor count or net.')
+    if 'view' in settings and (settings['view'] != 'molecular_patch' or settings.get('template') not in _CIRCUIT_SIZE):
+        raise ValueError('This drawing view does not match the selected template.')
     if mode == 'assembly':
         return _assembly_choices(smiles, labels, relevant, net, int(cat), settings)
     if int(cat) > (7 if mode == 'crystal' else 0):
@@ -167,31 +174,28 @@ def parse_record(text, catalog_rows):
         a,b = orientation
         for template in TEMPLATES:
             key = template['id']
-            from .cofdraw_spatial import matches
-            if link not in template['linkages']:
+            if link not in template['linkages'] or template['allow_pairs'] and counts not in template['allow_pairs']:
                 continue
-            if not matches(template,[roles[i]['site_shapes'].get(r) for i,r in zip(orientation,rule['roles'])]):
-                continue
-            if template.get('topology_label') and any(roles[i]['site_shapes'].get(r)=='tetrahedral' for i,r in zip(orientation,rule['roles'])):
+            ordered_roles = [roles[a], roles[b]]
+            if net_geometry_error(template, counts, ordered_roles, rule['roles']):
                 continue
             if settings.get('template') != key and template.get('topology_label') and any(roles[i]['site_shapes'].get(r) in ('spiro','spatial_unspecified','prismatic') for i,r in zip(orientation,rule['roles'])):
                 continue
-            if key=='branched_4_3' and not any(
-                    count==4 and roles[i]['geometry_hint']=='tetrahedral' for count,i in zip(counts,orientation)):
-                continue
-            if key=='kgm_4_2' and not kagome_match([roles[a],roles[b]],rule['roles']):
-                continue
+            instances = template['instances']
+            if key in _CIRCUIT_SIZE and settings.get('template') == key and 'view' not in settings:
+                instances = _CIRCUIT_SIZE[key]
+                if key == 'kgm_4_2' and not kagome_match(ordered_roles, rule['roles']):
+                    continue
             requested = settings.get('template')
             legacy_ring = requested == 'alternating_hexagon' and net == 'unk'
             if ((requested and requested != key and not legacy_ring)
                     or net != 'unk' and (template['topology_label'] or template.get('parent_net')) != net
-                    or template['allow_pairs'] and counts not in template['allow_pairs']
                     or template['topology_label'] and any(x['geometry_hint']=='tetrahedral' for x in roles)):
                 continue
             title = 'Restore original single ring' if legacy_ring and key == requested else template['label']
             choices.append({'label': f"{LINKAGE_LABELS[link]} · {title}", 'prepare_request': dict(
                 monomer_a=smiles[a], monomer_b=smiles[b], label_a=labels[a], label_b=labels[b],
-                linkage=link, template_id=key, instances=template['instances'])})
+                linkage=link, template_id=key, instances=instances)})
     if not choices:
         raise ValueError('No supported drawing rule matches these reactive groups, net and linkage.')
     return choices

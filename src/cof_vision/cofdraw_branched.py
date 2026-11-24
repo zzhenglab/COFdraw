@@ -82,7 +82,10 @@ def graph_for(components,count,key):
     if key in SPATIAL:
         from .cofdraw_chemistry import inspect_monomer
         a=components['A']
-        shape=inspect_monomer(a['monomer_smiles'])['site_shapes'].get(a['role'])
+        metadata=inspect_monomer(a['monomer_smiles'])
+        shape=metadata['site_shapes'].get(a['role'])
+        if key in ('dia_4_2','pts_4_4') and metadata['attachment_directions'].get(a['role'])=='tetrahedral':
+            shape='tetrahedral'
         return patch_graph(key,shape,count)
     faces,edges,xy,degrees=face_layout(PLANAR[key][0]) if key in PLANAR else circuit_layout()
     by_degree={c['connectivity']:k for k,c in components.items()}
@@ -92,7 +95,8 @@ def graph_for(components,count,key):
 
 def branch_patch(components,count,key='branched_4_3'):
     fields=('fragment_smiles','monomer_smiles','role','connectivity')
-    signature=json.dumps({k:{f:c[f] for f in fields} for k,c in components.items()},sort_keys=True)
+    signature=json.dumps({k:{**{f:c[f] for f in fields}, "linkage":c.get("linkage")}
+                          for k,c in components.items()},sort_keys=True)
     mol,details=_cached_patch(signature,count,key)
     if mol is None:raise ValueError(details)
     return Chem.Mol(mol),deepcopy(details)

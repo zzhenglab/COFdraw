@@ -32,6 +32,18 @@ const nitroneB={compatible_roles:[{linkage:'nitrone',role:'aryl_hydroxylamine',r
 assert.equal(L.automaticPlan(nitroneLibrary,nitroneA,nitroneB).id,'nitrone','The supported hydroxylamine pair has a real automatic construction');
 assert.equal(L.automaticPlan(nitroneLibrary,nitroneB,nitroneA).swapped,true,'Visible A/B order may remain stable while payload roles are mapped');
 assert.equal(L.automaticChoice(nitroneLibrary,monomers.b,'b',nitroneA).compatible,false,'An ordinary amine is not a hydroxylamine partner');
+const planarA = {...monomers.a, attachment_directions:{aldehyde:"square_planar"}};
+const tetraB = {compatible_roles:[{linkage:"imine", role:"amine", reactive_sites:4}], attachment_directions:{amine:"tetrahedral"}};
+const planarB = {...tetraB, attachment_directions:{amine:"square_planar"}};
+const spatialLibrary = {...automaticLibrary, templates:[
+  {id:"sql_4_4", topology_label:"sql", allow_pairs:[[4,4]]},
+  {id:"pts_4_4", topology_label:"pts", allow_pairs:[[4,4]]}
+]};
+for (const [first, second] of [[planarA,tetraB], [tetraB,planarA]]) {
+  assert.deepEqual(L.compatibleLinkages(spatialLibrary, first, second)[0].templates, ["pts_4_4"]);
+}
+assert.deepEqual(L.compatibleLinkages(spatialLibrary, planarA, planarB)[0].templates, ["sql_4_4"]);
+assert.equal(L.templateCompatibility(spatialLibrary.templates[1], "imine", {a:planarA, b:monomers.b}, library).compatible, false);
 const square = {id:"square",linkages:["imine"],required_functionalities:{a:[4],b:[2]}};
 assert.equal(L.templateCompatibility(square,"imine",monomers,library).compatible,true);
 assert.equal(L.templateCompatibility({...square,required_functionalities:{a:[3],b:[2]}},"imine",monomers,library).compatible,false);
@@ -45,6 +57,44 @@ assert.equal(L.templateCompatibility({topology_label:"sql",allow_pairs:[[4,2]]},
 assert.deepEqual(L.stylesInCategory([{id:"plain"},{id:"stack",category:"layered"}],"chemical").map(x=>x.id),["plain"]);
 const cross={id:"cross",abbreviation:"Cross",full_name:"Four-arm cross",point_group:"C2",connection_count:4,literature_names:["Alternate name"]};
 assert.equal(L.connectionCount(cross),4);
+const aldehydeGroup = {id:"aldehyde", label:"Aldehyde"};
+const amineGroup = {id:"primary_amine", label:"Primary amine"};
+const decorated = {...cross, functional_groups:["Aldehyde","Phenol"], linkage_functional_groups:[aldehydeGroup]};
+const amine = {id:"diamine", connection_count:2, linkage_functional_groups:[amineGroup]};
+const noLinkageRole = {id:"reference", functional_groups:["Phenol"], linkage_functional_groups:[]};
+const catalog = [decorated, cross, amine, noLinkageRole];
+assert.deepEqual(L.linkageGroupOptions([amine,...catalog]),[aldehydeGroup,amineGroup]);
+assert.deepEqual(L.searchMonomers(catalog,"","all","aldehyde"),[decorated]);
+assert.deepEqual(L.searchMonomers(catalog,"",4,"all"),[decorated,cross]);
+assert.deepEqual(L.searchMonomers(catalog,"alternate",4,"aldehyde"),[decorated]);
+assert.deepEqual(L.searchMonomers(catalog,"alternate",3,"aldehyde"),[]);
+assert.deepEqual(L.searchMonomers(catalog,"",4,"primary_amine"),[]);
+assert.deepEqual(L.searchMonomers(catalog,"","all","phenol"),[]);
+// Only the group's role in a viable pair qualifies in the compatible-B view.
+const carbonyl = {linkage:"imine",role:"aldehyde"}, amino = {linkage:"imine",role:"amine"};
+const boronic = {linkage:"boronate",role:"boronic_acid"};
+const groupRows = [
+  {...aldehydeGroup,binary_roles:[carbonyl]}, {...amineGroup,binary_roles:[amino]},
+  {id:"boronic_acid",label:"Boronic acid",binary_roles:[boronic]},
+  {id:"nitrile",label:"Nitrile",binary_roles:[]}
+];
+const multifunctional = {linkage_functional_groups:groupRows,
+  binary_roles:[carbonyl,amino,boronic].map(r=>({...r,reactive_sites:2}))};
+const partnerLibrary = {linkages:{
+  imine:{supported:true,roles:["aldehyde","amine"]}, boronate:{supported:true,roles:["diol","boronic_acid"]}
+}};
+const feed = {binary_roles:[{...carbonyl,reactive_sites:3},{linkage:"boronate",role:"diol",reactive_sites:2}]};
+const partnerGroupIds = (a,selected,automatic,lib=partnerLibrary) =>
+  L.partnerLinkageGroups(lib,a,multifunctional,selected,automatic).map(g=>g.id);
+assert.deepEqual(partnerGroupIds(feed,"imine",true),["primary_amine","boronic_acid"]);
+assert.deepEqual(partnerGroupIds(feed,"imine",false),["primary_amine"]);
+assert.deepEqual(partnerGroupIds({binary_roles:[{...amino,reactive_sites:3}]},"imine",false),["aldehyde"]);
+const dualFeed = {binary_roles:multifunctional.binary_roles};
+assert.equal(L.compatibleLinkages(partnerLibrary,dualFeed,multifunctional).find(m=>m.id==="imine").swapped,false);
+assert.deepEqual(partnerGroupIds(dualFeed,"imine",false),["primary_amine"],
+  "With two viable imine assignments, filter B by the end used by the fixed-linkage drawing");
+assert.deepEqual(partnerGroupIds({...library.monomer_presets[0],geometry_hint:"tetrahedral"},"imine",false,
+  {...partnerLibrary,templates:[{allow_pairs:[[3,3]]}]}),["primary_amine"]);
 assert.deepEqual(L.searchMonomers([cross],"alternate",4),[cross]);
 assert.deepEqual(L.searchMonomers([cross],"",2),[]); // C2 symmetry is not two reactive sites.
 assert.equal(L.monomerChoice(library,library.monomer_presets[0],"imine","b").compatible,false);

@@ -236,3 +236,67 @@ def test_changed_attachment_incidence_clears_chosen_net_identity():
     assert changed["selected_template"] is None
     assert changed["design_topology"] is None
     assert " COFex.unk.cat0;" in changed["design_cofex_notation"]
+
+
+def test_library_functional_groups_are_independent_of_reaction_sites():
+    from cof_vision.cofdraw_chemistry import decorated_monomers
+
+    rows = decorated_monomers([{"id": "tp", "smiles": TP},
+                               {"id": "hydrazide", "smiles": "NNC(=O)c1ccc(C(=O)NN)cc1"},
+                               {"id": "ester", "smiles": "COC(=O)c1ccccc1"}])
+    tp, hydrazide, ester = rows
+    assert {"Phenol", "Aldehyde"} <= set(tp["functional_groups"])
+    assert "Phenol" not in {g["label"] for g in tp["functionality"]}
+    assert "Acyl hydrazide" in hydrazide["functional_groups"]
+    assert "Primary amine" not in hydrazide["functional_groups"]
+    assert set(ester["functional_groups"]) == {"Ester"}
+
+
+def test_library_linkage_groups_across_reviewed_monomer_types():
+    from pathlib import Path
+
+    from cof_vision.cofdraw_chemistry import decorated_monomers
+    from cof_vision.cofdraw_core import catalog_monomers, read_catalog
+
+    expected = {
+        'tp': {'aldehyde'}, 'dmtp': {'aldehyde'}, 'bpda_n3': {'aldehyde'},
+        'pdan': {'activated_cyanomethyl'}, 'hhtp': {'catechol'}, 'tmc': {'acyl_chloride'},
+        'bfbaepy': {'aldehyde', 'primary_amine'},
+        'thpe': {'phenol'}, 'thpb': {'phenol'}, 'dpt': {'activated_ester'}, 'dpbp': {'activated_ester'},
+        'tfpc_dioxin': {'vicinal_aryl_fluorides'}, 'ppcn': {'nitrile'},
+        'recovered_monoformylphloroglucinol': {'phenol'},
+        'recovered_1_4_phenylene_diisocyanate': {'isocyanate'}, 'recovered_urea': {'terminal_urea'},
+        'cv_b1cb056e6150b738': {'benzyl_bromide'}, 'cv_2a97fff010220244': {'pyridyl_nitrogen'},
+        'cv_58b48601a6c68864': set(),  # S6, an intermediate with free amino groups.
+        'cv_05cbf00025a2d4a1': {'primary_amine', 'masked_aldehyde'},
+        'cv_6bb0458f6411d793': {'aldehyde', 'masked_amine'},
+        'terphenyl_cooh2_cho2': {'aldehyde', 'carboxylic_acid'},
+    }
+    catalog = read_catalog(Path(__file__).resolve().parents[1] / 'data')
+    feeds = [r for r in catalog_monomers(catalog) if r['id'] in expected]
+    by_id = {r['id']: r for r in decorated_monomers(feeds)}
+    assert {k: {g['id'] for g in r['linkage_functional_groups']} for k, r in by_id.items()} == expected
+
+    for row in by_id.values():
+        candidates = {(r['linkage'], r['role']) for r in row['binary_roles']}
+        facet_roles = {(r['linkage'], r['role']) for g in row['linkage_functional_groups'] for r in g['binary_roles']}
+        assert candidates == facet_roles
+    groups = {g['id']: g for g in by_id['terphenyl_cooh2_cho2']['linkage_functional_groups']}
+    assert ('imine', 'aryl_aldehyde') in {(r['linkage'], r['role']) for r in groups['aldehyde']['binary_roles']}
+    assert groups['carboxylic_acid']['binary_roles'] == [{'linkage': 'amide', 'role': 'aryl_carboxyl'}]
+    assert by_id['dpt']['linkage_functional_groups'][0]['binary_roles'] == []
+
+
+def test_linkage_facet_requires_a_reaction_context_for_reference_only_motifs():
+    from cof_vision.cofdraw_chemistry import decorated_monomers
+
+    unknown = {'smiles': 'C#Cc1ccc(C#C)cc1', 'catalog_use': 'reference_only',
+               'source_dois': ['10.example/unassigned']}
+    same_paper = dict(unknown, source_dois=['10.1021/acsapm.4c00560'])
+    click = dict(same_paper, reported_source_chemistry=['azide_alkyne_cycloaddition'])
+    unknown_row, same_paper_row, click_row = decorated_monomers([unknown, same_paper, click])
+    assert unknown_row['functional_groups'] == ['Alkyne']
+    assert not unknown_row['linkage_functional_groups']
+    assert not same_paper_row['linkage_functional_groups']
+    assert click_row['linkage_functional_groups'] == [
+        {'id': 'terminal_alkyne', 'label': 'Terminal alkyne', 'binary_roles': []}]

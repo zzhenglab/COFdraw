@@ -739,13 +739,41 @@ def fit_bet(relative_pressures, uptake_mmol_g, *, fit_min=.05, fit_max=.30, cros
                          "Cross-section 0.162 nm² is a conventional nitrogen value; match adsorptive, temperature, and analysis assumptions."]}
 
 
-def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15.):
+def _spatial_net_view(recipe, mol, audit, net):
+    """Join saved 3D positions to the rendered graph by stable fragment atom keys."""
+    rows = {(r['instance'], r['fragment_atom_index']): r.get('xyz') for r in recipe.get('atom_coordinates', [])}
+    atoms, positions, xyz_lines = [], [], []
+    for atom, origin in zip(mol.GetAtoms(), audit['atom_origin']):
+        point = np.asarray(rows.get((origin['instance'], origin['fragment_atom_index'])), dtype=float)
+        if point.shape != (3,) or not np.isfinite(point).all() or np.max(np.abs(point)) > 100000:
+            raise ValueError(f'The {net} drawing needs its spatial coordinates. Recreate it from the selected building blocks.')
+        x, y, z = point.tolist()
+        element = atom.GetSymbol()
+        isotope = atom.GetIsotope()
+        atoms.append(dict(element=element, isotope=isotope, x=x, y=y, z=z, continuation_site=element == '*',
+                          instance=origin['instance'], component=origin['component']))
+        positions.append([x, y, z])
+        xyz_lines.append(f"{'X' if element == '*' else element} {x:.8f} {y:.8f} {z:.8f} {isotope}")
+    bonds = [dict(a=b.GetBeginAtomIdx(), b=b.GetEndAtomIdx(), order=b.GetBondTypeAsDouble()) for b in mol.GetBonds()]
+    scope = f'One idealized {net} net fragment from the active drawing. Open sites mark framework continuation.'
+    xyz = [str(len(atoms)), 'Properties=species:S:1:pos:R:3:isotope:I:1 pbc="F F F" ' + scope, *xyz_lines]
+    return dict(kind='finite_dia_cage' if net == 'dia' else 'finite_pts_patch', periodic=False, scope=scope, source_audit=audit, warnings=[],
+                viewer=dict(atoms=atoms, bonds=bonds, periodic=False, bounds=_bounds(positions), units='angstrom'),
+                exports={'xyz': '\n'.join(xyz) + '\n'})
+
+
+def patch_3d(recipe, *, layer_spacing=3.4, layers=3, stacking="AA", slip=None, bond_length=1.4, twist_degrees=15., topology_only=False):
     """Chemically scaled finite drawing layers; explicitly not a periodic crystal."""
     from .cofdraw_spatial import net_preview
     from .framework_drawing import build_patch
+    spatial_net = {'dia_4_2': 'dia', 'pts_4_4': 'pts'}.get((recipe.get('selected_template') or {}).get('id'))
+    if spatial_net and recipe.get("layout_kind") == "net_patch" and not topology_only:
+        return _spatial_net_view(recipe, *build_patch(recipe), spatial_net)
     spatial=net_preview(recipe)
     if spatial is not None:
         return spatial
+    if topology_only:
+        raise ValueError("Choose a drawing with a supported spatial topology.")
     layer_count = _integer(layers, "layers", 1, 6)
     spacing = _finite(layer_spacing, "layer_spacing", 1, 20)
     target_bond = _finite(bond_length, "bond_length", 1, 2)

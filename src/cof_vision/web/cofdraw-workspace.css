@@ -19,6 +19,7 @@
 .output-bar .button{padding:6px 9px;min-height:30px;font-size:11px}
 .appearance-options>summary{padding:12px 0}
 .canvas-panel .canvas-appearance,.geometry-options{display:block;margin-top:10px;padding:0 12px;background:#fff;border:1px solid #d6e1da;border-radius:8px}
+.canvas-panel .canvas-appearance{max-height:none;overflow:visible}
 .canvas-appearance .appearance-options{margin:0;border:0}
 .geometry-options>summary{padding:12px 0;color:#355f51;font-size:12px;font-weight:600;cursor:pointer}
 .geometry-tools{margin-bottom:0}

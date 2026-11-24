@@ -41,20 +41,30 @@
     return Number.isInteger(count) && count >= 0 ? count : null;
   }
   function templateCompatibility(template, linkage, monomers, library) {
-    const shapes=['a','b'].map(block=>monomers[block]?.site_shapes?.[roleFor(library,linkage,block)]);
+    const blocks=['a','b'];
+    const roles=blocks.map(block=>roleFor(library,linkage,block));
+    const shapes=blocks.map((block,i)=>monomers[block]?.site_shapes?.[roles[i]]);
+    const directions=blocks.map((block,i)=>monomers[block]?.attachment_directions?.[roles[i]]);
+    const tetrahedral=blocks.map((block,i)=>directions[i]==='tetrahedral'||shapes[i]==='tetrahedral'||(!directions[i]&&!shapes[i]&&monomers[block]?.geometry_hint?.startsWith('tetrahedral')));
+    const molecularMatch=(template.id==='pts_4_4'&&directions.includes('square_planar')&&directions.includes('tetrahedral'))||
+      (template.id==='dia_4_2'&&directions.some((dir,i)=>dir==='linear'&&tetrahedral[1-i]));
     if(template.topology_label&&shapes.includes('unresolved_alkyl'))return {compatible:false,reason:'The attachment directions of this aliphatic building block are unassigned. Choose a local projection.'};
-    if(template.shape_pair&&!template.shape_pair.every((value,i)=>value===shapes[i])&&
+    if(['pts_4_4','dia_4_2'].includes(template.id)&&!template.shape_pair&&!molecularMatch)
+      return {compatible:false,reason:'The attachment directions do not match this spatial net.'};
+    if(template.shape_pair&&!molecularMatch&&!template.shape_pair.every((value,i)=>value===shapes[i])&&
        !template.shape_pair.every((value,i)=>value===shapes[1-i]))return {compatible:false,reason:'The reactive arms do not match this spatial arrangement.'};
     if(template.topology_label&&(shapes.includes('spiro')||shapes.includes('spatial_unspecified')))return {compatible:false,reason:'This node has out-of-plane arms. Its geometry needs a separate connectivity assignment.'};
     if(template.topology_label&&shapes.includes('prismatic'))return {compatible:false,reason:'The six arms on this triptycene core form a prism. Choose a spatial net.'};
     if(template.id==='branched_4_3'&&![monomers.a,monomers.b].some(m=>m?.geometry_hint==='tetrahedral'))return {compatible:false,reason:'Requires a tetrahedral four-connected monomer.'};
     if (template.supported === false) return {compatible: false, reason: template.limits || "Template unavailable."};
     if (Array.isArray(template.linkages) && !template.linkages.includes(linkage)) return {compatible: false, reason: "Not available for this linkage."};
-    if (template.id==="kgm_4_2") {
-      const arms=["a","b"].map(block=>monomers[block]?.kagome_roles?.[roleFor(library,linkage,block)]);
-      if (!arms.includes("node") || !arms.includes("spacer")) return {compatible:false,reason:"Choose a four-arm tetraarylethene and a linear ditopic spacer."};
+    if(template.id==='kgm_4_2'){
+      const kagomeRoles=blocks.map((block,i)=>monomers[block]?.kagome_roles?.[roles[i]]);
+      if(!directions.includes('linear')&&!(kagomeRoles.includes('node')&&kagomeRoles.includes('spacer')))
+        return {compatible:false,reason:'Choose a four-connected node and a linear two-connected spacer.'};
     }
-    if (template.topology_label && [monomers.a, monomers.b].some(item => item?.geometry_hint?.startsWith("tetrahedral"))) return {compatible:false, reason:"A tetrahedral node needs explicit 3D incidence. Use an unassigned projection rather than a planar net template."};
+    if(template.topology_label&&template.dimension!==3&&!molecularMatch&&tetrahedral.some(Boolean))
+      return {compatible:false,reason:'A tetrahedral node requires a spatial template.'};
     for (const block of ["a", "b"]) {
       const role = roleFor(library, linkage, block);
       const evidence = roleEvidence(monomers[block], linkage, role);
@@ -79,9 +89,17 @@
     const counts=groupRows(item).map(row=>row.count).filter(Number.isInteger);
     return counts.length?Math.max(...counts):null;
   }
-  function searchMonomers(rows,query="",count="all") {
+  function linkageGroupOptions(rows, groupsFor = row=>list(row.linkage_functional_groups)) {
+    const groups = new Map();
+    for (const row of rows) {
+      for (const group of groupsFor(row)) groups.set(group.id, group);
+    }
+    return [...groups.values()].sort((a,b) => a.label.localeCompare(b.label));
+  }
+  function searchMonomers(rows,query="",count="all",group="all",groupsFor = row=>list(row.linkage_functional_groups)) {
     const tokens=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
     return list(rows).filter(item=>{
+      if(group!=="all" && !groupsFor(item).some(entry=>entry.id===group))return false;
       if(count!=="all"&&connectionCount(item)!==Number(count))return false;
       const text=[item.abbreviation,item.full_name,item.label,item.id,...list(item.literature_names),...list(item.aliases)].filter(Boolean).join(" ").toLowerCase();
       return tokens.every(token=>text.includes(token));
@@ -101,7 +119,7 @@
       const pair=block==="a"?{a:item,b:other}:{a:other,b:item};
       const eligible=templates.filter(t=>templateCompatibility(t,linkage,pair,library).compatible);
       if(!eligible.length)return {compatible:false,reason:"No available connectivity template supports this pair of reactive-site counts and geometry."};
-      if(eligible.every(t=>!t.topology_label))return {compatible:true,reason:`Supplies ${label}. Only an unassigned finite projection is available for this pair.`};
+      if(eligible.every(t=>!t.topology_label&&!t.parent_net))return {compatible:true,reason:`Supplies ${label}. Only an unassigned finite projection is available for this pair.`};
     }
     return {compatible:true,reason:`Supplies ${label}. Attachment incidence and the selected template are checked during construction.`};
   }
@@ -123,6 +141,34 @@
     // Product-state reduction is never an automatic replacement for condensation.
     const order=['beta_ketoenamine','alkyl_ketoenamine','keto_hydrazide','imine','alkyl_imine','acylhydrazone','azine','nitrone','secondary_amine'];
     return results.sort((a,b)=>(order.indexOf(a.id)<0?99:order.indexOf(a.id))-(order.indexOf(b.id)<0?99:order.indexOf(b.id)));
+  }
+  function periodicLinkageMatches(library,a,b,selected,automatic) {
+    const matches = [], supported = ['imine','secondary_amine','acylhydrazone'];
+    if (!a || !b) return matches;
+    for (const id of new Set([selected,...(automatic ? supported : [])])) {
+      const roles = library?.linkages?.[id]?.roles;
+      if (!supported.includes(id) || roles?.length !== 2) continue;
+      for (const swapped of [false,true]) {
+        const pair = swapped ? [b,a] : [a,b];
+        const sizes = pair.map((m,i)=>reactiveCount(m,id,roles[i]));
+        const hub = pair.map((m,i)=>m.geometry_hint === 'tetrahedral' && sizes[i] === 4);
+        if ((hub[0] && (sizes[1]===2 || hub[1])) || (hub[1] && sizes[0]===2)) {
+          matches.push({id,swapped});
+          break;
+        }
+      }
+    }
+    return matches;
+  }
+  function partnerLinkageGroups(library,a,b,selected,automatic) {
+    const groups = list(b?.linkage_functional_groups);
+    if (!a || !groups.length) return [];
+    const matches = [...compatibleLinkages(library,a,b), ...periodicLinkageMatches(library,a,b,selected,automatic)];
+    return groups.filter(group => matches.some(({id,swapped}) => {
+      if (!automatic && id !== selected) return false;
+      const partnerRole = library.linkages[id].roles[swapped ? 0 : 1];
+      return list(group.binary_roles).some(match=>match.linkage===id && match.role===partnerRole);
+    }));
   }
   function automaticChoice(library,item,block,other) {
     if(block==='editor') return {compatible:true,reason:'Open, inspect, or edit this monomer.'};
@@ -293,7 +339,7 @@
     }
     return {request};
   }
-  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,startingCombinations,starterSections,createPreviewCache};
+  const api = {displayName, roleFor, roleEvidence, compatiblePresets, groupRows, reactiveCount, templateCompatibility, stylesInCategory,connectionCount,linkageGroupOptions,partnerLinkageGroups,periodicLinkageMatches,searchMonomers,monomerChoice,compatibleLinkages,automaticChoice,automaticPlan,startingCombinations,starterSections,createPreviewCache};
   scope.COFdrawLibrary = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window === "undefined" ? globalThis : window);

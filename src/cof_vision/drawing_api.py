@@ -24,7 +24,7 @@ class PrepareDrawing(BaseModel):
     monomer_b: str = Field(min_length=1, max_length=4000)
     label_a: str = Field(default="A", max_length=100)
     label_b: str = Field(default="B", max_length=100)
-    instances: Literal[4, 6, 8, 12] = 6
+    instances: Literal[4, 6, 8, 12, 21, 22, 30] = 6
     template_id: str | None = Field(default=None, max_length=80)
 
 
@@ -67,7 +67,7 @@ class RenderDrawing(BaseModel):
 
 class RepeatDrawing(RenderDrawing):
     repeats: int = Field(ge=1, le=4)
-    extent_mode: Literal['pores', 'cells', 'triad', 'star', 'triangle'] = 'pores'
+    extent_mode: Literal['pores', 'cells', 'triad', 'star', 'triangle', 'hexagon', 'circuit'] = 'pores'
     color_pores: bool = False
 
 
@@ -112,6 +112,7 @@ class DisplayCells(BaseModel):
 
 
 class Patch3D(RenderDrawing):
+    topology_only: bool = False
     layers: int = Field(default=3, ge=1, le=6)
     layer_spacing: float = Field(default=3.4, ge=2.5, le=12, allow_inf_nan=False)
     stacking: Literal['AA','AB','ABC','slipped','twisted'] = 'AA'
@@ -338,8 +339,8 @@ def validate_recipe(recipe: dict) -> None:
     connections = recipe.get("connections")
     if not isinstance(components, dict) or not 1 <= len(components) <= 16:
         raise ValueError("Provide 1–16 components")
-    if not isinstance(instances, list) or not 3 <= len(instances) <= 24:
-        raise ValueError("Provide 3–24 ordered pore instances")
+    if not isinstance(instances, list) or not 3 <= len(instances) <= 30:
+        raise ValueError("Provide 3–30 ordered pore instances")
     if not isinstance(connections, list) or not 3 <= len(connections) <= 64:
         raise ValueError("Provide 3–64 explicit port connections")
     counts, ports = {}, {}
@@ -371,8 +372,11 @@ def validate_recipe(recipe: dict) -> None:
         if not isinstance(xy, list) or len(xy) != 2 or any(not isinstance(x, (int, float)) or not math.isfinite(x) or abs(x) > 200 for x in xy):
             raise ValueError("Layout coordinates must be finite numbers between −200 and 200")
         positions.append(xy)
-    if total > 1000:
-        raise ValueError("Drawing limit is 1,000 atoms including continuation ports")
+    # A complete kagome star uses up to 1.5 times as many monomers of either
+    # type as the original half-star. Keep its previously drawable pairs usable.
+    atom_limit = 1500 if recipe.get("layout_kind") == "net_patch" and len(instances) == 30 else 1000
+    if total > atom_limit:
+        raise ValueError(f"Drawing limit is {atom_limit:,} atoms including continuation ports")
     for index, xy in enumerate(positions):
         if math.dist(xy, positions[index - 1]) < 0.05:
             raise ValueError("Adjacent pore instances need different positions")
@@ -389,7 +393,7 @@ def validate_recipe(recipe: dict) -> None:
 def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -> APIRouter:
     from .framework_drawing import LINKAGE_LIBRARY, VERSION, linkage_fragment, matches_linkage_family, render_recipe, build_patch
     from .cofdraw_core import STYLES, PRESETS, catalog_monomers, read_catalog, normalize_monomer, render_styled, export_chemical_formats
-    from .cofdraw_chemistry import TEMPLATES, library_linkages, decorated_monomers, prepare_template, refresh_design_identity, design_signature
+    from .cofdraw_chemistry import TEMPLATES, library_linkages, library_topologies, decorated_monomers, prepare_template, refresh_design_identity, design_signature
     from .cofdraw_styles import PALETTES, FONTS, ELEMENT_SCHEMES, style_configuration
     from rdkit import Chem
 
@@ -546,9 +550,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
         from .cofdraw_self import self_examples
         monomers = decorated_monomers(catalog_monomers(catalog))
         monomers = [{**m, 'synthetic_accessibility': synthetic_accessibility(m.get('smiles', ''))} for m in monomers]
-        from .cofdraw_starters import topology_catalog
         return {"schema_version": VERSION, "linkages": library_linkages(catalog), "source_recipes": sources,
-                "templates": TEMPLATES, "topology_catalog": topology_catalog(catalog.get("topology_catalog", [])),
+                "templates": TEMPLATES, "topology_catalog": library_topologies(catalog),
                 "style_controls": {"hydrogen_labels":["show","compact"], "element_schemes": ["style_default", *ELEMENT_SCHEMES], "palettes":list(PALETTES),"palette_colors":PALETTES,"fonts":FONTS,"edge_styles":["wavy_cross","dashed","crossbar","bond_stub"],"boundary_cuts":["linkage","aryl","hub"],
                                    "element_colors":{scheme:{Chem.GetPeriodicTable().GetElementSymbol(z):color for z,color in colors.items()} for scheme,colors in ELEMENT_SCHEMES.items()},
                                    "defaults":{s['id']:style_configuration(s['id'])[2] for s in STYLES},
@@ -561,7 +564,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
                 "named_pairs": [{"name":name,"a":a,"b":b,"linkage":link,"template_id":template,
                                  "doi":NAMED_DESIGNS[name][1]} for name,(a,b,link,template) in NAMED_PAIRS.items()],
                 "style_evidence": catalog.get("style_evidence", catalog.get("source_styles", [])),
-                "source_registry_errors": errors, "max_atoms": 1000,
+                "source_registry_errors": errors, "max_atoms": 1000, "max_star_atoms": 1500,
                 "presets": [{"instances": n, "label": f"{n // 2} A + {n // 2} B alternating pore"} for n in (6, 12)],
                 "scope": "Finite chemical pore patches with explicit attachment ports; preset connectivity is a design choice, not a topology prediction."}
 
@@ -765,7 +768,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             prepared = prepare_template(**request.model_dump())
             recipe = {"schema_version": VERSION, "recipe_id": "designed-pore", **prepared,
                       "topology": None, "topology_basis": "explicit_user_chosen_template_not_experimental",
-                      "layout_refinement": "bond_angle_pose_v2",
+                      "layout_refinement": "manual" if prepared.get("atom_coordinates") else "bond_angle_pose_v2",
                       "cofex_id": None, "cofex_notation": None, "cofex_string": None, "designed_variant": True, "ground_truth": False, "review_status": "user_design",
                       "design_note": "Reactive ports were chosen by their 2D angular fit to the selected template. Inspect incidence; a template does not establish experimental topology or synthesis feasibility."}
             recipe["design_template_signature"] = design_signature(recipe)
@@ -1203,7 +1206,7 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
     def patch_model(request: Patch3D):
         try:
             from .cofdraw_science import patch_3d
-            with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip,twist_degrees=request.twist_degrees)
+            with lock:result=patch_3d(selected_recipe(request),layer_spacing=request.layer_spacing,layers=request.layers,stacking=request.stacking,slip=request.slip,twist_degrees=request.twist_degrees,topology_only=request.topology_only)
             result.setdefault('scope','Finite illustrative layers from scaled drawing coordinates; not a relaxed periodic crystal. X sites mark continuation boundaries.')
             return scientific_result(result, 'patch', request.model_dump())
         except (ValueError,KeyError,TypeError,RuntimeError) as exc:raise HTTPException(422,str(exc)) from exc

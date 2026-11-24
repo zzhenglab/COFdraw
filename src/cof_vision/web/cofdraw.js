@@ -34,23 +34,9 @@ function templateCheck(template=selectedTemplate()){if(!template)return {compati
 function option(value,label){const item=document.createElement("option");item.value=value;item.textContent=label;return item;}
 function roleLabel(role,index){const info=linkageInfo();return info.role_labels?.[index]||role?.replaceAll("_"," ")||"Reactive building block";}
 function periodicLinkage(a,b){
-  if(!a||!b)return null;
-  const supported=['imine','secondary_amine','acylhydrazone'];
-  const selected=$('linkage').value;
-  for(const linkage of [...new Set([selected,...(state.autoChemistry?supported:[])])]){
-    if(!supported.includes(linkage))continue;
-    const roles=state.library?.linkages?.[linkage]?.roles;
-    if(roles?.length!==2)continue;
-    for(const [node,link] of [[a,b],[b,a]]){
-      if(node.geometry_hint!=='tetrahedral')continue;
-      if(roles.some((r,i)=>L.reactiveCount(node,linkage,r)===4&&
-        (L.reactiveCount(link,linkage,roles[1-i])===2||link.geometry_hint==='tetrahedral'&&L.reactiveCount(link,linkage,roles[1-i])===4)))return linkage;
-    }
-  }
-  return null;
+  return L.periodicLinkageMatches(state.library,a,b,$('linkage').value,state.autoChemistry)[0]?.id||null;
 }
 function monomerChoice(item,block,other){
-  
   if(block!=='editor'&&periodicLinkage(item,other))return {compatible:true,reason:'This pair supports a tetrahedral periodic framework.'};
   if(block!=='editor'&&item.binary_eligible===false)return {compatible:false,reason:item.qualification||'Outside the supported pair constructor.'};
   if(block==='b'&&!other&&$("smiles-a").value.trim())return {compatible:false,reason:'Building block A is being checked or has an invalid structure. Update its preview before selecting B.'};
@@ -319,10 +305,10 @@ function refreshTemplates(desired=null){
   if(!rows.length){$("template-description").textContent="Alternating monomers with unconnected outward continuation ports.";return;}
   const select=$("template"),current=desired||select.value;select.replaceChildren();
   for(const t of available){const check=templateCheck(t),o=option(t.id,t.label||t.id);o.disabled=!check.compatible;o.hidden=state.autoChemistry&&(!check.compatible||!t.allow_pairs?.length);o.dataset.spatial=String(t.dimension===3);
-    if(t.topology_label)o.textContent='2D '+(t.label||t.id);
+    if(t.topology_label&&t.dimension!==3)o.textContent='2D '+(t.label||t.id);
     o.title=check.reason||t.description||"";select.append(o);}
   const validCurrent=Array.from(select.options).find(o=>o.value===current&&!o.disabled);const first=Array.from(select.options).find(o=>!o.disabled);
-  select.value=validCurrent?.value||first?.value||available[0]?.id||"";
+  select.value=validCurrent?.value||first?.value||"";
   if(!select.options.length)select.append(option("","No compatible template available"));
   const item=selectedTemplate(),check=templateCheck();$("template-description").textContent=item?[item.description,check.compatible?item.limits:check.reason].filter(Boolean).join(" "):"Choose supported linkage chemistry to view its templates.";
   if(item?.instances)$("pore").value=String(item.instances);
@@ -344,7 +330,7 @@ function refreshInspectors(){
     }
   }
 }
-function refreshChemistry(desiredTemplate=null){const automatic=autoMatchChemistry();refreshPresetLists();refreshInspectors();refreshTemplates(state.autoChemistry?automatic:desiredTemplate);updateIdentity();sync();if($("monomer-library-dialog").open)drawLibrary();}
+function refreshChemistry(desiredTemplate=null){const automatic=autoMatchChemistry();refreshPresetLists();refreshInspectors();refreshTemplates(desiredTemplate || automatic);updateIdentity();sync();if($("monomer-library-dialog").open)drawLibrary();}
 function notice(text, error=false) { $("notice").textContent=text; $("notice").className=`notice${error ? " error" : ""}`; }
 async function api(path, payload) {
   const response=await fetch(`./api/drawing/${path}`,payload===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -357,11 +343,9 @@ function sync() {
   $("chemistry-note").textContent=source?`${state.sourceId?'Source':'Recorded'} graph loaded. Change presentation or edit the recorded layout; change a precursor to start a new construction.`:linkage.limits||"The pore sequence is an explicit design choice. It does not assign a periodic topology.";
   const hideChoices=source||state.autoChemistry;
   document.querySelector('.linkage-first').hidden=hideChoices;
-  const validTemplates=Array.from($('template').options).filter(o=>!o.disabled&&!o.hidden);
-  const multipleNets=!source&&!multi()&&state.autoChemistry&&Boolean(checkedMonomer('a')&&checkedMonomer('b'))&&
-    validTemplates.length>1;
-  document.querySelector('.chemistry-options').hidden=hideChoices&&!multipleNets;
-  for(const id of ['linkage-roles','template-description'])$(id).hidden=hideChoices;
+  document.querySelector('.chemistry-options').hidden=source;
+  $('linkage-roles').hidden=hideChoices;
+  $('template-description').hidden=source;
   document.querySelector('.template-scope').hidden=hideChoices;
   $('chemistry-mode-field').hidden=source;$("combination-search").disabled=state.busy;
   if(source)$("chemistry-match").textContent="The recorded recipe supplies this graph directly; constructor compatibility does not apply.";
@@ -413,10 +397,9 @@ function sync() {
   if(boundaryControl)boundaryControl.disabled=state.busy;
   for(const id of ["cof-preset","linkage","linkage-search","pore","template","image-size","label-a","label-b","smiles-a","smiles-b","preset-a","preset-b","recipe-json","open-project"]) $(id).disabled=state.busy;
   $("auto-chemistry").checked=state.autoChemistry;$("auto-chemistry").disabled=state.busy;
-  for(const id of ['linkage','linkage-search','template','pore'])$(id).disabled=state.busy||state.autoChemistry;
+  for(const id of ['linkage','linkage-search','pore'])$(id).disabled=state.busy||state.autoChemistry;
   $("linkage-mode-label").textContent=state.autoChemistry?'Linkage · Auto':'Linkage · Manual';
-  if(multipleNets)$('template').disabled=state.busy;
-  $("template-mode-label").textContent=multipleNets?'Possible framework designs':state.autoChemistry?'Connectivity · Auto':'Connectivity · Manual';
+  $("template-mode-label").textContent='Candidate nets and drawing templates';
   if(!source&&!state.autoChemistry)$("chemistry-match").textContent='Choose a linkage and a connectivity template.';
   if(crystal?.active){
     $('scope-badge').textContent='3D FRAMEWORK';
@@ -448,7 +431,7 @@ function markInputsChanged() { selectionRevision++;const wasSource=sourceMode();
 function syncJSON(){ $("recipe-json").value=state.recipe?JSON.stringify(state.recipe,null,2):"";state.jsonPending=false; }
 function validateRecipeShape(recipe) {
   if(recipe?.explicit_graph){if(!Array.isArray(recipe.explicit_graph.atoms)||!Array.isArray(recipe.explicit_graph.bonds))throw new Error("This source drawing needs explicit atoms and bonds.");return;}
-  if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>24)throw new Error("A recipe needs components, 3–24 instances, and explicit connections.");
+  if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>30)throw new Error("A recipe needs components, 3–30 instances, and explicit connections.");
   for(const item of recipe.instances)if(!recipe.components[item.component]||!Array.isArray(item.layout_position)||item.layout_position.length!==2||item.layout_position.some(x=>typeof x!=="number"||!Number.isFinite(x)||Math.abs(x)>200))throw new Error("Each block needs a component and finite x/y coordinates between −200 and 200.");
 }
 function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);restoreAssembly(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
@@ -557,7 +540,7 @@ async function render(){
 $("build").addEventListener("click",async()=>{
   clearTimeout(liveDrawingTimer);
   if(window.COFdrawCrystalDesign?.active){window.COFdrawCrystalDesign.build();return;}
-  if(currentPairKey()!==standardPair&&(!state.recipe||state.inputsDirty&&state.autoChemistry)&&!multi()&&!$('build-periodic-from-pair').hidden){$('build-periodic-from-pair').click();return;}
+  if(!selectedTemplate()?.allow_pairs?.length&&currentPairKey()!==standardPair&&(!state.recipe||state.inputsDirty&&state.autoChemistry)&&!multi()&&!$('build-periodic-from-pair').hidden){$('build-periodic-from-pair').click();return;}
   if(state.busy)return;state.busy=true;sync();
   const revision=selectionRevision;
   try{
@@ -847,7 +830,9 @@ async function selectLibraryItem(id,expand=true){
   libraryView.selected=id;const item=libraryItem();if(!item)return;document.querySelectorAll(".library-row").forEach(row=>row.classList.toggle("selected",row.dataset.id===id));
   $("library-detail-panel").hidden=false;$("library-detail-label").textContent=item.abbreviation||item.label||item.id;if(expand)$("library-detail-panel").open=true;
   $("library-name").textContent=item.abbreviation||item.label||item.id;$("library-full-name").textContent=item.full_name||L.displayName(item);
-  $("library-site-count").textContent=L.connectionCount(item)===null?"Not cataloged":`${L.connectionCount(item)} reactive connection sites`;
+  $("library-linkage-groups").textContent=item.linkage_functional_groups?.map(group=>group.label).join(", ")||"None identified for a COF linkage";
+  $("library-functional-groups").textContent=item.functional_groups?.join(", ")||"None recognized";
+  $("library-site-count").textContent=L.connectionCount(item)===null?"Not cataloged":`${L.connectionCount(item)}-connected`;
   const symmetry=item.point_group||item.symmetry;$("library-geometry").textContent=[item.geometry_hint?.replaceAll("_"," "),symmetry?`Point group: ${Array.isArray(symmetry)?symmetry.join(", "):symmetry}`:null].filter(Boolean).join("; ")||"Not assigned";
   const chips=$("library-groups");chips.replaceChildren();for(const group of libraryGroups(item)){const chip=document.createElement("span");chip.className="group-chip";chip.textContent=`${group.count} × ${group.label||group.kind.replaceAll("_"," ")}`;chips.append(chip);}
   const choice=libraryChoice(item),target=$("library-target").value;$("library-compatibility").textContent=choice.reason;$("library-compatibility").classList.toggle("unavailable",!choice.compatible);$("library-apply").disabled=!choice.compatible||libraryView.busy;$("library-edit").disabled=libraryView.busy;$("library-apply").textContent=target==="editor"?"Open single monomer":`Use as ${target.toUpperCase()}`;
@@ -857,10 +842,25 @@ async function selectLibraryItem(id,expand=true){
   $("library-preview").hidden=true;$("library-preview-state").hidden=false;$("library-preview-state").textContent="Preparing local structure preview…";
   try{const preview=await libraryPreviews.request(item.smiles);if(libraryView.selected!==id)return;$("library-preview").src=preview.url;$("library-preview").hidden=false;$("library-preview-state").hidden=true;}catch(e){if(libraryView.selected===id)$("library-preview-state").textContent=e.message;}
 }
+function setLibraryGroupOptions(groups){
+  const menu=$("library-group"), selected=menu.value;
+  if (menu.options.length === groups.length+1 && groups.every((g,i)=>menu.options[i+1].value===g.id)) return;
+  menu.replaceChildren(option("all","Any group"),...groups.map(group=>option(group.id,group.label)));
+  menu.value = groups.some(group=>group.id===selected) ? selected : "all";
+}
 function drawLibrary(){
   const target=$("library-target").value,partnerView=target==='b'&&Boolean($("smiles-a").value.trim()),showAll=$("library-show-all").checked;
   const visibleCatalog=(state.library?.monomer_presets||[]).filter(r=>r.catalog_use!=="synthetic_intermediate");
-  const searched=L.searchMonomers(visibleCatalog,$("library-search").value,$("library-sites").value),rows=partnerView&&!showAll?searched.filter(item=>libraryChoice(item).compatible):searched;
+  const partnerGroups = new Map();
+  if (partnerView && !showAll) {
+    const partner = checkedMonomer("a");
+    for (const item of visibleCatalog) {
+      partnerGroups.set(item,L.partnerLinkageGroups(state.library,partner,item,$("linkage").value,state.autoChemistry));
+    }
+  }
+  const groupsFor = item => partnerGroups.get(item) ?? item.linkage_functional_groups ?? [];
+  setLibraryGroupOptions(L.linkageGroupOptions(visibleCatalog,groupsFor));
+  const searched=L.searchMonomers(visibleCatalog,$("library-search").value,$("library-sites").value,$("library-group").value,groupsFor),rows=partnerView&&!showAll?searched.filter(item=>libraryChoice(item).compatible):searched;
   $("library-show-all-field").hidden=!partnerView;$("library-target").disabled=libraryView.busy;
   updateLibraryPair(target);
   $("library-context").textContent=target==="editor"?"Browse any monomer to edit or export on its own.":partnerView?(!checkedMonomer('a')?"Check A's structure before choosing a partner.":showAll?`All monomers shown. Unavailable partners for ${libraryCurrent('a').name} are disabled.`:`Choose a compatible B for ${libraryCurrent('a').name}. ${state.autoChemistry?'Chemistry matches automatically.':`Linkage: ${linkageInfo().label||$("linkage").value}.`}`):target==="b"?"Choose A first to narrow this list to compatible partners.":"Choose A, then select a compatible partner B.";
@@ -881,17 +881,17 @@ function drawLibrary(){
     apply.setAttribute("aria-describedby",status.id);const sa=document.createElement('p');sa.className='library-sa';sa.dataset.saScore='true';const score=item.synthetic_accessibility;sa.textContent=score?.available?`SA Score ${score.score.toFixed(2)} / 10`:'SA Score unavailable';sa.title='1 easier–10 harder; finite-molecule heuristic, not a synthesis route or COF yield.';
     row.append(heading,inspect,name,status,sa,actions);list.append(row);if(libraryView.observer)libraryView.observer.observe(row);else loadLibraryThumbnail(row,item);
   }
-  if(!rows.length){const p=document.createElement("p");p.className="style-empty";p.textContent=partnerView&&!showAll?"No compatible partners match these filters. Clear the search or site filter, check A, or show all monomers to inspect why a choice is unavailable.":"No monomers match these filters. Clear the name or reactive-site filter to browse all entries.";list.append(p);$("library-detail-panel").hidden=true;$("library-apply").disabled=true;$("library-edit").disabled=true;return;}
+  if(!rows.length){const p=document.createElement("p");p.className="style-empty";p.textContent=partnerView&&!showAll?"No compatible partners match these filters. Clear a filter, check A, or show all monomers to inspect why a choice is unavailable.":"No monomers match these filters. Clear the search or either filter to browse all entries.";list.append(p);$("library-detail-panel").hidden=true;$("library-apply").disabled=true;$("library-edit").disabled=true;return;}
   const selected=rows.find(item=>item.id===libraryView.selected);if(selected)selectLibraryItem(selected.id,false);else{$("library-detail-panel").hidden=true;$("library-detail-panel").open=false;libraryView.selected=null;}
 }
-function openLibrary(target="a"){if(!state.online)return;$("library-target").value=target;$("library-search").value="";$("library-sites").value="all";$("library-show-all").checked=false;libraryView.selected=null;$("library-detail-panel").open=false;$("monomer-library-dialog").showModal();drawLibrary();}
+function openLibrary(target="a"){if(!state.online)return;$("library-target").value=target;$("library-search").value="";$("library-sites").value="all";$("library-group").value="all";$("library-show-all").checked=false;libraryView.selected=null;$("library-detail-panel").open=false;$("monomer-library-dialog").showModal();drawLibrary();}
 function setLibraryTarget(target){if(libraryView.busy)return;$("library-target").value=target;$("library-show-all").checked=false;drawLibrary();}
 async function applyLibraryItem(item=libraryItem()){
   if(!item||libraryView.busy||!libraryChoice(item).compatible)return;const target=$("library-target").value;
   if(target==="editor"){$("monomer-library-dialog").close();openSketch("a",item);return;}
   libraryView.busy=true;$("library-apply").disabled=true;$("library-edit").disabled=true;
   try{$(`smiles-${target}`).value=item.smiles;$(`label-${target}`).value=item.abbreviation||item.label||item.id;delete state.monomers[target];markInputsChanged();await validateMonomer(target,true);refreshChemistry();queueDrawing();notice(`Building block ${target.toUpperCase()} loaded from the monomer library.`);
-    if(target==="a"){$("library-target").value="b";$("library-search").value="";$("library-sites").value="all";$("library-show-all").checked=false;libraryView.selected=null;}else $("monomer-library-dialog").close();
+    if(target==="a"){$("library-target").value="b";$("library-search").value="";$("library-sites").value="all";$("library-group").value="all";$("library-show-all").checked=false;libraryView.selected=null;}else $("monomer-library-dialog").close();
   }catch(e){$("library-compatibility").textContent=e.message;$("library-compatibility").classList.add("unavailable");}finally{libraryView.busy=false;drawLibrary();}
 }
 $("open-monomer-library").addEventListener("click",()=>openLibrary("a"));document.querySelectorAll(".library-open").forEach(b=>b.addEventListener("click",()=>openLibrary(b.dataset.block)));
@@ -901,7 +901,7 @@ $("library-solubility").addEventListener("click",()=>{
   const item=libraryItem();
   if(item)window.COFdrawSolubility.open(item.smiles,item.abbreviation||item.label);
 });
-for(const id of["library-search","library-sites","library-show-all"])$(id).addEventListener(id==="library-search"?"input":"change",drawLibrary);
+for(const id of["library-search","library-sites","library-group","library-show-all"])$(id).addEventListener(id==="library-search"?"input":"change",drawLibrary);
 $("library-target").addEventListener('change',()=>{$("library-show-all").checked=false;drawLibrary();});
 document.querySelectorAll("[data-library-target]").forEach(button=>button.addEventListener("click",()=>setLibraryTarget(button.dataset.libraryTarget)));
 $("library-editor-mode").addEventListener("click",()=>setLibraryTarget($("library-target").value==="editor"?"a":"editor"));
@@ -1127,6 +1127,10 @@ async function initialize(){
   try{
     const library=await api("library");state.library=library;state.online=true;$("engine-dot").classList.add("live");$("engine-status").textContent="Local chemistry engine · ready";$("catalog-version").textContent=library.catalog_version||"Built-in drawing library";
     const presets=library.cof_presets?.length?library.cof_presets:fallbackPresets;library.cof_presets=presets;combinations=L.startingCombinations(library);populateLinkages("imine");refreshChemistry();
+    const browsable = library.monomer_presets.filter(item=>item.catalog_use!=="synthetic_intermediate");
+    setLibraryGroupOptions(L.linkageGroupOptions(browsable));
+    const counts = new Set(browsable.map(L.connectionCount).filter(Number.isInteger));
+    $("library-sites").replaceChildren(option("all","Any count"), ...Array.from(counts).sort((a,b)=>a-b).map(n=>option(String(n),n+"-connected")));
     drawStyles();drawStyleControls();
     if(library.source_registry_errors?.length)notice("Some source recipes failed integrity checks and are omitted from the library.",true);
     setCombination(presets[0]);state.inputsDirty=false;setStyleDescription();window.dispatchEvent(new CustomEvent('cofdraw:library',{detail:library}));

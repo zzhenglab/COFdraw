@@ -148,3 +148,23 @@ def test_reference_precursor_colors_follow_record_order_and_group_composition(cl
 def test_bad_or_unsupported_cofex_never_switches_to_unrelated_structure(client,text):
     result=client.post('/api/drawing/cofex/resolve',json={'text':text})
     assert result.status_code==422
+
+
+@pytest.mark.parametrize('a,b,key,patch_size,circuit_size', [
+    ('ta', 'tapm', 'dia_4_2', 22, 12),
+    ('tfppy', 'tapm', 'pts_4_4', 22, 4),
+    ('ta', 'tape', 'kgm_4_2', 30, 12),
+])
+def test_full_record_restores_molecular_patch_and_earlier_circuit(a,b,key,patch_size,circuit_size):
+    from cof_vision.cofdraw_chemistry import prepare_template
+    from cof_vision.cofdraw_cofex import recipe_record, parse_record
+
+    rows = {r['id']: r['smiles'] for r in json.loads((DATA/'framework-drawing/catalog/current.json').read_bytes())['monomer_presets']}
+    for size in (patch_size, circuit_size):
+        original = prepare_template(rows[a], rows[b], 'imine', a, b, size, key)
+        record = recipe_record(original)
+        choice, = parse_record(record['text'], [])
+        restored = prepare_template(**choice['prepare_request'])
+        assert restored['layout_kind'] == original['layout_kind']
+        assert restored['connections'] == original['connections']
+        assert len(restored['instances']) == size

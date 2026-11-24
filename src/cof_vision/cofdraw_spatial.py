@@ -156,7 +156,11 @@ def net_preview(recipe):
     if rule['degrees'][0]!=rule['degrees'][1]:
         primary='A' if degree_a==rule['degrees'][0] else 'B'
     else:
-        shape=site_shapes(Chem.MolFromSmiles(first['monomer_smiles'])).get(first['role'])
+        if key=='pts_4_4' and recipe.get('layout_kind')=='net_patch':
+            from .cofdraw_chemistry import inspect_monomer
+            shape=inspect_monomer(first['monomer_smiles'])['attachment_directions'].get(first['role'])
+        else:
+            shape=site_shapes(Chem.MolFromSmiles(first['monomer_smiles'])).get(first['role'])
         primary='A' if shape==rule['shapes'][0] else 'B'
     secondary='B' if primary=='A' else 'A'
     code=rule['code']

@@ -168,3 +168,119 @@ def test_reviewed_tfb_tab_anchors_are_unchanged_by_automatic_layout_or_styles(tm
         assert np.array_equal(rendered['drawing_style']['layout']['atom_coordinates'], xy)
         signatures.append((folder/(recipe['recipe_id']+'.mol')).read_bytes())
     assert signatures[0] == signatures[1] == signatures[2]
+
+
+@pytest.mark.parametrize('spacer,steps,defined_azo', [('azoda', 2, 6), ('oda44', 4, 0)])
+def test_hcb_imines_follow_the_equivalent_linker_poses(spacer, steps, defined_azo):
+    rows = json.loads((ROOT / 'data/framework-drawing/catalog/current.json').read_bytes())['monomer_presets']
+    smiles = {row['id']: row['smiles'] for row in rows}
+    recipe = dict(schema_version=VERSION, recipe_id='hcb-spacer',
+                  **prepare_template(smiles['tfb'], smiles[spacer], 'imine', 'TFB', spacer, 12, 'hcb_3_2'))
+    # A recipe without the optional layout setting and the normal Studio
+    # request must produce the same usable molecular coordinates.
+    mol, audit = build_patch(recipe)
+    ui, _ = build_patch({**recipe, 'designed_variant': True, 'layout_refinement': 'bond_angle_pose_v2'})
+    raw, _ = build_patch({**recipe, 'layout_refinement': 'manual'})
+    assert _graph(mol) == _graph(raw)
+    assert np.allclose(ui.GetConformer().GetPositions(), mol.GetConformer().GetPositions())
+    assert sum(b.GetStereo() == Chem.BondStereo.STEREOE for b in mol.GetBonds()) == defined_azo
+    assert audit['defined_double_bond_geometry']['valid']
+    _, errors = _junction_geometry(mol, audit['atom_origin'])
+    assert len(errors) == 24 and max(errors) < 1
+
+    # Check corresponding atoms in every repeated species, including the
+    # outward arms. The azo spacer repeats each edge, the ether every other.
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    xy -= xy.mean(axis=0)
+    owner = np.array([r['instance'] for r in audit['atom_origin']])
+    blocks = [xy[owner == item['id']] for item in recipe['instances']]
+    angle = np.radians(30 * steps)
+    rotation = np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]])
+    for current, following in zip(blocks, blocks[steps:] + blocks[:steps]):
+        assert np.allclose(current @ rotation, following, atol=.01)
+
+
+@pytest.mark.parametrize('a,b,template,coordination', [
+    ('tfb','pa','hcb_3_2',3), ('ta','tapb','hcb_3_2',3),
+    ('tfb','tapb','hcb_3_3',3), ('tfb','oda44','hcb_3_2',3),
+    ('ta','pytta','sql_4_2',4), ('hexaformylbenzene','pa','hxl_6_2',6),
+])
+def test_all_imines_at_each_equivalent_node_turn_the_same_way(a, b, template, coordination):
+    rows = json.loads((ROOT/'data/framework-drawing/catalog/current.json').read_bytes())['monomer_presets']
+    smiles = {row['id']: row['smiles'] for row in rows}
+    smiles['hexaformylbenzene'] = 'O=Cc1c(C=O)c(C=O)c(C=O)c(C=O)c1C=O'
+    recipe = prepare_template(smiles[a], smiles[b], 'imine', a, b, 12, template)
+    mol, audit = build_patch(dict(schema_version=VERSION, recipe_id='node-turn', **recipe))
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    owners = [row['instance'] for row in audit['atom_origin']]
+    nodes = 0
+    for block in recipe['instances']:
+        if recipe['components'][block['component']]['connectivity'] != coordination:
+            continue
+        nodes += 1
+        arms = []
+        for atom in mol.GetAtoms():
+            i = atom.GetIdx()
+            if owners[i] != block['id'] or atom.GetDegree() != 2:
+                continue
+            outside = [n for n in atom.GetNeighbors() if n.GetAtomicNum()==0 or owners[n.GetIdx()]!=owners[i]]
+            if len(outside) != 1:
+                continue
+            j = outside[0].GetIdx()
+            assert mol.GetBondBetweenAtoms(i,j).GetBondType() == Chem.BondType.DOUBLE
+            k = next(n.GetIdx() for n in atom.GetNeighbors() if n.GetIdx()!=j)
+            radial, bend = xy[i]-xy[k], xy[j]-xy[i]
+            turn = np.degrees(np.arctan2(radial[0]*bend[1]-radial[1]*bend[0], radial@bend))
+            arms.append((turn, outside[0].GetAtomicNum()==0))
+        assert len(arms) == coordination
+        assert sum(is_stub for _,is_stub in arms) == coordination - 2
+        # A rectangular pyrene four-arm node can depart from the square angle.
+        tolerance = 1 if coordination == 3 else 10
+        assert all(abs(turn - 60) < tolerance for turn,_ in arms)
+    assert nodes == {3: 6, 4: 4, 6: 3}[coordination]
+
+
+@pytest.mark.parametrize('aldehyde,amine,net,blocks,rod_count', [
+    ('ta', 'pa_so3h', 'chain_2_2', 6, 6),
+    ('bpda_n3', 'pytta', 'sql_4_2', 8, 4),
+    ('phenyl-ta', 'tapb', 'hcb_3_2', 12, 6),
+    ('hexaaldehyde', 'cv_7dd0838a18ffc4a3', 'hxl_6_2', 6, 3),
+])
+def test_straight_imine_linker_ends_bend_to_opposite_sides(aldehyde, amine, net, blocks, rod_count):
+    presets = json.loads((ROOT / 'data/framework-drawing/catalog/current.json').read_bytes())['monomer_presets']
+    smiles = {row['id']: row['smiles'] for row in presets}
+    smiles['phenyl-ta'] = 'O=Cc1c(-c2ccccc2)cc(C=O)cc1'
+    smiles['hexaaldehyde'] = 'O=Cc1c(C=O)c(C=O)c(C=O)c(C=O)c1C=O'
+    recipe = prepare_template(smiles[aldehyde], smiles[amine], 'imine', aldehyde, amine, blocks, net)
+    mol, audit = build_patch(dict(schema_version=VERSION, recipe_id='straight-linker', **recipe))
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    owners = [row['instance'] for row in audit['atom_origin']]
+    rods = [row['id'] for row in recipe['instances'] if recipe['components'][row['component']]['connectivity'] == 2]
+    assert len(rods) == rod_count
+    for rod in rods:
+        ends = []
+        for atom in mol.GetAtoms():
+            site = atom.GetIdx()
+            if owners[site] != rod or atom.GetAtomicNum() == 0:
+                continue
+            for neighbor in atom.GetNeighbors():
+                tip = neighbor.GetIdx()
+                if owners[tip] != rod or neighbor.GetAtomicNum() == 0:
+                    assert mol.GetBondBetweenAtoms(site, tip).GetBondType() == Chem.BondType.DOUBLE
+                    ends.append((site, tip))
+        # Use the same directed chord for both physical sides, even when one
+        # terminal bond is an outward continuation at the end of an open chain.
+        assert len(ends) == 2
+        sites, tips = np.asarray(ends).T
+        chord = xy[sites[1]] - xy[sites[0]]
+        normal = np.array([-chord[1], chord[0]]) / np.linalg.norm(chord)
+        lateral = (xy[tips] - xy[sites]) @ normal
+        assert lateral.min() < -0.5 and lateral.max() > 0.5
+    if net == 'hxl_6_2':
+        # Bulky unreacted arms of these porphyrins cross in this 2D crop.
+        # The fit recovers the imine bends and eliminates overlapping atoms.
+        assert audit['layout_refinement']['quality'] == 'needs_review'
+        assert audit['layout_diagnostics']['nonbonded_overlap_pairs'] == []
+        assert len(audit['layout_diagnostics']['nonincident_bond_crossings']) == 12
+    else:
+        assert audit['layout_refinement']['quality'] == 'regular'

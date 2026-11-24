@@ -1,6 +1,7 @@
 """The 3D design route must derive each single-net crystal from both precursor graphs."""
-from collections import Counter
+from collections import Counter, defaultdict
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 from rdkit import Chem
@@ -13,6 +14,36 @@ from cof_vision.cofdraw_science import import_cif
 
 TAPM = "Nc1ccc(C(c2ccc(N)cc2)(c2ccc(N)cc2)c2ccc(N)cc2)cc1"
 TETRA_CHO = "O=Cc1ccc(C(c2ccc(C=O)cc2)(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1"
+
+
+def assert_opposed_terephthalaldehyde_ends(structure, bonds, expected_linkers):
+    """Measure every para-linker's two outgoing C=N vectors in its lattice images."""
+    atoms = structure['atoms']
+    linker = 'B' if structure['provenance']['node_index'] == 0 else 'A'
+    remaining = {i for i, atom in enumerate(atoms) if atom['component'] == linker}
+    neighbors, imines = defaultdict(set), {}
+    fractional = np.array([atom['fractional'] for atom in atoms])
+    for bond in bonds:
+        a, b = bond['a'], bond['b']
+        if a in remaining and b in remaining:
+            neighbors[a].add(b)
+            neighbors[b].add(a)
+        elif (a in remaining) != (b in remaining):
+            assert bond['order'] == 2
+            vector = (fractional[b] + bond['translation'] - fractional[a]) @ structure['cell']
+            imines[a if a in remaining else b] = vector if a in remaining else -vector
+    count = 0
+    while remaining:
+        component = {remaining.pop()}
+        front = component
+        while front:
+            front = {j for i in front for j in neighbors[i]} - component
+            component |= front
+        remaining -= component
+        left, right = [imines[i] for i in component if i in imines]
+        assert left @ right / (np.linalg.norm(left) * np.linalg.norm(right)) < -.98
+        count += 1
+    assert count == expected_linkers
 
 
 @pytest.mark.parametrize("net,reverse,cells", [("dia", False, 1), ("lon", True, 2)])
@@ -57,6 +88,8 @@ def test_draw_custom_periodic_product_without_template(tmp_path,a,b,linkage,coun
         keys=lambda edges:{edge_key(e["a"],e["b"],e["translation"]) for e in edges}
         assert keys(explicit)==keys(net["edges"])
         assert sum(e["order"]==2 for e in explicit) == (0 if linkage=="secondary_amine" else 16 if linkage=="acylhydrazone" else 8)
+        if linkage == 'imine':
+            assert_opposed_terephthalaldehyde_ends(m, explicit, 4)
         repeated = client.post(route+"/reports/"+data["report_id"]+"/view",json={"repeats":[2,1,1]})
         assert repeated.status_code==200 and len(repeated.json()["viewer"]["atoms"])==2*sum(counts.values())
 
@@ -82,6 +115,13 @@ def test_interwoven_networks_match_requested_count_and_have_no_crosslinks(tmp_pa
         assert inspect_periodic_network(import_cif(cif.text))["quotient_components_by_dimension"]=={"3":3}
 
 
+@pytest.mark.parametrize('topology,linkers', [('4h',16), ('6h',24)])
+def test_opposed_linkers_in_diamond_polytypes(topology, linkers):
+    from cof_vision.cofdraw_dia import build_dia
+    model, validation = build_dia(TAPM, 'O=Cc1ccc(C=O)cc1', topology=topology)
+    assert_opposed_terephthalaldehyde_ends(model, validation['periodic_bonds'], linkers)
+
+
 def test_dia_and_lon_have_distinct_periodic_junction_graphs_for_same_custom_linker(tmp_path):
     from cof_vision.cofdraw_dia import _junction_sequence
     with TestClient(create_desktop_app(tmp_path)) as client:
@@ -93,6 +133,8 @@ def test_dia_and_lon_have_distinct_periodic_junction_graphs_for_same_custom_link
             data=resp.json()
             structures[net]=data["structure"]
             assert len(data["structure"]["atoms"])==sites
+            assert_opposed_terephthalaldehyde_ends(data["structure"], data["cell_validation"]["periodic_bonds"],
+                                               4 if net == "dia" else 8)
             assert data["cell_validation"]["junction_coordination_sequence"]==expected
             imported=inspect_periodic_network(import_cif(client.get(data["downloads"]["cif"]).text))
             assert imported["short_contact_count"]==0 and imported["dimensions"]==[3]

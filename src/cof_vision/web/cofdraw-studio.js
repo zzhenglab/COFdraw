@@ -28,13 +28,16 @@
   function signature(){return JSON.stringify([S.state.sourceId,S.state.recipe,S.state.inputsDirty,S.state.jsonPending,$('smiles-a').value,$('smiles-b').value]);}
   function drawingName(){if(S.state.recipe?.assembly)return "Current design · "+Object.values(S.state.recipe.components).map(c=>c.label).join(" + ");return S.state.sourceId?`Source drawing · ${S.state.sourceMetadata?.label||S.state.recipe?.label||S.state.sourceId}`:`Current design · ${$('label-a').value||'A'} + ${$('label-b').value||'B'}`;}
   function drawingReady(){return Boolean(S.state.recipe&&!S.state.inputsDirty&&!S.state.jsonPending);}
+  function spatialNet(){return drawingReady() && S.state.recipe.layout_kind === "net_patch" && ({dia_4_2:'dia', pts_4_4:'pts'})[S.state.recipe.selected_template?.id];}
   function spatialDesign(){const t=S.state.recipe?.selected_template;return drawingReady()&&(t?.dimension===3||t?.id==='branched_4_3');}
   function syncSource(){
     const valid=drawingReady();
-    const spatial=spatialDesign(),graph=origin==='spatial-net';
+    const net=spatialNet(), spatial=Boolean(net)||spatialDesign(), graph=origin==='spatial-net';
+    $('show-spatial-net').hidden=!net;
+    if(net)$('show-spatial-net').textContent='Show '+net+' molecular structure';
     $('current-cell-spacing').closest('label').hidden=spatial;
     $('finite-view-options').hidden=spatial;
-    $('build-current-cell').textContent=spatial?'Show 3D topology':'Build periodic CIF';
+    $('build-current-cell').textContent=spatial?'Show building-block topology':'Build periodic CIF';
     $('viewer-measure').disabled=graph;$('viewer-color').disabled=graph;
     $('show-atom-table').textContent=graph?'Building-block coordinates':'Atom coordinates';
     if(graph)$('viewer-measure').checked=false;
@@ -81,7 +84,8 @@
       }
       $('structure-source').value='drawing';
       sourceMode();
-      generateCurrentCell(true);
+      if(spatialNet()) generatePatch();
+      else if(drawingReady()) generateCurrentCell(true);
     }
     requestAnimationFrame(()=>viewer.draw());
   });
@@ -107,7 +111,7 @@
     syncDisplayCells(result);
     currentStructure=result.structure||null;origin=kind;viewer.set(result.viewer||{atoms:[],bonds:[]});$('viewer-title').textContent=title;
     const provenance = currentStructure?.provenance;
-    $('viewer-provenance').textContent=kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='current-periodic'?`${drawingName()} · unrelaxed periodic cell`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration hypothesis':'Independent periodic model / imported CIF';
+    $('viewer-provenance').textContent=kind==='pts'?`${drawingName()} · one PtS net fragment`:kind==='dia'?`${drawingName()} · one diamond-net cage`:kind==='drawing'?`${drawingName()} · finite layers from the active recipe`:kind==='current-periodic'?`${drawingName()} · unrelaxed periodic cell`:kind==='monomer'?'Selected monomer · force-field conformer':kind==='networks'?'User-defined translated copies · interpenetration hypothesis':'Independent periodic model / imported CIF';
     $('structure-scope').textContent=result.scope||result.qualification||result.viewer?.scope||(kind==='drawing'?'Finite layers scaled from the 2D drawing; no periodic crystal or optimized stacking is inferred.':'Model coordinates in Å; inspect geometry and provenance before simulation.');
     if(kind==='spatial-net')$('viewer-provenance').textContent=drawingName()+' · proposed '+result.net+' net';
     syncSource();
@@ -154,8 +158,17 @@
   function drawingRequest(){if(!S.state.recipe)throw new Error('Create or open a drawing first.');if(S.state.inputsDirty||S.state.jsonPending)throw new Error('Apply your input changes first.');return S.state.sourceId?{source_recipe_id:S.state.sourceId}:{recipe:copy(S.state.recipe)};}
   const repeats=()=>['a','b','c'].map(x=>Number($(`repeat-${x}`).value));
   function patchRequest(stacking=$('patch-stacking').value){return {...drawingRequest(),layers:Number($('patch-layers').value),layer_spacing:Number($('patch-spacing').value),stacking,slip:[Number($('patch-slip-x').value),Number($('patch-slip-y').value)],twist_degrees:Number($('patch-twist').value)};}
-  async function showFinite(api){
-    const request=patchRequest(), result=await api('science/patch',request);
+  async function showFinite(api,topologyOnly=false){
+    const request=patchRequest();
+    if(topologyOnly)request.topology_only=true;
+    const result=await api('science/patch',request);
+    if(result.kind === 'finite_dia_cage' || result.kind === 'finite_pts_patch'){
+      const net = result.kind === 'finite_dia_cage' ? 'dia' : 'pts';
+      $('viewer-mode').value='wireframe';
+      display(result,'Current drawing · ' + (net === 'dia' ? 'dia cage' : 'pts net'),net);
+      cellNote('');
+      return;
+    }
     if(result.kind==='spatial_building_block_net'){
       display(result,result.net+' · building-block topology','spatial-net');
       cellNote('Atomic coordinates and an experimental or optimized unit cell are required for physical properties.');
@@ -163,13 +176,14 @@
     }
     display(result,`Current drawing · ${stackLabels[request.stacking]}`,'drawing');
   }
-  function generatePatch(){return work(async api=>{await showFinite(api);status('Finite layers ready.');});}
+  function generatePatch(){return work(async api=>{await showFinite(api);status(spatialNet()?'Drag the structure to rotate.':'Finite layers ready.');});}
   function cellNote(message){
     $('current-cell-result').textContent=message;
     $('current-cell-result').hidden=!message;
   }
   function generateCurrentCell(useFiniteFallback=true){
     return work(async api=>{
+      if(spatialNet()){await showFinite(api);status('Drag the structure to rotate.');return;}
       if(spatialDesign()){await showFinite(api);status('Drag to rotate the proposed topology. Colors identify the selected building blocks.');return;}
       const value=$('current-cell-spacing').value;
       const result=await api('science/build-periodic',{
@@ -216,12 +230,19 @@
     return generateCurrentCell();
   }
   $('structure-source').addEventListener('change',sourceMode);
-  $('build-current-cell').addEventListener('click',()=>generateCurrentCell());
+  $('build-current-cell').addEventListener('click',()=>{
+    if(spatialNet())return work(async api=>{
+      await showFinite(api,true);
+      status('Drag to rotate. Each vertex represents one building block.');
+    });
+    return generateCurrentCell();
+  });
   $('current-cell-spacing').addEventListener('input',()=>{
     currentLayer=null;
     invalidate('Layer spacing changed. Build the CIF again.',origin==='current-periodic');
     cellNote('');
   });
+  $('show-spatial-net').addEventListener('click',generatePatch);
   $('build-patch-3d').addEventListener('click',generatePatch);
   for(const id of ['patch-layers','patch-spacing','patch-stacking','patch-slip-x','patch-slip-y','patch-twist'])$(id).addEventListener('input',()=>{
     invalidate('Layer settings changed. Generate a preview or compare stackings.',origin==='drawing');

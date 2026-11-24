@@ -28,7 +28,7 @@ Draw covalent organic frameworks from their building blocks, explore periodic cr
 
 ### Color and drawing extent
 
-Four **Rendering** presets on the same TFB–TAPB graph show how color and depth change the figure. The layer and sphere effects are illustrations.
+The **Rendering** controls sit below the drawing. Four presets on the same TFB–TAPB graph show how color and depth change the figure. The layer and sphere effects are illustrations.
 
 ![The same imine pore in four compact panels with pastel ring fills, teal gradient layers, purple spheres and bonds, and half-space-filling layers](docs/assets/gallery-style-strip.png)
 
@@ -38,13 +38,15 @@ Full-size views · [Ring fills](docs/assets/gallery-aromatic-ring-fills.png) · 
 
 ![TFB–TAPB ring fills in lavender mint, ocean coral, purple gold, and forest berry palettes](docs/assets/gallery-ring-palettes.png)
 
+Imine drawings use bent C=N junctions. For equivalent node arms and straight linkers, the layout seeks consistent turns around the node and opposite-sided bends across the linker. Crowded projections still need visual review.
+
 **Drawing extent** expands a single motif into its connected neighborhood. The SIOC-COF example opens up both triangular and hexagonal pores in the same 2D patch.
 
 ![SIOC-COF drawn as a short triangular pore and then as an expanded neighborhood with multiple pore shapes](docs/assets/feature-pore-expansion.png)
 
 ## Monomers and topology
 
-Use **Draw / edit** to build a monomer with atoms, bonds, and templates. The **Monomer library** offers searchable structure cards, aliases, provenance, and compatible partner selection.
+Use **Draw / edit** to build a monomer with atoms, bonds, and templates. In the **Monomer library**, filter by **Connectivity** and **Functional group** independently or together. For example, choose **3-connected** and **Aldehyde** to find TFB. When choosing a compatible partner, the functional group filter follows the role each candidate can play in the selected linkage. Each card includes the monomer’s aliases and source records.
 
 [![COFdraw monomer editor showing TAPB and the atom and bond tools](docs/assets/feature-monomer-editor.png)](docs/assets/feature-monomer-editor.png)
 
@@ -63,9 +65,9 @@ Use **Draw / edit** to build a monomer with atoms, bonds, and templates. The **M
 | Aromatic carboxylic acids | 10 |
 | Primary aliphatic amines | 5 |
 
-Counts use distinct canonical structures in the shipped library. Reactive classes overlap. A compatible role checks functional groups. Automatic matching also considers the selected linkage, attachment-site count, and geometry before proposing a supported drawing template.
+The table counts structural motifs in distinct monomers. Classes overlap. The **Functional group** filter uses framework-forming roles, so its counts can differ from the table. A compatible role checks functional groups. Automatic matching also considers the selected linkage, attachment-site count, and geometry before proposing a supported drawing template.
 
-**Browse topology references** to compare node geometry and net diagrams. The library API exposes **38 topology entries** and **26 drawing templates**. The browser marks reference entries and supports design choices such as honeycomb, square, and kagome layouts. Assigning an experimental topology requires structural evidence.
+**Browse topology references** to compare node geometry and net diagrams. The library API exposes **38 topology entries** and **26 drawing templates**. The browser marks reference entries and supports design choices such as honeycomb, square, and kagome layouts. For compatible monomers, the picker offers geometries such as dia for a tetrahedral node and a linear spacer, pts for tetrahedral and square-planar nodes, and sql or kgm for eligible planar four-connected nodes with linear spacers. The canvas shows molecular projections of dia and pts. Open **3D & properties** to rotate those fragments. Assigning an experimental topology requires structural evidence. [Net geometries and supporting literature](docs/topology-priorities.md)
 
 [![Topology browser with honeycomb, square, and triangular net diagrams and guidance on geometry](docs/assets/feature-topology-browser.png)](docs/assets/feature-topology-browser.png)
 
@@ -106,7 +108,7 @@ The linkage gallery draws on the classification and reaction schemes discussed b
 | Platform | First launch |
 | --- | --- |
 | Windows x64 | Extract the **entire ZIP** to a writable folder and open `COFdraw.exe`. Keep `COFdraw.exe.config`, `_internal`, and `data` beside it. The package includes Python. [Windows startup help](docs/windows-startup.md) |
-| macOS beta | Choose **arm64** for Apple silicon or **x86_64** for Intel. Extract the ZIP, move **COFdraw.app** to Applications, and follow the first-open instructions for your build. [Mac beta downloads and tested macOS versions](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21) |
+| macOS beta | Choose the [Apple silicon (arm64) ZIP](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7-mac-beta.21/COFdraw-macOS-arm64.zip) or the [Intel (x86_64) ZIP](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7-mac-beta.21/COFdraw-macOS-x86_64.zip). Extract the ZIP, move **COFdraw.app** to Applications, and follow the first-open instructions for your build. [Mac beta downloads and tested macOS versions](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21) |
 
 ## From building blocks to a figure
 

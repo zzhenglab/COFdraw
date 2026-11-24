@@ -138,7 +138,7 @@ def test_duplicate_bd_abbreviation_stays_ambiguous_until_selected(library):
         assert confirmed["status"] == "ready"
         assert {confirmed["selection"][key] for key in ("monomer_a_id", "monomer_b_id")} == {choice["id"], "tfppy_13c"}
         assert confirmed["prepare_request"]["template_id"] == "sql_4_2"
-        assert [row["id"] for row in confirmed["alternatives"]] == ["nbo_4_2"]
+        assert {row["id"] for row in confirmed["alternatives"]} == {"kgm_4_2", "nbo_4_2"}
         spatial = describe_cof("BD + 13C-Tfppy", library, {**selected_bd, "template_id": "nbo_4_2"})
         assert spatial["status"] == "ready"
         assert spatial["prepare_request"]["template_id"] == "nbo_4_2"
@@ -304,3 +304,223 @@ def test_explicit_colored_bonds_are_kept_with_pastel_palette(library):
     assert result["status"] == "ready"
     assert result["style_id"] == "red_blue"
     assert result["style_options"]["palette"] == "pastel"
+
+
+@pytest.mark.parametrize("pair", [("tapm", "ta"), ("ta", "tapm")])
+def test_diamond_pair_selects_spatial_cage_and_keeps_canvas_projection(library, pair):
+    import numpy as np
+    from cof_vision.cofdraw_science import patch_3d
+
+    plan = describe_cof("Draw an imine COF", library, {"monomer_a_id": pair[0], "monomer_b_id": pair[1]})
+    assert plan["status"] == "ready", plan["unresolved"]
+    assert plan["selection"]["template_id"] == "dia_4_2"
+    recipe = dict(schema_version=VERSION, recipe_id="dia-test", **prepare_template(**plan["prepare_request"]))
+    validate_recipe(recipe)
+    mol, audit = build_patch(recipe)
+    canvas = mol.GetConformer().GetPositions()
+    assert np.all(canvas[:, 2] == 0)
+    centers = {item["id"]: np.array(item["layout_position"]) for item in recipe["instances"]}
+    link_ends = {}
+    for edge in recipe["connections"]:
+        link_ends.setdefault(edge["b"]["instance"], []).append(edge["a"]["instance"])
+    sides = [centers[a] - centers[b] for a, b in link_ends.values()]
+    assert sum(abs(dx) < .01 * abs(dy) for dx, dy in sides) == 3
+    model = patch_3d(recipe)
+    assert model["kind"] == "finite_dia_cage"
+    graph = patch_3d(recipe, topology_only=True)
+    assert graph["kind"] == "spatial_building_block_net" and graph["net"] == "dia"
+    assert graph["viewer"]["units"] == "graph units"
+    atoms = model["viewer"]["atoms"]
+    assert len(atoms) == mol.GetNumAtoms() == 402
+    points = np.array([[atom[k] for k in ("x", "y", "z")] for atom in atoms])
+    assert np.linalg.matrix_rank(points - points.mean(axis=0)) == 3
+    saved = {(r["instance"], r["fragment_atom_index"]): r["xyz"] for r in recipe["atom_coordinates"]}
+    assert np.allclose(points, [saved[o["instance"], o["fragment_atom_index"]] for o in audit["atom_origin"]])
+    assert model["viewer"]["bonds"] == [
+        dict(a=b.GetBeginAtomIdx(), b=b.GetEndAtomIdx(), order=b.GetBondTypeAsDouble()) for b in mol.GetBonds()
+    ]
+
+
+@pytest.mark.parametrize("pair", [("tapm", "tfppy"), ("tfppy", "tapm"), ("por_cho", "tapm"), ("tfs_cho4", "tapp")])
+def test_pts_from_selected_monomers(library, pair):
+    from collections import Counter
+    import numpy as np
+    from cof_vision.cofdraw_science import patch_3d
+
+    plan = describe_cof("Draw an imine COF", library, {"monomer_a_id": pair[0], "monomer_b_id": pair[1]})
+    assert plan["status"] == "ready", plan["unresolved"]
+    assert plan["selection"]["template_id"] == "pts_4_4"
+    recipe = dict(schema_version=VERSION, recipe_id="pts-test", **prepare_template(**plan["prepare_request"]))
+    validate_recipe(recipe)
+    assert recipe["design_topology"] == "pts"
+    used = [(edge[side]["instance"], edge[side]["port"]) for edge in recipe["connections"] for side in ("a", "b")]
+    assert len(used) == len(set(used)) == 48
+    degrees = Counter(instance for instance, port in used)
+    assert len(degrees) == 22 and max(degrees.values()) == 4
+    model = patch_3d(recipe)
+    assert model["kind"] == "finite_pts_patch" and not model["periodic"]
+    graph = patch_3d(recipe, topology_only=True)
+    assert graph["kind"] == "spatial_building_block_net" and graph["net"] == "pts"
+    assert graph["viewer"]["units"] == "graph units"
+    atoms, bonds = model["viewer"]["atoms"], model["viewer"]["bonds"]
+    mol, audit = build_patch(recipe)
+    assert len(atoms) == mol.GetNumAtoms()
+    assert sum(a["continuation_site"] for a in atoms) == 40
+    assert np.all(mol.GetConformer().GetPositions()[:, 2] == 0)
+    assert bonds == [dict(a=b.GetBeginAtomIdx(), b=b.GetEndAtomIdx(), order=b.GetBondTypeAsDouble())
+                     for b in mol.GetBonds()]
+    coords = np.array([[a[k] for k in ("x", "y", "z")] for a in atoms])
+    assert np.linalg.matrix_rank(coords - coords.mean(axis=0)) == 3
+    for b in bonds:
+        a, c = b["a"], b["b"]
+        if atoms[a]["instance"] != atoms[c]["instance"]:
+            assert atoms[a]["component"] != atoms[c]["component"]
+            assert b["order"] == 2
+            assert 1.1 < np.linalg.norm(coords[a] - coords[c]) < 1.8
+
+
+@pytest.mark.parametrize("a,b", [("tfppy", "pytta"), ("tfs_cho4", "tapm"), ("ta", "tapm")])
+def test_pts_requires_both_geometries_and_four_sites(library, a, b):
+    monomers = {r["id"]: r["smiles"] for r in library["monomer_presets"]}
+    with pytest.raises(ValueError, match="requires|needs"):
+        prepare_template(monomers[a], monomers[b], "imine", a, b, 22, "pts_4_4")
+    if a == "tfppy":
+        assert prepare_template(monomers[a], monomers[b], "imine", a, b, 4, "sql_4_4")["design_topology"] == "sql"
+
+
+def test_pts_periodic_neighbor_geometry():
+    import numpy as np
+    from cof_vision.cofdraw_net_patch import _pts_neighbors
+
+    metric = np.array([1., 1., 1 / np.sqrt(2)])
+    for site in [(0, 0, 1), (0, 1, 0), (0, 0, 3), (1, 0, 2)]:
+        neighbors = _pts_neighbors(site)
+        assert len(set(neighbors)) == 4
+        assert all(site in _pts_neighbors(n) for n in neighbors)
+        arms = (np.array(neighbors) - site) * metric
+        if site[2] % 2:
+            arms /= np.linalg.norm(arms, axis=1)[:, None]
+            assert np.allclose((arms @ arms.T)[np.triu_indices(4, 1)], -1 / 3)
+        else:
+            assert np.linalg.matrix_rank(arms) == 2
+            assert np.allclose(arms[0], -arms[3])
+
+@pytest.mark.parametrize("a,b", [("ta", "pytta"), ("tfppy", "pa"), ("bfbapy", "pytta")])
+def test_kagome_has_six_triangles_around_a_hexagon(library, a, b):
+    from collections import defaultdict
+
+    monomers = {r["id"]: r["smiles"] for r in library["monomer_presets"]}
+    template = next(t for t in library["templates"] if t["id"] == "kgm_4_2")
+    request = PrepareDrawing(monomer_a=monomers[a], monomer_b=monomers[b], template_id=template["id"],
+                             instances=template["instances"])
+    recipe = dict(schema_version=VERSION, recipe_id="kgm-star", **prepare_template(**request.model_dump()))
+    validate_recipe(recipe)
+    assert len(recipe["instances"]) == template["instances"] == 30
+    mol, _ = build_patch(recipe)
+    assert sum(atom.GetAtomicNum() == 0 for atom in mol.GetAtoms()) == 12
+    linker_ends = defaultdict(list)
+    for edge in recipe["connections"]:
+        linker_ends[edge["b"]["instance"]].append(edge["a"]["instance"])
+    assert len(linker_ends) == 18
+    neighbors = defaultdict(set)
+    for left, right in linker_ends.values():
+        neighbors[left].add(right)
+        neighbors[right].add(left)
+    ring = {n for n, adjacent in neighbors.items() if len(adjacent) == 4}
+    tips = set(neighbors) - ring
+    assert len(tips) == len(ring) == 6
+    assert all(len(neighbors[n] & ring) == 2 for n in ring)
+    ring_edges = {frozenset((n, m)) for n in ring for m in neighbors[n] & ring}
+    assert {frozenset(neighbors[tip]) for tip in tips} == ring_edges
+
+
+def test_dia_view_matches_cof300_cage_projection(library):
+    import numpy as np
+
+    monomers = {r["id"]: r["smiles"] for r in library["monomer_presets"]}
+    recipe = prepare_template(monomers["ta"], monomers["tapm"], "imine", "TA", "TAPM", 22, "dia_4_2")
+    centers = np.array([i["layout_position"] for i in recipe["instances"] if i["component"] == "B"])
+    # Approximate junction positions read from Fig. 2A. Compare shape in the
+    # displayed orientation, allowing translation and one overall scale factor.
+    reference = np.array([(432,87), (166,425), (285,488), (613,394), (225,159),
+                          (345,226), (675,126), (80,560), (406,466), (524,536)], dtype=float)
+    reference[:, 1] *= -1
+    for points in (centers, reference):
+        points -= points.mean(axis=0)
+        points /= np.linalg.norm(points)
+    assert np.linalg.norm(centers - reference) < .24
+
+
+@pytest.mark.parametrize("alias,node,spacer,extent", [
+    ("dia", "tapm", "ta", "circuit"), ("pts", "tapm", "tfppy", "circuit"),
+    ("kagome", "pytta", "ta", "hexagon"),
+])
+def test_request_one_face_of_full_molecular_drawing(library, alias, node, spacer, extent):
+    from cof_vision.cofdraw_chemistry import design_signature
+    from cof_vision.cofdraw_repeat import repeat_patch
+
+    selections = {"monomer_a_id": node, "monomer_b_id": spacer}
+    plan = describe_cof(f"Draw one pore with {alias} topology and imine linkage", library, selections)
+    assert plan['status'] == 'ready', plan['unresolved']
+    choice = plan['drawing_extent']
+    assert choice['extent_mode'] == extent and choice['pores'] == 1
+    recipe = prepare_template(**plan['prepare_request'])
+    recipe['design_template_signature'] = design_signature(recipe)
+    _, _, _, summary, _ = repeat_patch(recipe, choice['repeats'], extent_mode=extent)
+    assert summary['pore_count'] == 1
+
+
+@pytest.mark.parametrize("a,b,key,n,joins", [
+    ("ta", "tapm", "dia_4_2", 22, 24),
+    ("tfppy", "tapm", "pts_4_4", 22, 24),
+    ("ta", "pytta", "kgm_4_2", 30, 36),
+])
+def test_molecular_net_imines_have_two_trigonal_centers(library, a, b, key, n, joins):
+    import numpy as np
+    from rdkit import Chem
+
+    monomers = {r["id"]: r["smiles"] for r in library["monomer_presets"]}
+    recipe = prepare_template(monomers[a], monomers[b], "imine", a, b, n, key)
+    mol, audit = build_patch(dict(schema_version=VERSION, recipe_id=key, **recipe))
+    positions = {(row["instance"], row["fragment_atom_index"]): row.get("xyz", row["xy"])
+                 for row in recipe["atom_coordinates"]}
+    xyz = np.array([positions[o["instance"], o["fragment_atom_index"]] for o in audit["atom_origin"]])
+    imines = mol.GetSubstructMatches(Chem.MolFromSmarts("c-[CH]=N-c"))
+    assert len(imines) == joins
+    for match in imines:
+        vectors = np.diff(xyz[list(match)], axis=0)
+        lengths = np.linalg.norm(vectors, axis=1)
+        assert lengths[1] < min(lengths[0], lengths[2])
+        directions = vectors / lengths[:, None]
+        cosines = -np.sum(directions[:-1] * directions[1:], axis=1)
+        assert cosines == pytest.approx([-.5, -.5], abs=1e-4)
+
+
+@pytest.mark.parametrize("node", ["tape", "pytta"])
+def test_kagome_boundary_arms_continue_opposite_imines(library, node):
+    import numpy as np
+    from rdkit import Chem
+    from cof_vision.framework_drawing import _ports
+
+    smiles = {r["id"]: r["smiles"] for r in library["monomer_presets"]}
+    recipe = prepare_template(smiles["ta"], smiles[node], "imine", "TA", node, 30, "kgm_4_2")
+    mol, audit = build_patch(dict(schema_version=VERSION, recipe_id="kgm-boundary", **recipe))
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    fragment = Chem.MolFromSmiles(recipe["components"]["B"]["fragment_smiles"])
+    ports = _ports(fragment)
+    checked = 0
+    for block in recipe["instances"]:
+        if block["component"] != "B":
+            continue
+        atoms = {o["fragment_atom_index"]: i for i, o in enumerate(audit["atom_origin"])
+                 if o["instance"] == block["id"]}
+        arms = []
+        for dummy, terminal in ports.values():
+            anchor = next(a.GetIdx() for a in fragment.GetAtomWithIdx(terminal).GetNeighbors() if a.GetIdx() != dummy)
+            tip = next(a.GetIdx() for a in mol.GetAtomWithIdx(atoms[terminal]).GetNeighbors() if a.GetIdx() != atoms[anchor])
+            arms.append(xy[[atoms[anchor], atoms[terminal], tip]])
+            checked += dummy in atoms
+        center = np.mean([arm[0] for arm in arms], axis=0)
+        for arm in arms:
+            assert any(np.allclose(2 * center - arm, opposite, atol=1e-4) for opposite in arms)
+    assert checked == 12
