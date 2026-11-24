@@ -4,7 +4,7 @@
 
 Draw covalent organic frameworks from their building blocks, explore periodic crystal models, and compare simulated properties. The desktop app opens in a 2D chemical drawing workspace. You can start with monomers, a COF name, a COFex record, or a description. The drawing engine and catalog run locally.
 
-**[Download for Windows](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7/COFdraw-Windows.zip)** · **[Download for Mac (beta)](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21)** · **[Download the screening dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-24)**
+**[Download for Windows](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7/COFdraw-Windows.zip)** · **[Download for Mac (beta)](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21)** · **[Download the screening dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-24-paused)**
 
 **405 monomers · 38 topology entries · 21,429 hypothetical periodic CIFs.** For an agent, paste this repository URL and ask it to read [SKILL.md](SKILL.md). For a paper, pin the software version and dataset snapshot under [Citing COFdraw](#citing-cofdraw).
 
@@ -129,7 +129,7 @@ The linkage gallery draws on the classification and reaction schemes discussed b
 
 ## Explore the screening dataset
 
-The **November 24, 2026** release records **39,096 design outcomes**. It includes **21,429 unique periodic CIFs** for generated, unrelaxed AA-stacked sheets. **19,090** have a first-pass gas screen. Each coordinate file is linked to its precursor SMILES and proposed net through the CSV index. The index also records rejected builds and held calculations. Empty property fields mean the result is unavailable. [Coverage, methods, and validation](benchmarks/screening-2026-11-24.md)
+The **November 24, 2026 paused checkpoint** records **39,096 design outcomes**. It includes **21,429 unique periodic CIFs** for generated, unrelaxed AA-stacked sheets. **19,090** have a first-pass gas screen. Each coordinate file is linked to its precursor SMILES and proposed net through the CSV index. The index also records rejected builds and held calculations. Empty property fields mean the result is unavailable. [Coverage, methods, and pause status](benchmarks/screening-2026-11-24-paused.md)
 
 | Hypothetical design family | Recorded outcomes | Periodic CIFs |
 | --- | ---: | ---: |
@@ -145,8 +145,8 @@ This snapshot covers **39,096 of 45,439 eligible construction attempts**. The 1,
 
 | Download | How to use it |
 | --- | --- |
-| [CIFs and property index (ZIP)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-24/COFdraw-screening-CIFs.zip) | Open `results.csv` and use the `cif` column to find a model. The `cif_sha256` column identifies its exact coordinates. |
-| [COFdraw results file (JSON.GZ)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-24/research-screen.json.gz) | In **Explore COF chemical space → Simulation results → Open results file**, select the compressed file directly. |
+| [CIFs and property index (ZIP)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-24-paused/COFdraw-screening-CIFs.zip) | Open `results.csv` and use the `cif` column to find a model. The `cif_sha256` column identifies its exact coordinates. |
+| [COFdraw results file (JSON.GZ)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-24-paused/research-screen.json.gz) | In **Explore COF chemical space → Simulation results → Open results file**, select the compressed file directly. |
 
 ![Methane simulations for the 1,133-model subset. A scatter plot relates crystal density to volumetric delivery. A second panel shows median uptake and the 10th to 90th percentile at seven pressures.](docs/assets/methane-screen-2026-11-24.png)
 
@@ -180,7 +180,7 @@ On Windows the helper also accepts `--exe` with the path to the extracted deskto
 ## Citing COFdraw
 
 - **Software.** zzhenglab (2026). *COFdraw*, version 0.10.7. Cite the release you ran. [Release](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7) · [Machine-readable citation](CITATION.cff)
-- **Dataset.** zzhenglab (2026). *COFdraw hypothetical COF screening dataset*, snapshot `screening-2026-11-24`. For individual structures, report the record ID and CIF SHA‑256. [Versioned dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-24)
+- **Dataset.** zzhenglab (2026). *COFdraw hypothetical COF screening dataset*, snapshot `screening-2026-11-24-paused`. For individual structures, report the record ID and CIF SHA‑256. [Versioned dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-24-paused)
 - **Linkage chemistry.** Tan, K. T. et al. (2023). *Covalent organic frameworks*. Nature Reviews Methods Primers **3**, 1. [DOI](https://doi.org/10.1038/s43586-022-00181-z)
 
 ## Run from source
