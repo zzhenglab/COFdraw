@@ -5,8 +5,7 @@ import numpy as np
 from rdkit import Chem
 
 from .cofdraw_chemistry import best_port_pair
-from .cofdraw_depiction import compute_2d_coords
-from .framework_drawing import _ports, linkage_fragment
+from .framework_drawing import linkage_fragment
 
 ALDEHYDE, AMINE = 'aryl_aldehyde', 'primary_arylamine'
 
@@ -40,33 +39,6 @@ def _fragment(row, role):
         component['activation'] = row['self_activation']
     component['label'] = (row.get('abbreviation') or row['label'])[:100]
     return component
-
-
-def _port_span(component, angle):
-    incoming, outgoing, _ = best_port_pair(component, angle)
-    mol = Chem.MolFromSmiles(component['fragment_smiles'])
-    compute_2d_coords(mol)
-    xy = mol.GetConformer().GetPositions()
-    ports = _ports(mol)
-    return float(np.linalg.norm(xy[ports[incoming][0]] - xy[ports[outgoing][0]]))
-
-
-def _polygon(lengths):
-    # A cyclic polygon gives different chord lengths a common radius and closes exactly.
-    low = max(lengths)/2
-    def angles(radius):
-        return [2*math.asin(min(1, length/(2*radius))) for length in lengths]
-    if sum(angles(low)) < math.tau:
-        raise ValueError('These linker spans do not fit a convex pore in this layout.')
-    high = sum(lengths)
-    for _ in range(48):
-        mid = (low+high)/2
-        if sum(angles(mid)) > math.tau:
-            low = mid
-        else:
-            high = mid
-    turns = np.r_[0., np.cumsum(angles(high)[:-1])] + math.pi/2
-    return high*np.column_stack([np.cos(turns), np.sin(turns)])
 
 
 def assemble(rows, pattern, pore_view=None, pore_layout=None):
@@ -136,25 +108,17 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
                 raise ValueError('Choose two linear ditopic spacers with outward-facing reactive groups.')
             if pattern not in ('BBB','CCC','BCBCBC','CBCBCB'):
                 raise ValueError('Choose the B triangle, C triangle, or alternating hexagon.')
-            corners=len(pattern)
         elif len(pattern) != corners or set(pattern) != {'B','C'}:
             raise ValueError(f'Enter {corners} linker positions using both B and C.')
-        interior = 180-360/corners
-        # Two node radii along each edge, plus the actual linker attachment span.
-        node_span = _port_span(components['A'],interior)/math.sin(math.radians(interior/2))
-        spans = {k:node_span+_port_span(components[k],180) for k in 'BC'}
-        vertices = _polygon([spans[k] for k in pattern])
-        # Span ratios determine the polygon's shape. Its absolute scale must
-        # remain free for build_patch to fit the actual imine junctions.
-        vertices /= min(spans[k] for k in pattern)
-        for i,k in enumerate(pattern):
-            p,q = vertices[i],vertices[(i+1)%corners]
-            u,v = vertices[i-1]-p,q-p
-            angle = math.degrees(math.acos(np.clip(u@v/(np.linalg.norm(u)*np.linalg.norm(v)),-1,1)))
-            ordered.extend([('A',p,angle),(k,(p+q)/2,180)])
         scope = (f'Kagome design · {pattern}. B and C form distinct triangular faces around an alternating hexagon.'
                  if pore_layout=='kgm' else f'Local imine pore · {pattern}. The ordered neighborhood is one B/C placement hypothesis.')
-        layout = 'closed_pore'
+        from .cofdraw_mixed import pore_face_geometry
+        return dict(components=components, linkage='imine', layout_kind='closed_pore',
+                    assembly=dict(kind='mixed_imine', monomer_ids=[r['id'] for r in rows],
+                                  linker_sequence=pattern, scope=scope,
+                                  **({'pore_layout':pore_layout} if pore_layout else {})),
+                    selected_template=None, design_topology=None,
+                    **pore_face_geometry(components, pattern, pore_layout))
     else:
         raise ValueError('Choose one self-condensing precursor or one node and two linkers.')
     instances = []
@@ -168,12 +132,6 @@ def assemble(rows, pattern, pore_view=None, pore_layout=None):
         left,right=instances[i],instances[(i+1)%len(instances)]
         edges.append({'a':{'instance':left['id'],'port':left['outgoing_port']},
                       'b':{'instance':right['id'],'port':right['incoming_port']},'bond_order':2})
-    geometry={}
-    if pore_layout=='kgm':
-        from .cofdraw_mixed import kagome_face_geometry
-        geometry=kagome_face_geometry(components,pattern)
     return dict(components=components,instances=instances,connections=edges,linkage='imine',layout_kind=layout,
-                assembly={'monomer_ids':[r['id'] for r in rows], 'linker_sequence':pattern if len(rows)==3 else '',
-                          'scope':scope, **({'kind':'self_imine','precursors':[feed_metadata(rows[0])]} if len(rows)==1 else
-                             {'kind':'mixed_imine', **({'pore_layout':pore_layout} if pore_layout else {})})},
-                selected_template=None,design_topology=None) | geometry
+                assembly=dict(monomer_ids=[row['id']], linker_sequence='', scope=scope, kind='self_imine',
+                              precursors=[feed_metadata(row)]), selected_template=None,design_topology=None)

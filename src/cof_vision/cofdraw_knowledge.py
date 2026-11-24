@@ -171,9 +171,8 @@ def capability_inventory():
 
 
 def _catalog_records(data_root):
-    from .cofdraw_chemistry import TEMPLATES, library_linkages, inspect_monomer
+    from .cofdraw_chemistry import TEMPLATES, library_linkages, library_topologies, inspect_monomer
     from .cofdraw_core import catalog_monomers
-    from .cofdraw_starters import topology_catalog
     from .cofdraw_spatial import SPATIAL
     from .cofdraw_planar import PLANAR
     from .cofdraw_styles import STYLES
@@ -217,7 +216,7 @@ def _catalog_records(data_root):
     template_codes = {key: value['code'] for key, value in SPATIAL.items()}
     template_codes.update({key: value[0] for key, value in PLANAR.items()})
     template_codes.update(kgm_4_2='kgm', branched_4_3='bor')
-    for row in topology_catalog(catalog.get("topology_catalog", [])):
+    for row in library_topologies(catalog):
         actual_templates = [t["id"] for t in TEMPLATES if t["id"] in row.get("compatible_template_ids", [])
                             or template_codes.get(t["id"]) == row["id"]]
         records.append(_record("topology", row["id"], row.get("label", row["id"]), row,

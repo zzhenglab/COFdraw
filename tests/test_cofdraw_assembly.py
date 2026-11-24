@@ -112,3 +112,37 @@ def test_different_necklaces_are_selectable_at_fixed_feed_ratio(catalog):
     rows=[catalog[k] for k in ('tapb','ta','bpda_cho')]
     with pytest.raises(ValueError,match='ETTA'):
         assemble(rows,'BBB',pore_layout='kgm')
+
+
+@pytest.mark.parametrize('example', MIXED_EXAMPLES, ids=lambda e: e['id'])
+def test_straight_imine_linkers_and_shared_pore_coordinates(catalog, example):
+    pattern, layout = example['linker_sequence'], example.get('pore_layout')
+    design = assemble([catalog[k] for k in example['monomer_ids']], pattern, pore_layout=layout)
+    one, audit = build_patch(dict(design, schema_version=VERSION, recipe_id='single'))
+    sheet, summary = pore_patch(design['components'], pattern, 3, 2, layout)
+    xy = sheet.GetConformer().GetPositions()[:, :2]
+    origins = summary['atom_origin']
+    ends = {}
+    for bond in sheet.GetBonds():
+        a, b = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        for site, tip in ((a,b), (b,a)):
+            origin = origins[site]
+            if origin['component'] in ('B','C') and origins[tip]['instance'] != origin['instance']:
+                ends.setdefault(origin['instance'], []).append((site,tip))
+    assert len(ends) == len({o['instance'] for o in origins if o['component'] in ('B','C')})
+    for left, right in ends.values():
+        axis = xy[right[0]] - xy[left[0]]
+        normal = np.array([-axis[1], axis[0]]) / np.linalg.norm(axis)
+        assert ((xy[left[1]] - xy[left[0]]) @ normal) * ((xy[right[1]] - xy[right[0]]) @ normal) < -.1
+
+    # Identify a face by chemical order, independently of IDs assigned for its crop.
+    large_face = summary['pore_faces'][0]
+    small_face = [item['id'] for item in design['instances']]
+    coordinates = {(o['instance'], o['fragment_atom_index']): p for o, p in zip(origins, xy)}
+    offsets = []
+    one_xy = one.GetConformer().GetPositions()[:, :2]
+    for atom, origin in zip(one.GetAtoms(), audit['atom_origin']):
+        if atom.GetAtomicNum():
+            name = large_face[small_face.index(origin['instance'])]
+            offsets.append(coordinates[name, origin['fragment_atom_index']] - one_xy[atom.GetIdx()])
+    assert np.ptp(offsets, axis=0).max() < 1e-5

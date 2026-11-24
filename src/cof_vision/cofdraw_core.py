@@ -251,6 +251,15 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size, model
     defs = ET.Element(tag('defs')); root.insert(0, defs)
     atom_colors = {}
     source_style = recipe.get('source_style', {}) if style_id == 'source' else {}
+    opacities = source_style.get('atom_opacities', {})
+    if recipe.get('layout_kind') == 'net_patch':
+        depths = {f"{r['instance']}:{r['fragment_atom_index']}": r['depth']
+                  for r in recipe.get('atom_coordinates', []) if 'depth' in r}
+        if depths and all(key in depths for key in graph_keys):
+            near, far = max(depths.values()), min(depths.values())
+            if near > far:
+                opacities = {i: .28 + .72 * (depths[key] - far) / (near - far)
+                             for i, key in enumerate(graph_keys)}
     source_colors = source_style.get('atom_colors', {})
     for old in kept:
         atom_colors[old_to_new[old]] = source_colors.get(str(old), source_colors.get(old,
@@ -308,7 +317,6 @@ def _native_styled_svg(mol, audit, recipe, style_id, options, rules, size, model
                 root.remove(element)
                 continue
             recolor(element, atom_colors[atoms[0]])
-        opacities = source_style.get('atom_opacities', {})
         values = [opacities.get(str(kept[a]), opacities.get(kept[a], source_style.get('fade_opacity', .28) if kept[a] in source_style.get('faded_atoms', []) else 1.)) for a in atoms]
         if values and min(values) < 1:
             element.set('opacity', str(max(0., min(1., float(min(values))))))

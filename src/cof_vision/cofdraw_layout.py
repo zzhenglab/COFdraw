@@ -1,9 +1,11 @@
 """Rigid 2D block layout and diagnostics; never a force field or crystal model."""
 from __future__ import annotations
 
+from collections import Counter
 from copy import deepcopy
 import math
 import numpy as np
+from rdkit import Chem
 
 
 def _bond_crossings(xy, bonds):
@@ -169,7 +171,146 @@ def refine_rigid_poses(mol, coordinates, origins, joins, *, robust=False):
     return fitted, report
 
 
-def refine_bond_angles(mol, coordinates, origins, joins):
+def _fixed_imine_ends(mol, origins, joins):
+    """Index retained boundary tips and their joined counterparts identically."""
+    ends = {}
+    for join in joins:
+        for key, partner in (('a', 'b'), ('b', 'a')):
+            if join.get('fixed_' + key):
+                site = join[key]
+                name = origins[site]['instance']
+                inside = next(a.GetIdx() for a in mol.GetAtomWithIdx(site).GetNeighbors()
+                              if origins[a.GetIdx()]['instance'] == name)
+                ends.setdefault(name, []).append((inside, site, join[partner]))
+    if not ends:
+        return ends
+    for atom in mol.GetAtoms():
+        tip = atom.GetIdx()
+        name = origins[tip]['instance']
+        if atom.GetAtomicNum() == 0 and name in ends:
+            site = atom.GetNeighbors()[0]
+            inside = next(a.GetIdx() for a in site.GetNeighbors() if a.GetIdx() != tip)
+            ends[name].append((inside, site.GetIdx(), tip))
+    return ends
+
+
+def refine_bond_angles(mol, coordinates, origins, joins, alternate_spacers=()):
+    from .cofdraw_depiction import straight_linker_axes
+    xy = np.asarray(coordinates, dtype=float)
+    ends = _fixed_imine_ends(mol, origins, joins)
+    rods = {}
+    nodes = {}
+    for name, arms in ends.items():
+        inside, sites, tips = np.asarray(arms).T
+        if straight_linker_axes(xy[sites], xy[sites] - xy[inside]):
+            rods[name] = (sites, tips)
+        elif len(arms) > 2:
+            nodes[name] = (inside, sites, tips)
+
+    def fit(positions, constraints):
+        fitted, report = _fit_spacer_poses(mol, positions, origins, constraints, alternate_spacers)
+        failures = []
+        for name, (sites, tips) in rods.items():
+            chord = fitted[sites[1]] - fitted[sites[0]]
+            bends = fitted[tips] - fitted[sites]
+            sides = (bends @ np.array([-chord[1], chord[0]])) / (np.linalg.norm(chord) * np.linalg.norm(bends, axis=1))
+            if sides.min() >= -1e-3 or sides.max() <= 1e-3:
+                failures.append(name)
+        if failures:
+            report.update(quality='needs_review', same_side_straight_linkers=failures)
+        for name, (inside, sites, tips) in nodes.items():
+            radial, bend = fitted[sites] - fitted[inside], fitted[tips] - fitted[sites]
+            turns = radial[:, 0] * bend[:, 1] - radial[:, 1] * bend[:, 0]
+            if turns.min() <= 1e-8 and turns.max() >= -1e-8:
+                report['quality'] = 'needs_review'
+                report.setdefault('inconsistent_imine_nodes', []).append(name)
+        return fitted, report
+
+    fitted, report = fit(xy, joins)
+    if not ends or report['quality'] == 'regular':
+        return fitted, report
+
+    # An ortho substituent can crowd the first winding. Switch every free
+    # imine arm together, including the continuations drawn at the boundary.
+    flipped = xy.copy()
+    other_joins = [dict(j) for j in joins]
+    directions = {(j[k], j[p]): (j, 'direction_' + k) for j in other_joins
+                  for k, p in (('a', 'b'), ('b', 'a')) if j.get('fixed_' + k)}
+    for arms in ends.values():
+        for inside, site, tip in arms:
+            axis = xy[site] - xy[inside]
+            entry = directions.get((site, tip))
+            direction = entry[0][entry[1]] if entry else xy[tip] - xy[site]
+            reflection = 2 * (axis @ direction) / (axis @ axis) * axis - direction
+            if entry:
+                entry[0][entry[1]] = reflection
+            else:
+                flipped[tip] = xy[site] + reflection
+    alternate, opposite = fit(flipped, other_joins)
+    if opposite['quality'] == 'regular':
+        return alternate, opposite
+
+    # Distorted and asymmetric designs can benefit from relaxing the individual
+    # junction directions. Keep the opposite-side constraint for straight rods.
+    free_joins = [dict(j, fixed_a=False, fixed_b=False) for j in joins]
+    alternative, comparison = fit(xy, free_joins)
+    if comparison['quality'] == 'regular':
+        return alternative, comparison
+    best = min(((fitted, report), (alternate, opposite), (alternative, comparison)),
+               key=lambda pair: (len(pair[1].get('same_side_straight_linkers', [])),
+                                 len(pair[1].get('inconsistent_imine_nodes', [])),
+                                 pair[1]['final_max_junction_angle_deviation_degrees']))
+    return best
+
+
+def _fit_spacer_poses(mol, coordinates, origins, joins, alternate_spacers):
+    fitted, report = _fit_bond_angles(mol, coordinates, origins, joins)
+    if not alternate_spacers or report['final_max_junction_angle_deviation_degrees'] <= 2:
+        return fitted, report
+
+    # A bent ditopic linker can alternate its bow between the six hcb edges.
+    # This preserves the labelled port incidence and gives two sublattices
+    # of three equivalent poses. Reflect only stereochemically free blocks.
+    xy = np.asarray(coordinates, dtype=float).copy()
+    owners = np.array([row['instance'] for row in origins])
+    candidate_joins = [dict(j) for j in joins]
+    for name in alternate_spacers:
+        indices = np.flatnonzero(owners == name)
+        atoms = [mol.GetAtomWithIdx(int(i)) for i in indices]
+        if any(atom.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED or
+               any(b.GetStereo() != Chem.BondStereo.STEREONONE for b in atom.GetBonds()) for atom in atoms):
+            return fitted, report
+        ends = [(j, end) for j in candidate_joins for end in ('a', 'b') if owners[j[end]] == name]
+        if len(ends) != 2:
+            return fitted, report
+        p, q = (xy[j[end]] for j, end in ends)
+        axis = q-p
+        length = np.linalg.norm(axis)
+        if length < 1e-8:
+            return fitted, report
+        axis /= length
+        reflection = 2*np.outer(axis, axis)-np.eye(2)
+        xy[indices] = (xy[indices]-p) @ reflection + p
+        for j, end in ends:
+            key = 'direction_' + end
+            j[key] = j[key] @ reflection
+            if j.get('fixed_' + end):
+                terminal = j[end]
+                inner = next(n.GetIdx() for n in mol.GetAtomWithIdx(terminal).GetNeighbors()
+                             if owners[n.GetIdx()] == name)
+                arm = xy[terminal] - xy[inner]
+                arm /= np.linalg.norm(arm)
+                j[key] = 2 * (j[key] @ arm) * arm - j[key]
+
+    candidate, result = _fit_bond_angles(mol, xy, origins, candidate_joins)
+    if (result['final_max_junction_angle_deviation_degrees'] + 1 < report['final_max_junction_angle_deviation_degrees']
+            and result['quality'] == 'regular'):
+        result['reflected_spacers'] = list(alternate_spacers)
+        return candidate, result
+    return fitted, report
+
+
+def _fit_bond_angles(mol, coordinates, origins, joins):
     """Choose unspecified port-side depictions, then fit rigid molecular blocks.
 
     A consumed dummy is a connection placeholder, not specified imine E/Z.
@@ -198,7 +339,7 @@ def refine_bond_angles(mol, coordinates, origins, joins):
             vectors = [direction]
             inside = [a.GetIdx() for a in mol.GetAtomWithIdx(endpoint).GetNeighbors()
                       if owners[a.GetIdx()] == owners[endpoint]]
-            if len(inside) == 1:
+            if len(inside) == 1 and not join.get('fixed_' + key):
                 axis = spaced[inside[0]]-spaced[endpoint]
                 axis /= np.linalg.norm(axis)
                 reflected = 2*np.dot(direction, axis)*axis-direction
@@ -228,13 +369,24 @@ def refine_bond_angles(mol, coordinates, origins, joins):
     best_score = best_values[1]+best_values[2]+180*best_values[3]
     attempts = []
     selected = None
-    for pattern in (0, 1, 2, 3):
+    for pattern in ((0,) if all(len(options) == 1 for options in choices) else (0, 1, 2, 3)):
         selected_joins = [options[min((pattern if pattern < 2 else (index+pattern) % 2), len(options)-1)]
                           for index, options in enumerate(choices)]
         fitted, fit = refine_rigid_poses(mol, spaced, origins, selected_joins, robust=True)
         values = metrics(fitted)
         new_overlaps = {tuple(pair) for pair in values[0]['nonbonded_overlap_pairs']}-baseline_overlaps
         new_crossings = {tuple(pair) for pair in values[0]['nonincident_bond_crossings']}-baseline_crossings
+        if (new_crossings and len(values[0]['nonbonded_overlap_pairs']) < len(baseline_overlaps)
+                and all(j.get('fixed_a') and j.get('fixed_b') for j in selected_joins)):
+            # Wide pendant groups can cross even before the junctions are fitted.
+            # Moving where the same two blocks cross can remove coincident atoms.
+            # Compare each block pair separately, including bonds between blocks.
+            bond_blocks = [tuple(sorted((owners[b.GetBeginAtomIdx()], owners[b.GetEndAtomIdx()])))
+                           for b in mol.GetBonds()]
+            def crossing_counts(pairs):
+                return Counter(tuple(sorted((bond_blocks[i], bond_blocks[j]))) for i, j in pairs)
+            if crossing_counts(values[0]['nonincident_bond_crossings']) <= crossing_counts(baseline_crossings):
+                new_crossings = set()
         score = values[1]+values[2]+180*values[3]
         accept = not new_overlaps and not new_crossings and values[3] <= .12 and score < best_score-1e-6
         attempts.append({'pattern': pattern, 'accepted': accept, 'max_angle_deviation_degrees': values[1],

@@ -9,7 +9,7 @@ from copy import deepcopy
 import re
 import unicodedata
 
-from .cofdraw_chemistry import prepare_template
+from .cofdraw_chemistry import net_geometry_error, prepare_template
 
 SELECTION_KEYS = {"source_recipe_id", "monomer_a_id", "monomer_b_id", "linkage", "template_id", "style_id", "palette"}
 SCOPE = "Finite catalog-bound COF drawing plan for review; not a synthesis prediction, automatic topology assignment, periodic crystal, or literature verification."
@@ -118,6 +118,8 @@ for template, code in [(key, row[0]) for key,row in PLANAR.items()] + [
     GEOMETRY_TEMPLATES.setdefault(code, set()).add(template)
 GEOMETRIES['kgd'].append('rhombille')
 GEOMETRIES['kgm'].append('kagome')
+GEOMETRIES['pts'].extend(['platinum sulfide', 'platinum sulfide net'])
+GEOMETRIES['dia'].extend(['diamond', 'diamond net', 'diamond cage'])
 for shape in ('square', 'hexagon', 'octagon'):
     template = 'local_' + shape
     GEOMETRIES[template] = ['local ' + shape, 'local ' + shape + ' ring']
@@ -558,23 +560,19 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
     candidates = [row for row in catalog["templates"] if row.get("allow_pairs") and counts in row["allow_pairs"]]
     if geometries:
         candidates = [row for row in catalog["templates"] if row["id"] in GEOMETRY_TEMPLATES[geometries[0]] and (not row.get("allow_pairs") or counts in row["allow_pairs"])]
-    from .cofdraw_spatial import matches
     shapes = [row.get("site_shapes", {}).get(role) for row, role in zip((a, b), roles)]
     out_of_plane = any(shape in {"tetrahedral", "prismatic", "spiro", "spatial_unspecified"} for shape in shapes)
-    candidates = [row for row in candidates if matches(row, shapes)
+    candidates = [row for row in candidates if not net_geometry_error(row, counts, (a, b), roles)
                   and (not row["linkages"] or linkage in row["linkages"])
                   and not (row["topology_label"] and out_of_plane)]
-    from .cofdraw_chemistry import kagome_match
-    if not kagome_match([a,b],roles):
-        candidates = [row for row in candidates if row['id']!='kgm_4_2']
-    if not any(count==4 and row.get('geometry_hint')=='tetrahedral'
-                                    for count,row in zip(counts,(a,b))):
-        candidates = [row for row in candidates if row['id']!='branched_4_3']
     if instance_counts:
         candidates = [row for row in candidates if row["instances"] == instance_counts[0]]
     if not template_id:
         planar = [row for row in candidates if row["topology_label"]]
-        if len(candidates) == 1:
+        if {row["id"] for row in planar} == {"sql_4_2", "kgm_4_2"}:
+            template_id = "sql_4_2"
+            assumptions.append("Use the square (sql) drawing by default. Kagome (kgm) is another candidate for these building blocks.")
+        elif len(candidates) == 1:
             template_id = candidates[0]["id"]
             assumptions.append("Choose the compatible finite drawing layout " + template_id + "; this is a layout proposal for review, not a prediction of periodic topology.")
         elif len(planar) == 1 and all(row == planar[0] or row["dimension"] == 3 for row in candidates):
@@ -596,7 +594,7 @@ def describe_cof(text, library, selection=None, *, allow_unmatched_words=False):
             prepared = prepare_template(**request)
             result["compatibility"] = {"reactive_site_counts": prepared["compatibility"]["reactive_site_counts"],
                                        "roles": prepared["compatibility"]["roles"], "validated_by": "prepare_template"}
-            if extents and extents[0] != 1:
+            if extents and (extents[0] != 1 or prepared.get('layout_kind') == 'net_patch'):
                 from .cofdraw_chemistry import design_signature
                 from .cofdraw_repeat import repeat_options
                 prepared['design_template_signature']=design_signature(prepared)

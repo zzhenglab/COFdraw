@@ -114,6 +114,29 @@ def _unit(v):
     return v / np.linalg.norm(v)
 
 
+def _straight_imine_joins(linker, edge):
+    """Return the two linker-to-node C=N bonds of a straight aryl spacer."""
+    from .cofdraw_mixed import linear_arms
+    matches = []
+    for dummy, terminal in _ports(linker).values():
+        anchor = next(a for a in linker.GetAtomWithIdx(terminal).GetNeighbors() if a.GetIdx() != dummy)
+        if not anchor.GetIsAromatic():
+            return ()
+        matches.append((anchor.GetIdx(), terminal))
+    if not linear_arms(linker, matches):
+        return ()
+    # _edge_molecule adds each join from a node atom to a linker atom.
+    return [(b.GetEndAtomIdx(), b.GetBeginAtomIdx()) for b in edge.GetBonds() if b.HasProp('_productJoin')]
+
+
+def _opposite_linker_bends(xyz, joins):
+    sites, partners = np.asarray(joins).T
+    axis = _unit(xyz[sites[1]] - xyz[sites[0]])
+    bonds = xyz[partners] - xyz[sites]
+    transverse = bonds - np.outer(bonds @ axis, axis)
+    return transverse[0] @ transverse[1] < 0
+
+
 def _basis(v):
     v = _unit(v)
     w = _unit(np.cross(v, np.eye(3)[np.argmin(abs(v))]))
@@ -302,6 +325,7 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
     if sum(counts.values()) > (1800 if topology in STACKS else 650):
         raise ValueError("The selected periodic repeat exceeds the atom budget for this builder.")
     edge = _edge_molecule(mols[node_slot],mols[1-node_slot],LINKAGE_LIBRARY[linkage]["join_bond_order"],node_slot)
+    straight_joins = _straight_imine_joins(mols[1-node_slot], edge) if linkage == 'imine' and not two_nodes else ()
     ends = [a.GetIdx() for a in edge.GetAtoms() if a.HasProp("_diaCenter")]
     neighbours = [next(a.GetIdx() for a in edge.GetAtomWithIdx(i).GetNeighbors() if a.GetAtomicNum()!=1) for i in ends]
     best = "no extended tetrahedral conformer"
@@ -321,6 +345,9 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
         else:
             raise ValueError("The molecular edge lacks supported conformer force-field parameters.")
         if converged!=0:
+            continue
+        if straight_joins and not _opposite_linker_bends(edge.GetConformer().GetPositions(), straight_joins):
+            best = "no converged opposite-side imine arrangement passed the cell checks"
             continue
         for angle,structure,bonds in cell_candidates(edge,ends,neighbours):
             net = inspect_periodic_network(structure)
@@ -352,12 +379,15 @@ def build_dia(monomer_a, monomer_b, linkage="imine", label_a="Monomer A", label_
             structure,bonds,junctions,pack=packed
         scope = (f"Unrelaxed {topology} hypothesis with {network_count} chosen network(s) generated from the selected precursors. "
                  "Tetrahedral junction angles, periodic bonds and rank three for each network were checked. Experimental packing and interpenetration are unspecified.")
+        geometry = "Reduced amine" if linkage == "secondary_amine" else "Extended E starting geometry at newly formed imines"
+        if straight_joins:
+            geometry += ", with the two imine bonds on opposite sides of each straight spacer"
         structure.update(chemical_bonds=bonds,junction_sites=junctions)
         structure["provenance"] = dict(kind="monomer_dia_design",model_name=f"{label_a} + {label_b}",net=topology,
                 network_dimension=3,network_count=network_count,precursors=smiles,linkage=linkage,node_index=node_slot,
                 precursor_connectivities=[f["connectivity"] for f in fragments],
                 packing=pack,
-                conformer_seed=seed,product_geometry="Extended E starting geometry at newly formed imines" if linkage!="secondary_amine" else "Reduced amine",
+                conformer_seed=seed,product_geometry=geometry,
                 qualification=scope)
         from .cofdraw_cofex import design_record
         feeds = [dict(smiles=s, label=l) for s,l in zip(smiles,(label_a,label_b))]

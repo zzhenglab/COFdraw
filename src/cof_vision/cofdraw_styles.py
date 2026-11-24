@@ -364,7 +364,7 @@ def decorate_svg(svg,mol,audit,recipe,xy,style_id,options,size):
             pts=np.asarray(xy)[list(ring)]; center=pts.mean(0); pts=center+.92*(pts-center)
             ET.SubElement(full,tag('polygon'),{"points":" ".join(f"{x:.3f},{y:.3f}" for x,y in pts),"fill":colors[audit['atom_origin'][ring[0]]['component']],"opacity":str(options['fill_opacity'])})
     face_colors = recipe.get('repeat_face_colors',[])
-    if (style_id=='pore_fill' or face_colors) and recipe.get('layout_kind')!='open_chain' and len(centers)>=3:
+    if (style_id=='pore_fill' or face_colors) and recipe.get('layout_kind') not in ('open_chain','net_patch') and len(centers)>=3:
         faces = recipe.get('repeat_faces')
         if faces is None:
             ids = [i['id'] for i in recipe.get('instances',[]) if i['id'] in centers]

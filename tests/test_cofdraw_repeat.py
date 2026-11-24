@@ -4,9 +4,11 @@ from pathlib import Path
 from xml.etree import ElementTree
 import math
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 from rdkit import Chem
+from rdkit.Chem import rdMolTransforms
 
 from cof_vision.cofdraw_chemistry import design_signature, prepare_template
 from cof_vision.cofdraw_desktop import create_desktop_app
@@ -104,6 +106,41 @@ def test_binary_shared_faces_keep_isotopes_and_stereochemistry():
     assert summary['interblock_bonds']==30 and len(ports)==9
     assert tri.GetNumAtoms()==extents['three-pores']['atoms']
     assert len({(o['instance'],o['fragment_atom_index']) for o in origins})==tri.GetNumAtoms()
+
+
+@pytest.mark.parametrize('linker,azo_bonds', [
+    ('Nc1ccc(Oc2ccc(N)cc2)cc1', 0),
+    ('Nc1ccc(/N=N/c2ccc(N)cc2)cc1', 19),
+])
+def test_hcb_repeat_draws_equivalent_imines_as_zigzags(linker, azo_bonds):
+    recipe = prepare_template('O=Cc1cc(C=O)cc(C=O)c1', linker, 'imine', 'TFB', 'linker', 12, 'hcb_3_2')
+    recipe.update(schema_version=VERSION, recipe_id='hcb-repeat', design_template_signature=design_signature(recipe))
+    mol, origins, _, summary, _ = repeat_patch(recipe, 2)
+    conformer = mol.GetConformer()
+    aromatic_positions = {}
+    for atom, owner, position in zip(mol.GetAtoms(), origins, conformer.GetPositions()):
+        if atom.GetIsAromatic():
+            aromatic_positions.setdefault(owner['instance'], []).append(position)
+    centers = {key: np.mean(points, axis=0) for key, points in aromatic_positions.items()}
+    for face in summary['pore_faces']:
+        points = np.array([centers[block] for block in face])
+        distances = np.linalg.norm(points[:, None] - points[None, :], axis=2)
+        # Four positions in the alternating twelve-block pore span 120 degrees.
+        assert np.allclose(distances, np.roll(distances, (4, 4), axis=(0, 1)), atol=.02)
+
+    imines = mol.GetSubstructMatches(Chem.MolFromSmarts('c-[C]=[N]-c'))
+    assert len(imines) == summary['interblock_bonds'] == 38
+    for ipso_c, carbon, nitrogen, ipso_n in imines:
+        assert rdMolTransforms.GetAngleDeg(conformer, ipso_c, carbon, nitrogen) == pytest.approx(120, abs=1)
+        assert rdMolTransforms.GetAngleDeg(conformer, carbon, nitrogen, ipso_n) == pytest.approx(120, abs=1)
+        assert abs(rdMolTransforms.GetDihedralDeg(conformer, ipso_c, carbon, nitrogen, ipso_n)) == pytest.approx(180)
+
+    # Each azobenzene spacer retains its input trans geometry.
+    azo = mol.GetSubstructMatches(Chem.MolFromSmarts('c-N=N-c'))
+    assert len(azo) == azo_bonds
+    for a, n1, n2, b in azo:
+        assert abs(rdMolTransforms.GetDihedralDeg(conformer, a, n1, n2, b)) == pytest.approx(180)
+        assert mol.GetBondBetweenAtoms(n1, n2).GetStereo() in (Chem.BondStereo.STEREOE, Chem.BondStereo.STEREOTRANS)
 
 
 def test_actual_kagome_pore_tints_and_v3000_exports(api):
@@ -231,3 +268,103 @@ def test_self_kagome_complete_shell_matches_mixed_kagome_incidence(api):
         assert len(triangles)==6 and s['pore_count']==s['interblock_bonds']-s['blocks']+1==7
         assert all(len(t)*2==len(center) and len(center&set(t))==(2 if len(feed)==1 else 3) for t in triangles)
         assert len(Chem.GetMolFrags(mol))==1 and len(origins)==choice['atoms']==mol.GetNumAtoms()
+
+
+def test_full_kagome_star_can_switch_to_a_single_hexagon():
+    from cof_vision.cofdraw_mixed import ETTA
+
+    recipe = prepare_template('O=Cc1ccc(C=O)cc1', ETTA, 'imine', 'TA', 'ETTA', 30, 'kgm_4_2')
+    choices = repeat_options(recipe)['extents']
+    assert choices[0]['label'] == 'Hexagon + 6 triangles' and len(recipe['instances']) == 30
+    assert sum(row.get('pores') == 7 for row in choices) == 1
+    single = next(row for row in choices if row['label'] == 'One hexagon')
+    _, _, _, summary, _ = repeat_patch(recipe, single['repeats'], extent_mode=single['extent_mode'])
+    assert summary['pore_counts'] == {'hexagon': 1}
+    assert summary['blocks'] == 12
+
+
+@pytest.mark.parametrize('aldehyde,template,blocks_per_cell', [
+    ('O=Cc1ccc(C=O)cc1', 'hcb_3_2', 5),
+    ('O=Cc1cc(C=O)cc(C=O)c1', 'hcb_3_3', 2),
+])
+def test_chemically_equivalent_imines_share_a_winding_and_a_translation_cell(aldehyde, template, blocks_per_cell):
+    # The original TTTDA depiction turns one of its three equivalent sites
+    # the other way. All boundary ports and reacted joins should agree.
+    tttda = 'Cc1cc(-c2nc(-c3cc(C)c(N)c(C)c3)nc(-c3cc(C)c(N)c(C)c3)n2)cc(C)c1N'
+    recipe = prepare_template(aldehyde, tttda, 'imine', 'node A', 'TTTDA', 6, template)
+    recipe.update(schema_version=VERSION, recipe_id='imine-net', design_template_signature=design_signature(recipe))
+    mol, origins, _, summary, _ = repeat_patch(recipe, 2, extent_mode='cells')
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    turns, geometries = {}, {}
+    for atom, origin in zip(mol.GetAtoms(), origins):
+        if not atom.GetAtomicNum():
+            continue
+        i = atom.GetIdx()
+        name = origin['instance']
+        geometries.setdefault(name, []).append((origin['fragment_atom_index'], xy[i]))
+        neighbors = list(atom.GetNeighbors())
+        if len(neighbors) != 2:
+            continue
+        exits = [n.GetIdx() for n in neighbors if not n.GetAtomicNum() or origins[n.GetIdx()]['instance'] != name]
+        if len(exits) != 1:
+            continue
+        j, = exits
+        k = next(n.GetIdx() for n in neighbors if n.GetIdx() != j)
+        u, v = xy[i] - xy[k], xy[j] - xy[i]
+        angle = math.degrees(math.atan2(u[0]*v[1] - u[1]*v[0], u @ v))
+        turns.setdefault(name, []).append(angle)
+    assert len(turns) == summary['blocks'] == 4 * blocks_per_cell
+    cell_motifs = {}
+    for name, angles in turns.items():
+        assert len(angles) in (2, 3)
+        assert all(abs(a - math.copysign(60, angles[0])) < .5 for a in angles)
+        slot = name.split('.')[-1]
+        coords = np.array([xy for _, xy in sorted(geometries[name])])
+        offsets = coords - coords[0]
+        assert np.allclose(offsets, cell_motifs.setdefault(slot, offsets), atol=1e-6)
+    assert len(cell_motifs) == blocks_per_cell
+
+
+@pytest.mark.parametrize('node_id,template,linker_count', [
+    ('tapb', 'hcb_3_2', 19), ('pytta', 'sql_4_2', 12), ('hexaaminobenzene', 'hxl_6_2', 9),
+])
+def test_substituted_straight_linkers_have_opposed_imines_on_translated_pores(node_id, template, linker_count):
+    import json
+
+    catalog = Path(__file__).resolve().parents[1] / 'data/framework-drawing/catalog/current.json'
+    nodes = {row['id']: row['smiles'] for row in json.loads(catalog.read_text())['monomer_presets']}
+    nodes['hexaaminobenzene'] = 'Nc1c(N)c(N)c(N)c(N)c1N'
+    linker = 'O=Cc1c(-c2ccccc2)cc(C=O)cc1'  # Both formyl arms are para, only one is ortho to phenyl.
+    recipe = prepare_template(linker, nodes[node_id], 'imine', 'spacer', 'node', 12, template)
+    recipe.update(schema_version=VERSION, recipe_id='substituted-rod', design_template_signature=design_signature(recipe))
+    mol, origins, _, summary, _ = repeat_patch(recipe, 2)
+    xy = mol.GetConformer().GetPositions()[:, :2]
+    ends, atoms = {}, {}
+    for atom, owner in zip(mol.GetAtoms(), origins):
+        if not atom.GetAtomicNum():
+            continue
+        i = atom.GetIdx()
+        name = owner['instance']
+        atoms.setdefault(name, []).append((owner['fragment_atom_index'], i))
+        if owner['component'] == 'A':
+            for neighbor in atom.GetNeighbors():
+                j = neighbor.GetIdx()
+                if not neighbor.GetAtomicNum() or origins[j]['instance'] != name:
+                    ends.setdefault(name, []).append((i, j))
+    assert len(ends) == linker_count
+    for (left, tip_left), (right, tip_right) in ends.values():
+        # Both bends use one fixed axis, so opposite transverse signs really
+        # mean opposite sides of the spacer, including at a sheet boundary.
+        chord = xy[right] - xy[left]
+        assert np.linalg.det([chord, xy[tip_left]-xy[left]]) * np.linalg.det([chord, xy[tip_right]-xy[right]]) < 0
+
+    faces = summary['pore_faces']
+    assert len(faces) == 4
+    translated = {}
+    for face in faces:
+        indices = [i for name in face for _, i in sorted(atoms[name])]
+        points = xy[indices] - xy[indices[0]]
+        # The triangular sheet has two face orientations in its primitive cell.
+        slots = tuple(name.split('.')[-1] for name in face)
+        assert np.allclose(points, translated.setdefault(slots, points), atol=1e-6)
+    assert len(translated) == (2 if template == 'hxl_6_2' else 1)

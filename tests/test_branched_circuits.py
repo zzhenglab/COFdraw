@@ -91,3 +91,25 @@ def test_spatial_design_regenerates_with_selected_roles(key,a,b):
     assert all(vertices[i]['label']!=vertices[j]['label'] for i,j in edges)
     for role in ('A','B'):
         assert max(sum(i in e for e in edges) for i,v in enumerate(vertices) if v['component']==role)==recipe['components'][role]['connectivity']
+
+
+def test_opposed_imine_linkers_across_diamond_circuits():
+    from collections import defaultdict
+    from cof_vision.cofdraw_branched import branch_patch
+    recipe = prepare_template('O=Cc1ccc(C=O)cc1', TAPM, 'imine', 'TA', 'TAPM', 12, 'dia_4_2')
+    for size, count in ((1, 6), (3, 16)):
+        mol, summary = branch_patch(recipe['components'], size, 'dia_4_2')
+        owners = summary['atom_origin']
+        ends = defaultdict(list)
+        for bond in mol.GetBonds():
+            a, b = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+            if owners[a]['instance'] == owners[b]['instance']:
+                continue
+            site, neighbor = (a, b) if owners[a]['component'] == 'A' else (b, a)
+            ends[owners[site]['instance']].append((site, neighbor))
+        assert len(ends) == count
+        xy = mol.GetConformer().GetPositions()[:, :2]
+        for (a, left), (b, right) in ends.values():
+            axis = xy[b] - xy[a]
+            normal = np.array([-axis[1], axis[0]]) / np.linalg.norm(axis)
+            assert ((xy[left] - xy[a]) @ normal) * ((xy[right] - xy[b]) @ normal) < -.1

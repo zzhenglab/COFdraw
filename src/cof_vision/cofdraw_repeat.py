@@ -12,7 +12,7 @@ from rdkit import Chem
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .cofdraw_chemistry import design_signature
-from .cofdraw_depiction import compute_2d_coords
+from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports
 from .cofdraw_periodic_build import SUPPORTED_TEMPLATES, _fit_blocks, _net, _rotate
 from .cofdraw_periodic_options import validated_design
 from .depiction_rings import symmetric_depiction_rings
@@ -26,13 +26,15 @@ MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
 
 
-def _planar_block(component):
+def _planar_block(component, imine_mode=None):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     compute_2d_coords(mol, canonOrient=False, forceRDKit=True)
     ports = list(_ports(mol).values())
     xyz = mol.GetConformer().GetPositions()
     sites = np.array([site for _, site in ports])
     xyz -= xyz[sites].mean(axis=0)
+    if imine_mode:
+        normalize_imine_ports(mol, xyz, straight_only=imine_mode == 'straight')
     directions = xyz[[dummy for dummy, _ in ports], :2] - xyz[sites, :2]
     directions /= np.linalg.norm(directions, axis=1)[:, None]
     return dict(mol=mol, xyz=xyz, sites=sites, ports=ports, directions=directions)
@@ -184,14 +186,18 @@ def _sheet_layout(design, template, repeats, extent_mode):
     return kinds, cell, centers, edges, faces, nodes
 
 
+def _rotated_block(block, angle):
+    rotated = dict(block, xyz=block['xyz'].copy())
+    rotated['xyz'][:, :2] = _rotate(block['xyz'][:, :2], angle)
+    rotated['directions'] = _rotate(block['directions'], angle)
+    return rotated
+
+
 def _self_states(block):
     # Antiparallel or quarter-turned sublattices cover unlike ports on both
     # alternating and adjacent 2+2 arrangements. Keep each fragment rigid.
     for angle in (0., math.pi/2, math.pi, -math.pi/2):
-        other = dict(block, xyz=block['xyz'].copy())
-        other['xyz'][:,:2] = _rotate(block['xyz'][:,:2],angle)
-        other['directions'] = _rotate(block['directions'],angle)
-        yield [block, other]
+        yield [block, _rotated_block(block, angle)]
 
 
 def _chain(recipe, repeats):
@@ -209,15 +215,22 @@ def _chain(recipe, repeats):
 
 
 @lru_cache(maxsize=64)
-def _fit_sheet(template,fragments,order):
+def _fit_sheet(template,fragments,order,imine_mode=None):
     # The placement is independent of drawing size and style. Reuse it in
     # the extent picker and the actual drawing, including unsuccessful fits.
     components = {key:dict(fragment_smiles=smiles,connectivity=count) for key,smiles,count in fragments}
     kinds,ref,centers,edges = _quotient(template,components)
-    blocks = {key:_planar_block(c) for key,c in components.items()}
+    blocks = {key:_planar_block(c, imine_mode) for key,c in components.items()}
     poses = []
     cell_blocks = [blocks[k] for k in kinds]
     states = _self_states(cell_blocks[0]) if template == 'self_square' else [cell_blocks]
+    if template == 'hcb_3_2':
+        # The last three sites are edge midpoints around the first node.
+        # Rotate copies of the spacer together so equivalent arms can meet
+        # the same end of a bent or substituted linker at every junction.
+        edge_blocks = [_rotated_block(block, math.atan2(y, x))
+                       for block, (x, y) in zip(cell_blocks[2:], centers[2:])]
+        states = [cell_blocks[:2] + edge_blocks, cell_blocks]
     for state in states:
         for pose in _fit_blocks(state,ref,centers,edges,1.35 if order == 2 else 1.5):
             if template == 'self_square':
@@ -232,7 +245,12 @@ def _fit_sheet(template,fragments,order):
 
 def _sheet_placement(design,template):
     fragments = tuple((key,c['fragment_smiles'],c['connectivity']) for key,c in sorted(design['components'].items()))
-    placement = _fit_sheet(template,fragments,design['connections'][0]['bond_order'])
+    imines = template in SHEET_TEMPLATES and design.get('linkage') in ('imine','alkyl_imine')
+    order = design['connections'][0]['bond_order']
+    placement = _fit_sheet(template,fragments,order,'all' if imines else None)
+    if placement is None and imines:
+        # Try the original node poses while retaining opposite sides on every straight spacer.
+        placement = _fit_sheet(template,fragments,order,'straight')
     if placement is None:
         raise ValueError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
     return placement
@@ -340,8 +358,9 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
         chain = template in ('self_chain','chain_2_2')
         if template in BRANCHED:
             noun='pore' if template in PLANAR or template in LOCAL_FACES else 'circuit'
-            options['extents'][0]['label']='One '+noun
-            for n in (2,3):
+            full_patch = recipe.get('layout_kind') == 'net_patch'
+            options['extents'][0]['label'] = ('Molecular cage' if template == 'dia_4_2' else 'Molecular patch') if full_patch else 'One '+noun
+            for n in ((1,2,3) if full_patch else (2,3)):
                 atoms,_=_estimate(model,template,n)
                 if atoms<=MAX_ATOMS:
                     if template in SPATIAL or template in PLANAR or template in LOCAL_FACES:
@@ -350,13 +369,21 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
                         except ValueError as error:
                             options['reason']=str(error)
                             continue
-                    options['extents'].append(dict(value=n,label=f'{n} connected {noun}s',pores=n,atoms=atoms))
+                    if n == 1:
+                        options['extents'].append(dict(value='circuit',repeats=1,extent_mode='circuit',label='One circuit',pores=1,atoms=atoms))
+                    else:
+                        options['extents'].append(dict(value=n,label=f'{n} connected {noun}s',pores=n,atoms=atoms))
             scope=('Explicitly shared edges in a finite drawing. Periodic net unassigned.' if template in LOCAL_FACES else
                    'Adjacent faces of the chosen sheet' if template in PLANAR else 'Unfolded circuits from the chosen 3D parent net')
             options.update(template=template,available=len(options['extents'])>1,scope=scope)
             return options
         if template=='kgm_4_2':
-            options['extents'][0]['label']='One hexagon'
+            if recipe.get('layout_kind') == 'net_patch':
+                options['extents'][0].update(label='Hexagon + 6 triangles', pores=7)
+                atoms,_ = _estimate(model,template,1)
+                options['extents'].append(dict(value='hexagon',repeats=1,extent_mode='hexagon',label='One hexagon',pores=1,atoms=atoms))
+            else:
+                options['extents'][0]['label']='One hexagon'
             atoms,_=_estimate(model,template,1,'triangle')
             if atoms<=MAX_ATOMS:
                 options['extents'].append(dict(value='triangle',repeats=1,extent_mode='triangle',label='One triangle',pores=1,atoms=atoms))
@@ -371,6 +398,8 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
                 options['extents'].append(dict(value='kagome-star',repeats=2,extent_mode='star',
                                                label='Hexagon + 6 triangles',pores=pores,atoms=atoms))
         for n in (2,3,4):
+            if n==2 and template=='kgm_4_2' and recipe.get('layout_kind')=='net_patch':
+                continue  # The default molecular star already contains these seven pores.
             count,pores = _estimate(model,template,n)
             if count > MAX_ATOMS:
                 continue
@@ -387,12 +416,14 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
 
 
 def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mode='pores'):
-    sizes={'pores':(2,3,4),'cells':(2,3,4),'triad':(3,),'star':(2,),'triangle':(1,)}
+    sizes={'pores':(2,3,4),'cells':(2,3,4),'triad':(3,),'star':(2,),'triangle':(1,),'hexagon':(1,),'circuit':(1,)}
     if repeats not in sizes.get(extent_mode,()):
         raise ValueError('Choose an extent available for this drawing.')
     template = _classification(recipe,source_rule,source_sha256)
-    if ((extent_mode=='star' and template!='self_kagome') or (extent_mode=='triangle' and template!='kgm_4_2')):
+    if ((extent_mode=='star' and template!='self_kagome') or (extent_mode in ('triangle','hexagon') and template!='kgm_4_2')):
         raise ValueError('Choose a Kagome design for this pore arrangement.')
+    if extent_mode == 'circuit' and template not in SPATIAL:
+        raise ValueError('Choose a spatial design for this circuit.')
     assembly = recipe.get('assembly') or {}
     design = recipe
     if not assembly:
@@ -410,7 +441,7 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
         mol,details = _chain(recipe,repeats)
     elif template in BRANCHED:
         from .cofdraw_branched import branch_patch
-        if extent_mode!='pores' or repeats not in (2,3) or _estimate(design,template,repeats)[0]>MAX_ATOMS:
+        if (extent_mode!='circuit' and (extent_mode!='pores' or repeats not in (2,3))) or _estimate(design,template,repeats)[0]>MAX_ATOMS:
             raise ValueError('Choose an available two- or three-circuit extent.')
         mol,details=branch_patch(design['components'],repeats,template)
     elif template == 'self_kagome':
@@ -444,7 +475,7 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
     links = [b for b in mol.GetBonds() if origins[b.GetBeginAtomIdx()]['instance'] != origins[b.GetEndAtomIdx()]['instance']]
     fragcount = len(set(o['instance'] for o in origins))
     nfaces = len(links) - fragcount + 1
-    expected={'triad':3,'star':7,'triangle':1}.get(extent_mode)
+    expected={'triad':3,'star':7,'triangle':1,'hexagon':1,'circuit':1}.get(extent_mode)
     if expected and nfaces!=expected:
         raise ValueError('The generated pores do not match the selected neighborhood.')
     if nfaces < 0 or details.get('pore_count',details.get('pores',nfaces)) != nfaces:
@@ -462,7 +493,7 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
                or b.GetBondTypeAsDouble() != 2 for b in links):
             raise ValueError('Every aminoaldehyde junction must join an aldehyde carbon to an amine nitrogen.')
     extent = (f'{repeats} chain segments' if template in ('self_chain','chain_2_2') else
-              f'{repeats} × {repeats} cells' if extent_mode=='cells' else 'One triangle' if extent_mode=='triangle' else f'{nfaces} connected pores')
+              f'{repeats} × {repeats} cells' if extent_mode=='cells' else 'One '+extent_mode if extent_mode in ('triangle','hexagon','circuit') else f'{nfaces} connected pores')
     basis = design.get('source_drawing_basis')
     if basis:
         basis = {k:basis[k] for k in ('recipe_id','recipe_sha256','drawing_doi','template','orientation_assumption') if k in basis}

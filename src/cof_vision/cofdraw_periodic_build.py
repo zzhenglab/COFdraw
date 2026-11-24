@@ -9,7 +9,7 @@ from rdkit import Chem
 from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
 from rdkit.Geometry import Point3D
 
-from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core
+from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core, normalize_imine_ports
 from .cofdraw_network import inspect_periodic_network
 from .cofdraw_science import normalize_structure
 from .framework_drawing import _ports
@@ -173,7 +173,7 @@ def _embedded_block(mol, ports, xy, seed, cap_element):
     return product
 
 
-def _block(component, general_tilt=0, cap_element=None, embed_seed=None):
+def _block(component, general_tilt=0, cap_element=None, embed_seed=None, imine_mode=None):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     if mol is None or len(Chem.GetMolFrags(mol)) != 1:
         raise ValueError('Each reacted building block must be one connected molecule.')
@@ -188,6 +188,8 @@ def _block(component, general_tilt=0, cap_element=None, embed_seed=None):
     compute_2d_coords(mol, canonOrient=False, forceRDKit=True)
     conformer = mol.GetConformer()
     xy = conformer.GetPositions()[:, :2]
+    if imine_mode:
+        normalize_imine_ports(mol, xy, preserve_uniform=True, straight_only=imine_mode == 'straight')
     xy = (xy - xy[[a for _, a in ports.values()]].mean(axis=0)) * (1.4/1.5)
     for i, (x, y) in enumerate(xy):
         conformer.SetAtomPosition(i, (float(x), float(y), 0.))
@@ -394,7 +396,13 @@ def build_periodic_layer(design, *, spacing=None):
             if len(ends) != 1:
                 raise ValueError('Stereospecific construction requires equivalent attachment elements on each monomer.')
             initial_caps['B' if key == 'A' else 'A'] = ends.pop()
-    unique = {k: {**_block(c, embed_seed=2941 if chiral else None, cap_element=initial_caps.get(k)), 'component': k} for k, c in components.items()}
+    imine_mode = None
+    if design['linkage'] in ('imine', 'alkyl_imine'):
+        # Source-derived cells are new constructions from precursors. Keep the
+        # existing node pose and use opposed ends on their generated spacers.
+        imine_mode = 'straight' if design.get('source_drawing_basis') else 'all'
+    unique = {k: {**_block(c, embed_seed=2941 if chiral else None, cap_element=initial_caps.get(k),
+                           imine_mode=imine_mode), 'component': k} for k, c in components.items()}
     blocks = [unique[k] for k in block_types]
     if sum(len(b['elements']) for b in blocks) > MAX_CELL_SITES:
         raise ValueError(f'Automatic cells are limited to {MAX_CELL_SITES} explicit sites.')
@@ -421,7 +429,7 @@ def build_periodic_layer(design, *, spacing=None):
             if method == 'restrained_mmff94' and not all(cap_elements.values()):
                 continue
             try:
-                adjusted = {k: _block(c, general_tilt=45,
+                adjusted = {k: _block(c, general_tilt=45, imine_mode=imine_mode,
                                       cap_element=cap_elements[k] if method == 'restrained_mmff94' else None)
                             for k, c in components.items()}
             except ValueError:

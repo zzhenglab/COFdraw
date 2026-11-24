@@ -7,7 +7,7 @@ import math
 import numpy as np
 from rdkit import Chem
 
-from .cofdraw_depiction import compute_2d_coords
+from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports, straight_linker_axes
 from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _ports
 
@@ -66,15 +66,8 @@ def linear_arms(mol, matches):
     mol=Chem.Mol(mol)
     compute_2d_coords(mol,canonOrient=False,forceRDKit=True)
     xy=mol.GetConformer().GetPositions()[:,:2]
-    a,b=matches
-    chord=xy[b[1]]-xy[a[1]]
-    span=np.linalg.norm(chord)
-    if span<1e-8:
-        return False
-    unit=chord/span
-    directions=[xy[site[1]]-xy[site[0]] for site in matches]
-    return all(outward@d/np.linalg.norm(d)>math.cos(math.radians(25))
-               for outward,d in zip((-unit,unit),directions))
+    anchors, sites = np.array([match[:2] for match in matches]).T
+    return straight_linker_axes(xy[sites], xy[sites] - xy[anchors])
 
 
 _HEX = ((2,0),(1,1),(-1,1),(-2,0),(-1,-1),(1,-1))
@@ -107,19 +100,19 @@ def _faces(pattern,repeats,kgm,triad=False,single_linker=None):
                     faces[frozenset(tri)] = (tri,(single_linker or 'BC'[i%2])*3)
         return list(faces.values())
     corners = _HEX if n==6 else _SQUARE
-    # Opposite sides belong to one edge family. Parity alternates along
-    # its face normal, so both incident pores always assign the same linker.
+    # Neighboring faces assign the same species to their common edge. Square
+    # faces alternate by half a turn so each row spans both linker lengths.
     faces=[]
     cells=((0,0),(0,1),(1,0)) if triad else product(range(repeats),repeat=2)
     for u,v in cells:
         center = (3*u,u+2*v) if n==6 else (u,v)
-        parity = (u,v,u) if n==6 else (v,u)
+        parity = (u,v,u) if n==6 else (u+v,u+v)
         seq = ''.join(pattern[(i+n//2*(parity[i%(n//2)]%2))%n] for i in range(n))
         faces.append((tuple(_add(center,p) for p in corners),seq))
     return faces
 
 
-def _block(component,alternate=False):
+def _block(component, alternate=False, *, planar_pore=False):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     from .cofdraw_depiction import has_triptycene_core,has_free_base_porphyrin,coordgen_coords
     if has_triptycene_core(mol):
@@ -131,6 +124,8 @@ def _block(component,alternate=False):
     ports = list(_ports(mol).values())
     endpoints = [site for _,site in ports]
     xy = mol.GetConformer().GetPositions()[:,:2].copy()
+    if component.get("linkage") in ("imine", "alkyl_imine") and normalize_imine_ports(mol, xy, straight_only=not planar_pore):
+        mol.SetBoolProp("_fixedImineTurns", True)
     xy -= xy[endpoints].mean(axis=0)
     tangents = xy[[dummy for dummy,_ in ports]]-xy[endpoints]
     tangents /= np.linalg.norm(tangents,axis=1)[:,None]
@@ -159,14 +154,16 @@ def _orient(axes,ports,xy):
     return best[1:]
 
 
-def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
+def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None, *, images=None, cell=None):
     """Fit rigid fragments to shared junctions with analytic rotation derivatives."""
     owners=np.array(joins)
     a,b=owners.T
     n=len(kinds)
     incident=[[] for _ in kinds]
-    for x,y in joins:
+    for edge,(x,y) in enumerate(joins):
         d=centers[y]-centers[x]
+        if images is not None:
+            d=d+images[edge]@cell
         d=d/np.linalg.norm(d)
         incident[x].append(d)
         incident[y].append(-d)
@@ -187,7 +184,7 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
             atom=mol.GetAtomWithIdx(end)
             others=[j.GetIdx() for j in atom.GetNeighbors() if j.GetIdx()!=dummy]
             variants=[d]
-            if len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
+            if not mol.HasProp("_fixedImineTurns") and len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
                     bond.GetStereo()==Chem.BondStereo.STEREONONE for bond in atom.GetBonds()):
                 axis=xy[end]-xy[others[0]]
                 axis/=np.linalg.norm(axis)
@@ -203,6 +200,8 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
     ix=np.arange(len(joins))
     incidence[ix,a]=-1
     incidence[ix,b]=1
+    if images is not None:
+        incidence=np.column_stack((incidence,images))
     solve=np.linalg.pinv(incidence)
     project=incidence@solve-np.eye(len(joins))
     initial=angles.copy()
@@ -237,7 +236,7 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
     # Different length linkers can leave short junctions at closed loops.
     # Correct inter-block distances by translations of complete molecules.
     for _ in range(60):
-        bonds=translations[b]-translations[a]+ends[:,1]-ends[:,0]
+        bonds=incidence@translations+ends[:,1]-ends[:,0]
         lengths=np.linalg.norm(bonds,axis=1)
         if np.min(lengths)<1e-8 or np.max(abs(lengths-1.5))<.015:
             break
@@ -245,14 +244,14 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None):
     return translations,angles,slots
 
 
-def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientations=None,geometry=None):
+def join_fragments(components,kinds,centers,joins,slot_pairs,bond_order,orientations=None,geometry=None,placement=None):
     degrees=Counter(k for pair in joins for k in pair)
     geo=geometry or {k:_block(components[k]) for k in set(kinds)}
     if sum(geo[k][0].GetNumAtoms() for k in kinds)-2*len(joins)>2400:
         raise ValueError('This drawing exceeds 2,400 atoms. Use a smaller neighborhood.')
     if any(degrees[i]>len(geo[k][1]) for i,k in enumerate(kinds)):
         raise ValueError('The selected node has too few sites for this pore arrangement.')
-    translations,angles,slots=_fit(geo,kinds,centers,joins,slot_pairs,orientations)
+    translations,angles,slots=placement or _fit(geo,kinds,centers,joins,slot_pairs,orientations)
     fragments=[]
     for i,k in enumerate(kinds):
         original,ports,local,_=geo[k]
@@ -291,6 +290,61 @@ def binary_kagome_roles(components):
     return tuple(next(k for k,c in components.items() if c['connectivity']==n) for n in (4,2))
 
 
+def _periodic_pore_placement(geometry, pattern, kgm, node, spacer, kinds, grid, joins, metric):
+    """Fit the repeating molecular motif once, then crop it to the selected faces."""
+    if kgm:
+        cell = np.array([[4, 0], [2, 2]])
+    elif len(pattern) == 6:
+        cell = np.array([[3, 1], [0, 2]])
+        # Face ordering in _faces toggles opposite edges along u or v.
+        cell[0] *= 2 if pattern[0] != pattern[3] or pattern[2] != pattern[5] else 1
+        cell[1] *= 2 if pattern[1] != pattern[4] else 1
+    else:
+        cell = np.eye(2, dtype=int)
+        if pattern[:2] != pattern[2:]:
+            # Alternating half-turns give each row and column the same inventory
+            # of short and long linkers, with one shared molecule per edge.
+            cell = np.array([[1, 1], [-1, 1]])
+    inverse = np.linalg.inv(cell)
+    def address(kind, point):
+        image = np.floor(point @ inverse + 1e-8).astype(int)
+        # The integer vertex grid also contains half-integer linker midpoints.
+        x, y = np.rint(2 * (point - image @ cell)).astype(int)
+        return (kind, x, y), image
+
+    # Include complete incident stars even when the requested crop is one face.
+    motif_edges = set()
+    for vertices, sequence in _faces(pattern, 3, kgm, single_linker=spacer):
+        for a, b, kind in zip(vertices, vertices[1:] + vertices[:1], sequence):
+            mid, image = address(kind, (np.array(a) + b) / 2)
+            for vertex in (a, b):
+                corner, offset = address(node, np.array(vertex))
+                motif_edges.add((corner, mid, tuple(image - offset)))
+    ordered = sorted(motif_edges)
+    sites = sorted({site for a, b, _ in ordered for site in (a, b)})
+    index = {site: i for i, site in enumerate(sites)}
+    pairs = [(index[a], index[b]) for a, b, _ in ordered]
+    sides = []
+    degree = Counter()
+    for a, b in pairs:
+        sides.append((degree[a], degree[b]))
+        degree.update((a, b))
+    points = np.array([site[1:] for site in sites]) * metric / 2
+    shifts = np.array([shift for _, _, shift in ordered])
+    positions, angles, ports = _fit(geometry, [s[0] for s in sites], points, pairs, sides,
+                                    images=shifts, cell=cell * metric)
+    addresses = [address(kind, point) for kind, point in zip(kinds, grid)]
+    tile = positions[-2:]
+    translations = np.array([positions[index[site]] + offset @ tile for site, offset in addresses])
+    lookup = dict(zip(ordered, ports))
+    slots = []
+    for a, b in joins:
+        source, start = addresses[a]
+        target, end = addresses[b]
+        slots.append(lookup[source, target, tuple(end - start)])
+    return translations, np.array([angles[index[site]] for site, _ in addresses]), slots
+
+
 def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
     """Build a finite molecular graph with shared blocks, labeled outer ports, and pore census."""
     kgm=layout=='kgm'
@@ -322,8 +376,14 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
             joins.append((junction,mid))
             slot_pairs.append((degrees[junction],degrees[mid]))
             degrees[junction]+=1; degrees[mid]+=1
-    centers=np.array(centers)*([.5,math.sqrt(3)/2] if kgm or len(pattern)==6 else [1.,1.])
-    result,origins=join_fragments(components,kinds,centers,joins,slot_pairs,bond_order)
+    grid = np.array(centers)
+    metric = np.array([.5, math.sqrt(3)/2] if kgm or len(pattern)==6 else [1., 1.])
+    imines = all(c.get("linkage") in ("imine", "alkyl_imine") for c in components.values())
+    geometry = {k: _block(c, planar_pore=imines) for k, c in components.items()}
+    placement = (_periodic_pore_placement(geometry, pattern, kgm, node, spacer, kinds, grid, joins, metric)
+                 if imines else None)
+    result,origins=join_fragments(components,kinds,grid*metric,joins,slot_pairs,bond_order,
+                                  geometry=geometry,placement=placement)
     census=dict(sorted(Counter(canonical_sequence(s) for _,s in faces).items()))
     pore_faces=[]
     for vertices,_ in faces:
@@ -340,10 +400,10 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
                        'A two-cell B/C ordering extends the selected pore. Neighboring pores share each molecular edge.')
 
 
-def kagome_face_geometry(components,pattern):
+def pore_face_geometry(components,pattern,layout):
     """Keep one editable pore in exactly the same rigid-fragment geometry as larger patches."""
-    mol,summary=pore_patch(components,pattern,1,2,layout='kgm')
-    return circuit_geometry(components,mol,summary,'Rigid precursor fragments fitted to a Kagome pore')
+    mol,summary=pore_patch(components,pattern,1,2,layout=layout)
+    return circuit_geometry(components,mol,summary,'Single face of the repeating molecular drawing')
 
 
 def circuit_geometry(components,mol,summary,provenance):

@@ -382,11 +382,35 @@ def build_patch(recipe: dict):
     if recipe.get("schema_version") != VERSION:
         raise ValueError("Unsupported drawing recipe version")
     instances = recipe["instances"]
+    refinement_method = recipe.get('layout_refinement')
+    # Older generated planar templates and direct Python callers can omit
+    # the automatic layout setting that Studio supplies on new drawings.
+    if ('layout_refinement' not in recipe and recipe.get('selected_template')
+            and recipe.get('linkage') in ('imine', 'alkyl_imine')
+            and recipe.get('layout_kind') in ('closed_pore', 'open_chain')
+            and not recipe.get('atom_coordinates')
+            and not any(item.get('layout_rotation_degrees') or item.get('flip_across_attachment_axis')
+                        for item in instances)):
+        refinement_method = 'bond_angle_pose_v2'
     if len(instances) < 3 or len({x["id"] for x in instances}) != len(instances):
         raise ValueError("A pore needs at least three uniquely identified instances")
     if recipe.get("topology_basis") == "monomer_degree_only":
         raise ValueError("Monomer degree alone cannot establish topology")
     components, parts, offsets, used, positions, coords = recipe["components"], {}, {}, set(), {}, {}
+    template_id = (recipe.get('selected_template') or {}).get('id')
+    automatic_imines = (refinement_method == 'bond_angle_pose_v2' and not recipe.get('atom_coordinates')
+                     and recipe.get('linkage') in ('imine', 'alkyl_imine')
+                     and (template_id or recipe.get('designed_variant') or recipe.get('assembly'))
+                     and not any(i.get('layout_rotation_degrees') or i.get('flip_across_attachment_axis')
+                                 for i in instances))
+    cyclic_imines = automatic_imines and template_id in ('hcb_3_2', 'hcb_3_3', 'sql_4_2', 'sql_4_4', 'hxl_6_2')
+    if cyclic_imines and template_id == 'hxl_6_2':
+        # A six-connected prism can also be opened as a flat triangular face.
+        # Only a planar six-arm precursor should receive the sixfold depiction.
+        from .cofdraw_spatial import site_shapes
+        cyclic_imines = any(site_shapes(Chem.MolFromSmiles(c['monomer_smiles'])).get(c.get('role')) == 'hexagonal'
+                            for c in components.values() if c.get('monomer_smiles'))
+    symmetric_blocks = set()
     joined = Chem.Mol()
     atom_origin = []
     for i, item in enumerate(instances):
@@ -405,8 +429,12 @@ def build_patch(recipe: dict):
                 nxt = (2*position-np.asarray(prev)).tolist()
         coords[name] = _fragment_layout(mol, item["incoming_port"], item["outgoing_port"], position, prev, nxt,
                                        item.get("flip_across_attachment_axis", False),
-                                       recipe.get('layout_refinement') == 'bond_angle_pose_v2',
-                                       bool(recipe.get('designed_variant')) and not recipe.get('atom_coordinates'))
+                                       refinement_method == 'bond_angle_pose_v2',
+                                       bool(recipe.get('designed_variant') or automatic_imines) and not recipe.get('atom_coordinates'))
+        if automatic_imines:
+            from .cofdraw_depiction import normalize_imine_ports
+            if normalize_imine_ports(mol, coords[name], straight_only=not cyclic_imines):
+                symmetric_blocks.add(name)
         angle = item.get('layout_rotation_degrees', 0)
         if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle):
             raise ValueError('Block rotation must be a finite angle')
@@ -464,7 +492,9 @@ def build_patch(recipe: dict):
         rw.AddBond(*endpoints, {1: Chem.BondType.SINGLE, 2: Chem.BondType.DOUBLE, 3: Chem.BondType.TRIPLE}[edge["bond_order"]])
         consumed_selector_replacements[edge_dummies[0]] = endpoints[1]
         consumed_selector_replacements[edge_dummies[1]] = endpoints[0]
-        port_joins.append({'a': endpoints[0], 'b': endpoints[1], 'direction_a': directions[0], 'direction_b': directions[1]})
+        port_joins.append({'a': endpoints[0], 'b': endpoints[1], 'direction_a': directions[0], 'direction_b': directions[1],
+                           'fixed_a': edge['a']['instance'] in symmetric_blocks,
+                           'fixed_b': edge['b']['instance'] in symmetric_blocks})
     removed = set(to_remove)
     for idx in sorted(removed, reverse=True):
         rw.RemoveAtom(idx)
@@ -523,20 +553,35 @@ def build_patch(recipe: dict):
     kept_coords = [p for i, p in enumerate(all_coords) if i not in removed]
     kept_origin = [p for i, p in enumerate(atom_origin) if i not in removed]
     refinement = {'method': None, 'applied': False}
-    if recipe.get('layout_refinement') not in (None, 'manual') and not recipe.get('atom_coordinates'):
-        if recipe['layout_refinement'] in ('rigid_block_pose_v1', 'bond_angle_pose_v2'):
+    if refinement_method not in (None, 'manual') and not recipe.get('atom_coordinates'):
+        if refinement_method in ('rigid_block_pose_v1', 'bond_angle_pose_v2'):
             from .cofdraw_layout import refine_rigid_poses, refine_bond_angles
-            if specified_double_stereo or any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in mol.GetAtoms()):
-                refinement = {'method': recipe['layout_refinement'], 'applied': False, 'reason': 'explicit_stereochemistry_preserved_without_automatic_reorientation'}
-                if recipe['layout_refinement'] == 'bond_angle_pose_v2':
+            # Rigid poses preserve all stereochemistry internal to a block.
+            # A consumed stereo-defining selector or a stereocentre at the
+            # join itself still needs its original connection-side depiction.
+            join_is_stereosensitive = bool(remapped_selector_count) or any(
+                joined.GetAtomWithIdx(j[end]).GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED
+                for j in port_joins for end in ('a', 'b')
+            )
+            if join_is_stereosensitive:
+                refinement = {'method': refinement_method, 'applied': False, 'reason': 'explicit_stereochemistry_preserved_without_automatic_reorientation'}
+                if refinement_method == 'bond_angle_pose_v2':
                     kept_coords, spacing = _refine_block_spacing(mol, kept_coords, kept_origin)
                     refinement.update(applied=spacing['applied'], angle_fit_applied=False, quality='needs_review',
                                       spacing=spacing, rigid_intrablock_geometry_preserved=True)
             else:
                 joins = [{**j, 'a': retained_atom_indices[j['a']], 'b': retained_atom_indices[j['b']]} for j in port_joins]
-                fit = refine_bond_angles if recipe['layout_refinement'] == 'bond_angle_pose_v2' else refine_rigid_poses
-                kept_coords, refinement = fit(mol, kept_coords, kept_origin, joins)
-        elif recipe['layout_refinement'] == 'rigid_block_translation_v1':
+                if refinement_method == 'bond_angle_pose_v2':
+                    alternate = ()
+                    if ((recipe.get('selected_template') or {}).get('id') == 'hcb_3_2'
+                            and not any(i.get('layout_rotation_degrees') or i.get('flip_across_attachment_axis') for i in instances)):
+                        spacers = [i['id'] for i in instances if len(_ports(parts[i['id']])) == 2]
+                        if len(instances) == 12 and len(spacers) == 6:
+                            alternate = spacers[1::2]
+                    kept_coords, refinement = refine_bond_angles(mol, kept_coords, kept_origin, joins, alternate)
+                else:
+                    kept_coords, refinement = refine_rigid_poses(mol, kept_coords, kept_origin, joins)
+        elif refinement_method == 'rigid_block_translation_v1':
             kept_coords, refinement = _refine_block_spacing(mol, kept_coords, kept_origin)
         else:
             raise ValueError('Unsupported layout refinement')

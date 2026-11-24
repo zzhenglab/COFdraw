@@ -169,3 +169,75 @@ def test_actual_viewer_model_api_checks_scattering_and_saved_reports(tmp_path):
         assert client.get(stacked.json()['downloads']['cif']).status_code==200
         operations=client.get(prefix+'capabilities').json()['operations']
         assert {'finite-inspect','finite-powder','stacking'} <= set(operations)
+
+
+@pytest.mark.parametrize('aldehyde,template,atoms,edges', [
+    ('O=Cc1cc(C=O)cc(C=O)c1', 'hcb_3_3', 72, 78),
+    ('O=Cc1ccc(C=O)cc1', 'hcb_3_2', 156, 168),
+])
+def test_periodic_imine_arms_fit_the_original_hcb_quotient(aldehyde, template, atoms, edges):
+    from cof_vision.cofdraw_chemistry import prepare_template
+    from cof_vision.cofdraw_periodic_build import build_periodic_layer
+
+    tttda = 'Cc1cc(-c2nc(-c3cc(C)c(N)c(C)c3)nc(-c3cc(C)c(N)c(C)c3)n2)cc(C)c1N'
+    design = prepare_template(aldehyde, tttda, 'imine', 'A', 'TTTDA', 6, template)
+    structure, audit = build_periodic_layer(design)
+    sites = structure['atoms']
+    assert len(sites) == atoms
+    assert audit['periodic_rank'] == 2 and audit['short_contacts'] == 0
+    assert audit['expected_atom_edges_verified'] == edges
+    fractions = np.array([a['fractional'] for a in sites])
+    vectors = {}
+    joins = []
+    for bond in audit['periodic_bonds']:
+        i, j = bond['a'], bond['b']
+        vec = (fractions[j] + bond['translation'] - fractions[i]) @ structure['cell']
+        vectors[i, j], vectors[j, i] = vec[:2], -vec[:2]
+        if sites[i]['component'] != sites[j]['component']:
+            assert bond['order'] == 2
+            joins.append((i, j))
+    turns = []
+    for i, j in joins:
+        # TTTDA supplies the imine nitrogen. Unwrap each bond separately.
+        if sites[i]['component'] != 'B':
+            i, j = j, i
+        (aryl_to_n,) = [-v for (a, b), v in vectors.items() if a == i and b != j]
+        out = vectors[i, j]
+        turns.append(aryl_to_n[0]*out[1] - aryl_to_n[1]*out[0])
+    assert len(turns) == (3 if template == 'hcb_3_3' else 6)
+    assert all(v > 0 for v in turns) or all(v < 0 for v in turns)
+
+
+def test_periodic_substituted_linker_imines_point_to_opposite_sides_across_cell_boundaries():
+    from rdkit import Chem
+    from cof_vision.cofdraw_chemistry import prepare_template
+    from cof_vision.cofdraw_periodic_build import build_periodic_layer
+
+    aldehyde = 'O=Cc1c(-c2ccccc2)cc(C=O)cc1'
+    amine = 'Nc1ccc(-c2cc(-c3ccc(N)cc3)cc(-c3ccc(N)cc3)c2)cc1'
+    design = prepare_template(aldehyde, amine, 'imine', 'straight spacer', 'TAPB', 12, 'hcb_3_2')
+    structure, audit = build_periodic_layer(design)
+    sites = structure['atoms']
+    xy = np.array([site['fractional'] for site in sites])
+    vectors, imines = {}, {}
+    for bond in audit['periodic_bonds']:
+        i, j = bond['a'], bond['b']
+        vector = ((xy[j] + bond['translation'] - xy[i]) @ structure['cell'])[:2]
+        vectors[i, j], vectors[j, i] = vector, -vector
+        if sites[i]['component'] != sites[j]['component']:
+            assert bond['order'] == 2
+            imines[i] = vector
+            imines[j] = -vector
+    fragment = Chem.AddHs(Chem.MolFromSmiles(design['components']['A']['fragment_smiles']))
+    indices = [a.GetIdx() for a in fragment.GetAtoms() if a.GetAtomicNum()]
+    ports = [a.GetNeighbors()[0].GetIdx() for a in fragment.GetAtoms() if not a.GetAtomicNum()]
+    path = Chem.GetShortestPath(fragment, *ports)
+    offsets = [indices.index(i) for i in path]
+    starts = [i for i, site in enumerate(sites) if site['component'] == 'A'][::len(indices)]
+    assert len(starts) == 3 and audit['periodic_rank'] == 2 and audit['short_contacts'] == 0
+    for start in starts:
+        # Sum image-corrected bonds along the rod. Raw fractional coordinates
+        # can put either endpoint or either neighboring imine in the wrong cell.
+        chord = sum(vectors[start+i, start+j] for i, j in zip(offsets, offsets[1:]))
+        side_a, side_b = (np.linalg.det([chord, imines[start+i]]) for i in (offsets[0], offsets[-1]))
+        assert side_a * side_b < 0

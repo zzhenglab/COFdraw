@@ -4,19 +4,6 @@
 }
 #science-dialog[hidden] { display:none }
 body:has(.crystal-workspace:not([hidden])) { display:block; height:auto; overflow:auto }
-.canvas-panel { position:relative; --render-width:clamp(220px,20vw,310px) }
-.workspace-tools .canvas-appearance { position:static; display:block; width:auto; margin:0; padding:0; background:transparent; border:0 }
-.workspace-tools .appearance-options { position:static; border:0; padding:0; margin:0; background:transparent }
-.workspace-tools .appearance-options > summary { width:auto; min-height:30px; padding:6px 11px; border:1px solid #bdcec7; border-radius:5px; background:#fff; color:#275e51; font:600 12px "Segoe UI",sans-serif }
-.drawing-render-body { padding:12px; background:#fff; border:1px solid #cfddd7; border-radius:7px }
-@media(min-width:1010px){
-  .canvas-panel:has(#appearance-options[open]) { padding-right:calc(var(--render-width) + 30px) }
-  .drawing-render-body { position:absolute; right:10px; top:12px; width:var(--render-width); max-height:calc(100dvh - 125px); overflow:auto; z-index:2 }
-}
-@media(max-width:1009px){
-  .workspace-tools .canvas-appearance:has(details[open]) { flex-basis:100% }
-  .drawing-render-body { max-height:48vh; overflow:auto }
-}
 .crystal-workspace .dialog-header { display:flex; align-items:center; justify-content:space-between; padding:10px 22px; background:#f6f9f8 }
 .crystal-workspace .dialog-header h2 { font:600 18px "Segoe UI",sans-serif }
 .crystal-workspace .science-workspace { display:grid; grid-template-columns:minmax(0,1fr) minmax(295px,30%); overflow:visible }

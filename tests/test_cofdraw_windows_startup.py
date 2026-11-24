@@ -45,7 +45,7 @@ def test_failed_native_page_smoke_returns_error_and_destroys_window(monkeypatch,
     destroyed = []
     def fail_script(script):
         raise RuntimeError("Native page did not load")
-    window = SimpleNamespace(evaluate_js=fail_script, destroy=lambda: destroyed.append(True))
+    window = SimpleNamespace(evaluate_js=fail_script, run_js=fail_script, destroy=lambda: destroyed.append(True))
     fake = SimpleNamespace(create_window=lambda *a, **kw: window, start=lambda callback, **kw: callback())
     monkeypatch.setitem(sys.modules, "webview", fake)
     status_file = tmp_path / "status.json"

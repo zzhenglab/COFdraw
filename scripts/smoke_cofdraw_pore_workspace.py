@@ -161,13 +161,23 @@ def main():
 
         page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
         assert not panel.is_visible()
-        drawer = page.locator("#appearance-options > summary")
-        drawer.click()
-        side = page.locator(".drawing-render-body").bounding_box()
-        sheet = page.locator("#canvas-viewport").bounding_box()
-        assert side["x"] >= sheet["x"] + sheet["width"] - 2, (side, sheet)
-        drawer.click()
-        page.locator("#open-science" if page.locator("#science-dialog").is_hidden() else "#close-science").click()
+        rendering = page.locator("#appearance-options > summary")
+        for width in (1450, 768, 390):
+            page.set_viewport_size({"width": width, "height": 960})
+            figure = page.locator("#canvas-viewport")
+            closed_width = figure.bounding_box()["width"]
+            rendering.click()
+            sheet = figure.bounding_box()
+            tab = rendering.bounding_box()
+            assert tab["y"] >= sheet["y"] + sheet["height"] - 1
+            assert abs(sheet["width"] - closed_width) <= 1
+            controls = page.locator(".drawing-render-body")
+            assert controls.evaluate("e => e.scrollWidth <= e.clientWidth + 1")
+            page.locator("#image-size").scroll_into_view_if_needed()
+            expect(page.locator("#image-size")).to_be_in_viewport()
+            rendering.click()
+        page.set_viewport_size({"width": 1450, "height": 960})
+        page.locator("#open-science").click()
         assert page.evaluate("COFdrawPores.structureHash") == signature
         page.locator('[data-science-tab="porosity"]').click()
         page.locator("#probe-radius").fill("2.1")
