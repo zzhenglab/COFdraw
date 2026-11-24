@@ -26,6 +26,8 @@ Describe a COF, review its building blocks, and draw. Explore 3D structures and 
 
 In **Explore COF chemical space**, open a linkage to inspect literature pairs, browse hypothetical candidates and export screening data with available CIFs.
 
+The [November 24 screening dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-24) includes 21,429 unrelaxed periodic CIFs, a CSV property index and a COFdraw results file. In **Explore COF chemical space → Simulation results → Open results file**, select `research-screen.json.gz`. [Coverage and validation](benchmarks/screening-2026-11-24.md)
+
 1. Download **[COFdraw-Windows.zip](https://github.com/zzhenglab/COFdraw/releases/latest/download/COFdraw-Windows.zip)** from the latest release.
 2. Extract the **entire ZIP** into a writable folder.
 3. Open **`COFdraw.exe`** inside the extracted `COFdraw` folder.
