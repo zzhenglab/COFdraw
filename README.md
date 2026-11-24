@@ -10,6 +10,18 @@ Draw covalent organic frameworks from their building blocks, explore periodic cr
 
 *Try this drawing:* In **Build manually**, choose **One monomer · self-condensation**, select **COF-953 · Kagome**, then choose **Hexagon + 6 triangles** under **Drawing extent**. Each triangular pore shares an edge with the central hexagon.
 
+## Drawing gallery
+
+| TpPa · Reaction scheme | F-COF-1 · Source-style highlights |
+| :---: | :---: |
+| [![Tp and Pa above a reaction arrow leading to one beta-ketoenamine pore with a double-ended measurement arrow](docs/assets/gallery-tppa-reaction.png)](docs/assets/gallery-tppa-reaction.png) | [![A red-and-black vinylene pore with a yellow halo around the bonds](docs/assets/gallery-f-cof-1-highlight.png)](docs/assets/gallery-f-cof-1-highlight.png) |
+| A precursor scheme and the measured opening in the drawing plane. | A recovered drawing that preserves the source bond colors and decorative halo. [Drawing notes](docs/recovered-source-drawings.md) |
+
+| COF-300 · 2D chemical projection | COF-300 · Periodic crystal view |
+| :---: | :---: |
+| [![Two connected diamond-net circuits drawn in blue and amber with rear bonds faded to show depth](docs/assets/gallery-cof-300-circuits.png)](docs/assets/gallery-cof-300-circuits.png) | [![Interpenetrating diamond networks colored by component around translucent blue pore surfaces](docs/assets/gallery-cof-300-crystal.png)](docs/assets/gallery-cof-300-crystal.png) |
+| Depth fading separates front and rear bonds in the chemical drawing. | The published fivefold COF-300 phase with a pore-surface overlay. [Supporting CIF](https://doi.org/10.1021/ja8096256.s002) |
+
 ## Run the desktop app
 
 | Platform | First launch |
