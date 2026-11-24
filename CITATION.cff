@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use COFdraw in research, please cite the software release that you ran."
+type: software
+title: COFdraw
+authors:
+  - name: zzhenglab
+version: "0.10.7"
+license: MIT
+repository-code: https://github.com/zzhenglab/COFdraw
+url: https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7
+keywords:
+  - covalent organic frameworks
+  - chemical drawing
+  - crystal structures
+  - reticular chemistry
