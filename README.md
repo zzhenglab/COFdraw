@@ -17,10 +17,22 @@ Draw covalent organic frameworks from their building blocks, explore periodic cr
 | [![Tp and Pa above a reaction arrow leading to one beta-ketoenamine pore with a double-ended measurement arrow](docs/assets/gallery-tppa-reaction.png)](docs/assets/gallery-tppa-reaction.png) | [![A red-and-black vinylene pore with a yellow halo around the bonds](docs/assets/gallery-f-cof-1-highlight.png)](docs/assets/gallery-f-cof-1-highlight.png) |
 | A precursor scheme and the measured opening in the drawing plane. | A recovered drawing that preserves the source bond colors and decorative halo. [Drawing notes](docs/recovered-source-drawings.md) |
 
-| COF-300 · 2D chemical projection | COF-300 · Periodic crystal view |
+| COF-300 · Source-informed 2D drawing | COF-300 · Periodic crystal view |
 | :---: | :---: |
-| [![Two connected diamond-net circuits drawn in blue and amber with rear bonds faded to show depth](docs/assets/gallery-cof-300-circuits.png)](docs/assets/gallery-cof-300-circuits.png) | [![Interpenetrating diamond networks colored by component around translucent blue pore surfaces](docs/assets/gallery-cof-300-crystal.png)](docs/assets/gallery-cof-300-crystal.png) |
-| Depth fading separates front and rear bonds in the chemical drawing. | The published fivefold COF-300 phase with a pore-surface overlay. [Supporting CIF](https://doi.org/10.1021/ja8096256.s002) |
+| [![COF-300 chemical drawing with black phenyl rings, red imine nitrogens, and a faded rear branch](docs/assets/gallery-cof-300-projection.png)](docs/assets/gallery-cof-300-projection.png) | [![Interpenetrating diamond networks colored by component around translucent blue pore surfaces](docs/assets/gallery-cof-300-crystal.png)](docs/assets/gallery-cof-300-crystal.png) |
+| This reviewed finite drawing shows the tetrahedral junctions, bis-imine linkers, and faded rear branch of the published scheme. [Source scheme](https://doi.org/10.1021/acsami.3c12826) · [Drawing notes](docs/recovered-source-drawings.md) | The fivefold phase reported in 2009, shown with a pore-surface overlay. [Supporting CIF](https://doi.org/10.1021/ja8096256.s002) |
+
+### One imine pore, four rendering styles
+
+All four figures use the same TFB–TAPB chemical graph. Choose these presets in **Rendering**. The layer and sphere effects are illustrations.
+
+| Filled aromatic rings | Gradient layers |
+| :---: | :---: |
+| [![Mint and lavender aromatic rings with crisp black bonds](docs/assets/gallery-aromatic-ring-fills.png)](docs/assets/gallery-aromatic-ring-fills.png) | [![A black chemical drawing above tilted translucent teal sheets](docs/assets/gallery-gradient-layers.png)](docs/assets/gallery-gradient-layers.png) |
+
+| Spheres and bonds | Half-space-filling layers |
+| :---: | :---: |
+| [![Purple and rose shaded atoms fade into a black bond-line drawing](docs/assets/gallery-spheres-and-bonds.png)](docs/assets/gallery-spheres-and-bonds.png) | [![A chemical drawing over stacked shaded atoms with blue nitrogen sites](docs/assets/gallery-half-space-layers.png)](docs/assets/gallery-half-space-layers.png) |
 
 ## Run the desktop app
 
