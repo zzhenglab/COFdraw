@@ -10,6 +10,8 @@ Draw covalent organic frameworks from their building blocks, explore periodic cr
 
 *Try this drawing:* In **Build manually**, choose **One monomer · self-condensation**, select **COF-953 · Kagome**, then choose **Hexagon + 6 triangles** under **Drawing extent**. Each triangular pore shares an edge with the central hexagon.
 
+**[Drawing gallery](#drawing-gallery)** · **[3D, diffraction and gas sorption](#3d-diffraction-and-gas-sorption)** · **[Linkage explorer](#explore-chemical-space-by-linkage)**
+
 ## Drawing gallery
 
 | TpPa · Reaction scheme | F-COF-1 · Source-style highlights |
@@ -33,6 +35,28 @@ All four figures use the same TFB–TAPB chemical graph. Choose these presets in
 | Spheres and bonds | Half-space-filling layers |
 | :---: | :---: |
 | [![Purple and rose shaded atoms fade into a black bond-line drawing](docs/assets/gallery-spheres-and-bonds.png)](docs/assets/gallery-spheres-and-bonds.png) | [![A chemical drawing over stacked shaded atoms with blue nitrogen sites](docs/assets/gallery-half-space-layers.png)](docs/assets/gallery-half-space-layers.png) |
+
+## 3D, diffraction and gas sorption
+
+**3D crystal views.** Rotate a structure, color its interpenetrating networks, or switch to a simplified topology. These two COF‑300 views show the published fivefold phase and a local set of connected tetrahedral junctions. [Supporting CIF](https://doi.org/10.1021/ja8096256.s002)
+
+[![COF-300 crystal packing colored by network next to a simplified graph of its local tetrahedral junctions](docs/assets/feature-cof-300-network-views.png)](docs/assets/feature-cof-300-network-views.png)
+
+**Powder diffraction.** In **3D & properties → PXRD**, compare calculated AA, AB, ABC, and slipped packing patterns for a TFB–TAPB model. The separation slider spreads the traces vertically and the low-angle control zooms into the first peaks. [PXRD methods](docs/characterization-methods.md)
+
+[![COFdraw's PXRD comparison with four vertically separated simulated traces from 2 to 22 degrees two theta](docs/assets/feature-stacking-pxrd.png)](docs/assets/feature-stacking-pxrd.png)
+
+**Gas sorption.** The **Gas adsorption** panel ran RASPA3 for pure methane at seven pressures from 0.1 to 20 bar. The figure shows absolute loading from a short demonstration with a rigid, uncharged TFB–TAPB model and an ideal-gas reservoir. Error bars are internal sampling intervals from this run. [Force fields, charges, and simulation settings](docs/raspa-methods.md)
+
+[![Seven simulated methane adsorption points at 298 K on a logarithmic pressure axis with 95 percent sampling intervals](docs/assets/feature-methane-sorption.png)](docs/assets/feature-methane-sorption.png)
+
+## Explore chemical space by linkage
+
+Open **Explore COF chemical space** to browse families by their reaction schemes. Select a family to inspect which building-block pairs were screened as eligible, which have indexed reports, and which have both kinds of evidence. Select a heatmap cell to see the precursor structures and available literature entries.
+
+[![COFdraw linkage cards with reaction schemes for imine, beta-ketoenamine, carbon–carbon linkages, and other families](docs/assets/feature-linkage-families.png)](docs/assets/feature-linkage-families.png)
+
+[![Imine precursor pair heatmap with records and precursor structures for a selected combination](docs/assets/feature-imine-pairs.png)](docs/assets/feature-imine-pairs.png)
 
 ## Run the desktop app
 
