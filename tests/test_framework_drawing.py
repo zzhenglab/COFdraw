@@ -7,6 +7,34 @@ import numpy as np
 from rdkit import Chem
 
 from cof_vision.framework_drawing import VERSION, TP, linkage_fragment, build_patch, draw_cofex
+from cof_vision.cofdraw_depiction import compute_2d_coords, normalize_linkage_ports
+
+
+def test_reduced_linkage_symmetry_preserves_individual_drawing_angles():
+    fragment = linkage_fragment('O=Cc1cc(C=O)cc(C=O)c1', 'secondary_amine', 'aryl_aldehyde')
+    mol = Chem.MolFromSmiles(fragment['fragment_smiles'])
+    compute_2d_coords(mol)
+    xy = mol.GetConformer().GetPositions()[:, :2].copy()
+    scaffold = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum()]
+    original = xy[scaffold].copy()
+    ports = [a for a in mol.GetAtoms() if not a.GetAtomicNum()]
+    expected = []
+    for port, angle, length in zip(ports, (40., -73., 54.), (1.4, 1.5, 1.6), strict=True):
+        site = port.GetNeighbors()[0]
+        anchor = next(a for a in site.GetNeighbors() if a.GetAtomicNum())
+        axis = xy[site.GetIdx()] - xy[anchor.GetIdx()]
+        axis /= np.linalg.norm(axis)
+        normal = np.array([-axis[1], axis[0]])
+        theta = math.radians(angle)
+        xy[port.GetIdx()] = xy[site.GetIdx()] + length * (math.cos(theta) * axis + math.sin(theta) * normal)
+        expected.append((port.GetIdx(), site.GetIdx(), axis, abs(angle), length))
+
+    assert normalize_linkage_ports(mol, xy, 'secondary_amine')
+    np.testing.assert_array_equal(xy[scaffold], original)
+    for port, site, axis, angle, length in expected:
+        bond = xy[port] - xy[site]
+        assert np.linalg.norm(bond) == pytest.approx(length)
+        assert math.degrees(math.atan2(np.linalg.det([axis, bond]), axis @ bond)) == pytest.approx(angle)
 
 
 def pore():

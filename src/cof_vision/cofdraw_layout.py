@@ -171,7 +171,7 @@ def refine_rigid_poses(mol, coordinates, origins, joins, *, robust=False):
     return fitted, report
 
 
-def _fixed_imine_ends(mol, origins, joins):
+def _fixed_port_ends(mol, origins, joins):
     """Index retained boundary tips and their joined counterparts identically."""
     ends = {}
     for join in joins:
@@ -197,7 +197,11 @@ def _fixed_imine_ends(mol, origins, joins):
 def refine_bond_angles(mol, coordinates, origins, joins, alternate_spacers=()):
     from .cofdraw_depiction import straight_linker_axes
     xy = np.asarray(coordinates, dtype=float)
-    ends = _fixed_imine_ends(mol, origins, joins)
+    ends = _fixed_port_ends(mol, origins, joins)
+    # Retain the existing audit key for double-bond junctions.
+    node_failures = ('inconsistent_linkage_nodes' if any(
+        mol.GetBondBetweenAtoms(j['a'], j['b']).GetBondType() == Chem.BondType.SINGLE for j in joins)
+        else 'inconsistent_imine_nodes')
     rods = {}
     nodes = {}
     for name, arms in ends.items():
@@ -223,7 +227,7 @@ def refine_bond_angles(mol, coordinates, origins, joins, alternate_spacers=()):
             turns = radial[:, 0] * bend[:, 1] - radial[:, 1] * bend[:, 0]
             if turns.min() <= 1e-8 and turns.max() >= -1e-8:
                 report['quality'] = 'needs_review'
-                report.setdefault('inconsistent_imine_nodes', []).append(name)
+                report.setdefault(node_failures, []).append(name)
         return fitted, report
 
     fitted, report = fit(xy, joins)
@@ -231,7 +235,7 @@ def refine_bond_angles(mol, coordinates, origins, joins, alternate_spacers=()):
         return fitted, report
 
     # An ortho substituent can crowd the first winding. Switch every free
-    # imine arm together, including the continuations drawn at the boundary.
+    # linkage arm together, including the continuations drawn at the boundary.
     flipped = xy.copy()
     other_joins = [dict(j) for j in joins]
     directions = {(j[k], j[p]): (j, 'direction_' + k) for j in other_joins
@@ -258,7 +262,7 @@ def refine_bond_angles(mol, coordinates, origins, joins, alternate_spacers=()):
         return alternative, comparison
     best = min(((fitted, report), (alternate, opposite), (alternative, comparison)),
                key=lambda pair: (len(pair[1].get('same_side_straight_linkers', [])),
-                                 len(pair[1].get('inconsistent_imine_nodes', [])),
+                                 len(pair[1].get(node_failures, [])),
                                  pair[1]['final_max_junction_angle_deviation_degrees']))
     return best
 

@@ -7,7 +7,7 @@ import math
 import numpy as np
 from rdkit import Chem
 
-from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports, straight_linker_axes
+from .cofdraw_depiction import SYMMETRIC_PORT_LINKAGES, compute_2d_coords, normalize_linkage_ports, straight_linker_axes
 from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _ports
 
@@ -124,8 +124,8 @@ def _block(component, alternate=False, *, planar_pore=False):
     ports = list(_ports(mol).values())
     endpoints = [site for _,site in ports]
     xy = mol.GetConformer().GetPositions()[:,:2].copy()
-    if component.get("linkage") in ("imine", "alkyl_imine") and normalize_imine_ports(mol, xy, straight_only=not planar_pore):
-        mol.SetBoolProp("_fixedImineTurns", True)
+    if normalize_linkage_ports(mol, xy, component.get("linkage"), straight_only=not planar_pore):
+        mol.SetBoolProp("_fixedLinkageTurns", True)
     xy -= xy[endpoints].mean(axis=0)
     tangents = xy[[dummy for dummy,_ in ports]]-xy[endpoints]
     tangents /= np.linalg.norm(tangents,axis=1)[:,None]
@@ -184,7 +184,7 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None, *, images=No
             atom=mol.GetAtomWithIdx(end)
             others=[j.GetIdx() for j in atom.GetNeighbors() if j.GetIdx()!=dummy]
             variants=[d]
-            if not mol.HasProp("_fixedImineTurns") and len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
+            if not mol.HasProp("_fixedLinkageTurns") and len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
                     bond.GetStereo()==Chem.BondStereo.STEREONONE for bond in atom.GetBonds()):
                 axis=xy[end]-xy[others[0]]
                 axis/=np.linalg.norm(axis)
@@ -378,10 +378,10 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
             degrees[junction]+=1; degrees[mid]+=1
     grid = np.array(centers)
     metric = np.array([.5, math.sqrt(3)/2] if kgm or len(pattern)==6 else [1., 1.])
-    imines = all(c.get("linkage") in ("imine", "alkyl_imine") for c in components.values())
-    geometry = {k: _block(c, planar_pore=imines) for k, c in components.items()}
+    symmetric = all(c.get("linkage") in SYMMETRIC_PORT_LINKAGES for c in components.values())
+    geometry = {k: _block(c, planar_pore=symmetric) for k, c in components.items()}
     placement = (_periodic_pore_placement(geometry, pattern, kgm, node, spacer, kinds, grid, joins, metric)
-                 if imines else None)
+                 if symmetric else None)
     result,origins=join_fragments(components,kinds,grid*metric,joins,slot_pairs,bond_order,
                                   geometry=geometry,placement=placement)
     census=dict(sorted(Counter(canonical_sequence(s) for _,s in faces).items()))

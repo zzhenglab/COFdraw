@@ -12,7 +12,7 @@ from rdkit import Chem
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .cofdraw_chemistry import design_signature
-from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports
+from .cofdraw_depiction import SYMMETRIC_PORT_LINKAGES, compute_2d_coords, normalize_linkage_ports
 from .cofdraw_periodic_build import SUPPORTED_TEMPLATES, _fit_blocks, _net, _rotate
 from .cofdraw_periodic_options import validated_design
 from .depiction_rings import symmetric_depiction_rings
@@ -26,15 +26,14 @@ MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
 
 
-def _planar_block(component, imine_mode=None):
+def _planar_block(component, linkage=None, straight_only=False):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     compute_2d_coords(mol, canonOrient=False, forceRDKit=True)
     ports = list(_ports(mol).values())
     xyz = mol.GetConformer().GetPositions()
     sites = np.array([site for _, site in ports])
     xyz -= xyz[sites].mean(axis=0)
-    if imine_mode:
-        normalize_imine_ports(mol, xyz, straight_only=imine_mode == 'straight')
+    normalize_linkage_ports(mol, xyz, linkage, straight_only=straight_only)
     directions = xyz[[dummy for dummy, _ in ports], :2] - xyz[sites, :2]
     directions /= np.linalg.norm(directions, axis=1)[:, None]
     return dict(mol=mol, xyz=xyz, sites=sites, ports=ports, directions=directions)
@@ -215,12 +214,12 @@ def _chain(recipe, repeats):
 
 
 @lru_cache(maxsize=64)
-def _fit_sheet(template,fragments,order,imine_mode=None):
+def _fit_sheet(template,fragments,order,linkage=None,straight_only=False):
     # The placement is independent of drawing size and style. Reuse it in
     # the extent picker and the actual drawing, including unsuccessful fits.
     components = {key:dict(fragment_smiles=smiles,connectivity=count) for key,smiles,count in fragments}
     kinds,ref,centers,edges = _quotient(template,components)
-    blocks = {key:_planar_block(c, imine_mode) for key,c in components.items()}
+    blocks = {key:_planar_block(c, linkage, straight_only) for key,c in components.items()}
     poses = []
     cell_blocks = [blocks[k] for k in kinds]
     states = _self_states(cell_blocks[0]) if template == 'self_square' else [cell_blocks]
@@ -245,12 +244,12 @@ def _fit_sheet(template,fragments,order,imine_mode=None):
 
 def _sheet_placement(design,template):
     fragments = tuple((key,c['fragment_smiles'],c['connectivity']) for key,c in sorted(design['components'].items()))
-    imines = template in SHEET_TEMPLATES and design.get('linkage') in ('imine','alkyl_imine')
+    linkage = design.get('linkage') if template in SHEET_TEMPLATES else None
     order = design['connections'][0]['bond_order']
-    placement = _fit_sheet(template,fragments,order,'all' if imines else None)
-    if placement is None and imines:
+    placement = _fit_sheet(template,fragments,order,linkage)
+    if placement is None and linkage in SYMMETRIC_PORT_LINKAGES:
         # Try the original node poses while retaining opposite sides on every straight spacer.
-        placement = _fit_sheet(template,fragments,order,'straight')
+        placement = _fit_sheet(template,fragments,order,linkage,straight_only=True)
     if placement is None:
         raise ValueError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
     return placement
