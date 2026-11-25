@@ -598,7 +598,10 @@ def build_patch(recipe: dict):
             raise ValueError('Atom coordinates must be finite xy pairs')
         refinement = {'method': 'explicit_atom_coordinates', 'applied': False, 'source_coordinates_preserved': True}
         assembly=recipe.get('assembly') or {}
-        if (assembly.get('kind')=='self_kagome' or assembly.get('pore_view')=='rhombus' or assembly.get('pore_layout')=='kgm'
+        provenance = recipe.get('coordinate_provenance')
+        if ((template_id == 'sql_4_4' and isinstance(provenance, dict)
+             and provenance.get('kind') in ('fitted_sheet_face', 'user_manual_coordinates'))
+                or assembly.get('kind')=='self_kagome' or assembly.get('pore_view')=='rhombus' or assembly.get('pore_layout')=='kgm'
                 or (recipe.get('selected_template') or {}).get('id')=='kgm_4_2'):
             refinement.update(source_coordinates_preserved=False, coordinate_provenance=recipe.get('coordinate_provenance'))
     conf = Chem.Conformer(mol.GetNumAtoms())

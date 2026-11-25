@@ -11,6 +11,7 @@ import time
 from urllib.request import Request, urlopen
 
 from rdkit import Chem
+from rdkit.Chem import rdMolTransforms
 
 
 def downloaded_molecule(url, drawing):
@@ -84,6 +85,17 @@ def check_service(url):
     assert groups["bfbapy"] == {"aldehyde", "primary_amine"}
     check_hcb_junctions(api, url, library["monomer_presets"])
     smiles = {row["id"]: row["smiles"] for row in library["monomer_presets"]}
+    square = api("prepare", {"monomer_a": smiles["feed_97d130d567b8"], "monomer_b": smiles["pytta"],
+                             "linkage": "imine", "template_id": "sql_4_4", "instances": 4})["recipe"]
+    imine = Chem.MolFromSmarts("[#6]-[C;D2]=[N;D2]-[#6]")
+    for route, options, joins in (("render", {}, 4), ("repeat", {"repeats": 2}, 12)):
+        view = api(route, {"recipe": square, "size": 640, **options})
+        mol = downloaded_molecule(url, view)
+        sites = mol.GetSubstructMatches(imine)
+        assert len(sites) == joins
+        for flank, carbon, nitrogen, other_flank in sites:
+            for triplet in ((flank, carbon, nitrogen), (carbon, nitrogen, other_flank)):
+                assert abs(rdMolTransforms.GetAngleDeg(mol.GetConformer(), *triplet) - 120) < .1
     mtf = api("prepare", {"monomer_a": smiles["tfb"], "monomer_b": smiles["tape"], "linkage": "imine",
                           "template_id": "mtf_4_3", "instances": 32})["recipe"]
     sheet = api("render", {"recipe": mtf, "size": 640})
@@ -114,7 +126,8 @@ def check_service(url):
         job = api("science/adsorption/jobs/" + job["job_id"])
     assert job["status"] == "complete", (job["status"], job.get("message"))
     print(f"Verified {len(library['monomer_presets'])} monomers, hcb imine and ketoenamine angles and node symmetry, "
-          "opposed imines across four neighboring hcb pores, the 17-pore mtf sheet and its two aperture sizes, "
+          "opposed imines across four neighboring hcb pores, BDPT–PyTTA one- and four-pore sql angles, "
+          "the 17-pore mtf sheet and its two aperture sizes, "
           "COF-300 PNG and CIF, and argon Widom/GCMC.")
 
 

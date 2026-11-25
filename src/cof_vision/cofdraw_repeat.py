@@ -24,6 +24,7 @@ from .cofdraw_planar import LOCAL_FACES, PLANAR
 BRANCHED=('branched_4_3',*SPATIAL,*PLANAR,*LOCAL_FACES)
 MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
+SHEET_FACE_SCOPE = 'One face of the fitted 2D sheet. Neighboring pores use the same block poses and attachment sites.'
 # Selector passed to the mtf face builder, number of bounded faces, and picker label.
 MTF_VIEWS = {
     'small_pore': (0, 1, 'One small square'),
@@ -248,6 +249,10 @@ def _fit_sheet(template,fragments,order,linkage=None,straight_only=False):
     return min(poses,key=lambda item:item[0])[1:] if poses else None
 
 
+class SheetAlignmentError(ValueError):
+    """The fragments support a local drawing but do not fit a translational sheet."""
+
+
 def _sheet_placement(design,template):
     fragments = tuple((key,c['fragment_smiles'],c['connectivity']) for key,c in sorted(design['components'].items()))
     linkage = design.get('linkage') if template in SHEET_TEMPLATES else None
@@ -257,7 +262,7 @@ def _sheet_placement(design,template):
         # Try the original node poses while retaining opposite sides on every straight spacer.
         placement = _fit_sheet(template,fragments,order,linkage,straight_only=True)
     if placement is None:
-        raise ValueError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
+        raise SheetAlignmentError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
     return placement
 
 
@@ -313,6 +318,35 @@ def _sheet(design,template,repeats,extent_mode):
     return mol, dict(blocks=len(fragments),pore_count=nfaces,
                      pore_faces=[[_id(k) for k in face] for face in faces],
                      interblock_bonds=len(joined_edges))
+
+
+def sheet_face_geometry(components, linkage, connections, template):
+    """Serialize the first face from the same fitted sheet used by larger extents."""
+    from .cofdraw_mixed import circuit_geometry
+
+    for component in components.values():
+        fragment = Chem.MolFromSmiles(component['fragment_smiles'])
+        # Keep the existing stereochemistry-aware local drawing when a planar
+        # reflection could change a specified stereocentre or bond depiction.
+        if (any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in fragment.GetAtoms())
+                or any(b.GetStereo() != Chem.BondStereo.STEREONONE for b in fragment.GetBonds())):
+            return None
+        ports = _ports(fragment)
+        if len({site for _, site in ports.values()}) != len(ports):
+            return None  # Endpoint identity alone cannot distinguish these ports.
+    design = dict(components=components, linkage=linkage, connections=connections)
+    try:
+        mol, summary = _sheet(design, template, 1, 'pores')
+    except SheetAlignmentError:
+        return None
+    rim = summary['pore_faces'][0]
+    component_by_id = {atom.GetProp('instance'): atom.GetProp('component') for atom in mol.GetAtoms()}
+    names = {name: f'{component_by_id[name]}{i+1}' for i, name in enumerate(rim)}
+    summary['pore_faces'] = [[names[name] for name in rim]]
+    summary['atom_origin'] = [dict(instance=names[atom.GetProp('instance')], component=atom.GetProp('component'),
+                                   fragment_atom_index=atom.GetIntProp('fragment_atom_index')) for atom in mol.GetAtoms()]
+    provenance = dict(kind='fitted_sheet_face', template=template, scope=SHEET_FACE_SCOPE, source_registered=False)
+    return circuit_geometry(components, mol, summary, provenance)
 
 
 def _estimate(recipe, template, n, extent_mode='pores'):
@@ -435,6 +469,9 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
             options['extents'].append({'value':n,'label':name,'pores':pores,'atoms':count})
         options.update(available=len(options['extents'])>1,template=template,
                        scope='Finite chemical design with shared building blocks. Larger extents use a new layout.')
+        provenance = recipe.get('coordinate_provenance')
+        if isinstance(provenance, dict) and provenance.get('kind') == 'fitted_sheet_face':
+            options['scope'] = SHEET_FACE_SCOPE
         if not options['available']:
             options['reason']='Even the smallest expanded patch exceeds the 2,400-atom drawing limit.'
     except (ValueError,KeyError,TypeError,RuntimeError) as exc:

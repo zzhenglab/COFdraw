@@ -87,13 +87,13 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
         return design_signature(value)
 
     saved_signature = normalized_signature(recipe)
-    # The original four-node mtf drawing used a different face and may be
-    # drawable even when the new representative face would have crossings.
+    # Older mtf and square designs chose local port pairs. Validate those
+    # exact saved incidences as well as the current representative face.
     count = len(recipe['instances'])
-    legacy_possible = selected['id'] == 'mtf_4_3' and count == 4
+    legacy_possible = selected['id'] in ('mtf_4_3', 'sql_4_4') and count == 4
     for legacy in ((False, True) if legacy_possible else (False,)):
         try:
-            fresh = _assemble_template(checked, recipe['linkage'], count, selected['id'], legacy_mtf=legacy)
+            fresh = _assemble_template(checked, recipe['linkage'], count, selected['id'], legacy_pore=legacy)
         except ProjectionConflict:
             if legacy_possible and not legacy:
                 continue
