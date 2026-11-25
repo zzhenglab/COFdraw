@@ -16,6 +16,7 @@ def _graph(smiles):
 def validated_design(recipe, *, source_rule=None, source_sha256=None):
     """Recover the declared chemistry and confirm its finite template incidence."""
     from .cofdraw_chemistry import design_signature, _assemble_template, prepare_template
+    from .cofdraw_spatial import ProjectionConflict
     from .framework_drawing import linkage_fragment, _ports, LINKAGE_LIBRARY
 
     if source_rule and source_sha256 and source_rule["source_sha256"] == source_sha256:
@@ -78,10 +79,6 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
             if Chem.MolToSmiles(actual)!=Chem.MolToSmiles(reference):
                 raise ValueError('Edited product fragments do not match the declared precursor transform')
         checked[key]={**expected,'fragment_smiles':component['fragment_smiles'],'label':key}
-    fresh=_assemble_template(checked,recipe['linkage'],len(recipe['instances']),selected['id'])
-    if fresh['selected_template'] is None:
-        raise ValueError('Unknown periodic connectivity template')
-
     def normalized_signature(value):
         value=deepcopy(value)
         for component in value['components'].values():
@@ -90,14 +87,22 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
         return design_signature(value)
 
     saved_signature = normalized_signature(recipe)
-    if normalized_signature(fresh) != saved_signature:
-        # The original four-node mtf drawing selected its ports on a different
-        # representative face. Check the exact old incidence for saved projects.
-        if selected['id'] == 'mtf_4_3' and len(recipe['instances']) == 4:
-            fresh = _assemble_template(checked, recipe['linkage'], 4, selected['id'], legacy_mtf=True)
-        if normalized_signature(fresh) != saved_signature:
-            raise ValueError('Drawing incidence differs from the selected connectivity template')
-    return fresh, precursors
+    # The original four-node mtf drawing used a different face and may be
+    # drawable even when the new representative face would have crossings.
+    count = len(recipe['instances'])
+    legacy_possible = selected['id'] == 'mtf_4_3' and count == 4
+    for legacy in ((False, True) if legacy_possible else (False,)):
+        try:
+            fresh = _assemble_template(checked, recipe['linkage'], count, selected['id'], legacy_mtf=legacy)
+        except ProjectionConflict:
+            if legacy_possible and not legacy:
+                continue
+            raise
+        if fresh['selected_template'] is None:
+            raise ValueError('Unknown periodic connectivity template')
+        if normalized_signature(fresh) == saved_signature:
+            return fresh, precursors
+    raise ValueError('Drawing incidence differs from the selected connectivity template')
 
 
 def periodic_options(recipe, manifest, *, design=None, source_sha256=None):

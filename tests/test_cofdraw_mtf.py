@@ -128,6 +128,21 @@ def test_saved_four_block_mtf_incidence_still_expands():
     assert list(map(len, summary['pore_faces'])) == [8]
 
 
+def test_oversized_mtf_selects_a_clear_small_pore_without_overriding_explicit_extents():
+    precursors = ('cv_18fdac58ad343c87', 'tapp')
+    with pytest.raises(ValueError, match='cross'):
+        prepare(*precursors, 8)
+    default = prepare(*precursors, 32)
+    small = prepare(*precursors, 4)
+    assert len(default['instances']) == 4
+    assert design_signature(default) == design_signature(small)
+    assert 'drawing atom limit' in default['drawing_extent_note']
+    assert 'projected bond geometry' in default['drawing_extent_note']
+    assert 'drawing_extent_note' not in small
+    with pytest.raises(ValueError, match='overlap'):
+        prepare('tfppy_ome', 'tabpb', 32)
+
+
 def test_desktop_mtf_exports_the_displayed_imine_graph(tmp_path):
     with TestClient(create_desktop_app(DATA, output_root=tmp_path)) as api:
         prepared = api.post('/api/drawing/prepare', json=dict(

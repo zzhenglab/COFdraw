@@ -303,6 +303,10 @@ def patch_graph(key,shape_a,count):
 
 
 
+class ProjectionConflict(ValueError):
+    """The chosen finite crop cannot be drawn clearly with these molecular poses."""
+
+
 def check_projection(mol):
     """Reject severe interfragment overlaps and stretched joins in a flattened drawing."""
     xy=mol.GetConformer().GetPositions()[:,:2]
@@ -319,12 +323,12 @@ def check_projection(mol):
             for row in range(y-1,y+2):
                 for j in bins.get((col,row),[]):
                     if owners[i]!=owners[j] and np.linalg.norm(xy[i]-xy[j])<tolerance:
-                        raise ValueError('Separate monomers overlap in this projected circuit. Choose a different net or a smaller drawing extent.')
+                        raise ProjectionConflict('Separate monomers overlap in this projected circuit. Choose a different net or a smaller drawing extent.')
         bins.setdefault((x,y),[]).append(i)
     for b in mol.GetBonds():
         i,j=b.GetBeginAtomIdx(),b.GetEndAtomIdx()
         if owners[i]!=owners[j] and not 1.05<np.linalg.norm(xy[i]-xy[j])<1.95:
-            raise ValueError('A linkage is excessively stretched in this circuit projection. Choose a different net or a smaller drawing extent.')
+            raise ProjectionConflict('A linkage is excessively stretched in this circuit projection. Choose a different net or a smaller drawing extent.')
     # Internal perspective conventions belong to the depicted monomer. Edges
     # of independently placed blocks should never intersect on the page.
     bins={}
@@ -344,7 +348,7 @@ def check_projection(mol):
                     t=(w[0]*v[1]-w[1]*v[0])/det
                     s=(w[0]*u[1]-w[1]*u[0])/det
                     if .02<t<.98 and .02<s<.98:
-                        raise ValueError('Bonds on separate building blocks cross in this projection. Choose a different net or a smaller extent.')
+                        raise ProjectionConflict('Bonds on separate building blocks cross in this projection. Choose a different net or a smaller extent.')
         bins.setdefault((x,y),[]).append((i,j))
 
 

@@ -399,6 +399,37 @@ def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,templ
 MTF_PATCH_ATOM_LIMIT = 1500
 
 
+def _mtf_drawing(components, instances, legacy):
+    from .cofdraw_branched import branch_patch
+
+    if legacy:
+        mol, summary = branch_patch(components, 1, 'legacy_mtf')
+        return 4, mol, summary, None
+    # Every crop has equal numbers of both monomers. Count the continuation
+    # ports here, as the editor does when validating an imported recipe.
+    pair_atoms = sum(Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for c in components.values())
+    sizes = [instances] if instances in (4, 8) else [32, 8, 4]
+    extents = {32: (17, 'complete mtf patch'), 8: (1, 'large square'), 4: (0, 'small square')}
+    skipped = []
+    for size in sizes:
+        faces, name = extents[size]
+        limit = MTF_PATCH_ATOM_LIMIT if size == 32 else 1000
+        if size // 2 * pair_atoms > limit:
+            if size == sizes[-1]:
+                raise ValueError(f'Drawing limit is {limit:,} atoms including continuation ports')
+            skipped.append(f'The {name} exceeds the drawing atom limit.')
+            continue
+        try:
+            mol, summary = branch_patch(components, faces, 'mtf_4_3')
+        except spatial.ProjectionConflict:
+            if size == sizes[-1]:
+                raise
+            skipped.append(f'The {name} has conflicting projected bond geometry.')
+            continue
+        note = ' '.join([f'Showing the {name} ({size} nodes).', *skipped]) if skipped else None
+        return size, mol, summary, note
+
+
 def _assemble_template(components, linkage, instances, template_id, *, legacy_mtf=False):
     rule=LINKAGE_LIBRARY[linkage]
     monomer_a, monomer_b=(components[k]['monomer_smiles'] for k in ('A','B'))
@@ -418,21 +449,8 @@ def _assemble_template(components, linkage, instances, template_id, *, legacy_mt
             raise ValueError(reason)
 
     if template_id == 'mtf_4_3':
-        from .cofdraw_branched import branch_patch
         from .cofdraw_mixed import circuit_geometry
-        # Every size has equal numbers of the two alternating monomers.
-        # The complete finite patch has four groups around one large aperture.
-        size = instances if instances in (4, 8) else 32
-        pair_atoms = sum(Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for c in components.values())
-        size_note = None
-        if size == 32 and 16 * pair_atoms > MTF_PATCH_ATOM_LIMIT:
-            size = 8 if 4 * pair_atoms <= 1000 else 4
-            size_note = 'Showing one square because the complete mtf patch exceeds the drawing atom limit.'
-        face_count = {4: 0, 8: 1, 32: 17}[size]
-        if legacy_mtf:
-            mol, summary = branch_patch(components, 1, 'legacy_mtf')
-        else:
-            mol, summary = branch_patch(components, face_count, template_id)
+        size, mol, summary, size_note = _mtf_drawing(components, instances, legacy_mtf)
         geometry = circuit_geometry(components, mol, summary, summary['order_assumption'])
         template['instances'] = size
         recipe = dict(components=components, linkage=linkage, selected_template=template,
