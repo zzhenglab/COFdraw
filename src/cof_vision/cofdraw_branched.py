@@ -73,6 +73,11 @@ def circuit_layout():
 
 
 def graph_for(components,count,key):
+    if key == 'mtf_4_3':
+        from .cofdraw_mtf import graph
+        return graph(components, count)
+    if key == 'legacy_mtf':
+        key = 'mtf_4_3'
     if key in LOCAL_FACES:
         if min(c['connectivity'] for c in components.values())<3:
             raise ValueError('Sharing this molecular edge requires a third reactive site at both ends.')
@@ -110,7 +115,12 @@ def _cached_patch(signature,count,key):
 
 def _draw_patch(components,count,key):
     from .cofdraw_spatial import SPATIAL
+    if key == 'mtf_4_3':
+        from .cofdraw_mtf import patch
+        return patch(components, count)
     faces,edges,xy,kinds=graph_for(components,count,key)
+    if key == 'legacy_mtf':
+        key = 'mtf_4_3'
     geo={k:_block(c) for k,c in components.items()}
     fragment,ports,_,_=geo['A']
     order=fragment.GetBondBetweenAtoms(*ports[0]).GetBondTypeAsDouble()

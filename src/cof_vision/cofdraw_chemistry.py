@@ -342,7 +342,7 @@ def refresh_design_identity(recipe):
     selected=recipe.get("selected_template") or {}
     matched=recipe.get("design_template_signature")==design_signature(recipe)
     known=next((t for t in TEMPLATES if t["id"]==selected.get("id")),None) if matched else None
-    if known and known["id"] in ("kgm_4_2", "dia_4_2", "pts_4_4"):
+    if known and known["id"] in ("kgm_4_2", "dia_4_2", "pts_4_4", "mtf_4_3"):
         known = {**known, "instances": len(recipe["instances"])}
         if recipe.get("layout_kind") == "net_patch" and known["id"] in spatial.SPATIAL:
             known["topology_label"] = known["parent_net"]
@@ -396,7 +396,10 @@ def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,templ
     return _assemble_template(components, linkage, instances, template_id)
 
 
-def _assemble_template(components, linkage, instances, template_id):
+MTF_PATCH_ATOM_LIMIT = 1500
+
+
+def _assemble_template(components, linkage, instances, template_id, *, legacy_mtf=False):
     rule=LINKAGE_LIBRARY[linkage]
     monomer_a, monomer_b=(components[k]['monomer_smiles'] for k in ('A','B'))
     label_a, label_b=(components[k]['label'] for k in ('A','B'))
@@ -413,6 +416,36 @@ def _assemble_template(components, linkage, instances, template_id):
         reason = net_geometry_error(template, counts, inspection, rule["roles"])
         if reason:
             raise ValueError(reason)
+
+    if template_id == 'mtf_4_3':
+        from .cofdraw_branched import branch_patch
+        from .cofdraw_mixed import circuit_geometry
+        # Every size has equal numbers of the two alternating monomers.
+        # The complete finite patch has four groups around one large aperture.
+        size = instances if instances in (4, 8) else 32
+        pair_atoms = sum(Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for c in components.values())
+        size_note = None
+        if size == 32 and 16 * pair_atoms > MTF_PATCH_ATOM_LIMIT:
+            size = 8 if 4 * pair_atoms <= 1000 else 4
+            size_note = 'Showing one square because the complete mtf patch exceeds the drawing atom limit.'
+        face_count = {4: 0, 8: 1, 32: 17}[size]
+        if legacy_mtf:
+            mol, summary = branch_patch(components, 1, 'legacy_mtf')
+        else:
+            mol, summary = branch_patch(components, face_count, template_id)
+        geometry = circuit_geometry(components, mol, summary, summary['order_assumption'])
+        template['instances'] = size
+        recipe = dict(components=components, linkage=linkage, selected_template=template,
+                      layout_kind='net_patch' if size == 32 else 'closed_pore', designed_variant=True,
+                      compatibility=dict(reactive_site_counts=counts, roles=rule['roles'], monomers=inspection),
+                      **geometry)
+        if size == 32:
+            recipe['repeat_faces'] = summary['pore_faces']
+        if size_note:
+            recipe['drawing_extent_note'] = size_note
+        recipe['design_template_signature'] = design_signature(recipe)
+        refresh_design_identity(recipe)
+        return recipe
 
     # The molecular cage and star have their own fixed sizes. Smaller saved
     # requests use the corresponding single-circuit / single-face depiction.

@@ -47,10 +47,14 @@ def _edge_clearance(points, polygon):
 
 def measure_drawing(recipe):
     from .framework_drawing import build_patch
-    mol, _ = build_patch(recipe)
+    mol, audit = build_patch(recipe)
     if mol.GetNumAtoms() > 1000:
         raise ValueError("Drawing measurement supports at most 1,000 atoms")
-    aperture=prepare_aperture(mol)
+    faces = recipe.get('repeat_faces')
+    if (recipe.get('selected_template') or {}).get('id') == 'mtf_4_3' and faces:
+        aperture = prepare_aperture(mol, [o['instance'] for o in audit['atom_origin']], faces[0])
+    else:
+        aperture = prepare_aperture(mol)
     result=measure_aperture(mol.GetConformer().GetPositions()[:,:2],aperture)
     return qualify_circuit_span(result,(recipe.get('selected_template') or {}).get('id'))
 

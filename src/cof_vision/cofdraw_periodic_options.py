@@ -89,8 +89,14 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
                 component[field]=_graph(component[field])
         return design_signature(value)
 
-    if normalized_signature(fresh)!=normalized_signature(recipe):
-        raise ValueError('Drawing incidence differs from the selected connectivity template')
+    saved_signature = normalized_signature(recipe)
+    if normalized_signature(fresh) != saved_signature:
+        # The original four-node mtf drawing selected its ports on a different
+        # representative face. Check the exact old incidence for saved projects.
+        if selected['id'] == 'mtf_4_3' and len(recipe['instances']) == 4:
+            fresh = _assemble_template(checked, recipe['linkage'], 4, selected['id'], legacy_mtf=True)
+        if normalized_signature(fresh) != saved_signature:
+            raise ValueError('Drawing incidence differs from the selected connectivity template')
     return fresh, precursors
 
 

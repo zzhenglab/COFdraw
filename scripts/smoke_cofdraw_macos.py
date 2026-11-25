@@ -83,6 +83,15 @@ def check_service(url):
     assert groups["dmtp"] == {"aldehyde"} and groups["tapt"] == {"primary_amine"}
     assert groups["bfbapy"] == {"aldehyde", "primary_amine"}
     check_hcb_junctions(api, url, library["monomer_presets"])
+    smiles = {row["id"]: row["smiles"] for row in library["monomer_presets"]}
+    mtf = api("prepare", {"monomer_a": smiles["tfb"], "monomer_b": smiles["tape"], "linkage": "imine",
+                          "template_id": "mtf_4_3", "instances": 32})["recipe"]
+    sheet = api("render", {"recipe": mtf, "size": 640})
+    assert sheet["audit"]["building_block_instances"] == 32 and len(mtf["connections"]) == 48
+    assert sorted(map(len, mtf["repeat_faces"])) == [4]*16 + [8]
+    for view, blocks in (("large_pore", 8), ("small_pore", 4)):
+        crop = api("repeat", {"recipe": mtf, "repeats": 1, "extent_mode": view, "size": 640})
+        assert crop["summary"]["pore_count"] == 1 and crop["summary"]["blocks"] == blocks
     drawing = api("render", {"source_recipe_id": "cof-300-projection-v1", "size": 640})
     with urlopen(url.rstrip("/") + drawing["downloads"]["png"], timeout=30) as response:
         assert response.read(8) == bytes.fromhex("89504e470d0a1a0a")
@@ -105,7 +114,7 @@ def check_service(url):
         job = api("science/adsorption/jobs/" + job["job_id"])
     assert job["status"] == "complete", (job["status"], job.get("message"))
     print(f"Verified {len(library['monomer_presets'])} monomers, hcb imine and ketoenamine angles and node symmetry, "
-          "opposed imines across four neighboring hcb pores, "
+          "opposed imines across four neighboring hcb pores, the 17-pore mtf sheet and its two aperture sizes, "
           "COF-300 PNG and CIF, and argon Widom/GCMC.")
 
 

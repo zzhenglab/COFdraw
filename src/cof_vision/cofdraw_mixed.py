@@ -407,7 +407,8 @@ def pore_face_geometry(components,pattern,layout):
 
 
 def circuit_geometry(components,mol,summary,provenance):
-    rim=summary['pore_faces'][0]
+    """Serialize the faces with shared blocks and chemical connections stored once."""
+    rims=summary['pore_faces']
     origins=summary['atom_origin']
     xy=mol.GetConformer().GetPositions()[:,:2]
     sites={k:{endpoint:port for port,(_,endpoint) in _ports(Chem.MolFromSmiles(c['fragment_smiles'])).items()}
@@ -420,16 +421,21 @@ def circuit_geometry(components,mol,summary,provenance):
             for here,there in ((a,b),(b,a)):
                 incidence[here['instance'],there['instance']]=sites[here['component']][here['fragment_atom_index']]
                 orders[here['instance'],there['instance']]=int(bond.GetBondTypeAsDouble())
-    instances=[]; connections=[]
-    for i,name in enumerate(rim):
-        previous,following=rim[i-1],rim[(i+1)%len(rim)]
-        indices=[j for j,o in enumerate(origins) if o['instance']==name]
-        incoming,outgoing=incidence[name,previous],incidence[name,following]
-        instances.append(dict(id=name,component=origins[indices[0]]['component'],incoming_port=incoming,
-                              outgoing_port=outgoing,layout_position=xy[indices].mean(axis=0).tolist()))
-        connections.append(dict(a=dict(instance=name,port=outgoing),
-                                b=dict(instance=following,port=incidence[following,name]),bond_order=orders[name,following]))
+    instances={}; connections={}
+    for rim in rims:
+        for i,name in enumerate(rim):
+            previous,following=rim[i-1],rim[(i+1)%len(rim)]
+            if name not in instances:
+                indices=[j for j,o in enumerate(origins) if o['instance']==name]
+                instances[name]=dict(id=name,component=origins[indices[0]]['component'],
+                                     incoming_port=incidence[name,previous],outgoing_port=incidence[name,following],
+                                     layout_position=xy[indices].mean(axis=0).tolist())
+            edge=frozenset((name,following))
+            if edge not in connections:
+                connections[edge]=dict(a=dict(instance=name,port=incidence[name,following]),
+                                       b=dict(instance=following,port=incidence[following,name]),
+                                       bond_order=orders[name,following])
     coords=[dict(instance=o['instance'],fragment_atom_index=o['fragment_atom_index'],xy=point.tolist())
             for o,point in zip(origins,xy)]
-    return dict(instances=instances,connections=connections,atom_coordinates=coords,
+    return dict(instances=list(instances.values()),connections=list(connections.values()),atom_coordinates=coords,
                 coordinate_provenance=provenance)

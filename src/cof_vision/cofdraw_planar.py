@@ -43,7 +43,7 @@ def local_faces(size):
 
 def templates():
     return [dict(id=key, label=f'{code} sheet · {degrees[0]}c + {degrees[1]}c',
-                 allow_pairs=[list(degrees), list(reversed(degrees))], instances=4,
+                 allow_pairs=[list(degrees), list(reversed(degrees))], instances=32 if code == 'mtf' else 4,
                  shape_pair=list(shapes), dimension=2, topology_label=code, linkages=['imine'],
                  description=f'Connected faces of a proposed {code} sheet. Junction angles can depart from ideal monomer symmetry.')
             for key, (code, degrees, shapes) in PLANAR.items()]
