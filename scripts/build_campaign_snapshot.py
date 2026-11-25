@@ -47,7 +47,7 @@ def number(value):
     return result
 
 
-def build_record(path, receipt, recipe, cutoff):
+def build_record(path, receipt, recipe, cutoff, *, gas_path=None):
     g = read(path/'geometry.json')
     row = dict(id=recipe['id'], family=recipe['family'], pair=recipe['pair'], status=receipt['status'],
                template=recipe['template'], indexed=bool(recipe['atlas_same_family_refs']), values={})
@@ -68,14 +68,15 @@ def build_record(path, receipt, recipe, cutoff):
     if row['status'] == 'screened':
         if g.get('status') != 'gas_eligible':
             raise ValueError(f'Gas results failed geometry qualification for {row["id"]}')
-        gas = read(path/'gas.json')
+        gas_path = gas_path or path
+        gas = read(gas_path/'gas.json')
         if gas['seeds'] != SEEDS:
             raise ValueError(f'Unexpected seeds for {row["id"]}')
         replicates = {key: [] for key in GAS}
         for seed in SEEDS:
             values = []
             for mode, species, pressure in [('gcmc','CH4',65), ('gcmc','CH4',5.8), ('widom','CH4',1), ('widom','H2',1)]:
-                job = read(path/f'{mode}-{species}-{pressure}-{seed}.json')
+                job = read(gas_path/f'{mode}-{species}-{pressure}-{seed}.json')
                 if (job['cif_sha256'], job['seed'], job['bar'], job['gas'], job['mode']) != (model_sha, seed, pressure, species, mode):
                     raise ValueError(f'Native receipt mismatch for {row["id"]}')
                 values.append(number(job['value']))
@@ -160,8 +161,67 @@ def breadth_record(directory, recipe, entry, protocol):
     return result
 
 
+def merge_coordinates(rows, folder, recipes, protocol):
+    """Join completed coordinates and committed gas results by recipe and CIF identity."""
+    progress = read(folder/'receipt.json')
+    if progress['coordinate_protocol'] != protocol:
+        raise ValueError('Coordinate protocol differs from the base screen')
+    existing = {row['id']: row for row in rows}
+    gas = read(folder/'gas-journal.json')
+    repeats = []
+    coordinate_ids = set()
+    with folder.joinpath('catalog.csv').open(encoding='utf-8', newline='') as source:
+        for item in csv.DictReader(source):
+            key = item['id']
+            recipe = recipes[key]
+            if key in existing or key in coordinate_ids or recipe['flags'] or recipe['family'] != item['family']:
+                raise ValueError(f'Invalid coordinate membership for {key}')
+            coordinate_ids.add(key)
+            path = folder/'records'/recipe['family']/key
+            status = item['status']
+            result = gas.get(key)
+            if status not in ('build_rejected','gas_eligible','geometry_only','pocket_review'):
+                raise ValueError(f'Unknown coordinate status for {key}')
+            if result and status != 'gas_eligible':
+                raise ValueError(f'Gas result outside admitted coordinates for {key}')
+            if result and result['status'] not in ('screened','reused_new','reused_prior','force_field_hold','error'):
+                raise ValueError(f'Unknown gas status for {key}')
+            resolved = ('gas_pending' if status == 'gas_eligible' else status)
+            if result and result['status'] in ('screened','force_field_hold'):
+                resolved = result['status']
+            if result and result['status'] == 'error':
+                resolved = 'operational_error'
+            row = build_record(path, {'status': resolved}, recipe, float('inf'),
+                               gas_path=folder/'gas'/recipe['family']/key)
+            if result and row['sha256'] != result['cif_sha256']:
+                raise ValueError(f'Coordinate and gas CIF hashes disagree for {key}')
+            if resolved == 'screened' and any(
+                row['values'][k] != result['details'][k]['mean'] or
+                row['values'][k+'_sd'] != result['details'][k]['seed_sd'] for k in GAS
+            ):
+                raise ValueError(f'Journal and checked gas receipts disagree for {key}')
+            row['cohorts'] = ['coordinate_completion']
+            if result and result['status'] in ('reused_new','reused_prior'):
+                ref = result['details'].get('id') or result['details']['representative']
+                repeats.append((row, ref))
+            rows.append(row)
+            existing[key] = row
+    if set(gas) - coordinate_ids:
+        raise ValueError('Gas journal contains IDs outside coordinate completion')
+    for row, ref in repeats:
+        donor = existing[ref]
+        if row['sha256'] != donor['sha256'] or donor['status'] != 'screened':
+            raise ValueError(f'Invalid screened alias for {row["id"]}')
+        for key in GAS:
+            for field in (key, key+'_sd'):
+                row['values'][field] = donor['values'][field]
+        row.update(status='screened', gas_reused_from=ref)
+    return progress
+
+
 def build(args):
-    if args.as_of and (args.extra_results or args.confirmation_csv or args.deep_csv):
+    coordinate = getattr(args, 'coordinate_results', None)
+    if args.as_of and (args.extra_results or args.confirmation_csv or args.deep_csv or coordinate):
         raise ValueError('Use the live snapshot for extra campaigns; their catalog rows have no cutoff timestamps')
     campaign = read(args.results/'campaign.json')
     snapshot = campaign['snapshot']
@@ -176,10 +236,13 @@ def build(args):
     cutoff = at.timestamp()
     rows = []
     breadth = breadth_inputs(args.extra_results, campaign)
+    recipes = {}
     with gzip.open(args.recipes, 'rt', encoding='utf8') as stream:
         for recipe in map(json.loads, stream):
             if recipe['flags']:
                 continue
+            if coordinate:
+                recipes[recipe['id']] = recipe
             path = args.results/'records'/recipe['family']/recipe['id']
             marker = path/'screen-done.json'
             record = None
@@ -204,6 +267,8 @@ def build(args):
     if any(catalog for _,_,catalog in breadth):
         raise ValueError('A breadth catalog contains a held or unrecognized recipe')
     methods = {'screen': 'Unrelaxed AA cell, checked against intended bonds and close contacts. Geometry uses a 1.82 Å probe, 0.65 Å requested grid and 64 surface samples per atom. At 298 K the rigid zero-charge RASPA3 screen uses two independent seeds. CH₄ delivery is the 65 to 5.8 bar swing (500 initialization and 1,000 production cycles per pressure). Dilute CH₄/H₂ is the ratio of Widom Henry coefficients (3,000 cycles per gas). Volumetric delivery uses ideal-crystal density. SD is between seeds. Spacing sensitivity spans three graph-preserving heights at ±0.25 Å.'}
+    if coordinate:
+        methods['coordinate_completion'] = merge_coordinates(rows, coordinate, recipes, campaign['protocol'])
     metrics = {**GEOMETRY, **GAS, **{k+'_sd': label+' · seed SD' for k,label in GAS.items()},
                'spacing_span': 'Spacing sensitivity, volume span (cm³/g)'}
     for i,(_,manifest,_) in enumerate(breadth, start=1):
@@ -242,4 +307,5 @@ if __name__ == '__main__':
     parser.add_argument('--deep-csv', type=Path)
     parser.add_argument('--deep-method', type=Path)
     parser.add_argument('--extra-results', type=Path, action='append', default=[], help='Additional frozen breadth run with catalog and completed receipts')
+    parser.add_argument('--coordinate-results', type=Path, help='Coordinate completion catalog with a committed gas journal')
     build(parser.parse_args())
