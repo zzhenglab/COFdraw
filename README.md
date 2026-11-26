@@ -4,9 +4,9 @@
 
 Draw covalent organic frameworks from their building blocks, explore periodic crystal models, and compare simulated properties. The desktop app opens in a 2D chemical drawing workspace. You can start with monomers, a COF name, a COFex record, or a description. The drawing engine and catalog run locally.
 
-**[Download for Windows](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7/COFdraw-Windows.zip)** · **[Download for Mac (beta)](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21)** · **[Download the screening dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-25)**
+**[Download for Windows](https://github.com/zzhenglab/COFdraw/releases/download/v0.10.7-catalog.1/COFdraw-Windows.zip)** · **[Download for Mac (beta)](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-mac-beta.21)** · **[Download the screening dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-26-paused)**
 
-**405 monomers · 38 topology entries · 24,760 hypothetical periodic CIFs.** For an agent, paste this repository URL and ask it to read [SKILL.md](SKILL.md). For a paper, pin the software version and dataset snapshot under [Citing COFdraw](#citing-cofdraw).
+**409 monomers · 38 topology entries · 24,760 hypothetical periodic CIFs.** For an agent, paste this repository URL and ask it to read [SKILL.md](SKILL.md). For a paper, pin the software version and dataset snapshot under [Citing COFdraw](#citing-cofdraw).
 
 ![COFdraw 0.10.7 with the COF-953 precursor in the left editor and a kagome patch on the canvas. The central hexagonal pore is purple and its six triangular neighbors are green.](docs/assets/cofdraw-workspace-v0107.png)
 
@@ -54,10 +54,10 @@ Use **Draw / edit** to build a monomer with atoms, bonds, and templates. In the 
 
 | Monomer class or eligibility · v0.10.7 | Structures |
 | --- | ---: |
-| **Distinct monomer structures** | **405** |
-| Eligible for at least one binary drawing role | 319 |
+| **Distinct monomer structures** | **409** |
+| Eligible for at least one binary drawing role | 323 |
 | Aromatic aldehydes | 151 |
-| Primary aromatic amines | 127 |
+| Primary aromatic amines | 131 |
 | Nitriles | 25 |
 | Arylboronic acids | 22 |
 | Terminal acylhydrazides | 18 |
@@ -131,7 +131,7 @@ The linkage gallery draws on the classification and reaction schemes discussed b
 
 ## Explore the screening dataset
 
-The **November 25, 2026 checkpoint** records all **45,439 eligible construction outcomes**, with **24,760 unique periodic CIFs** for generated, unrelaxed AA-stacked sheets. **19,270** have a first-pass gas screen in this snapshot. Each coordinate file is linked to its precursor SMILES and proposed net through the CSV index. The index also records rejected builds and held calculations. Empty property fields mean the result is unavailable. [Coverage and methods](benchmarks/screening-2026-11-25.md)
+The **November 26, 2026 checkpoint** records all **45,439 eligible construction outcomes**, with **24,760 unique periodic CIFs** for generated, unrelaxed AA-stacked sheets. **22,050** have a first-pass gas screen in this snapshot. Each coordinate file is linked to its precursor SMILES and proposed net through the CSV index. The index also records rejected builds and held calculations. Empty property fields mean the result is unavailable. [Coverage and methods](benchmarks/screening-2026-11-26-paused.md)
 
 | Hypothetical design family | Recorded outcomes | Periodic CIFs |
 | --- | ---: | ---: |
@@ -143,12 +143,12 @@ The **November 25, 2026 checkpoint** records all **45,439 eligible construction 
 | Keto-hydrazide | 39 | 34 |
 | **Total** | **45,439** | **24,760** |
 
-The 1,133-model follow-up adds seven-pressure methane isotherms and three-seed equimolar CH₄/H₂ mixture calculations. The temperature and paired force-field studies are complete. At this checkpoint, **2,811** newly built CIFs were still queued for the first-pass gas screen. The public collection uses proposed honeycomb and square sheets. The bundled 3D reference crystals are a separate collection.
+The 1,133-model follow-up adds seven-pressure methane isotherms and three-seed equimolar CH₄/H₂ mixture calculations. The temperature and paired force-field studies are complete. The latest coordinate cohort adds independent methane delivery checks for 192 models. Both 10-bar CH?/H? mixture series finished. The 1- and 30-bar follow-up paused after 2,138 of 17,760 runs. The public collection uses proposed honeycomb and square sheets. The bundled 3D reference crystals are a separate collection.
 
 | Download | How to use it |
 | --- | --- |
-| [CIFs and property index (ZIP)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-25/COFdraw-screening-CIFs.zip) | Open `results.csv` and use the `cif` column to find a model. The `cif_sha256` column identifies its exact coordinates. |
-| [COFdraw results file (JSON.GZ)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-25/research-screen.json.gz) | In **Explore COF chemical space → Simulation results → Open results file**, select the compressed file directly. |
+| [CIFs and property index (ZIP)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-26-paused/COFdraw-screening-CIFs.zip) | Open `results.csv` and use the `cif` column to find a model. The `cif_sha256` column identifies its exact coordinates. |
+| [COFdraw results file (JSON.GZ)](https://github.com/zzhenglab/COFdraw/releases/download/screening-2026-11-26-paused/research-screen.json.gz) | In **Explore COF chemical space → Simulation results → Open results file**, select the compressed file directly. |
 
 ![Methane simulations for the 1,133-model subset. A scatter plot relates crystal density to volumetric delivery. A second panel shows median uptake and the 10th to 90th percentile at seven pressures.](docs/assets/methane-screen-2026-11-24.png)
 
@@ -181,8 +181,8 @@ On Windows the helper also accepts `--exe` with the path to the extracted deskto
 
 ## Citing COFdraw
 
-- **Software.** zzhenglab (2026). *COFdraw*, version 0.10.7. Cite the release you ran. [Release](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7) · [Machine-readable citation](CITATION.cff)
-- **Dataset.** zzhenglab (2026). *COFdraw hypothetical COF screening dataset*, snapshot `screening-2026-11-25`. For individual structures, report the record ID and CIF SHA‑256. [Versioned dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-25)
+- **Software.** zzhenglab (2026). *COFdraw*, version 0.10.7. The Windows catalog refresh has its own release tag. Cite the build you ran. [Windows catalog release](https://github.com/zzhenglab/COFdraw/releases/tag/v0.10.7-catalog.1) · [Machine-readable citation](CITATION.cff)
+- **Dataset.** zzhenglab (2026). *COFdraw hypothetical COF screening dataset*, snapshot `screening-2026-11-26-paused`. For individual structures, report the record ID and CIF SHA‑256. [Versioned dataset](https://github.com/zzhenglab/COFdraw/releases/tag/screening-2026-11-26-paused)
 - **Linkage chemistry.** Tan, K. T. et al. (2023). *Covalent organic frameworks*. Nature Reviews Methods Primers **3**, 1. [DOI](https://doi.org/10.1038/s43586-022-00181-z)
 
 ## Run from source

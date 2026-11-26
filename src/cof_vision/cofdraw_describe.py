@@ -30,6 +30,11 @@ NAMED_DESIGNS = {
     "4PE-1P": ("TA + TAPE imine kgm_4_2", "10.1021/ja5092936"),
     "Py-Azine": ("TFPPy + hydrazine azine", "10.1021/ja4103293"),
     "H2Por-DETH-COF": ("Por-CHO + DETH acylhydrazone", "10.1038/s41467-021-21527-3"),
+    "Biph-COF": ("Por-CHO + benzidine imine", "10.1002/anie.202506462"),
+    "Ethane-COF": ("Por-CHO + Ethane dianiline imine", "10.1002/anie.202506462"),
+    "Piperazine-COF": ("Por-CHO + BANPZ imine", "10.1002/anie.202506462"),
+    "TP-EDAE": ("Tp + EDAE beta-ketoenamine", "10.1016/j.jcis.2024.12.203"),
+    "TP-BDDA": ("Tp + BDDA beta-ketoenamine", "10.1016/j.jcis.2024.12.203"),
 }
 NAMED_PAIRS = {
     "COF-LZU1": ("tfb","pa","imine","hcb_3_2"),
@@ -42,6 +47,11 @@ NAMED_PAIRS = {
     "4PE-1P": ("ta","tape","imine","kgm_4_2"),
     "Py-Azine": ("tfppy","hydrazine","azine","sql_4_2"),
     "H2Por-DETH-COF": ("por_cho","deth","acylhydrazone","sql_4_2"),
+    "Biph-COF": ("por_cho","benzidine","imine","sql_4_2"),
+    "Ethane-COF": ("por_cho","feed_67c28950c4a7","imine","sql_4_2"),
+    "Piperazine-COF": ("por_cho","feed_e58134332e43","imine","sql_4_2"),
+    "TP-EDAE": ("tp","feed_504ea0e4247e","beta_ketoenamine","hcb_3_2"),
+    "TP-BDDA": ("tp","feed_5b0d17a771ee","beta_ketoenamine","hcb_3_2"),
 }
 CORE_NAMES = {
     "tapp": ["porphyrin tetraamine", "aminophenyl porphyrin", "porphyrin node"],

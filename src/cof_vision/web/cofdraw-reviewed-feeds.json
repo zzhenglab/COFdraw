@@ -604,6 +604,7 @@
     "full_name": "diaminophenyl-functionalized pillar[5]arene",
     "smiles": "COc1cc2c(OC)cc1Cc1cc(OC)c(cc1OC)Cc1cc(OC)c(cc1OC)Cc1cc(-c3ccc(N)cc3)c(cc1-c1ccc(N)cc1)Cc1cc(OC)c(cc1OC)C2",
     "source_dois": [
+      "10.1002/anie.202510534",
       "10.1021/jacs.5c00768"
     ],
     "source_evidence": [
@@ -612,6 +613,12 @@
         "source_label": "APP[5]",
         "framework_annotation": "source-acs-jacs-5c00768-TpAP[5]",
         "molecule_annotation": "source-acs-jacs-5c00768-fig1-APP[5]"
+      },
+      {
+        "source_doi": "10.1002/anie.202510534",
+        "source_label": "P5A-NH2",
+        "framework_annotation": "agent-d-3562-f1b-pore",
+        "molecule_annotation": "agent-d-3562-f1b-p5a-nh2"
       }
     ]
   },
@@ -1043,6 +1050,7 @@
     "full_name": "1,3-bis(4-aminophenyl)urea",
     "smiles": "Nc1ccc(NC(=O)Nc2ccc(N)cc2)cc1",
     "source_dois": [
+      "10.1002/anie.202506462",
       "10.1021/acsami.0c04957"
     ],
     "source_evidence": [
@@ -1051,6 +1059,12 @@
         "source_label": "APU",
         "framework_annotation": "acs-ami-0c04957-C01",
         "molecule_annotation": "acs-ami-0c04957-M07"
+      },
+      {
+        "source_doi": "10.1002/anie.202506462",
+        "source_label": "APU",
+        "framework_annotation": "agent-d-3559-scheme1-urea",
+        "molecule_annotation": "agent-d-3559-scheme1-apu"
       }
     ]
   },
@@ -2340,6 +2354,7 @@
     "full_name": "1,3,5-tris(4-amino-2,3,5,6-tetrafluorophenyl)benzene",
     "smiles": "Nc1c(F)c(F)c(-c2cc(-c3c(F)c(F)c(N)c(F)c3F)cc(-c3c(F)c(F)c(N)c(F)c3F)c2)c(F)c1F",
     "source_dois": [
+      "10.1002/anie.202510312",
       "10.1021/acs.cgd.8b00630"
     ],
     "source_evidence": [
@@ -2348,6 +2363,12 @@
         "source_label": "1,3,5-tris(4-amino-2,3,5,6-tetrafluorophenyl)benzene",
         "framework_annotation": "source-acs-acs-cgd-8b00630-F-COF",
         "molecule_annotation": "acs-wave3-test-015"
+      },
+      {
+        "source_doi": "10.1002/anie.202510312",
+        "source_label": "DFTAPB",
+        "framework_annotation": "agent-d-3561-f1-pore",
+        "molecule_annotation": "agent-d-3561-f1-dftapb"
       }
     ]
   },
@@ -2396,6 +2417,275 @@
         "source_label": "TCPB",
         "framework_annotation": "source-wiley-smll-202302456-pore-main",
         "molecule_annotation": "source-wiley-smll-202302456-TCPB-main"
+      }
+    ]
+  },
+  {
+    "id": "tfta",
+    "abbreviation": "TFTA",
+    "full_name": "2,3,5,6-Tetrafluorobenzene-1,4-dicarbaldehyde",
+    "smiles": "O=Cc1c(F)c(F)c(C=O)c(F)c1F",
+    "source_dois": [
+      "10.1002/anie.202510312"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202510312",
+        "source_label": "TFTA",
+        "framework_annotation": "agent-d-3561-f1-pore",
+        "molecule_annotation": "agent-d-3561-f1-tfta"
+      }
+    ]
+  },
+  {
+    "id": "por_cho",
+    "abbreviation": "Por-CHO",
+    "full_name": "5,10,15,20-Tetrakis(4-formylphenyl)porphyrin, free base",
+    "smiles": "O=Cc1ccc(-c2c3nc(c(-c4ccc(C=O)cc4)c4ccc([nH]4)c(-c4ccc(C=O)cc4)c4nc(c(-c5ccc(C=O)cc5)c5ccc2[nH]5)C=C4)C=C3)cc1",
+    "source_dois": [
+      "10.1002/anie.202506462"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202506462",
+        "source_label": "TFPP",
+        "framework_annotation": "agent-d-3559-scheme1-urea",
+        "molecule_annotation": "agent-d-3559-scheme1-tfpp"
+      }
+    ]
+  },
+  {
+    "id": "benzidine",
+    "abbreviation": "BD",
+    "full_name": "Biphenyl-4,4′-diamine (benzidine)",
+    "smiles": "Nc1ccc(-c2ccc(N)cc2)cc1",
+    "source_dois": [
+      "10.1002/anie.202506462"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202506462",
+        "source_label": "BD",
+        "framework_annotation": "agent-d-3559-scheme1-biph",
+        "molecule_annotation": "agent-d-3559-scheme1-bd"
+      }
+    ]
+  },
+  {
+    "id": "feed_67c28950c4a7",
+    "abbreviation": "Ethane dianiline",
+    "full_name": "4,4'-(ethane-1,2-diyl)dianiline",
+    "smiles": "Nc1ccc(CCc2ccc(N)cc2)cc1",
+    "source_dois": [
+      "10.1002/anie.202506462"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202506462",
+        "source_label": "EDA",
+        "framework_annotation": "agent-d-3559-si-ethane-cof",
+        "molecule_annotation": "agent-d-3559-si-eda"
+      }
+    ]
+  },
+  {
+    "id": "feed_e58134332e43",
+    "abbreviation": "BANPZ",
+    "full_name": "4,4'-(piperazine-1,4-diyl)dianiline",
+    "smiles": "Nc1ccc(N2CCN(c3ccc(N)cc3)CC2)cc1",
+    "source_dois": [
+      "10.1002/anie.202506462"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202506462",
+        "source_label": "BANPZ",
+        "framework_annotation": "agent-d-3559-si-piperazine-cof",
+        "molecule_annotation": "agent-d-3559-si-banpz"
+      }
+    ]
+  },
+  {
+    "id": "tfpt",
+    "abbreviation": "TFPT",
+    "full_name": "2,4,6-Tris(4-formylphenyl)-1,3,5-triazine",
+    "smiles": "O=Cc1ccc(-c2nc(-c3ccc(C=O)cc3)nc(-c3ccc(C=O)cc3)n2)cc1",
+    "source_dois": [
+      "10.1002/anie.202510534"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202510534",
+        "source_label": "TATA",
+        "framework_annotation": "agent-d-3562-f1b-pore",
+        "molecule_annotation": "agent-d-3562-f1b-tata"
+      }
+    ]
+  },
+  {
+    "id": "cv_5141c71c7cba5e76",
+    "abbreviation": "p-Terphenyl-4,4″-diamine",
+    "full_name": "[1,1′:4′,1″-Terphenyl]-4,4″-diamine",
+    "smiles": "Nc1ccc(-c2ccc(-c3ccc(N)cc3)cc2)cc1",
+    "source_dois": [
+      "10.1002/anie.202510534",
+      "10.1016/j.jcis.2024.12.203"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1002/anie.202510534",
+        "source_label": "TP",
+        "framework_annotation": "agent-d-3562-si-ta-cof-pore",
+        "molecule_annotation": "agent-d-3562-si-tp"
+      },
+      {
+        "source_doi": "10.1016/j.jcis.2024.12.203",
+        "source_label": "TERP",
+        "framework_annotation": "els-jcis-2024-12-203-BS08",
+        "molecule_annotation": "els-jcis-2024-12-203-BC02"
+      }
+    ]
+  },
+  {
+    "id": "tapa",
+    "abbreviation": "TAPA",
+    "full_name": "Tris(4-aminophenyl)amine",
+    "smiles": "Nc1ccc(N(c2ccc(N)cc2)c2ccc(N)cc2)cc1",
+    "source_dois": [
+      "10.1016/j.jcat.2025.116077"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcat.2025.116077",
+        "source_label": "TAPA",
+        "framework_annotation": "els-jcat-2025-116077-BC01",
+        "molecule_annotation": "els-jcat-2025-116077-BM02"
+      }
+    ]
+  },
+  {
+    "id": "cv_cca53ee4d118457c",
+    "abbreviation": "TPA-3CHO",
+    "full_name": "tris(4-formylphenyl)amine",
+    "smiles": "O=Cc1ccc(N(c2ccc(C=O)cc2)c2ccc(C=O)cc2)cc1",
+    "source_dois": [
+      "10.1016/j.jcat.2022.07.023",
+      "10.1016/j.jcat.2025.116077"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcat.2025.116077",
+        "source_label": "TFPA",
+        "framework_annotation": "els-jcat-2025-116077-BC01",
+        "molecule_annotation": "els-jcat-2025-116077-BM01"
+      },
+      {
+        "source_doi": "10.1016/j.jcat.2022.07.023",
+        "source_label": "TFPA",
+        "framework_annotation": "els-jcat-2022-07-023-BC01",
+        "molecule_annotation": "els-jcat-2022-07-023-BM02"
+      }
+    ]
+  },
+  {
+    "id": "pytta",
+    "abbreviation": "PyTTA",
+    "full_name": "1,3,6,8-Tetrakis(4-aminophenyl)pyrene",
+    "smiles": "Nc1ccc(-c2cc(-c3ccc(N)cc3)c3ccc4c(-c5ccc(N)cc5)cc(-c5ccc(N)cc5)c5ccc2c3c54)cc1",
+    "source_dois": [
+      "10.1016/j.jcat.2022.07.023"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcat.2022.07.023",
+        "source_label": "TAPPy",
+        "framework_annotation": "els-jcat-2022-07-023-BC01",
+        "molecule_annotation": "els-jcat-2022-07-023-BM01"
+      }
+    ]
+  },
+  {
+    "id": "tp",
+    "abbreviation": "Tp",
+    "full_name": "2,4,6-Trihydroxybenzene-1,3,5-tricarbaldehyde (triformylphloroglucinol)",
+    "smiles": "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O",
+    "source_dois": [
+      "10.1016/j.jcis.2024.12.203"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcis.2024.12.203",
+        "source_label": "TP",
+        "framework_annotation": "els-jcis-2024-12-203-BS08",
+        "molecule_annotation": "els-jcis-2024-12-203-BC04"
+      }
+    ]
+  },
+  {
+    "id": "feed_504ea0e4247e",
+    "abbreviation": "EDAE",
+    "full_name": "4,4′-(ethyne-1,2-diyl)dianiline",
+    "smiles": "Nc1ccc(C#Cc2ccc(N)cc2)cc1",
+    "source_dois": [
+      "10.1016/j.jcis.2024.12.203"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcis.2024.12.203",
+        "source_label": "EDAE",
+        "framework_annotation": "els-jcis-2024-12-203-BS06",
+        "molecule_annotation": "els-jcis-2024-12-203-BC01"
+      }
+    ]
+  },
+  {
+    "id": "feed_5b0d17a771ee",
+    "abbreviation": "BDDA",
+    "full_name": "4,4′-(buta-1,3-diyne-1,4-diyl)dianiline",
+    "smiles": "Nc1ccc(C#CC#Cc2ccc(N)cc2)cc1",
+    "source_dois": [
+      "10.1016/j.jcis.2024.12.203"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.jcis.2024.12.203",
+        "source_label": "BDDA",
+        "framework_annotation": "els-jcis-2024-12-203-BS07",
+        "molecule_annotation": "els-jcis-2024-12-203-BC03"
+      }
+    ]
+  },
+  {
+    "id": "tapt",
+    "abbreviation": "TAPT",
+    "full_name": "2,4,6-Tris(4-aminophenyl)-1,3,5-triazine",
+    "smiles": "Nc1ccc(-c2nc(-c3ccc(N)cc3)nc(-c3ccc(N)cc3)n2)cc1",
+    "source_dois": [
+      "10.1016/j.dwt.2025.101305"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.dwt.2025.101305",
+        "source_label": "TAPT",
+        "framework_annotation": "els-dwt-2025-101305-BC01",
+        "molecule_annotation": "els-dwt-2025-101305-BC02"
+      }
+    ]
+  },
+  {
+    "id": "tfb",
+    "abbreviation": "TFB",
+    "full_name": "Benzene-1,3,5-tricarbaldehyde",
+    "smiles": "O=Cc1cc(C=O)cc(C=O)c1",
+    "source_dois": [
+      "10.1016/j.dwt.2025.101305"
+    ],
+    "source_evidence": [
+      {
+        "source_doi": "10.1016/j.dwt.2025.101305",
+        "source_label": "BTA",
+        "framework_annotation": "els-dwt-2025-101305-BC01",
+        "molecule_annotation": "els-dwt-2025-101305-BC03"
       }
     ]
   }
