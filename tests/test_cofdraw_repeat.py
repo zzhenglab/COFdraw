@@ -1,5 +1,5 @@
 """A larger drawing must export the same shared-edge graph shown on screen."""
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 from xml.etree import ElementTree
 import math
@@ -22,6 +22,59 @@ def api(tmp_path):
     source = Path(__file__).resolve().parents[1]/'data'
     with TestClient(create_desktop_app(source,output_root=tmp_path)) as client:
         yield client
+
+
+@pytest.mark.parametrize('a,b,linkage,template,extent,expected_blocks', [
+    ('tp', 'pa', 'beta_ketoenamine', 'hcb_3_2', 1, (6, 6)),
+    ('tp', 'pa', 'beta_ketoenamine', 'hcb_3_2', 2, (16, 19)),
+    ('tp', 'tapb', 'beta_ketoenamine', 'hcb_3_3', 1, (3, 3)),
+    ('tp', 'cv_fcab1b1c0f79e508', 'beta_ketoenamine', 'hcb_3_3', 2, (8, 8)),  # TTTDA
+    ('tp', 'deth', 'keto_hydrazide', 'hcb_3_2', 1, (6, 6)),
+    ('tfb', 'deth', 'acylhydrazone', 'hcb_3_2', 1, (6, 6)),
+    ('hfpb', 'deth', 'acylhydrazone', 'hxl_6_2', 1, (3, 3)),
+    ('ta', 'tape', 'secondary_amine', 'kgm_4_2', 1, (18, 12)),
+])
+def test_linkages_follow_the_rotation_of_each_building_block(api, a, b, linkage, template, extent, expected_blocks):
+    presets = {row['id']: row['smiles'] for row in api.get('/api/drawing/library').json()['monomer_presets']}
+    prepared = api.post('/api/drawing/prepare', json={
+        'monomer_a': presets[a], 'monomer_b': presets[b], 'linkage': linkage,
+        'template_id': template, 'instances': {'hcb_3_2': 12, 'kgm_4_2': 30}.get(template, 6),
+    })
+    prepared.raise_for_status()
+    recipe = prepared.json()['recipe']
+    body = {'recipe': recipe, 'size': 640, 'style_options': {'boundary_cut': 'linkage'}}
+    if extent == 1:
+        drawing = api.post('/api/drawing/render', json=body)
+    else:
+        drawing = api.post('/api/drawing/repeat', json={**body, 'repeats': extent})
+    drawing.raise_for_status()
+    urls = drawing.json()['downloads']
+    audit = api.get(urls['json']).json()['audit']
+    mol = Chem.MolFromMolBlock(api.get(urls['mol']).text, sanitize=False, removeHs=False)
+    xy = np.array(audit['drawing_style']['layout']['atom_pixels'])
+    origins = audit['atom_origin']
+    arms = defaultdict(list)
+    for atom, origin in zip(mol.GetAtoms(), origins):
+        site = atom.GetIdx()
+        if atom.GetDegree() != 2:
+            continue
+        neighbors = atom.GetNeighbors()
+        exits = [n.GetIdx() for n in neighbors if n.GetAtomicNum() == 0 or origins[n.GetIdx()]['instance'] != origin['instance']]
+        if len(exits) == 1:
+            tip, = exits
+            anchor = next(n.GetIdx() for n in neighbors if n.GetIdx() != tip)
+            arms[origin['component'], origin['instance']].append((anchor, site, tip))
+
+    assert Counter(comp for comp, _ in arms) == dict(zip(('A', 'B'), expected_blocks))
+    for (component, name), ends in arms.items():
+        assert len(ends) == recipe['components'][component]['connectivity']
+        anchors, sites, tips = np.array(ends).T
+        incoming, outgoing = xy[sites] - xy[anchors], xy[tips] - xy[sites]
+        turns = [math.degrees(math.atan2(np.linalg.det([u, v]), u @ v)) for u, v in zip(incoming, outgoing)]
+        assert all(abs(turn - math.copysign(60, turns[0])) < 1 for turn in turns), (name, turns)
+        if len(ends) == 2:
+            chord = xy[sites[1]] - xy[sites[0]]
+            assert np.prod([np.linalg.det([chord, bond]) for bond in outgoing]) < 0, name
 
 
 @pytest.mark.parametrize(('endpoint', 'style', 'extra'), [

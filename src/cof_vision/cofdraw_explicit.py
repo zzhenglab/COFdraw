@@ -57,6 +57,14 @@ def clear_source_registration(recipe):
         recipe["source_coordinates_preserved"] = False
     for key in ("source_coordinate_provenance", "coordinate_provenance"):
         if key in recipe:
+            if key == "coordinate_provenance" and not graph:
+                basis = recipe[key]
+                if (isinstance(basis, dict) and basis.get('kind') == 'fitted_sheet_face'
+                        and (recipe.get('selected_template') or {}).get('id') == 'sql_4_4'
+                        and recipe.get('atom_coordinates')):
+                    from .cofdraw_chemistry import sheet_face_signature
+                    if basis.get('layout_sha256') == sheet_face_signature(recipe):
+                        continue
             recipe[key] = deepcopy(provenance)
     if "layout_evidence" in recipe:
         recipe["layout_evidence"] = {"method": "user_manual_coordinates", "exact_atom_registration": False,

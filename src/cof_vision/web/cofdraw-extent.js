@@ -122,5 +122,5 @@ document.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('cofdraw:crystalviewclear',()=>{if(inCrystal())setCrystalOptions([],null,null);});
   window.addEventListener('cofdraw:state',sync);
   window.COFdrawExtent={get value(){return count;},get expanded(){return !inCrystal()&&count!==1;},get visible(){return clean()?visible:null;},
-    select,setCrystalOptions,restore(value,color=true){count=[1,'three-pores','kagome-star','triangle',2,3,4].includes(value)?value:1;$('color-pore-types').checked=color!==false;}};
+    select,setCrystalOptions,restore(value,color=true){count=value??1;$('color-pore-types').checked=color!==false;}};
 });

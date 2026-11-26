@@ -16,6 +16,7 @@ def _graph(smiles):
 def validated_design(recipe, *, source_rule=None, source_sha256=None):
     """Recover the declared chemistry and confirm its finite template incidence."""
     from .cofdraw_chemistry import design_signature, _assemble_template, prepare_template
+    from .cofdraw_spatial import ProjectionConflict
     from .framework_drawing import linkage_fragment, _ports, LINKAGE_LIBRARY
 
     if source_rule and source_sha256 and source_rule["source_sha256"] == source_sha256:
@@ -78,10 +79,6 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
             if Chem.MolToSmiles(actual)!=Chem.MolToSmiles(reference):
                 raise ValueError('Edited product fragments do not match the declared precursor transform')
         checked[key]={**expected,'fragment_smiles':component['fragment_smiles'],'label':key}
-    fresh=_assemble_template(checked,recipe['linkage'],len(recipe['instances']),selected['id'])
-    if fresh['selected_template'] is None:
-        raise ValueError('Unknown periodic connectivity template')
-
     def normalized_signature(value):
         value=deepcopy(value)
         for component in value['components'].values():
@@ -89,9 +86,23 @@ def validated_design(recipe, *, source_rule=None, source_sha256=None):
                 component[field]=_graph(component[field])
         return design_signature(value)
 
-    if normalized_signature(fresh)!=normalized_signature(recipe):
-        raise ValueError('Drawing incidence differs from the selected connectivity template')
-    return fresh, precursors
+    saved_signature = normalized_signature(recipe)
+    # Older mtf and square designs chose local port pairs. Validate those
+    # exact saved incidences as well as the current representative face.
+    count = len(recipe['instances'])
+    legacy_possible = selected['id'] in ('mtf_4_3', 'sql_4_4') and count == 4
+    for legacy in ((False, True) if legacy_possible else (False,)):
+        try:
+            fresh = _assemble_template(checked, recipe['linkage'], count, selected['id'], legacy_pore=legacy)
+        except ProjectionConflict:
+            if legacy_possible and not legacy:
+                continue
+            raise
+        if fresh['selected_template'] is None:
+            raise ValueError('Unknown periodic connectivity template')
+        if normalized_signature(fresh) == saved_signature:
+            return fresh, precursors
+    raise ValueError('Drawing incidence differs from the selected connectivity template')
 
 
 def periodic_options(recipe, manifest, *, design=None, source_sha256=None):

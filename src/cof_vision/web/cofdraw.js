@@ -311,7 +311,15 @@ function refreshTemplates(desired=null){
   select.value=validCurrent?.value||first?.value||"";
   if(!select.options.length)select.append(option("","No compatible template available"));
   const item=selectedTemplate(),check=templateCheck();$("template-description").textContent=item?[item.description,check.compatible?item.limits:check.reason].filter(Boolean).join(" "):"Choose supported linkage chemistry to view its templates.";
-  if(item?.instances)$("pore").value=String(item.instances);
+  if(item?.instances){
+    const pore=$("pore");
+    pore.querySelector('[data-template-size]')?.remove();
+    if(![...pore.options].some(row=>row.value===String(item.instances))){
+      const fixed=option(String(item.instances),item.instances+" building blocks");
+      fixed.dataset.templateSize=item.id;fixed.hidden=true;pore.append(fixed);
+    }
+    pore.value=String(item.instances);
+  }
 }
 function refreshInspectors(){
   const source=sourceMode(),info=linkageInfo(),roles=info.roles||[];$("linkage-roles").textContent=source?(state.sourceId?"Source-associated precursors":"Recorded graph — associated precursors"):roles.length?`${roleLabel(roles[0],0)} + ${roleLabel(roles[1],1)}`:(info.description||info.conceptual_motif||"Select a linkage category.");
@@ -413,7 +421,7 @@ function sync() {
   }else $('measure-pore').removeAttribute('title');
   window.dispatchEvent(new CustomEvent('cofdraw:state'));
 }
-function removeIdentity() {
+function removeIdentity(keepFittedFace=false) {
   if(!state.recipe)return;
   const wasSource=Boolean(state.sourceId);
   state.recipe.derived_from_recipe_id=state.recipe.derived_from_recipe_id||state.recipe.recipe_id;
@@ -422,7 +430,10 @@ function removeIdentity() {
   r.source_registered=false;if('source_coordinates_preserved' in r)r.source_coordinates_preserved=false;if('source_representation_kind' in r)r.source_representation_kind='user_edited_finite_patch';if('source_scope' in r)r.source_scope='User-edited finite chemical patch; original source scope is historical only.';
   if(r.explicit_graph){r.explicit_graph.source_coordinates_preserved=false;r.explicit_graph.coordinate_provenance={kind:'user_manual_coordinates',source_registered:false,scope:'Edited design; parent registration is historical evidence only.'};}
   if(r.source_style){r.source_style.source_registered=false;r.source_style.exact_style_equivalence=false;r.source_style.qualification='Inherited presentation on an edited drawing; no source registration asserted.';delete r.source_style.coordinate_evidence_sha256;delete r.source_style.review_evidence_sha256;}
-  for(const key of ['source_coordinate_provenance','coordinate_provenance','layout_evidence'])if(r[key])r[key]={kind:'user_manual_coordinates',source_registered:false,scope:'Current design coordinates; see source_registration_history for original evidence.'};
+  for(const key of ['source_coordinate_provenance','coordinate_provenance','layout_evidence']){
+    if(key==='coordinate_provenance'&&keepFittedFace&&r[key]?.kind==='fitted_sheet_face')continue;
+    if(r[key])r[key]={kind:'user_manual_coordinates',source_registered:false,scope:'Current design coordinates; see source_registration_history for original evidence.'};
+  }
   for(const k of ["cofex_id","cofex_string","cofex_notation","parent_cofex_id","source","reference","topology","topology_evidence","design_cofex_notation","design_topology"])state.recipe[k]=null;
   Object.assign(state.recipe,{designed_variant:true,ground_truth:false,review_status:"user_design"});state.sourceId=null;state.sourceMetadata=null;
   updateIdentity();if(wasSource)refreshInspectors();
@@ -431,10 +442,10 @@ function markInputsChanged() { selectionRevision++;const wasSource=sourceMode();
 function syncJSON(){ $("recipe-json").value=state.recipe?JSON.stringify(state.recipe,null,2):"";state.jsonPending=false; }
 function validateRecipeShape(recipe) {
   if(recipe?.explicit_graph){if(!Array.isArray(recipe.explicit_graph.atoms)||!Array.isArray(recipe.explicit_graph.bonds))throw new Error("This source drawing needs explicit atoms and bonds.");return;}
-  if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>30)throw new Error("A recipe needs components, 3–30 instances, and explicit connections.");
+  if(!recipe||!recipe.components||!Array.isArray(recipe.instances)||!Array.isArray(recipe.connections)||recipe.instances.length<3||recipe.instances.length>32)throw new Error("A recipe needs components, 3–32 instances, and explicit connections.");
   for(const item of recipe.instances)if(!recipe.components[item.component]||!Array.isArray(item.layout_position)||item.layout_position.length!==2||item.layout_position.some(x=>typeof x!=="number"||!Number.isFinite(x)||Math.abs(x)>200))throw new Error("Each block needs a component and finite x/y coordinates between −200 and 200.");
 }
-function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);restoreAssembly(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity();if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
+function acceptRecipe(recipe,sourceId=null,metadata=null,engineDesign=false){validateRecipeShape(recipe);restoreAssembly(recipe);state.recipe=clone(recipe);state.sourceId=sourceId;state.sourceMetadata=metadata;state.inputsDirty=false;state.dirty=true;if(!sourceId){const designNotation=state.recipe.design_cofex_notation,designTopology=state.recipe.design_topology;removeIdentity(true);if(engineDesign){state.recipe.design_cofex_notation=designNotation;state.recipe.design_topology=designTopology;}}syncJSON();drawLayout();drawLayoutTable();updateIdentity();sync();window.dispatchEvent(new CustomEvent('cofdraw:layoutchanged'));}
 function updateIdentity(){
   if(window.COFdrawCrystalDesign?.active)return;
   const audit=state.result&&!state.dirty?state.result.audit:null,metadata=state.sourceMetadata||audit?.literature_metadata||{};
@@ -527,6 +538,7 @@ async function render(){
     if(!state.sourceId){for(const key of["design_cofex_notation","design_topology","selected_template"])state.recipe[key]=clone(result.audit[key]??null);syncJSON();}
     $("framework-image").src=`.${result.downloads.svg}`;$("framework-image").hidden=false;$("canvas-empty").classList.add("hidden");
     const audit=result.audit;$("drawing-summary").textContent=`${audit.building_block_instances} blocks · ${audit.atoms} atoms · ${audit.continuation_ports.length} outward ports · ${state.sourceId?"provisional source patch":"designed finite patch"}`;
+    if (state.recipe?.drawing_extent_note) $("drawing-summary").textContent += " · " + state.recipe.drawing_extent_note;
     showExports(result.downloads);
     const exportNote=$("export-note"),exportAudit=audit.chemical_exports||{};
     exportNote.hidden=Boolean(result.downloads.cdxml);

@@ -330,6 +330,15 @@ def design_signature(recipe):
            "connections":recipe["connections"],"linkage":recipe.get("linkage"),"layout_kind":recipe.get("layout_kind")}
     return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
+
+def sheet_face_signature(recipe):
+    """Bind the generated pose to its ports and coordinates across JSON round trips."""
+    rows = [(r['instance'], r['fragment_atom_index'], [float(x or 0.).hex() for x in r['xy']])
+            for r in recipe['atom_coordinates']]
+    data = json.dumps([design_signature(recipe), sorted(rows)], separators=(',', ':')).encode()
+    return hashlib.sha256(data).hexdigest()
+
+
 def refresh_design_identity(recipe):
     if recipe.get('assembly'):
         from .cofdraw_cofex import recipe_record
@@ -342,7 +351,7 @@ def refresh_design_identity(recipe):
     selected=recipe.get("selected_template") or {}
     matched=recipe.get("design_template_signature")==design_signature(recipe)
     known=next((t for t in TEMPLATES if t["id"]==selected.get("id")),None) if matched else None
-    if known and known["id"] in ("kgm_4_2", "dia_4_2", "pts_4_4"):
+    if known and known["id"] in ("kgm_4_2", "dia_4_2", "pts_4_4", "mtf_4_3"):
         known = {**known, "instances": len(recipe["instances"])}
         if recipe.get("layout_kind") == "net_patch" and known["id"] in spatial.SPATIAL:
             known["topology_label"] = known["parent_net"]
@@ -396,7 +405,41 @@ def prepare_template(monomer_a,monomer_b,linkage,label_a,label_b,instances,templ
     return _assemble_template(components, linkage, instances, template_id)
 
 
-def _assemble_template(components, linkage, instances, template_id):
+MTF_PATCH_ATOM_LIMIT = 1500
+
+
+def _mtf_drawing(components, instances, legacy):
+    from .cofdraw_branched import branch_patch
+
+    if legacy:
+        mol, summary = branch_patch(components, 1, 'legacy_mtf')
+        return 4, mol, summary, None
+    # Every crop has equal numbers of both monomers. Count the continuation
+    # ports here, as the editor does when validating an imported recipe.
+    pair_atoms = sum(Chem.MolFromSmiles(c['fragment_smiles']).GetNumAtoms() for c in components.values())
+    sizes = [instances] if instances in (4, 8) else [32, 8, 4]
+    extents = {32: (17, 'complete mtf patch'), 8: (1, 'large square'), 4: (0, 'small square')}
+    skipped = []
+    for size in sizes:
+        faces, name = extents[size]
+        limit = MTF_PATCH_ATOM_LIMIT if size == 32 else 1000
+        if size // 2 * pair_atoms > limit:
+            if size == sizes[-1]:
+                raise ValueError(f'Drawing limit is {limit:,} atoms including continuation ports')
+            skipped.append(f'The {name} exceeds the drawing atom limit.')
+            continue
+        try:
+            mol, summary = branch_patch(components, faces, 'mtf_4_3')
+        except spatial.ProjectionConflict:
+            if size == sizes[-1]:
+                raise
+            skipped.append(f'The {name} has conflicting projected bond geometry.')
+            continue
+        note = ' '.join([f'Showing the {name} ({size} nodes).', *skipped]) if skipped else None
+        return size, mol, summary, note
+
+
+def _assemble_template(components, linkage, instances, template_id, *, legacy_pore=False):
     rule=LINKAGE_LIBRARY[linkage]
     monomer_a, monomer_b=(components[k]['monomer_smiles'] for k in ('A','B'))
     label_a, label_b=(components[k]['label'] for k in ('A','B'))
@@ -413,6 +456,23 @@ def _assemble_template(components, linkage, instances, template_id):
         reason = net_geometry_error(template, counts, inspection, rule["roles"])
         if reason:
             raise ValueError(reason)
+
+    if template_id == 'mtf_4_3':
+        from .cofdraw_mixed import circuit_geometry
+        size, mol, summary, size_note = _mtf_drawing(components, instances, legacy_pore)
+        geometry = circuit_geometry(components, mol, summary, summary['order_assumption'])
+        template['instances'] = size
+        recipe = dict(components=components, linkage=linkage, selected_template=template,
+                      layout_kind='net_patch' if size == 32 else 'closed_pore', designed_variant=True,
+                      compatibility=dict(reactive_site_counts=counts, roles=rule['roles'], monomers=inspection),
+                      **geometry)
+        if size == 32:
+            recipe['repeat_faces'] = summary['pore_faces']
+        if size_note:
+            recipe['drawing_extent_note'] = size_note
+        recipe['design_template_signature'] = design_signature(recipe)
+        refresh_design_identity(recipe)
+        return recipe
 
     # The molecular cage and star have their own fixed sizes. Smaller saved
     # requests use the corresponding single-circuit / single-face depiction.
@@ -465,6 +525,13 @@ def _assemble_template(components, linkage, instances, template_id):
                   "b":{"instance":items[(i+1)%n]["id"],"port":items[(i+1)%n]["incoming_port"]},"bond_order":rule["join_bond_order"]}
                  for i in range(n-1 if open_chain else n)]
     geometry={}
+    if template_id == 'sql_4_4' and not legacy_pore:
+        from .cofdraw_repeat import sheet_face_geometry
+        geometry = sheet_face_geometry(components, linkage, connections, template_id) or {}
+        if geometry:
+            selected = [dict(instance=item['id'], incoming_port=item['incoming_port'],
+                             outgoing_port=item['outgoing_port'], basis='Port assignment in the fitted square sheet')
+                        for item in geometry['instances']]
     if template_id=="branched_4_3" or template_id in spatial.SPATIAL or template_id in planar.PLANAR:
         from .cofdraw_branched import branch_patch
         from .cofdraw_mixed import circuit_geometry
@@ -481,8 +548,11 @@ def _assemble_template(components, linkage, instances, template_id):
     design_name=re.sub(r"[^A-Za-z0-9_+-]","",f"{label_a}-{label_b}")[:80] or "user-design"
     parent=net or (template or {}).get('parent_net') or 'unk'
     notation=".".join(sorted({canonical(monomer_a),canonical(monomer_b)}))+f" COFex.{parent}.cat0;{design_name}"
-    return {"components":components,"instances":items,"connections":connections,"linkage":linkage,
+    recipe = {"components":components,"instances":items,"connections":connections,"linkage":linkage,
             "layout_kind":"open_chain" if open_chain else "closed_pore", "selected_template":template,
             "design_topology":net,"design_cofex_notation":notation,"design_catenation":"cat0",
             "design_identity_qualification":"Proposed design notation. Net is the chosen template, cat0 is assumed; neither is experimental identity or a CIF.",
             "compatibility":{"reactive_site_counts":counts,"roles":rule["roles"],"port_selection":selected,"monomers":inspection},**geometry}
+    if template_id == 'sql_4_4' and geometry:
+        recipe['coordinate_provenance']['layout_sha256'] = sheet_face_signature(recipe)
+    return recipe

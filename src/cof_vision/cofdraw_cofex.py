@@ -12,7 +12,7 @@ from .framework_drawing import LINKAGE_LIBRARY, canonical, matches_linkage_famil
 
 
 # Earlier exchange records for these templates describe a single circuit.
-_CIRCUIT_SIZE = {'dia_4_2': 12, 'pts_4_4': 4, 'kgm_4_2': 12}
+_CIRCUIT_SIZE = {'dia_4_2': 12, 'pts_4_4': 4, 'kgm_4_2': 12, 'mtf_4_3': 4}
 
 
 def design_record(feeds, mode, linkage, net=None, count=1, **settings):
@@ -72,8 +72,11 @@ def recipe_record(recipe, metadata=None, source=False):
         # Unregistered explicit graphs and edited connections have no matching builder recipe.
         return None
     feeds = [dict(smiles=c['monomer_smiles'], label=c.get('label')) for c in (recipe['components'][k] for k in ('A','B'))]
-    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label') or template.get('parent_net'), template=template['id'],
-                         view='molecular_patch' if recipe.get('layout_kind')=='net_patch' else None)
+    view = 'molecular_patch' if recipe.get('layout_kind') == 'net_patch' else None
+    if template['id'] == 'mtf_4_3' and len(recipe.get('instances', [])) == 8:
+        view = 'large_square'
+    return design_record(feeds, 'binary', recipe['linkage'], template.get('topology_label') or template.get('parent_net'),
+                         template=template['id'], view=view)
 
 
 @lru_cache(maxsize=3000)
@@ -140,8 +143,11 @@ def parse_record(text, catalog_rows):
     allowed = {'binary':{'template','view'},'assembly':{'face'} if len(smiles)==1 else {'sequence','layout'},'crystal':{'polytype'}}
     if specific - allowed[mode]:
         raise ValueError('The COFdraw exchange fields disagree with the precursor count or net.')
-    if 'view' in settings and (settings['view'] != 'molecular_patch' or settings.get('template') not in _CIRCUIT_SIZE):
-        raise ValueError('This drawing view does not match the selected template.')
+    if 'view' in settings:
+        valid_patch = settings['view'] == 'molecular_patch' and settings.get('template') in _CIRCUIT_SIZE
+        large_square = settings['view'] == 'large_square' and settings.get('template') == 'mtf_4_3'
+        if not (valid_patch or large_square):
+            raise ValueError('This drawing view does not match the selected template.')
     if mode == 'assembly':
         return _assembly_choices(smiles, labels, relevant, net, int(cat), settings)
     if int(cat) > (7 if mode == 'crystal' else 0):
@@ -186,6 +192,8 @@ def parse_record(text, catalog_rows):
                 instances = _CIRCUIT_SIZE[key]
                 if key == 'kgm_4_2' and not kagome_match(ordered_roles, rule['roles']):
                     continue
+            elif key == 'mtf_4_3' and settings.get('view') == 'large_square':
+                instances = 8
             requested = settings.get('template')
             legacy_ring = requested == 'alternating_hexagon' and net == 'unk'
             if ((requested and requested != key and not legacy_ring)

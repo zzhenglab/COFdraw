@@ -95,8 +95,8 @@ def _add_block(items, atoms, view, spatial, kind, index, xyz, ports):
     return name
 
 
-def _imine_junctions(components, items, connections, atoms, view, spatial):
-    """Place both trigonal centers of a generated imine between its two scaffold atoms."""
+def _cn_junctions(components, items, connections, atoms, view, spatial, *, reduced=False):
+    """Place the C–N or C=N zigzag between the two fixed scaffold anchors."""
     ends = {}
     for kind, component in components.items():
         mol = Chem.MolFromSmiles(component["fragment_smiles"])
@@ -107,12 +107,11 @@ def _imine_junctions(components, items, connections, atoms, view, spatial):
                 ends[kind, port] = (atom.GetSymbol(), joined, neighbors[0])
     kinds = {i["id"]: i["component"] for i in items}
     normal = np.cross(view[:, 0], view[:, 1])
-    # In a local plane the exit bonds are parallel. The C=N bond makes
-    # 60 degrees with their forward direction (120 degrees at C and N).
-    # Use nominal length ratios, scaling the zigzag to each fixed pair of anchors.
-    scaffold_c, imine, scaffold_n = 1.47, 1.28, 1.42
-    axial = scaffold_c + scaffold_n + imine * 0.5
-    lateral = imine * np.sqrt(3.) / 2
+    # Parallel scaffold bonds and a 60° turn give a conventional skeletal
+    # zigzag. Scale nominal length ratios to the available anchor span.
+    scaffold_c, junction, scaffold_n = (1.51, 1.47, 1.42) if reduced else (1.47, 1.28, 1.42)
+    axial = scaffold_c + scaffold_n + junction * 0.5
+    lateral = junction * np.sqrt(3.) / 2
     span_squared = axial**2 + lateral**2
     for edge in connections:
         groups = {}
@@ -130,7 +129,7 @@ def _imine_junctions(components, items, connections, atoms, view, spatial):
         delta = right - left
         distance = np.linalg.norm(delta)
         if distance < 1e-8:
-            raise ValueError("The two imine attachment sites coincide in this net drawing.")
+            raise ValueError("The two C–N attachment sites coincide in this net drawing.")
         along = delta / distance
         # The azimuth around the attachment axis is free in this unrelaxed
         # schematic. Choose a transverse direction visible in the initial view.
@@ -144,7 +143,7 @@ def _imine_junctions(components, items, connections, atoms, view, spatial):
                 row.update(xyz=xyz.round(5).tolist(), depth=round(float(xyz @ normal), 5))
 
 
-def _complete_kagome_imine_arms(component, kind, items, atoms, connections, linker_ports):
+def _complete_kagome_arms(component, kind, items, atoms, connections, linker_ports):
     """Continue a symmetry-equivalent opposite arm at the edge of the finite star."""
     mol = Chem.MolFromSmiles(component["fragment_smiles"])
     ports = _ports(mol)
@@ -195,9 +194,10 @@ def net_patch(components, node, diamond, bond_order):
     axis = _unit(link_xyz[right] - link_xyz[left])
     across = np.array([-axis[1], axis[0], 0])
     radius = np.mean([np.linalg.norm(node_xyz[n]) for _, n in node_ports.values()])
-    imine = components[node]["linkage"] in ("imine", "alkyl_imine")
-    # Reserve the projected span of a bent imine between the precursor arms.
-    gap = 0.8 if imine else 1.4
+    linkage = components[node]["linkage"]
+    imine = linkage in ("imine", "alkyl_imine")
+    reduced = not diamond and linkage in ("secondary_amine", "reduced_alkyl_imine")
+    gap = 0.8 if imine or reduced else 1.4
     centers *= 2 * radius + np.linalg.norm(link_xyz[right] - link_xyz[left]) + 2 * gap
     view = _view(diamond)
     linker_plane_normal = np.cross(view[:, 0], view[:, 1])
@@ -235,10 +235,10 @@ def net_patch(components, node, diamond, bond_order):
         for end, dummy, key in ((end_a, dummy_a, p), (end_b, dummy_b, q)):
             connections.append(dict(a=end, b=dict(instance=name, port=key), bond_order=bond_order))
             del atoms[end["instance"], dummy], atoms[name, link_ports[key][0]]
-    if imine:
-        _imine_junctions(components, items, connections, atoms, view, diamond)
+    if imine or reduced:
+        _cn_junctions(components, items, connections, atoms, view, diamond, reduced=reduced)
         if not diamond:
-            _complete_kagome_imine_arms(components[node], node, items, atoms, connections, link_ports)
+            _complete_kagome_arms(components[node], node, items, atoms, connections, link_ports)
     return items, connections, list(atoms.values())
 
 
@@ -307,5 +307,5 @@ def pts_patch(components, tetra, bond_order):
         del atoms[names[i], fragments[blocks[i][0]][1][a][0]]
         del atoms[names[j], fragments[blocks[j][0]][1][b][0]]
     if imine:
-        _imine_junctions(components, items, connections, atoms, view, True)
+        _cn_junctions(components, items, connections, atoms, view, True)
     return items, connections, list(atoms.values())

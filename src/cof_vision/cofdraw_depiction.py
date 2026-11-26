@@ -38,27 +38,49 @@ def straight_linker_axes(sites, axes):
     return bool(min(-alignment[0], alignment[1]) > math.cos(math.radians(25)))
 
 
-def normalize_imine_ports(mol, xy, *, preserve_uniform=False, straight_only=False):
-    """Place imine bends around equivalent arms or on opposite sides of a straight linker.
+SYMMETRIC_PORT_LINKAGES = frozenset({
+    'imine', 'alkyl_imine', 'acylhydrazone', 'beta_ketoenamine', 'alkyl_ketoenamine', 'keto_hydrazide',
+    'secondary_amine', 'reduced_alkyl_imine',
+})
+
+
+def normalize_linkage_ports(mol, xy, linkage, *, preserve_uniform=False, straight_only=False):
+    """Use a common signed turn on equivalent arms and both ends of a straight rod.
 
     Only the replaceable dummy positions move. Mapped port numbers encode
     incidence; stereochemistry and isotopes still distinguish different arms.
     """
+    if linkage not in SYMMETRIC_PORT_LINKAGES:
+        return False
+    keto = linkage in ('beta_ketoenamine', 'alkyl_ketoenamine', 'keto_hydrazide')
+    reduced = linkage in ('secondary_amine', 'reduced_alkyl_imine')
+    hydrazide = linkage in ('acylhydrazone', 'keto_hydrazide')
+    port_order = Chem.BondType.SINGLE if keto or reduced else Chem.BondType.DOUBLE
     ports = [atom for atom in mol.GetAtoms() if atom.GetAtomicNum() == 0]
     if len(ports) < 2 or any(atom.GetDegree() != 1 for atom in ports):
         return False
     stereo_selectors = {i for b in mol.GetBonds() for i in b.GetStereoAtoms()}
     ends = []
+    planar_anchors = True
     for port in ports:
         site = port.GetNeighbors()[0]
         bond = port.GetBonds()[0]
         if (site.GetAtomicNum() not in (6, 7) or site.GetDegree() != 2 or
-                bond.GetBondType() != Chem.BondType.DOUBLE or bond.GetStereo() != Chem.BondStereo.STEREONONE or
+                bond.GetBondType() != port_order or bond.GetStereo() != Chem.BondStereo.STEREONONE or
+                site.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED or
                 port.GetIdx() in stereo_selectors):
             return False
         anchor = next(a for a in site.GetNeighbors() if a.GetIdx() != port.GetIdx())
-        if anchor.GetAtomicNum() != 6:
+        if anchor.GetAtomicNum() != 6 and not (hydrazide and site.GetAtomicNum() == 7 and anchor.GetAtomicNum() == 7):
             return False
+        # The Tp product is ring-C=CH–NH, with the bend at the exocyclic
+        # CH. Its scaffold anchor is a ring carbon in the keto tautomer.
+        if keto and site.GetAtomicNum() == 6:
+            scaffold_bond = mol.GetBondBetweenAtoms(site.GetIdx(), anchor.GetIdx())
+            if not anchor.IsInRing() or scaffold_bond.GetBondType() != Chem.BondType.DOUBLE:
+                return False
+        elif not anchor.GetIsAromatic():
+            planar_anchors = False
         ends.append((port.GetIdx(), site.GetIdx(), anchor.GetIdx()))
     dummies, sites, anchors = np.asarray(ends).T
     axis = xy[sites, :2] - xy[anchors, :2]
@@ -70,19 +92,28 @@ def normalize_imine_ports(mol, xy, *, preserve_uniform=False, straight_only=Fals
     # without changing the direction in which its two ends point.
     straight = straight_linker_axes(xy[sites, :2], axis)
     if not straight:
-        if straight_only or any(not mol.GetAtomWithIdx(int(i)).GetIsAromatic() for i in anchors):
+        if straight_only or not planar_anchors:
             return False
         ranks = port_symmetry_ranks(mol)
         if len({ranks[p.GetIdx()] for p in ports}) != 1:
             return False
     outgoing = xy[dummies, :2] - xy[sites, :2]
-    if preserve_uniform:
-        turns = axis[:, 0]*outgoing[:, 1] - axis[:, 1]*outgoing[:, 0]
-        if np.all(turns > 1e-8) or np.all(turns < -1e-8):
-            return True
+    turns = axis[:, 0]*outgoing[:, 1] - axis[:, 1]*outgoing[:, 0]
+    if preserve_uniform and (np.all(turns > 1e-8) or np.all(turns < -1e-8)):
+        return True
+    if reduced:
+        # A reduced C–N linkage is rotatable. Reflect only the drawing side,
+        # keeping both the original bond length and each endpoint's angle.
+        if np.any(np.abs(turns) < 1e-8):
+            return False
+        reverse = turns < 0
+        unit = axis[reverse] / lengths[reverse, None]
+        reflected = 2 * np.sum(unit * outgoing[reverse], axis=1)[:, None] * unit - outgoing[reverse]
+        xy[dummies[reverse], :2] = xy[sites[reverse], :2] + reflected
+        return True
     port_lengths = np.linalg.norm(outgoing, axis=1)
     # Rotate the outward aryl bond by +60 degrees. The angle drawn at the
-    # imine atom is then 120 degrees; a whole-block reflection reverses all arms.
+    # junction atom is then 120 degrees; a whole-block reflection reverses all arms.
     sine = math.sqrt(3.) / 2
     turn = np.array([[.5, sine], [-sine, .5]])
     xy[dummies, :2] = xy[sites, :2] + ((port_lengths / lengths)[:, None] * axis) @ turn

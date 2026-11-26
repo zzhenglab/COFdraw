@@ -18,7 +18,7 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry import Point3D
 from .depiction_rings import symmetric_depiction_rings
-from .cofdraw_depiction import compute_2d_coords
+from .cofdraw_depiction import SYMMETRIC_PORT_LINKAGES, compute_2d_coords, normalize_linkage_ports
 
 VERSION = "cof-chemical-patch-1"
 TP = "O=Cc1c(O)c(C=O)c(O)c(C=O)c1O"
@@ -386,7 +386,7 @@ def build_patch(recipe: dict):
     # Older generated planar templates and direct Python callers can omit
     # the automatic layout setting that Studio supplies on new drawings.
     if ('layout_refinement' not in recipe and recipe.get('selected_template')
-            and recipe.get('linkage') in ('imine', 'alkyl_imine')
+            and recipe.get('linkage') in SYMMETRIC_PORT_LINKAGES
             and recipe.get('layout_kind') in ('closed_pore', 'open_chain')
             and not recipe.get('atom_coordinates')
             and not any(item.get('layout_rotation_degrees') or item.get('flip_across_attachment_axis')
@@ -398,18 +398,18 @@ def build_patch(recipe: dict):
         raise ValueError("Monomer degree alone cannot establish topology")
     components, parts, offsets, used, positions, coords = recipe["components"], {}, {}, set(), {}, {}
     template_id = (recipe.get('selected_template') or {}).get('id')
-    automatic_imines = (refinement_method == 'bond_angle_pose_v2' and not recipe.get('atom_coordinates')
-                     and recipe.get('linkage') in ('imine', 'alkyl_imine')
-                     and (template_id or recipe.get('designed_variant') or recipe.get('assembly'))
-                     and not any(i.get('layout_rotation_degrees') or i.get('flip_across_attachment_axis')
-                                 for i in instances))
-    cyclic_imines = automatic_imines and template_id in ('hcb_3_2', 'hcb_3_3', 'sql_4_2', 'sql_4_4', 'hxl_6_2')
-    if cyclic_imines and template_id == 'hxl_6_2':
+    automatic_ports = (refinement_method == 'bond_angle_pose_v2' and not recipe.get('atom_coordinates')
+                       and recipe.get('linkage') in SYMMETRIC_PORT_LINKAGES
+                       and (template_id or recipe.get('designed_variant') or recipe.get('assembly'))
+                       and not any(i.get('layout_rotation_degrees') or i.get('flip_across_attachment_axis')
+                                   for i in instances))
+    cyclic_ports = automatic_ports and template_id in ('hcb_3_2', 'hcb_3_3', 'sql_4_2', 'sql_4_4', 'hxl_6_2')
+    if cyclic_ports and template_id == 'hxl_6_2':
         # A six-connected prism can also be opened as a flat triangular face.
         # Only a planar six-arm precursor should receive the sixfold depiction.
         from .cofdraw_spatial import site_shapes
-        cyclic_imines = any(site_shapes(Chem.MolFromSmiles(c['monomer_smiles'])).get(c.get('role')) == 'hexagonal'
-                            for c in components.values() if c.get('monomer_smiles'))
+        cyclic_ports = any(site_shapes(Chem.MolFromSmiles(c['monomer_smiles'])).get(c.get('role')) == 'hexagonal'
+                           for c in components.values() if c.get('monomer_smiles'))
     symmetric_blocks = set()
     joined = Chem.Mol()
     atom_origin = []
@@ -430,11 +430,9 @@ def build_patch(recipe: dict):
         coords[name] = _fragment_layout(mol, item["incoming_port"], item["outgoing_port"], position, prev, nxt,
                                        item.get("flip_across_attachment_axis", False),
                                        refinement_method == 'bond_angle_pose_v2',
-                                       bool(recipe.get('designed_variant') or automatic_imines) and not recipe.get('atom_coordinates'))
-        if automatic_imines:
-            from .cofdraw_depiction import normalize_imine_ports
-            if normalize_imine_ports(mol, coords[name], straight_only=not cyclic_imines):
-                symmetric_blocks.add(name)
+                                       bool(recipe.get('designed_variant') or automatic_ports) and not recipe.get('atom_coordinates'))
+        if automatic_ports and normalize_linkage_ports(mol, coords[name], recipe['linkage'], straight_only=not cyclic_ports):
+            symmetric_blocks.add(name)
         angle = item.get('layout_rotation_degrees', 0)
         if isinstance(angle, bool) or not isinstance(angle, (int, float)) or not math.isfinite(angle):
             raise ValueError('Block rotation must be a finite angle')
@@ -600,7 +598,10 @@ def build_patch(recipe: dict):
             raise ValueError('Atom coordinates must be finite xy pairs')
         refinement = {'method': 'explicit_atom_coordinates', 'applied': False, 'source_coordinates_preserved': True}
         assembly=recipe.get('assembly') or {}
-        if (assembly.get('kind')=='self_kagome' or assembly.get('pore_view')=='rhombus' or assembly.get('pore_layout')=='kgm'
+        provenance = recipe.get('coordinate_provenance')
+        if ((template_id == 'sql_4_4' and isinstance(provenance, dict)
+             and provenance.get('kind') in ('fitted_sheet_face', 'user_manual_coordinates'))
+                or assembly.get('kind')=='self_kagome' or assembly.get('pore_view')=='rhombus' or assembly.get('pore_layout')=='kgm'
                 or (recipe.get('selected_template') or {}).get('id')=='kgm_4_2'):
             refinement.update(source_coordinates_preserved=False, coordinate_provenance=recipe.get('coordinate_provenance'))
     conf = Chem.Conformer(mol.GetNumAtoms())

@@ -74,7 +74,10 @@
       if (count !== null && Array.isArray(allowed) && !allowed.includes(count)) return {compatible: false, reason: `Block ${block.toUpperCase()} has ${count} reactive sites; this template requires ${allowed.join(" or ")}.`};
     }
     const sizes=['a','b'].map(block=>roleEvidence(monomers[block],linkage,roleFor(library,linkage,block))?.fragment_atoms);
-    if(sizes.every(Number.isInteger)&&sizes.reduce((a,b)=>a+b)*template.instances/2>1000)return {compatible:false,reason:'This patch exceeds the 1,000-atom drawing limit.'};
+    // A large mtf pair opens on a smaller square when the full neighborhood
+    // is too large. Require enough room for its smallest drawable face.
+    const minimumBlocks=template.id==='mtf_4_3'?4:template.instances;
+    if(sizes.every(Number.isInteger)&&sizes.reduce((a,b)=>a+b)*minimumBlocks/2>1000)return {compatible:false,reason:'This patch exceeds the 1,000-atom drawing limit.'};
     const pairs = template.allow_pairs || template.required_functionalities?.allow_pairs;
     const a = reactiveCount(monomers.a, linkage, roleFor(library, linkage, "a"));
     const b = reactiveCount(monomers.b, linkage, roleFor(library, linkage, "b"));

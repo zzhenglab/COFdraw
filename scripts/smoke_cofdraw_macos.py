@@ -11,6 +11,7 @@ import time
 from urllib.request import Request, urlopen
 
 from rdkit import Chem
+from rdkit.Chem import rdMolTransforms
 
 
 def downloaded_molecule(url, drawing):
@@ -18,29 +19,32 @@ def downloaded_molecule(url, drawing):
         return Chem.MolFromMolBlock(response.read().decode(), sanitize=False, removeHs=False)
 
 
-def check_hcb_imines(api, url, presets):
+def check_hcb_junctions(api, url, presets):
     smiles = {row["id"]: row["smiles"] for row in presets}
-    recipe = api("prepare", {"monomer_a": smiles["tfb"], "monomer_b": smiles["pa"],
-                            "linkage": "imine", "template_id": "hcb_3_2", "instances": 12})["recipe"]
-    drawing = api("render", {"recipe": recipe, "size": 640})
-    mol = downloaded_molecule(url, drawing)
-    xy = mol.GetConformer().GetPositions()[:, :2]
-    owners = drawing["audit"]["atom_origin"]
-    # Six TFB nodes each have two joined imines and one outward continuation (=*).
-    # The six diamine linkers each have two joined nitrogen ends.
-    for pattern, arms in (("[#6]-[#6]=[#7,#0]", 3), ("[#6]-[#7]=[#6]", 2)):
-        by_instance = defaultdict(list)
-        for anchor, site, tip in mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)):
-            incoming = xy[site] - xy[anchor]
-            outgoing = xy[tip] - xy[site]
-            cross = incoming[0] * outgoing[1] - incoming[1] * outgoing[0]
-            turn = degrees(atan2(cross, incoming @ outgoing))
-            owner = owners[site]["instance"]
-            assert abs(abs(turn) - 60) < 1, f"{owner} imine angle {180 - abs(turn):.1f}°"
-            by_instance[owner].append(turn)
-        assert len(by_instance) == 6, f"Expected six instances matching {pattern}"
-        for owner, turns in by_instance.items():
-            assert len(turns) == arms and min(turns) * max(turns) > 0, (owner, turns)
+    # Each node contributes its two joined arms and its outward continuation.
+    for node, linkage, patterns in (
+        ("tfb", "imine", ("[#6]-[#6]=[#7,#0]", "[#6]-[#7]=[#6]")),
+        ("tp", "beta_ketoenamine", ("[#6]=[#6;D2]-[#7,#0]", "[#6;D3]-[#7;D2]-[#6;D2]")),
+    ):
+        recipe = api("prepare", {"monomer_a": smiles[node], "monomer_b": smiles["pa"],
+                                "linkage": linkage, "template_id": "hcb_3_2", "instances": 12})["recipe"]
+        drawing = api("render", {"recipe": recipe, "size": 640})
+        mol = downloaded_molecule(url, drawing)
+        xy = mol.GetConformer().GetPositions()[:, :2]
+        owners = drawing["audit"]["atom_origin"]
+        for pattern, arms in zip(patterns, (3, 2)):
+            by_instance = defaultdict(list)
+            for anchor, site, tip in mol.GetSubstructMatches(Chem.MolFromSmarts(pattern)):
+                incoming = xy[site] - xy[anchor]
+                outgoing = xy[tip] - xy[site]
+                cross = incoming[0] * outgoing[1] - incoming[1] * outgoing[0]
+                turn = degrees(atan2(cross, incoming @ outgoing))
+                owner = owners[site]["instance"]
+                assert abs(abs(turn) - 60) < 1, f"{owner} junction angle {180 - abs(turn):.1f}°"
+                by_instance[owner].append(turn)
+            assert len(by_instance) == 6, f"Expected six instances matching {pattern}"
+            for owner, turns in by_instance.items():
+                assert len(turns) == arms and min(turns) * max(turns) > 0, (owner, turns)
 
     # A phenyl substituent makes the two para aldehyde ends inequivalent.
     # The four translated pores share nineteen distinct straight linkers.
@@ -79,7 +83,27 @@ def check_service(url):
               for row in library["monomer_presets"]}
     assert groups["dmtp"] == {"aldehyde"} and groups["tapt"] == {"primary_amine"}
     assert groups["bfbapy"] == {"aldehyde", "primary_amine"}
-    check_hcb_imines(api, url, library["monomer_presets"])
+    check_hcb_junctions(api, url, library["monomer_presets"])
+    smiles = {row["id"]: row["smiles"] for row in library["monomer_presets"]}
+    square = api("prepare", {"monomer_a": smiles["feed_97d130d567b8"], "monomer_b": smiles["pytta"],
+                             "linkage": "imine", "template_id": "sql_4_4", "instances": 4})["recipe"]
+    imine = Chem.MolFromSmarts("[#6]-[C;D2]=[N;D2]-[#6]")
+    for route, options, joins in (("render", {}, 4), ("repeat", {"repeats": 2}, 12)):
+        view = api(route, {"recipe": square, "size": 640, **options})
+        mol = downloaded_molecule(url, view)
+        sites = mol.GetSubstructMatches(imine)
+        assert len(sites) == joins
+        for flank, carbon, nitrogen, other_flank in sites:
+            for triplet in ((flank, carbon, nitrogen), (carbon, nitrogen, other_flank)):
+                assert abs(rdMolTransforms.GetAngleDeg(mol.GetConformer(), *triplet) - 120) < .1
+    mtf = api("prepare", {"monomer_a": smiles["tfb"], "monomer_b": smiles["tape"], "linkage": "imine",
+                          "template_id": "mtf_4_3", "instances": 32})["recipe"]
+    sheet = api("render", {"recipe": mtf, "size": 640})
+    assert sheet["audit"]["building_block_instances"] == 32 and len(mtf["connections"]) == 48
+    assert sorted(map(len, mtf["repeat_faces"])) == [4]*16 + [8]
+    for view, blocks in (("large_pore", 8), ("small_pore", 4)):
+        crop = api("repeat", {"recipe": mtf, "repeats": 1, "extent_mode": view, "size": 640})
+        assert crop["summary"]["pore_count"] == 1 and crop["summary"]["blocks"] == blocks
     drawing = api("render", {"source_recipe_id": "cof-300-projection-v1", "size": 640})
     with urlopen(url.rstrip("/") + drawing["downloads"]["png"], timeout=30) as response:
         assert response.read(8) == bytes.fromhex("89504e470d0a1a0a")
@@ -101,8 +125,9 @@ def check_service(url):
         time.sleep(1)
         job = api("science/adsorption/jobs/" + job["job_id"])
     assert job["status"] == "complete", (job["status"], job.get("message"))
-    print(f"Verified {len(library['monomer_presets'])} monomers, hcb imine angles and node symmetry, "
-          "opposed imines across four neighboring hcb pores, "
+    print(f"Verified {len(library['monomer_presets'])} monomers, hcb imine and ketoenamine angles and node symmetry, "
+          "opposed imines across four neighboring hcb pores, BDPT–PyTTA one- and four-pore sql angles, "
+          "the 17-pore mtf sheet and its two aperture sizes, "
           "COF-300 PNG and CIF, and argon Widom/GCMC.")
 
 

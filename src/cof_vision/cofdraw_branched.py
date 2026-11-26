@@ -10,6 +10,7 @@ from rdkit import Chem
 from .cofdraw_mixed import _block, _orient, join_fragments
 from .cofdraw_net_graphs import neighbors, quotient
 from .cofdraw_planar import LOCAL_FACES, PLANAR, face_layout, local_faces
+from .cofdraw_spatial import ProjectionConflict
 
 
 def loop_edges(loop):
@@ -73,6 +74,11 @@ def circuit_layout():
 
 
 def graph_for(components,count,key):
+    if key == 'mtf_4_3':
+        from .cofdraw_mtf import graph
+        return graph(components, count)
+    if key == 'legacy_mtf':
+        key = 'mtf_4_3'
     if key in LOCAL_FACES:
         if min(c['connectivity'] for c in components.values())<3:
             raise ValueError('Sharing this molecular edge requires a third reactive site at both ends.')
@@ -98,19 +104,27 @@ def branch_patch(components,count,key='branched_4_3'):
     signature=json.dumps({k:{**{f:c[f] for f in fields}, "linkage":c.get("linkage")}
                           for k,c in components.items()},sort_keys=True)
     mol,details=_cached_patch(signature,count,key)
-    if mol is None:raise ValueError(details)
+    if mol is None:
+        error_type, message = details
+        raise error_type(message)
     return Chem.Mol(mol),deepcopy(details)
 
 
 @lru_cache(maxsize=48)
 def _cached_patch(signature,count,key):
     try:return _draw_patch(json.loads(signature),count,key)
-    except ValueError as e:return None,str(e)
+    except ProjectionConflict as e:return None,(ProjectionConflict,str(e))
+    except ValueError as e:return None,(ValueError,str(e))
 
 
 def _draw_patch(components,count,key):
     from .cofdraw_spatial import SPATIAL
+    if key == 'mtf_4_3':
+        from .cofdraw_mtf import patch
+        return patch(components, count)
     faces,edges,xy,kinds=graph_for(components,count,key)
+    if key == 'legacy_mtf':
+        key = 'mtf_4_3'
     geo={k:_block(c) for k,c in components.items()}
     fragment,ports,_,_=geo['A']
     order=fragment.GetBondBetweenAtoms(*ports[0]).GetBondTypeAsDouble()

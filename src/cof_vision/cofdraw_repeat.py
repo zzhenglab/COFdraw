@@ -12,7 +12,7 @@ from rdkit import Chem
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .cofdraw_chemistry import design_signature
-from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports
+from .cofdraw_depiction import SYMMETRIC_PORT_LINKAGES, compute_2d_coords, normalize_linkage_ports
 from .cofdraw_periodic_build import SUPPORTED_TEMPLATES, _fit_blocks, _net, _rotate
 from .cofdraw_periodic_options import validated_design
 from .depiction_rings import symmetric_depiction_rings
@@ -24,17 +24,23 @@ from .cofdraw_planar import LOCAL_FACES, PLANAR
 BRANCHED=('branched_4_3',*SPATIAL,*PLANAR,*LOCAL_FACES)
 MAX_ATOMS = 2400
 SHEET_TEMPLATES = (*SUPPORTED_TEMPLATES, 'hxl_6_2')
+SHEET_FACE_SCOPE = 'One face of the fitted 2D sheet. Neighboring pores use the same block poses and attachment sites.'
+# Selector passed to the mtf face builder, number of bounded faces, and picker label.
+MTF_VIEWS = {
+    'small_pore': (0, 1, 'One small square'),
+    'large_pore': (1, 1, 'One large square'),
+    'mtf_patch': (17, 17, 'One large square + 16 small squares'),
+}
 
 
-def _planar_block(component, imine_mode=None):
+def _planar_block(component, linkage=None, straight_only=False):
     mol = Chem.MolFromSmiles(component['fragment_smiles'])
     compute_2d_coords(mol, canonOrient=False, forceRDKit=True)
     ports = list(_ports(mol).values())
     xyz = mol.GetConformer().GetPositions()
     sites = np.array([site for _, site in ports])
     xyz -= xyz[sites].mean(axis=0)
-    if imine_mode:
-        normalize_imine_ports(mol, xyz, straight_only=imine_mode == 'straight')
+    normalize_linkage_ports(mol, xyz, linkage, straight_only=straight_only)
     directions = xyz[[dummy for dummy, _ in ports], :2] - xyz[sites, :2]
     directions /= np.linalg.norm(directions, axis=1)[:, None]
     return dict(mol=mol, xyz=xyz, sites=sites, ports=ports, directions=directions)
@@ -215,12 +221,12 @@ def _chain(recipe, repeats):
 
 
 @lru_cache(maxsize=64)
-def _fit_sheet(template,fragments,order,imine_mode=None):
+def _fit_sheet(template,fragments,order,linkage=None,straight_only=False):
     # The placement is independent of drawing size and style. Reuse it in
     # the extent picker and the actual drawing, including unsuccessful fits.
     components = {key:dict(fragment_smiles=smiles,connectivity=count) for key,smiles,count in fragments}
     kinds,ref,centers,edges = _quotient(template,components)
-    blocks = {key:_planar_block(c, imine_mode) for key,c in components.items()}
+    blocks = {key:_planar_block(c, linkage, straight_only) for key,c in components.items()}
     poses = []
     cell_blocks = [blocks[k] for k in kinds]
     states = _self_states(cell_blocks[0]) if template == 'self_square' else [cell_blocks]
@@ -243,16 +249,20 @@ def _fit_sheet(template,fragments,order,imine_mode=None):
     return min(poses,key=lambda item:item[0])[1:] if poses else None
 
 
+class SheetAlignmentError(ValueError):
+    """The fragments support a local drawing but do not fit a translational sheet."""
+
+
 def _sheet_placement(design,template):
     fragments = tuple((key,c['fragment_smiles'],c['connectivity']) for key,c in sorted(design['components'].items()))
-    imines = template in SHEET_TEMPLATES and design.get('linkage') in ('imine','alkyl_imine')
+    linkage = design.get('linkage') if template in SHEET_TEMPLATES else None
     order = design['connections'][0]['bond_order']
-    placement = _fit_sheet(template,fragments,order,'all' if imines else None)
-    if placement is None and imines:
+    placement = _fit_sheet(template,fragments,order,linkage)
+    if placement is None and linkage in SYMMETRIC_PORT_LINKAGES:
         # Try the original node poses while retaining opposite sides on every straight spacer.
-        placement = _fit_sheet(template,fragments,order,'straight')
+        placement = _fit_sheet(template,fragments,order,linkage,straight_only=True)
     if placement is None:
-        raise ValueError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
+        raise SheetAlignmentError('The reactive sites do not align with this planar net. Choose a different connectivity to extend the drawing.')
     return placement
 
 
@@ -310,6 +320,35 @@ def _sheet(design,template,repeats,extent_mode):
                      interblock_bonds=len(joined_edges))
 
 
+def sheet_face_geometry(components, linkage, connections, template):
+    """Serialize the first face from the same fitted sheet used by larger extents."""
+    from .cofdraw_mixed import circuit_geometry
+
+    for component in components.values():
+        fragment = Chem.MolFromSmiles(component['fragment_smiles'])
+        # Keep the existing stereochemistry-aware local drawing when a planar
+        # reflection could change a specified stereocentre or bond depiction.
+        if (any(a.GetChiralTag() != Chem.ChiralType.CHI_UNSPECIFIED for a in fragment.GetAtoms())
+                or any(b.GetStereo() != Chem.BondStereo.STEREONONE for b in fragment.GetBonds())):
+            return None
+        ports = _ports(fragment)
+        if len({site for _, site in ports.values()}) != len(ports):
+            return None  # Endpoint identity alone cannot distinguish these ports.
+    design = dict(components=components, linkage=linkage, connections=connections)
+    try:
+        mol, summary = _sheet(design, template, 1, 'pores')
+    except SheetAlignmentError:
+        return None
+    rim = summary['pore_faces'][0]
+    component_by_id = {atom.GetProp('instance'): atom.GetProp('component') for atom in mol.GetAtoms()}
+    names = {name: f'{component_by_id[name]}{i+1}' for i, name in enumerate(rim)}
+    summary['pore_faces'] = [[names[name] for name in rim]]
+    summary['atom_origin'] = [dict(instance=names[atom.GetProp('instance')], component=atom.GetProp('component'),
+                                   fragment_atom_index=atom.GetIntProp('fragment_atom_index')) for atom in mol.GetAtoms()]
+    provenance = dict(kind='fitted_sheet_face', template=template, scope=SHEET_FACE_SCOPE, source_registered=False)
+    return circuit_geometry(components, mol, summary, provenance)
+
+
 def _estimate(recipe, template, n, extent_mode='pores'):
     """Count actual fragment atoms and bounded faces before allocating a molecular graph."""
     components = recipe['components']
@@ -356,6 +395,28 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
         if template in (*SHEET_TEMPLATES,'self_square'):
             _sheet_placement(model,template)
         chain = template in ('self_chain','chain_2_2')
+        if template == 'mtf_4_3':
+            from .cofdraw_branched import branch_patch
+            current = {4:'small_pore', 8:'large_pore', 32:'mtf_patch'}.get(len(model['instances']))
+            if not source_sha256 and current:
+                _, pores, label = MTF_VIEWS[current]
+                options['extents'][0].update(label=label, pores=pores)
+            views = [(mode, count, pores, label, 1, mode)
+                     for mode, (count, pores, label) in MTF_VIEWS.items() if mode != current]
+            views += [(n, n, n, f'{n} connected pores', n, 'pores') for n in (2, 3)]
+            for value, count, pores, label, repeats, mode in views:
+                atoms, _ = _estimate(model, template, count)
+                if atoms <= MAX_ATOMS:
+                    try:
+                        branch_patch(model['components'], count, template)
+                    except ValueError as error:
+                        options['reason'] = str(error)
+                        continue
+                    options['extents'].append(dict(value=value, label=label, repeats=repeats, extent_mode=mode,
+                                                   atoms=atoms, pores=pores))
+            options.update(template=template, available=len(options['extents'])>1,
+                           scope='Connected apertures from one layer of the voided square grid.')
+            return options
         if template in BRANCHED:
             noun='pore' if template in PLANAR or template in LOCAL_FACES else 'circuit'
             full_patch = recipe.get('layout_kind') == 'net_patch'
@@ -408,6 +469,9 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
             options['extents'].append({'value':n,'label':name,'pores':pores,'atoms':count})
         options.update(available=len(options['extents'])>1,template=template,
                        scope='Finite chemical design with shared building blocks. Larger extents use a new layout.')
+        provenance = recipe.get('coordinate_provenance')
+        if isinstance(provenance, dict) and provenance.get('kind') == 'fitted_sheet_face':
+            options['scope'] = SHEET_FACE_SCOPE
         if not options['available']:
             options['reason']='Even the smallest expanded patch exceeds the 2,400-atom drawing limit.'
     except (ValueError,KeyError,TypeError,RuntimeError) as exc:
@@ -417,9 +481,11 @@ def repeat_options(recipe, source_rule=None, source_sha256=None):
 
 def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mode='pores'):
     sizes={'pores':(2,3,4),'cells':(2,3,4),'triad':(3,),'star':(2,),'triangle':(1,),'hexagon':(1,),'circuit':(1,)}
-    if repeats not in sizes.get(extent_mode,()):
+    if repeats not in sizes.get(extent_mode,(1,) if extent_mode in MTF_VIEWS else ()):
         raise ValueError('Choose an extent available for this drawing.')
     template = _classification(recipe,source_rule,source_sha256)
+    if extent_mode in MTF_VIEWS and template != 'mtf_4_3':
+        raise ValueError('Choose an mtf sheet for this aperture view.')
     if ((extent_mode=='star' and template!='self_kagome') or (extent_mode in ('triangle','hexagon') and template!='kgm_4_2')):
         raise ValueError('Choose a Kagome design for this pore arrangement.')
     if extent_mode == 'circuit' and template not in SPATIAL:
@@ -441,9 +507,15 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
         mol,details = _chain(recipe,repeats)
     elif template in BRANCHED:
         from .cofdraw_branched import branch_patch
-        if (extent_mode!='circuit' and (extent_mode!='pores' or repeats not in (2,3))) or _estimate(design,template,repeats)[0]>MAX_ATOMS:
+        if extent_mode in MTF_VIEWS:
+            face_selector = MTF_VIEWS[extent_mode][0]
+        elif extent_mode == 'circuit' or (extent_mode == 'pores' and repeats in (2,3)):
+            face_selector = repeats
+        else:
             raise ValueError('Choose an available two- or three-circuit extent.')
-        mol,details=branch_patch(design['components'],repeats,template)
+        if _estimate(design,template,face_selector)[0]>MAX_ATOMS:
+            raise ValueError('This drawing exceeds 2,400 atoms. Choose a smaller neighborhood.')
+        mol,details=branch_patch(design['components'],face_selector,template)
     elif template == 'self_kagome':
         from .cofdraw_self_kagome import kagome_patch
         mol,details = kagome_patch(recipe,repeats,triad=extent_mode=='triad',star=extent_mode=='star')
@@ -476,6 +548,8 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
     fragcount = len(set(o['instance'] for o in origins))
     nfaces = len(links) - fragcount + 1
     expected={'triad':3,'star':7,'triangle':1,'hexagon':1,'circuit':1}.get(extent_mode)
+    if extent_mode in MTF_VIEWS:
+        expected = MTF_VIEWS[extent_mode][1]
     if expected and nfaces!=expected:
         raise ValueError('The generated pores do not match the selected neighborhood.')
     if nfaces < 0 or details.get('pore_count',details.get('pores',nfaces)) != nfaces:
@@ -494,6 +568,8 @@ def repeat_patch(recipe,repeats,*,source_rule=None,source_sha256=None,extent_mod
             raise ValueError('Every aminoaldehyde junction must join an aldehyde carbon to an amine nitrogen.')
     extent = (f'{repeats} chain segments' if template in ('self_chain','chain_2_2') else
               f'{repeats} × {repeats} cells' if extent_mode=='cells' else 'One '+extent_mode if extent_mode in ('triangle','hexagon','circuit') else f'{nfaces} connected pores')
+    if extent_mode in MTF_VIEWS:
+        extent = MTF_VIEWS[extent_mode][2]
     basis = design.get('source_drawing_basis')
     if basis:
         basis = {k:basis[k] for k in ('recipe_id','recipe_sha256','drawing_doi','template','orientation_assumption') if k in basis}
@@ -517,6 +593,8 @@ def _focal_aperture(mol,origins,faces,labels,summary,recipe):
     middle=positions.mean(axis=0)
     assembly=recipe.get('assembly') or {}
     preferred=assembly.get('pore_view') or assembly.get('linker_sequence')
+    if summary['template']=='mtf_4_3':
+        preferred=labels[max(range(len(faces)), key=lambda i: len(faces[i]))]
     if summary['extent_mode']=='star' or (summary['pore_count']==7 and summary['template'] in ('kgm_4_2','mixed_kgm')):
         preferred='BCBCBC' if summary['template']=='mixed_kgm' else 'hexagon'
     index=min(range(len(faces)),key=lambda i:(bool(preferred and labels[i]!=preferred),float(np.linalg.norm(positions[i]-middle)),i))

@@ -24,7 +24,7 @@ class PrepareDrawing(BaseModel):
     monomer_b: str = Field(min_length=1, max_length=4000)
     label_a: str = Field(default="A", max_length=100)
     label_b: str = Field(default="B", max_length=100)
-    instances: Literal[4, 6, 8, 12, 21, 22, 30] = 6
+    instances: Literal[4, 6, 8, 12, 21, 22, 30, 32] = 6
     template_id: str | None = Field(default=None, max_length=80)
 
 
@@ -67,7 +67,8 @@ class RenderDrawing(BaseModel):
 
 class RepeatDrawing(RenderDrawing):
     repeats: int = Field(ge=1, le=4)
-    extent_mode: Literal['pores', 'cells', 'triad', 'star', 'triangle', 'hexagon', 'circuit'] = 'pores'
+    extent_mode: Literal['pores', 'cells', 'triad', 'star', 'triangle', 'hexagon', 'circuit',
+                         'small_pore', 'large_pore', 'mtf_patch'] = 'pores'
     color_pores: bool = False
 
 
@@ -323,6 +324,7 @@ class DescribeConversation(DescribeDrawing):
 def validate_recipe(recipe: dict) -> None:
     """Reject costly or degenerate graphs before the renderer allocates them."""
     from rdkit import Chem
+    from .cofdraw_chemistry import MTF_PATCH_ATOM_LIMIT
     from .framework_drawing import VERSION
 
     if 'explicit_graph' in recipe:
@@ -339,8 +341,8 @@ def validate_recipe(recipe: dict) -> None:
     connections = recipe.get("connections")
     if not isinstance(components, dict) or not 1 <= len(components) <= 16:
         raise ValueError("Provide 1–16 components")
-    if not isinstance(instances, list) or not 3 <= len(instances) <= 30:
-        raise ValueError("Provide 3–30 ordered pore instances")
+    if not isinstance(instances, list) or not 3 <= len(instances) <= 32:
+        raise ValueError("Provide 3–32 ordered pore instances")
     if not isinstance(connections, list) or not 3 <= len(connections) <= 64:
         raise ValueError("Provide 3–64 explicit port connections")
     counts, ports = {}, {}
@@ -375,6 +377,9 @@ def validate_recipe(recipe: dict) -> None:
     # A complete kagome star uses up to 1.5 times as many monomers of either
     # type as the original half-star. Keep its previously drawable pairs usable.
     atom_limit = 1500 if recipe.get("layout_kind") == "net_patch" and len(instances) == 30 else 1000
+    if (recipe.get('layout_kind') == 'net_patch' and len(instances) == 32
+            and (recipe.get('selected_template') or {}).get('id') == 'mtf_4_3'):
+        atom_limit = MTF_PATCH_ATOM_LIMIT
     if total > atom_limit:
         raise ValueError(f"Drawing limit is {atom_limit:,} atoms including continuation ports")
     for index, xy in enumerate(positions):
@@ -774,7 +779,8 @@ def create_drawing_router(data_root: Path, *, output_root: Path | None = None) -
             recipe["design_template_signature"] = design_signature(recipe)
             validate_recipe(recipe)
             return {"recipe": recipe, "status": "designed_variant", "selected_template": recipe.get("selected_template"),
-                    "compatibility": recipe.get("compatibility"), "limits": LINKAGE_LIBRARY[recipe['linkage']]["limits"]}
+                    "compatibility": recipe.get("compatibility"),
+                    "limits": ' '.join(filter(None, (recipe.get('drawing_extent_note'), LINKAGE_LIBRARY[recipe['linkage']]["limits"])))}
         except (ValueError, KeyError, TypeError, RuntimeError) as exc:
             raise HTTPException(422, str(exc)) from exc
 

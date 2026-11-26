@@ -7,7 +7,7 @@ import math
 import numpy as np
 from rdkit import Chem
 
-from .cofdraw_depiction import compute_2d_coords, normalize_imine_ports, straight_linker_axes
+from .cofdraw_depiction import SYMMETRIC_PORT_LINKAGES, compute_2d_coords, normalize_linkage_ports, straight_linker_axes
 from .depiction_rings import symmetric_depiction_rings
 from .framework_drawing import _ports
 
@@ -124,8 +124,8 @@ def _block(component, alternate=False, *, planar_pore=False):
     ports = list(_ports(mol).values())
     endpoints = [site for _,site in ports]
     xy = mol.GetConformer().GetPositions()[:,:2].copy()
-    if component.get("linkage") in ("imine", "alkyl_imine") and normalize_imine_ports(mol, xy, straight_only=not planar_pore):
-        mol.SetBoolProp("_fixedImineTurns", True)
+    if normalize_linkage_ports(mol, xy, component.get("linkage"), straight_only=not planar_pore):
+        mol.SetBoolProp("_fixedLinkageTurns", True)
     xy -= xy[endpoints].mean(axis=0)
     tangents = xy[[dummy for dummy,_ in ports]]-xy[endpoints]
     tangents /= np.linalg.norm(tangents,axis=1)[:,None]
@@ -184,7 +184,7 @@ def _fit(geometry,kinds,centers,joins,slot_pairs,orientations=None, *, images=No
             atom=mol.GetAtomWithIdx(end)
             others=[j.GetIdx() for j in atom.GetNeighbors() if j.GetIdx()!=dummy]
             variants=[d]
-            if not mol.HasProp("_fixedImineTurns") and len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
+            if not mol.HasProp("_fixedLinkageTurns") and len(others)==1 and atom.GetHybridization()==Chem.HybridizationType.SP2 and all(
                     bond.GetStereo()==Chem.BondStereo.STEREONONE for bond in atom.GetBonds()):
                 axis=xy[end]-xy[others[0]]
                 axis/=np.linalg.norm(axis)
@@ -378,10 +378,10 @@ def pore_patch(components,pattern,repeats,bond_order,layout='',triad=False):
             degrees[junction]+=1; degrees[mid]+=1
     grid = np.array(centers)
     metric = np.array([.5, math.sqrt(3)/2] if kgm or len(pattern)==6 else [1., 1.])
-    imines = all(c.get("linkage") in ("imine", "alkyl_imine") for c in components.values())
-    geometry = {k: _block(c, planar_pore=imines) for k, c in components.items()}
+    symmetric = all(c.get("linkage") in SYMMETRIC_PORT_LINKAGES for c in components.values())
+    geometry = {k: _block(c, planar_pore=symmetric) for k, c in components.items()}
     placement = (_periodic_pore_placement(geometry, pattern, kgm, node, spacer, kinds, grid, joins, metric)
-                 if imines else None)
+                 if symmetric else None)
     result,origins=join_fragments(components,kinds,grid*metric,joins,slot_pairs,bond_order,
                                   geometry=geometry,placement=placement)
     census=dict(sorted(Counter(canonical_sequence(s) for _,s in faces).items()))
@@ -407,7 +407,8 @@ def pore_face_geometry(components,pattern,layout):
 
 
 def circuit_geometry(components,mol,summary,provenance):
-    rim=summary['pore_faces'][0]
+    """Serialize the faces with shared blocks and chemical connections stored once."""
+    rims=summary['pore_faces']
     origins=summary['atom_origin']
     xy=mol.GetConformer().GetPositions()[:,:2]
     sites={k:{endpoint:port for port,(_,endpoint) in _ports(Chem.MolFromSmiles(c['fragment_smiles'])).items()}
@@ -420,16 +421,21 @@ def circuit_geometry(components,mol,summary,provenance):
             for here,there in ((a,b),(b,a)):
                 incidence[here['instance'],there['instance']]=sites[here['component']][here['fragment_atom_index']]
                 orders[here['instance'],there['instance']]=int(bond.GetBondTypeAsDouble())
-    instances=[]; connections=[]
-    for i,name in enumerate(rim):
-        previous,following=rim[i-1],rim[(i+1)%len(rim)]
-        indices=[j for j,o in enumerate(origins) if o['instance']==name]
-        incoming,outgoing=incidence[name,previous],incidence[name,following]
-        instances.append(dict(id=name,component=origins[indices[0]]['component'],incoming_port=incoming,
-                              outgoing_port=outgoing,layout_position=xy[indices].mean(axis=0).tolist()))
-        connections.append(dict(a=dict(instance=name,port=outgoing),
-                                b=dict(instance=following,port=incidence[following,name]),bond_order=orders[name,following]))
+    instances={}; connections={}
+    for rim in rims:
+        for i,name in enumerate(rim):
+            previous,following=rim[i-1],rim[(i+1)%len(rim)]
+            if name not in instances:
+                indices=[j for j,o in enumerate(origins) if o['instance']==name]
+                instances[name]=dict(id=name,component=origins[indices[0]]['component'],
+                                     incoming_port=incidence[name,previous],outgoing_port=incidence[name,following],
+                                     layout_position=xy[indices].mean(axis=0).tolist())
+            edge=frozenset((name,following))
+            if edge not in connections:
+                connections[edge]=dict(a=dict(instance=name,port=incidence[name,following]),
+                                       b=dict(instance=following,port=incidence[following,name]),
+                                       bond_order=orders[name,following])
     coords=[dict(instance=o['instance'],fragment_atom_index=o['fragment_atom_index'],xy=point.tolist())
             for o,point in zip(origins,xy)]
-    return dict(instances=instances,connections=connections,atom_coordinates=coords,
+    return dict(instances=list(instances.values()),connections=list(connections.values()),atom_coordinates=coords,
                 coordinate_provenance=provenance)

@@ -9,7 +9,7 @@ from rdkit import Chem
 from rdkit.Chem import rdDistGeom, rdForceFieldHelpers
 from rdkit.Geometry import Point3D
 
-from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core, normalize_imine_ports
+from .cofdraw_depiction import compute_2d_coords, free_base_porphyrin_core, normalize_linkage_ports
 from .cofdraw_network import inspect_periodic_network
 from .cofdraw_science import normalize_structure
 from .framework_drawing import _ports
@@ -189,7 +189,7 @@ def _block(component, general_tilt=0, cap_element=None, embed_seed=None, imine_m
     conformer = mol.GetConformer()
     xy = conformer.GetPositions()[:, :2]
     if imine_mode:
-        normalize_imine_ports(mol, xy, preserve_uniform=True, straight_only=imine_mode == 'straight')
+        normalize_linkage_ports(mol, xy, component['linkage'], preserve_uniform=True, straight_only=imine_mode == 'straight')
     xy = (xy - xy[[a for _, a in ports.values()]].mean(axis=0)) * (1.4/1.5)
     for i, (x, y) in enumerate(xy):
         conformer.SetAtomPosition(i, (float(x), float(y), 0.))
